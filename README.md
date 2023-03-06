@@ -1,16 +1,15 @@
 
-Invenio-RDM Go
-==============
+Institutional Repository Data Management Tools
+==============================================
 
-This is a proof of concept Go package fork working with Invenio-RDM's JSON API
-as well as via direct access to the Postgres database backing the Invenio-RDM instance.
+This is a proof of concept Go package fork working with Invenio-RDM's JSON API as well as via direct access to the Postgres database backing the Invenio-RDM instance.
 
 Requirements
 ------------
 
-- Go >= 1.19.2
+- Go >= 1.20.1
 - Make (e.g. GNU Make)
-- Pandoc >= 2.19.2
+- Pandoc >= 3
 - Git
 
 Installation
