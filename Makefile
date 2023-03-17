@@ -29,7 +29,7 @@ ifeq ($(OS), Windows)
 	EXT = .exe
 endif
 
-build: version.go $(PROGRAMS) $(MAN_PAGES) CITATION.cff about.md
+build: version.go $(PROGRAMS) man CITATION.cff about.md
 
 version.go: .FORCE
 	@echo "package $(PROJECT)" >version.go
@@ -50,19 +50,20 @@ man: $(MAN_PAGES)
 $(PROGRAMS): $(PACKAGE)
 	@mkdir -p bin
 	go build -o "bin/$@$(EXT)" cmd/$@/*.go
+	@./bin/$@ -help >$@.1.md
 
 $(MAN_PAGES): .FORCE
 	mkdir -p man/man1
 	$(PANDOC) $@.md --from markdown --to man -s >man/man1/$@
 
 CITATION.cff: codemeta.json
-	cat codemeta.json | sed -E   's/"@context"/"at__context"/g;s/"@type"/"at__type"/g;s/"@id"/"at__id"/g' >_codemeta.json
-	if [ -f $(PANDOC) ]; then echo "" | $(PANDOC) --metadata title="Cite $(PROJECT)" --metadata-file=_codemeta.json --template=codemeta-cff.tmpl >CITATION.cff; fi
+	@cat codemeta.json | sed -E   's/"@context"/"at__context"/g;s/"@type"/"at__type"/g;s/"@id"/"at__id"/g' >_codemeta.json
+	@if [ -f $(PANDOC) ]; then echo "" | $(PANDOC) --metadata title="Cite $(PROJECT)" --metadata-file=_codemeta.json --template=codemeta-cff.tmpl >CITATION.cff; fi
 
 about.md: codemeta.json $(PROGRAMS)
-	cat codemeta.json | sed -E 's/"@context"/"at__context"/g;s/"@type"/"at__type"/g;s/"@id"/"at__id"/g' >_codemeta.json
-	if [ -f $(PANDOC) ]; then echo "" | pandoc --metadata-file=_codemeta.json --template codemeta-md.tmpl >about.md 2>/dev/null; fi
-	if [ -f _codemeta.json ]; then rm _codemeta.json; fi
+	@cat codemeta.json | sed -E 's/"@context"/"at__context"/g;s/"@type"/"at__type"/g;s/"@id"/"at__id"/g' >_codemeta.json
+	@if [ -f $(PANDOC) ]; then echo "" | pandoc --metadata-file=_codemeta.json --template codemeta-md.tmpl >about.md 2>/dev/null; fi
+	@if [ -f _codemeta.json ]; then rm _codemeta.json; fi
 
 
 test: $(PACKAGE)
