@@ -67,6 +67,35 @@ type Links struct {
 	Prev string `json:"prev,omitempty"`
 }
 
+func dbgPrintf(cfg *Config, s string, args... interface{}) {
+	if cfg.Debug {
+		if strings.HasSuffix(s, "\n") {
+			fmt.Fprintf(os.Stderr, s , args...)
+		} else {
+			fmt.Fprintf(os.Stderr, s + "\n", args...)
+		}
+	}
+}
+
+func ratelimitPrintf(resp *http.Response) {
+		limit := resp.Header.Values("X-RateLimit-Limit")
+		remaining := resp.Header.Values("X-RateLimit-Remaining")
+		reset := resp.Header.Values("X-RateLimit-Reset")
+		if len(limit) > 0 {
+			fmt.Fprintf(os.Stderr, "limit %s\n", limit[0])
+		}
+		if len(remaining) > 0 {
+			fmt.Fprintf(os.Stderr, "remaining %s\n", limit[0])
+		}
+		if len(reset) > 0 {
+			t, err := strconv.Atoi(reset[0])
+			if err == nil {
+				tm := time.Unix(int64(t), 0);
+				fmt.Fprintf(os.Stderr, "rate limit reset at %s\n", tm.Format(time.RFC1123))
+			}
+		}
+}
+
 // getJSON sends a request to the InvenioAPI using
 // a token, url and values as parameters. It return a
 // JSON encoded response as byte slice
@@ -83,9 +112,12 @@ func getJSON(token string, uri string) ([]byte, error) {
 		return nil, err
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode == 429 {
+		ratelimitPrintf(resp)
+	} 
 	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("%s", resp.Status)
-	}
+		return nil, fmt.Errorf("%s %s", resp.Status, uri)
+	} 
 	src, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
@@ -109,6 +141,9 @@ func getXML(token string, uri string) ([]byte, http.Header, error) {
 		return nil, resp.Header, err
 	}
 	defer resp.Body.Close()
+	if resp.StatusCode == 429 {
+		ratelimitPrintf(resp)
+	}
 	if resp.StatusCode != 200 {
 		return nil, resp.Header, fmt.Errorf("%s %s", resp.Status, uri)
 	} 
@@ -120,11 +155,11 @@ func getXML(token string, uri string) ([]byte, http.Header, error) {
 }
 
 // Query takes a query string and returns the paged object
-// results as a slice of map[string]interface{}
+// results as a slice of `map[string]interface{}`
 //
 // ```
 //
-//		   records, err := Query(cfg, "Geological History in Southern California", 250, "updated")
+//		   records, err := Query(cfg, "Geological History in Southern California", "newest")
 //	    if err != nil {
 //	        // ... handle error ...
 //	    }
@@ -133,12 +168,9 @@ func getXML(token string, uri string) ([]byte, http.Header, error) {
 //	    }
 //
 // ```
-func Query(cfg *Config, q string, size int, sortBy string) ([]map[string]interface{}, error) {
-	if size == 0 {
-		size = 25
-	}
-	if sortBy == "" {
-		sortBy = "updated"
+func Query(cfg *Config, q string, sort string) ([]map[string]interface{}, error) {
+	if sort == "" {
+		sort = "bestmatch"
 	}
 	// Make sure we have a URL
 	u, err := url.Parse(cfg.InvenioAPI)
@@ -146,50 +178,33 @@ func Query(cfg *Config, q string, size int, sortBy string) ([]map[string]interfa
 		return nil, err
 	}
 	// Setup our query parameters, i.e. q=*
-	uri := fmt.Sprintf("%s/api/records?size=%d&sort=%s&q=%s", u.String(), size, sortBy, q)
-
-	src, err := getJSON(cfg.InvenioToken, uri)
-	if err != nil {
-		return nil, err
-	}
-	records := []map[string]interface{}{}
+	uri := fmt.Sprintf("%s/api/records?sort=%s&q=%s", u.String(), sort, q)
 	tot := 0
-	maxPages := 0
 	results := new(QueryResponse)
-	// NOTE: Need to unparse the response structure and
-	// then extract the IDs from the individual Hits results
-	if err := json.Unmarshal(src, &results); err != nil {
-		return nil, err
-	}
-	if results != nil && results.Hits != nil &&
-		results.Hits.Hits != nil && len(results.Hits.Hits) > 0 {
-		for _, hit := range results.Hits.Hits {
-			records = append(records, hit)
-		}
-		tot = results.Hits.Total
-		maxPages = int(tot/size) + 1
-		fmt.Fprintf(os.Stderr, "Total: %d, Pages %d, Query: %q\n", tot, maxPages, q)
-	}
-	// FIXME need to handle paged response from Invenio
-	if results.Links != nil {
-		for results.Links != nil &&
-			results.Links.Self != results.Links.Next {
-			src, err := getJSON(cfg.InvenioToken, results.Links.Next)
-			if err != nil {
-				return nil, err
-			}
-			if err := json.Unmarshal(src, &results); err != nil {
-				return nil, err
-			}
-			if results != nil && results.Hits != nil &&
-				results.Hits.Hits != nil && len(results.Hits.Hits) > 0 {
-				for _, hit := range results.Hits.Hits {
-					records = append(records, hit)
-				}
-			}
-			fmt.Fprintf(os.Stderr, "prev %+v\n", results.Links.Prev)
-			fmt.Fprintf(os.Stderr, "self %s\n", results.Links.Self)
-			fmt.Fprintf(os.Stderr, "next %s\n", results.Links.Next)
+   	records := []map[string]interface{}{}
+	for uri != "" {
+		dbgPrintf(cfg, "requesting %s", uri)
+    	src, err := getJSON(cfg.InvenioToken, uri)
+    	if err != nil {
+    		return nil, err
+    	}
+    	// NOTE: Need to unparse the response structure and
+    	// then extract the IDs from the individual Hits results
+    	if err := json.Unmarshal(src, &results); err != nil {
+    		return nil, err
+    	}
+    	if results != nil && results.Hits != nil &&
+    		results.Hits.Hits != nil && len(results.Hits.Hits) > 0 {
+    		for _, hit := range results.Hits.Hits {
+    			records = append(records, hit)
+    		}
+    		tot = results.Hits.Total
+    		dbgPrintf(cfg, "(%d/%d) %s\n", len(records), tot, q)
+    	}
+		if results.Links != nil && results.Links.Self != results.Links.Next {
+			uri = results.Links.Next;
+		} else {
+			uri = ""
 		}
 	}
 	return records, nil
@@ -201,21 +216,8 @@ func Query(cfg *Config, q string, size int, sortBy string) ([]map[string]interfa
 // The configuration object must have the InvenioAPI and
 // InvenioToken attributes set.
 //
-// FIXME: The maxim result set from the API with paging in 10K items,
-// this is too small for this function's purpose of returning all ids.
-//
-// The correct way to do this without API support is to directly
-// query the PostgreSQL for the ids. Our production instances have
-// PostgreSQL running in a container. That makes that appoach problematic
-// inless we figure out way to replicate that instance. Another
-// approach is ask the Invenio RDM developer core to provide an end point
-// for returning a list of all keys.
-//
-// NOTE: Using the records API you get back a "bestmatch" result set.
-// What are the other options (e.g. can we get results returned by
-// in timestamp order)
-//
-// Using another end point, e.g. OAI-PMH might also solve problem
+// NOTE: This method relies on OAI-PMH, this is a rate limited process
+// so results can take quiet some time.
 func GetRecordIds(cfg *Config) ([]string, error) {
 	ids := []string{}
 	resumptionToken := "     "
@@ -244,9 +246,102 @@ func GetRecordIds(cfg *Config) ([]string, error) {
 		secondsToWait := time.Duration(int(rateLimit/60)) * time.Second
 
 		// Pause to respect rate limits
+		// NOTE: Calculate when I can request more ids
+		if float64(remaining)/float64(rateLimit) <= 0.5 {
+			dbgPrintf(cfg, "waiting %s, %s\n", secondsToWait, uri)
+   			time.Sleep(secondsToWait)
+		} 
+		if cfg.Debug {
+			os.WriteFile("oai-pmh-list-identifiers.xml", src, 0660)
+		}
+		if bytes.HasPrefix(src, []byte("<html")) {
+			if cfg.Debug {
+				os.WriteFile("oai-pmh-error.html", src, 0660)
+			}
+			resumptionToken = ""
+		} else {
+    		oai := new(OAIListIdentifiersResponse)
+    		if err := xml.Unmarshal(src, oai); err != nil {
+				if cfg.Debug {
+					os.WriteFile("oai-pmh-error.html", src, 0660)
+				}
+				resumptionToken = ""
+    			return nil, err
+    		}
+    		if oai.ListIdentifiers != nil {
+    			resumptionToken = oai.ListIdentifiers.ResumptionToken
+    			if oai.ListIdentifiers.Headers != nil {
+    				for _, obj := range oai.ListIdentifiers.Headers {
+    					if obj.Identifier != "" {
+    						parts := strings.Split(obj.Identifier, ":")
+    						last := len(parts) - 1
+    						if last < 0 {
+    							last = 0
+    						}
+    						id := parts[len(parts)-1]
+    						ids = append(ids, id)
+    					}
+    				}
+    			}
+    		} else {
+    			resumptionToken = ""
+    		}
+		}
+		if (len(ids) % 500) == 0 {
+			dbgPrintf(cfg, "%d ids harvested", len(ids))
+		}
+	}
+	dbgPrintf(cfg, "%d ids harvested (total)", len(ids))
+	return ids, nil
+}
+
+// GetModifiedRecordIds takes a configuration object, contacts am RDM
+// instance and returns a list of ids created, deleted or updated in
+// the time range specififed. I problem is encountered returns an error.
+//
+// The configuration object must have the InvenioAPI and
+// InvenioToken attributes set.
+//
+// NOTE: This method relies on OAI-PMH, this is a rate limited process
+// so results can take quiet some time.
+func GetModifiedRecordIds(cfg *Config, start string, end string) ([]string, error) {
+	if start == "" {
+		start = time.Now().Format("2006-01-02")
+	}
+	if end == "" {
+		end = time.Now().Format("2006-01-02")
+	}
+	ids := []string{}
+	resumptionToken := "     "
+	uri := fmt.Sprintf("%s/oai2d?verb=ListIdentifiers&metadataPrefix=oai_dc&from=%s&until=%s", cfg.InvenioAPI, start, end)
+	dbgPrintf(cfg, "requesting %s", uri)
+	for i := 0; resumptionToken != ""; i++ {
+		if i > 0 {	
+			v := url.Values{}
+			v.Set("resumptionToken", resumptionToken)
+			uri = fmt.Sprintf("%s/oai2d?verb=ListIdentifiers&%s", cfg.InvenioAPI, v.Encode())
+		}
+		src, headers, err := getXML(cfg.InvenioToken, uri)
+		xRateLimitLimit := headers.Values("X-RateLimit-Limit")
+		xRateLimitRemaining := headers.Values("X-RateLimit-Remaining")
+		if err != nil {
+			return nil, err
+		}
+
+		rateLimit, err := strconv.Atoi(xRateLimitLimit[0])
+		if err != nil {
+			rateLimit = 60
+		}
+		remaining, err := strconv.Atoi(xRateLimitRemaining[0])
+		if err != nil {
+			remaining = 0
+		}
+		secondsToWait := time.Duration(int(rateLimit/60)) * time.Second
+
+		// Pause to respect rate limits
 		//FIXME: Need to calculate when I can request more ids
 		if float64(remaining)/float64(rateLimit) <= 0.5 {
-			fmt.Fprintf(os.Stderr, "DEBUG waiting (%d/%d), secondsToWait %s\n", remaining,rateLimit, secondsToWait)
+			dbgPrintf(cfg, "waiting %s, %s", secondsToWait, uri)
    			time.Sleep(secondsToWait)
 		} 
 		//os.WriteFile("oai-pmh-list-identifiers.xml", src, 0660) // DEBUG
@@ -262,7 +357,6 @@ func GetRecordIds(cfg *Config) ([]string, error) {
     		}
     		if oai.ListIdentifiers != nil {
     			resumptionToken = oai.ListIdentifiers.ResumptionToken
-    			//fmt.Fprintf(os.Stderr, "DEBUG (%d) resumptionToken=%s\n", i, resumptionToken)
     			if oai.ListIdentifiers.Headers != nil {
     				for _, obj := range oai.ListIdentifiers.Headers {
     					if obj.Identifier != "" {
@@ -272,7 +366,6 @@ func GetRecordIds(cfg *Config) ([]string, error) {
     							last = 0
     						}
     						id := parts[len(parts)-1]
-    						//fmt.Fprintf(os.Stderr, "DEBUG id %q\n", id)
     						ids = append(ids, id)
     					}
     				}
@@ -282,12 +375,15 @@ func GetRecordIds(cfg *Config) ([]string, error) {
     		}
 		}
 		if (len(ids) % 500) == 0 {
-			fmt.Fprintf(os.Stderr, "%d ids harvested\n", len(ids))// DEBUG
+			dbgPrintf(cfg, "%d ids harvested for %s - %s", len(ids), start, end)
 		}
 	}
-	fmt.Fprintf(os.Stderr, "%d ids harvested (total)\n", len(ids))// DEBUG
+	dbgPrintf(cfg, "%d ids harvested (total)", len(ids))
 	return ids, nil
 }
+
+
+
 
 // GetRecord takes a configuration object and record id,
 // contacts an RDM instance and returns a simplified record

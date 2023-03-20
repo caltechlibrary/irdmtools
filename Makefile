@@ -67,7 +67,7 @@ about.md: codemeta.json $(PROGRAMS)
 
 
 test: $(PACKAGE)
-	go test
+	go test -timeout 60m
 
 website: clean-website
 	make -f website.mak

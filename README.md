@@ -2,7 +2,10 @@
 Institutional Repository Data Management Tools
 ==============================================
 
-This is a proof of concept Go package fork working with Invenio-RDM's JSON API as well as via direct access to the Postgres database backing the Invenio-RDM instance.
+This is a proof of concept Go package for working with institutional
+repositories. Currently it is targetting Invenio RDM's REST API and
+OAI-PMH. Eventually it may include direct access to the Postgres database
+backing the Invenio-RDM instance.
 
 Requirements
 ------------

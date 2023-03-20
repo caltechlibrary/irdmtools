@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strings"
 )
 
 
@@ -27,7 +26,7 @@ type Util struct {
 //    fmt.Printf("Invenio RDM API UTL: %q\n", util.Cfg.IvenioAPI)   
 //    fmt.Printf("Invenio RDM token: %q\n", util.Cfg.InvenioToken)   
 // ```
-func (util *Util) Configure(configFName string, envPrefix string) error {
+func (util *Util) Configure(configFName string, envPrefix string, debug bool) error {
 	if util == nil {
 		util = new(Util)
 	}
@@ -44,6 +43,9 @@ func (util *Util) Configure(configFName string, envPrefix string) error {
 		return err
 	}
 	util.Cfg = cfg
+	if debug {
+		util.Cfg.Debug = true
+	}
 	// Make sure we have a minimal useful configuration
 	if util.Cfg.InvenioAPI == "" || util.Cfg.InvenioToken == "" {
 		return fmt.Errorf("invenio API URL or token not available")
@@ -85,7 +87,7 @@ func SampleConfig(configFName string) ([]byte, error) {
 			return src, err
 		}
 	}
-	invenioAPI := os.Getenv("INVENIO_API")
+	invenioAPI := os.Getenv("RDM_INVENIO_API")
 	if invenioAPI == "" {
 		invenioAPI = "http://localhost:5000"
 	}
@@ -108,19 +110,46 @@ func SampleConfig(configFName string) ([]byte, error) {
 //    if err := util.LoadConfig("irdmtools.json"); err != nil {
 //       // ... handle error ...
 //    }
-//    src, err := util.Query("My favorite book")
+//    src, err := util.Query("My favorite book", -1, "newest")
 //    if err != nil {
 //        // ... handle error ...
 //    }
 //    fmt.Printf("%s\n", src)
 // ```
-func (util *Util) Query(q string) ([]byte, error) {
-	const pageSize = 250
-	records, err := Query(util.Cfg, q, pageSize, "bestmatch")
+func (util *Util) Query(q string, sort string) ([]byte, error) {
+	fmt.Fprintf(os.Stderr, "DEBUG q %q, sort %q\n", q, sort)
+	records, err := Query(util.Cfg, q, sort)
 	if err != nil {
 		return nil, err
 	}
 	src, err := json.MarshalIndent(records, "", "    ")
+	if err != nil {
+		return nil, err
+	}
+	return src, nil
+}
+
+// GetModified returns a byte slice for a JSON encode list
+// of record ids modified (created, updated, deleted) in
+// the given time range. If a problem occurs an error is returned.
+//
+// ```
+//    util := new(irdmtools.Util)
+//    if err := util.LoadConfig("irdmtools.json"); err != nil {
+//       // ... handle error ...
+//    }
+//    src, err := util.GetModifiedIds("2020-01-01", "2020-12-31")
+//    if err != nil {
+//        // ... handle error ...
+//    }
+//    fmt.Printf("%s\n", src)
+// ```
+func (util *Util) GetModifiedIds(start string, end string) ([]byte, error) {
+	ids, err := GetModifiedRecordIds(util.Cfg, start, end)
+	if err != nil {
+		return nil, err
+	}
+	src, err := json.MarshalIndent(ids, "", "    ")
 	if err != nil {
 		return nil, err
 	}
@@ -214,13 +243,31 @@ func (util *Util) Run(in io.Reader, out io.Writer, eout io.Writer, action string
 		if len(params) == 0 {
 			return fmt.Errorf("missing query string")
 		}
-		src, err := util.Query(strings.Join(params, " "))
+		q, sort := params[0], ""
+		if len(params) > 1 {
+			sort = params[1]
+		}
+		src, err := util.Query(q, sort)
 		if err != nil {
 			return err
 		}
 		fmt.Fprintf(out, "%s\n", bytes.TrimSpace(src))
 		return nil
-	case "get_record_ids":
+	case "get_modified_ids":
+		if len(params) == 0 {
+			return fmt.Errorf("missing start and end dates")
+		}
+		start, end := params[0], ""
+		if len(params) > 1 {
+			end = params[1]
+		}
+		src, err := util.GetModifiedIds(start, end)
+		if err != nil {
+			return err
+		}
+		fmt.Fprintf(out, "%s\n", bytes.TrimSpace(src))
+		return nil
+	case "get_all_ids":
 		src, err := util.GetRecordIds()
 		if err != nil {
 			return err
