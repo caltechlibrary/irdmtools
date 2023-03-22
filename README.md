@@ -27,7 +27,7 @@ This tool is for interacting with an Invenio RDM repository.
 
 `rdmutil` configuration is read either from the envinronment or a JSON formated configuration file. See the [man page](rdmutil.1.md) for details.
 
-### 'doi2rdm`
+### `doi2rdm`
 
 This tool is for exporting metadata from either CrossRef or DataCite and
 mapping it into a JSON document suitable to import into Invenio RDM via
