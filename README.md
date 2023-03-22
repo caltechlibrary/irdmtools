@@ -4,17 +4,20 @@ Institutional Repository Data Management Tools
 
 This is a proof of concept set tools and Go packages for
 working with institutional repositories. Initial target is
-Invenio RDM's REST API and OAI-PMH service.
+Invenio RDM.
 
-The concept is being developed around a cli called `rdmutil` which
-can talk the web APIs supported by Invenio RDM. Caltech Library is using
-this prototype in our migration from EPrints to Invenio RDM and for
-content migration, content analysis and aggregation.
+The proof of concept is being developed around RDM's web services 
+(e.g. REST API and OAI-PMH), PostgreSQL database and external metadata
+services (e.g. CrossRef, DataCite).
 
-Tools
------
+Caltech Library is using testing the prototype with continuous content
+migration, aggregation and metadata analysis.
+
+## Tools
 
 ### `rdmutil`
+
+This tool is for interacting with an Invenio RDM repository.
 
 - get_all_ids uses the OAI-PMH service to harvest all the current record ids in an Invenio RDM instance (very slow due to rate limits)
 - get_modified_ids uses the OAI-PMH service with the "from" and "until" attributes to get a list of modified record ids (very slow due to rate limits)
@@ -24,20 +27,30 @@ Tools
 
 `rdmutil` configuration is read either from the envinronment or a JSON formated configuration file. See the [man page](rdmutil.1.md) for details.
 
-Requirements
-------------
+### 'doi2rdm`
 
-- Go >= 1.20.1
-- Make (e.g. GNU Make)
-- Pandoc >= 3
-- git
-- SQLite3, MySQL 8 or PostgreSQL 14
+This tool is for exporting metadata from either CrossRef or DataCite and
+mapping it into a JSON document suitable to import into Invenio RDM via
+RDM's REST API.  See the [man page](doi2rdm.1.md) for details.
 
-This codebase is speculative as a proof of concept. Installation requires
-downloading the source code and compiler. Here's the steps I take to
+
+## Requirements
+
+- An Invenio RDM deployment
+- To building the software and documentation
+    - git
+    - Go >= 1.20.1
+    - Make (e.g. GNU Make)
+    - Pandoc >= 3
+- For harvesting content
+    - [dataset](https://github.com/caltechlibrary/dataset/) >= 2
+
+## Installation
+
+This codebase is speculative. It is likely to change and 
+as issues are identified. To install you need to download
+the source code and compile it.  Here's the steps I take to
 install irdmtools.
-
-### Installation
 
 ~~~
 git clone git@github.com:caltechlibrary/irdmtools

@@ -22,21 +22,61 @@
 </nav>
 
 <section>
-<h1 id="invenio-rdm-go">Invenio-RDM Go</h1>
-<p>This is a proof of concept Go package fork working with Invenio-RDM’s
-JSON API as well as via direct access to the Postgres database backing
-the Invenio-RDM instance.</p>
+<h1 id="institutional-repository-data-management-tools">Institutional
+Repository Data Management Tools</h1>
+<p>This is a proof of concept set tools and Go packages for working with
+institutional repositories. Initial target is Invenio RDM.</p>
+<p>The proof of concept is being developed around RDM’s web services
+(e.g. REST API and OAI-PMH), PostgreSQL database and external metadata
+services (e.g. CrossRef, DataCite).</p>
+<p>Caltech Library is using testing the prototype with continuous
+content migration, aggregation and metadata analysis.</p>
+<h2 id="tools">Tools</h2>
+<h3 id="rdmutil"><code>rdmutil</code></h3>
+<p>This tool is for interacting with an Invenio RDM repository.</p>
+<ul>
+<li>get_all_ids uses the OAI-PMH service to harvest all the current
+record ids in an Invenio RDM instance (very slow due to rate
+limits)</li>
+<li>get_modified_ids uses the OAI-PMH service with the “from” and
+“until” attributes to get a list of modified record ids (very slow due
+to rate limits)</li>
+<li>get_record retrieves a specific RDM record based on the id (quick,
+uses the RDM REST API)</li>
+<li>query can retrieve a selection of records from the RDM REST API, it
+is limited to 10K total returned records by RDM/Elasticsearch’s
+configuration</li>
+<li>harvest reads a JSON array of record ids from a file and harvests
+the RDM records into a dataset v2 collection</li>
+</ul>
+<p><code>rdmutil</code> configuration is read either from the
+envinronment or a JSON formated configuration file. See the <a
+href="rdmutil.1.html">man page</a> for details.</p>
+<h3 id="doi2rdm">’doi2rdm`</h3>
+<p>This tool is for exporting metadata from either CrossRef or DataCite
+and mapping it into a JSON document suitable to import into Invenio RDM
+via RDM’s REST API. See the <a href="doi2rdm.1.html">man page</a> for
+details.</p>
 <h2 id="requirements">Requirements</h2>
 <ul>
-<li>Go &gt;= 1.19.2</li>
+<li>An Invenio RDM deployment</li>
+<li>To building the software and documentation
+<ul>
+<li>git</li>
+<li>Go &gt;= 1.20.1</li>
 <li>Make (e.g. GNU Make)</li>
-<li>Pandoc &gt;= 2.19.2</li>
-<li>Git</li>
+<li>Pandoc &gt;= 3</li>
+</ul></li>
+<li>For harvesting content
+<ul>
+<li><a href="https://github.com/caltechlibrary/dataset/">dataset</a>
+&gt;= 2</li>
+</ul></li>
 </ul>
 <h2 id="installation">Installation</h2>
-<p>This codebase is speculative as a proof of concept. Installation
-requires downloading the source code and compiler. Here’s the steps I
-take to install irdmtools.</p>
+<p>This codebase is speculative. It is likely to change and as issues
+are identified. To install you need to download the source code and
+compile it. Here’s the steps I take to install irdmtools.</p>
 <pre><code>git clone git@github.com:caltechlibrary/irdmtools
 cd irdmtools
 make
