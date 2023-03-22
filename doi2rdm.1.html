@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Bottler Concept</title>
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="/css/site.css">
+</head>
+<body>
+<header>
+<a href="http://library.caltech.edu" title="link to Caltech Library Homepage"><img src="/assets/liblogo.gif" alt="Caltech Library logo"></a>
+</header>
+<nav>
+<ul>
+    <li><a href="/">Home</a></li>
+    <li><a href="index.html">README</a></li>
+    <li><a href="LICENSE">LICENSE</a></li>
+    <li><a href="install.html">INSTALL</a></li>
+    <li><a href="user-manual.html">User Manual</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="https://github.com/caltechlibrary/irdmtools">GitHub</a></li>
+</ul>
+</nav>
+
+<section>
+<h1 id="name">NAME</h1>
+<p>doi2rdm</p>
+<h1 id="synopsis">SYNOPSIS</h1>
+<p>doi2rdm <a href="#options">OPTIONS</a> DOI_OR_FILENAME</p>
+<h1 id="description">DESCRIPTION</h1>
+<p>doi2rdm is a Caltech Library centric application that takes one or
+more DOI, queries the CrossRef API and if that fails the DataCite API
+and returns a JSON document suitable for import into Invenio RDM. The
+DOI can be in either their canonical form or URL form
+(e.g. “10.1021/acsami.7b15651” or
+“https://doi.org/10.1021/acsami.7b15651”).</p>
+<p>If you pass a filename instead of a DOI then the DOI will be read
+from the the file expecting one DOI per line.</p>
+<h1 id="options">OPTIONS</h1>
+<dl>
+<dt>-help</dt>
+<dd>
+display help
+</dd>
+<dt>-license</dt>
+<dd>
+display license
+</dd>
+<dt>-version</dt>
+<dd>
+display version
+</dd>
+<dt>-crossref</dt>
+<dd>
+only search CrossRef API for DOI records
+</dd>
+<dt>-datacite</dt>
+<dd>
+only search DataCite API for DOI records
+</dd>
+<dt>-dot-initials</dt>
+<dd>
+Add period to initials in given name
+</dd>
+<dt>-download</dt>
+<dd>
+attempt to download the digital object if object URL provided
+</dd>
+<dt>-mailto</dt>
+<dd>
+(string) set the mailto value for CrossRef API access (default
+“helpdesk@library.caltech.edu”)
+</dd>
+</dl>
+<h1 id="examples">EXAMPLES</h1>
+<p>Example generating a JSON document for a single DOI. The resulting
+text file is called “article.json”.</p>
+<pre><code>    doi2rdm &quot;10.1021/acsami.7b15651&quot; &gt;article.json</code></pre>
+<p>Example generating a JSON document for two DOI. The resulting text
+file is called “articles.json”.</p>
+<pre><code>    doi2rdm &quot;10.1021/acsami.7b15651&quot; &quot;10.1093/mnras/stu2495&quot; &gt;articles.json</code></pre>
+<p>Example processing a list of DOIs in a text file called
+“doi-list.txt” and writing the output to a JSON document called
+“articles.json”.</p>
+<pre><code>    doi2rdm doi-list.txt &gt;articles.json</code></pre>
+</section>
+
+<footer>
+<span>&copy; 2022 <a href="https://www.library.caltech.edu/copyright">Caltech Library</a></span>
+<address>1200 E California Blvd, Mail Code 1-32, Pasadena, CA 91125-3200</address>
+<span><a href="mailto:library@caltech.edu">Email Us</a></span>
+<span>Phone: <a href="tel:+1-626-395-3405">(626)395-3405</a></span>
+</footer>
+</body>
+</html>
