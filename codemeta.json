@@ -6,10 +6,17 @@
     "dateCreated": "2022-10-27",
     "issueTracker": "https://github.com/caltechlibrary/irdmtools/issues",
     "name": "irdmtools",
-    "version": "0.0.0",
-    "description": "This is a Go package and collection of tools for working with Invenio-RDM at both the JSON API level and directly with the Posgres database.",
-    "releaseNotes": "This is a proof of concept package",
+    "version": "0.0.1",
+    "description": "Tools for working with institutional repositories and data management systems. Current implementation targets Invenio-RDM.",
+    "applicationCategory": "library science",
+    "releaseNotes": "This is a proof of concept",
     "developmentStatus": "concept",
+    "keywords": [
+        "institutional repository",
+        "data management",
+        "Invenio",
+        "Invenio-RDM"
+    ],
     "programmingLanguage": [
         "Go"
     ],
@@ -18,6 +25,14 @@
         "Windows",
         "macOS"
     ],
+    "softwareRequirements": [
+        "Go >= 1.20.1",
+        "SQLite 3, MySQL 8 or PostgreSQL 14"
+    ],
+    "relatedLink": [
+        "https://inveniosoftware.org/products/rdm/",
+        "https://eprints.org"
+    ],
     "author": [
         {
             "@type": "Person",
@@ -25,6 +40,41 @@
             "givenName": "R. S.",
             "familyName": "Doiel",
             "email": "rsdoiel@caltech.edu",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Caltech Library, Caltech"
+            }
+        },
+        {
+            "@type": "Person",
+            "@id": "https://orcid.org/0000-0001-9266-5146",
+            "givenName": "Tom",
+            "familyName": "Morrell",
+            "email": "tmorrell@caltech.edu",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Caltech Library, Caltech"
+            }
+        }
+    ],
+    "contributor": [
+        {
+            "@type": "Person",
+            "@id": "https://orcid.org/0000-0002-6539-638X",
+            "givenName": "George",
+            "familyName": "Porter",
+            "email": "george@library.caltech.edu",
+            "affiliation": {
+                "@type": "Organization",
+                "name": "Caltech Library, Caltech"
+            }
+        },
+        {
+            "@type": "Person",
+            "@id": "https://orcid.org/0000-0002-0026-2516",
+            "givenName": "Kathy",
+            "familyName": "Johnson",
+            "email": "kjohnson@caltech.edu",
             "affiliation": {
                 "@type": "Organization",
                 "name": "Caltech Library, Caltech"

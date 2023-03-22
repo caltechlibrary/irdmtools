@@ -88,6 +88,9 @@ __pycache__
 *~
 *.bak
 *.swp
+*.ds
+*.json
+*.rc
 testout
 bin/*
 dist/*

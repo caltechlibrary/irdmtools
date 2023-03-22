@@ -3,33 +3,36 @@ cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
 type: software
 title: "irdmtools"
-abstract: "This is a Go package and collection of tools for working with
-Invenio-RDM at both the JSON API level and directly with the Posgres
-database."
+abstract: "Tools for working with institutional repositories and data
+management systems. Current implementation targets Invenio-RDM."
 authors:
   - family-names: Doiel
     given-names: R. S.
     orcid: "https://orcid.org/0000-0003-0900-6903"
+  - family-names: Morrell
+    given-names: Tom
+    orcid: "https://orcid.org/0000-0001-9266-5146"
 
 repository-code: "https://github.com/caltechlibrary/irdmtools"
-version: 0.0.0
+version: 0.0.1
 license-url: "https://spdx.org/licenses/BSD-3-Clause-Clear"
-
+keywords: [ "institutional repository", "data
+management", "Invenio", "Invenio-RDM" ]
 
 ---
 
 About this software
 ===================
 
-## irdmtools 0.0.0
+## irdmtools 0.0.1
 
 ### Authors
 
 - R. S. Doiel
+- Tom Morrell
 
-This is a Go package and collection of tools for working with
-Invenio-RDM at both the JSON API level and directly with the Posgres
-database.
+Tools for working with institutional repositories and data management
+systems. Current implementation targets Invenio-RDM.
 
 
 - License: https://spdx.org/licenses/BSD-3-Clause-Clear
@@ -47,3 +50,7 @@ database.
 - Windows
 - macOS
 
+### Software Requiremets
+
+- Go &gt;= 1.20.1
+- SQLite 3, MySQL 8 or PostgreSQL 14

@@ -14,31 +14,37 @@
 . ftr VB CB
 . ftr VBI CBI
 .\}
-.TH "irdmutil" "1" "2023-03-20" "user manual" ""
+.TH "rdmutil" "1" "2023-03-22" "rdmutil user manual" "Version 0.0.1"
 .hy
 .SH NAME
 .PP
-irdmutil
+rdmutil
 .SH SYNOPSIS
 .PP
-irdmutil OPTIONS ACTION [ACTION_PARAMETERS \&...]
+rdmutil OPTIONS ACTION [ACTION_PARAMETERS \&...]
 .SH DESCRIPTION
 .PP
-\f[B]irdmutil\f[R] provides a quick wrapper around Invenio-RDM\[cq]s
+\f[B]rdmutil\f[R] provides a quick wrapper around Invenio-RDM\[cq]s
 OAI-PMH and REST API.
-By default irdmutil looks for two environment variables.
-.IP \[bu] 2
+By default rdmutil looks for three environment variables.
+.TP
 RDM_INVENIO_API
-.IP \[bu] 2
+the URL of the Invenio RDM API and OAI-PMH services
+.TP
 RDM_INVENIO_TOKEN
+the token needed to access the Invenio RDM API and OAI-PMH services
+.TP
+RDM_C_NAME
+A dataset collection name.
+Collection must exist.
+See \f[V]dataset help init\f[R]
 .PP
-These are use to acces the Invenio RDM REST API and OAI-PMH services.
+The environment provides the default values for configuration.
+They maybe overwritten by using a JSON configuration file.
+The corresponding attributes are \[lq]invenio_api\[rq],
+\[lq]invenio_token\[rq] and \[lq]c_name\[rq].
 .PP
-You may specify a JSON configuration file holding the attributes of
-\[lq]invenio_api\[rq] and \[lq]invenio_token\[rq] instead of using
-environment variables.
-.PP
-irdmutil uses the OAI-PMH service to retrieve record ids.
+rdmutil uses the OAI-PMH service to retrieve record ids.
 This maybe slow due to rate limits.
 Also provided is a query service and record retrieval using Invenio
 RDM\[cq]s REST API.
@@ -56,11 +62,11 @@ version
 display version
 .TP
 config
-provide a path to an alternate configuration file (default is
-irdmtools.json)
+provide a path to an alternate configuration file
+(e.g.\ \[lq]rdmtools.json\[rq])
 .SH ACTION
 .PP
-\f[B]irdmutil\f[R] supports the following actions.
+\f[B]rdmutil\f[R] supports the following actions.
 .TP
 setup
 Display an example JSON setup configuration file, if it already exists
@@ -95,21 +101,25 @@ Query takes one required parameter and two option.
 get_record RECORD_ID
 Returns a specific record indicated by RECORD_ID, e.g.\ bq3se-47g50.
 The REORCID_ID is a required parameter.
+.TP
+harvest KEY_JSON
+harvest takes a JSON file containing a list of keys and harvests each
+record into the dataset collection.
 .SH ACTION_PARAMETERS
 .PP
 Action parameters are the specific optional or required parameters need
 to complete an aciton.
 .SH EXAMPLES
 .PP
-Setup for \f[B]irdmutil\f[R] by writing an example JSON configuration
+Setup for \f[B]rdmutil\f[R] by writing an example JSON configuration
 file.
 \[lq]nano\[rq] is an example text editor program, you need to edit the
 sample configuration appropriately.
 .IP
 .nf
 \f[C]
-irdmutil setup >irdmtools.json
-nano irdmtools.json
+rdmutil setup >rdmtools.json
+nano rdmtools.json
 \f[R]
 .fi
 .PP
@@ -118,7 +128,7 @@ Get a list of Invenio-RDM record ids modified from Jan 1, 2023 to Jan
 .IP
 .nf
 \f[C]
-irdmutil get_modified_ids 2023-01-01 2023-01-31
+rdmutil get_modified_ids 2023-01-01 2023-01-31
 \f[R]
 .fi
 .PP
@@ -126,7 +136,7 @@ Get a list of all Invenio-RDM record ids.
 .IP
 .nf
 \f[C]
-irdmutil get_all_ids
+rdmutil get_all_ids
 \f[R]
 .fi
 .PP
@@ -134,10 +144,8 @@ Get a specific Invenio-RDM record.
 .IP
 .nf
 \f[C]
-irdmutil get_record bq3se-47g50
+rdmutil get_record bq3se-47g50
 \f[R]
 .fi
-.PP
-irdmutil 0.0.0
 .SH AUTHORS
-R. S. Doiel.
+R. S. Doiel and Tom Morrell.

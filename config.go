@@ -1,6 +1,41 @@
+// irdmtools is a package for working with institutional repositories and
+// data management systems. Current implementation targets Invenio-RDM.
+//
+// @author R. S. Doiel, <rsdoiel@caltech.edu>
+// @author Tom Morrell, <tmorrell@caltech.edu>
+//
+// Copyright (c) 2023, Caltech
+// All rights not granted herein are expressly reserved by Caltech.
+// 
+// Redistribution and use in source and binary forms, with or without
+// modification, are permitted provided that the following conditions are met:
+// 
+// 1. Redistributions of source code must retain the above copyright notice,
+// this list of conditions and the following disclaimer.
+// 
+// 2. Redistributions in binary form must reproduce the above copyright notice,
+// this list of conditions and the following disclaimer in the documentation
+// and/or other materials provided with the distribution.
+// 
+// 3. Neither the name of the copyright holder nor the names of its contributors
+// may be used to endorse or promote products derived from this software without
+// specific prior written permission.
+// 
+// THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+// AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+// IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+// ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+// LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+// CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+// SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+// INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+// CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+// ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+// POSSIBILITY OF SUCH DAMAGE.
 package irdmtools
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -62,7 +97,7 @@ func (cfg *Config) LoadEnv(prefix string) error {
 	if token := os.Getenv(prefixVar("INVENIO_TOKEN", prefix)); token != "" && cfg.InvenioToken == "" {
 		cfg.InvenioToken = token
 	}
-	if cName := os.Getenv(prefixVar("COLLECTION_NAME", prefix)); cName != "" && cfg.CName == "" {
+	if cName := os.Getenv(prefixVar("C_NAME", prefix)); cName != "" && cfg.CName == "" {
 		cfg.CName = cName
 	}
 	return nil
@@ -102,3 +137,51 @@ func (cfg *Config) LoadConfig(configFName string) error {
 	}
 	return nil
 }
+
+// SampleConfig display a minimal configuration for the rdmutil
+// cli.  The minimal values in the configuration are "invenio_api"
+// url and "invenio_token" holding the access token.
+//
+// ```
+//    src, err := SampleConfig("irdmtools.json")
+//    if err != nil {
+//        // ... handle error ...
+//    }
+//    fmt.Printf("%s\n", src)
+// ```
+func SampleConfig(configFName string) ([]byte, error) {
+	if configFName == "" {
+		configFName = "irdmtools.json"
+	}
+	if _, err := os.Stat(configFName); err == nil {
+		src, err := os.ReadFile(configFName)
+		if err != nil {
+			return nil, fmt.Errorf("%s already exists, failed to read file %s", configFName, err)
+		}
+		// NOTE: If we're reading the file from disk about copying the 
+		// Invenio access token.
+		if s := bytes.TrimSpace(src); len(s) > 0 {
+			config := new(Config)
+			err := json.Unmarshal(src, &config)
+			if err != nil {
+				return nil, err
+			}
+			config.InvenioToken = `__INVENIO_TOKEN_GOES_HERE__`
+			src, err = json.MarshalIndent(config, "", "    ")
+			return src, err
+		}
+	}
+	invenioAPI := os.Getenv("RDM_INVENIO_API")
+	if invenioAPI == "" {
+		invenioAPI = "http://localhost:5000"
+	}
+	//invenioToken := os.Getenv("INVENIO_TOKEN")
+	config := new(Config)
+	// By default we look for Invenio-RDM as installed with
+	// docker on localhost:5000
+	config.InvenioAPI = invenioAPI
+	config.InvenioToken = `__INVENIO_TOKEN_GOES_HERE__`
+	src, err := json.MarshalIndent(config, "", "    ")
+	return src, err
+}
+
