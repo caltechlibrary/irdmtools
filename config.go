@@ -6,21 +6,21 @@
 //
 // Copyright (c) 2023, Caltech
 // All rights not granted herein are expressly reserved by Caltech.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 // 1. Redistributions of source code must retain the above copyright notice,
 // this list of conditions and the following disclaimer.
-// 
+//
 // 2. Redistributions in binary form must reproduce the above copyright notice,
 // this list of conditions and the following disclaimer in the documentation
 // and/or other materials provided with the distribution.
-// 
+//
 // 3. Neither the name of the copyright holder nor the names of its contributors
 // may be used to endorse or promote products derived from this software without
 // specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 // AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 // IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -61,6 +61,8 @@ type Config struct {
 	InvenioStorage string `json:"invenio_storage,omitempty"`
 	// CName holds the dataset collection name used when harvesting content
 	CName string `json:"c_name,omitempty"`
+	// MailTo holds an email address to use when an email (e.g. CrossRef API access) is needed
+	MailTo string `json:"mailto,omitempty"`
 	// ds his a non-public point to an dataset collection structure
 	ds *dataset.Collection
 }
@@ -100,6 +102,9 @@ func (cfg *Config) LoadEnv(prefix string) error {
 	if cName := os.Getenv(prefixVar("C_NAME", prefix)); cName != "" && cfg.CName == "" {
 		cfg.CName = cName
 	}
+	if mailTo := os.Getenv(prefixVar("MAILTO", prefix)); mailTo != "" && cfg.MailTo == "" {
+		cfg.MailTo = mailTo
+	}
 	return nil
 }
 
@@ -116,6 +121,8 @@ func (cfg *Config) LoadEnv(prefix string) error {
 //	}
 //	fmt.Printf("Invenio RDM API UTL: %q\n", cfg.IvenioAPI)
 //	fmt.Printf("Invenio RDM token: %q\n", cfg.InvenioToken)
+//	fmt.Printf("Dataset Collection: %q\n", cfg.CName)
+//	fmt.Printf("MailTo: %q\n", cfg.MailTo)
 //
 // ```
 func (cfg *Config) LoadConfig(configFName string) error {
@@ -143,11 +150,13 @@ func (cfg *Config) LoadConfig(configFName string) error {
 // url and "invenio_token" holding the access token.
 //
 // ```
-//    src, err := SampleConfig("irdmtools.json")
-//    if err != nil {
-//        // ... handle error ...
-//    }
-//    fmt.Printf("%s\n", src)
+//
+//	src, err := SampleConfig("irdmtools.json")
+//	if err != nil {
+//	    // ... handle error ...
+//	}
+//	fmt.Printf("%s\n", src)
+//
 // ```
 func SampleConfig(configFName string) ([]byte, error) {
 	if configFName == "" {
@@ -158,7 +167,7 @@ func SampleConfig(configFName string) ([]byte, error) {
 		if err != nil {
 			return nil, fmt.Errorf("%s already exists, failed to read file %s", configFName, err)
 		}
-		// NOTE: If we're reading the file from disk about copying the 
+		// NOTE: If we're reading the file from disk about copying the
 		// Invenio access token.
 		if s := bytes.TrimSpace(src); len(s) > 0 {
 			config := new(Config)
@@ -176,12 +185,22 @@ func SampleConfig(configFName string) ([]byte, error) {
 		invenioAPI = "http://localhost:5000"
 	}
 	//invenioToken := os.Getenv("INVENIO_TOKEN")
+	cName := os.Getenv("RDM_C_NAME")
+	if cName == "" {
+		cName = "__DATASET_COLLECTION_NAME_GOES_HERE__"
+	}
+
+	mailTo := os.Getenv("RDM_MAILTO")
+	if mailTo == "" {
+		mailTo = "__CROSSREF_API_MAILTO_GOES_HERE__"
+	}
 	config := new(Config)
 	// By default we look for Invenio-RDM as installed with
 	// docker on localhost:5000
 	config.InvenioAPI = invenioAPI
 	config.InvenioToken = `__INVENIO_TOKEN_GOES_HERE__`
+	config.CName = cName
+	config.MailTo = mailTo
 	src, err := json.MarshalIndent(config, "", "    ")
 	return src, err
 }
-

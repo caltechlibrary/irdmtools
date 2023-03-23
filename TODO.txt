@@ -1,0 +1,15 @@
+
+Todo
+====
+
+Bugs
+----
+
+Next
+----
+
+- [ ] Implement a first pass at a CrossRef/DataCite to Invenio RDM record
+- [x] Implement a first pass at a harvester
+- [x] Figure out a way to retrieve RDM ids without using the API, e.g. safely SQL via PostgreSQL or create a separate end point. The API max results returned is 10K and we're going to have many more records than that
+
+

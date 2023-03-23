@@ -5,21 +5,21 @@
 //
 // Copyright (c) 2023, Caltech
 // All rights not granted herein are expressly reserved by Caltech.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 // 1. Redistributions of source code must retain the above copyright notice,
 // this list of conditions and the following disclaimer.
-// 
+//
 // 2. Redistributions in binary form must reproduce the above copyright notice,
 // this list of conditions and the following disclaimer in the documentation
 // and/or other materials provided with the distribution.
-// 
+//
 // 3. Neither the name of the copyright holder nor the names of its contributors
 // may be used to endorse or promote products derived from this software without
 // specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 // AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 // IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -34,6 +34,7 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
 	"os"
@@ -59,14 +60,11 @@ var (
 
 # DESCRIPTION
 
-{app_name} is a Caltech Library centric application that takes one or
-more DOI, queries the CrossRef API and if that fails the DataCite API
-and returns a JSON document suitable for import into Invenio RDM. The
-DOI can be in either their canonical form or URL form 
+{app_name} is a Caltech Library centric command line application
+that takes a DOI, queries the CrossRef API and if that fails the DataCite API
+before returning a JSON document suitable for import into Invenio RDM. The
+DOI can be in either their canonical form or URL form
 (e.g. "10.1021/acsami.7b15651" or "https://doi.org/10.1021/acsami.7b15651").
-
-If you pass a filename instead of a DOI then the DOI will be read from
-the the file expecting one DOI per line.
 
 # OPTIONS
 
@@ -78,6 +76,9 @@ the the file expecting one DOI per line.
 
 -version
 : display version
+
+-config FILENAME
+: use configuration file
 
 -crossref
 : only search CrossRef API for DOI records
@@ -94,7 +95,17 @@ the the file expecting one DOI per line.
 -mailto
 : (string) set the mailto value for CrossRef API access (default "helpdesk@library.caltech.edu")
 
+-setup
+: Display an example configuration or the configuration
+
 # EXAMPLES
+
+Example generating a configuration example irdmtools saving
+the configuration to a text file named "doi2rdm.json".
+
+~~~
+{app_name} -setup >doi2rdm.json
+~~~
 
 Example generating a JSON document for a single DOI. The resulting
 text file is called "article.json".
@@ -103,24 +114,9 @@ text file is called "article.json".
 	{app_name} "10.1021/acsami.7b15651" >article.json
 ~~~
 
-Example generating a JSON document for two DOI. The resulting
-text file is called "articles.json".
-
-~~~
-	{app_name} "10.1021/acsami.7b15651" "10.1093/mnras/stu2495" >articles.json
-~~~
-
-Example processing a list of DOIs in a text file called "doi-list.txt" and
-writing the output to a JSON document called "articles.json".
-
-~~~
-	{app_name} doi-list.txt >articles.json
-~~~
 
 `
-
 )
-
 
 func fmtTxt(txt string, appName string) string {
 	return strings.ReplaceAll(strings.ReplaceAll(txt, "{app_name}", appName), "{version}", irdmtools.Version)
@@ -131,10 +127,11 @@ func main() {
 	showHelp, showVersion, showLicense := false, false, false
 	configFName, debug, downloadDocument := "", false, false
 	useCrossRef, useDataCite, dotInitials := false, false, false
-	mailTo := ""
+	mailTo, showSetup := "", false
 	flag.BoolVar(&showHelp, "help", false, "display help")
 	flag.BoolVar(&showVersion, "version", false, "display version")
 	flag.BoolVar(&showLicense, "license", false, "display license")
+	flag.BoolVar(&showSetup, "setup", false, "show (example) configuration file for "+appName)
 	flag.StringVar(&configFName, "config", configFName, "use a config file")
 	flag.BoolVar(&useCrossRef, "crossref", useCrossRef, "only search CrossRef API for DOI records")
 	flag.BoolVar(&useDataCite, "datacite", useDataCite, "only search DataCite API for DOI records")
@@ -158,12 +155,6 @@ func main() {
 		fmt.Fprintf(os.Stdout, "%s\n", irdmtools.LicenseText)
 		os.Exit(0)
 	}
-	if len(args) == 0 {
-		fmt.Fprintf(os.Stderr, "%s\n", fmtTxt(helpText, appName))
-		fmt.Fprintf(os.Stderr, "%s %s\n", appName, irdmtools.Version)
-		os.Exit(1)
-	}
-
 	options := map[string]string{}
 	if useCrossRef {
 		options["crossref_only"] = "true"
@@ -183,27 +174,32 @@ func main() {
 	if debug {
 		options["debug"] = "true"
 	}
-	
+	if showSetup {
+		options["setup"] = "true"
+	}
+
 	// Create a appity object
 	app := new(irdmtools.Doi2Rdm)
-	if len(args) == 0 {
-		fmt.Fprintf(os.Stderr, "missing action, don't know what to do\n")
-		os.Exit(1)
-	}
-	// To start we assume the first parameter is an action
-	action, params := args[0], args[1:]
 	// double check to see if -setup was used, and adjust
-	if action == "setup" {
-		if len(params) == 0 {
-			params = append(params, configFName)
+	if showSetup {
+		src, err := irdmtools.SampleConfig(configFName)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%s\n", err)
+			os.Exit(1)
 		}
+		fmt.Fprintf(os.Stdout, "%s\n", bytes.TrimSpace(src))
+		os.Exit(0)
 	} else {
 		if err := app.Configure(configFName, "RDM_", debug); err != nil {
 			fmt.Fprintf(os.Stderr, "%s\n", err)
 			os.Exit(1)
 		}
 	}
-	if err := app.Run(os.Stdin, os.Stdout, os.Stderr, options, action, params); err != nil {
+	if len(args) != 1 {
+		fmt.Fprintf(os.Stderr, "expected a single DOI on the command line")
+		os.Exit(1)
+	}
+	if err := app.Run(os.Stdin, os.Stdout, os.Stderr, options, args[0]); err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
 		os.Exit(1)
 	}

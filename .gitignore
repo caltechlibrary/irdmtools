@@ -94,4 +94,4 @@ __pycache__
 testout
 bin/*
 dist/*
-
+_codemeta.json

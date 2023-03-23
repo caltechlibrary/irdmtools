@@ -5,7 +5,10 @@ go 1.19
 require github.com/caltechlibrary/simplified v0.0.0-20230201231043-dc3b4ddcdfc8
 
 require (
+	github.com/caltechlibrary/crossrefapi v1.0.0 // indirect
+	github.com/caltechlibrary/dataciteapi v1.0.1 // indirect
 	github.com/caltechlibrary/dataset/v2 v2.1.1 // indirect
+	github.com/caltechlibrary/doitools v0.0.1 // indirect
 	github.com/caltechlibrary/dotpath v0.0.4 // indirect
 	github.com/caltechlibrary/dsv1 v0.0.0-20220817192039-7c2741c5699d // indirect
 	github.com/caltechlibrary/pairtree v1.0.2 // indirect

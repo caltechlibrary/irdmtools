@@ -12,14 +12,11 @@ doi2rdm [OPTIONS] DOI_OR_FILENAME
 
 # DESCRIPTION
 
-doi2rdm is a Caltech Library centric application that takes one or
-more DOI, queries the CrossRef API and if that fails the DataCite API
-and returns a JSON document suitable for import into Invenio RDM. The
-DOI can be in either their canonical form or URL form 
+doi2rdm is a Caltech Library centric command line application
+that takes a DOI, queries the CrossRef API and if that fails the DataCite API
+before returning a JSON document suitable for import into Invenio RDM. The
+DOI can be in either their canonical form or URL form
 (e.g. "10.1021/acsami.7b15651" or "https://doi.org/10.1021/acsami.7b15651").
-
-If you pass a filename instead of a DOI then the DOI will be read from
-the the file expecting one DOI per line.
 
 # OPTIONS
 
@@ -31,6 +28,9 @@ the the file expecting one DOI per line.
 
 -version
 : display version
+
+-config FILENAME
+: use configuration file
 
 -crossref
 : only search CrossRef API for DOI records
@@ -47,7 +47,17 @@ the the file expecting one DOI per line.
 -mailto
 : (string) set the mailto value for CrossRef API access (default "helpdesk@library.caltech.edu")
 
+-setup
+: Display an example configuration or the configuration
+
 # EXAMPLES
+
+Example generating a configuration example irdmtools saving
+the configuration to a text file named "doi2rdm.json".
+
+~~~
+doi2rdm -setup >doi2rdm.json
+~~~
 
 Example generating a JSON document for a single DOI. The resulting
 text file is called "article.json".
@@ -56,18 +66,5 @@ text file is called "article.json".
 	doi2rdm "10.1021/acsami.7b15651" >article.json
 ~~~
 
-Example generating a JSON document for two DOI. The resulting
-text file is called "articles.json".
-
-~~~
-	doi2rdm "10.1021/acsami.7b15651" "10.1093/mnras/stu2495" >articles.json
-~~~
-
-Example processing a list of DOIs in a text file called "doi-list.txt" and
-writing the output to a JSON document called "articles.json".
-
-~~~
-	doi2rdm doi-list.txt >articles.json
-~~~
 
 

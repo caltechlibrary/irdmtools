@@ -60,10 +60,10 @@
     "contributor": [
         {
             "@type": "Person",
-            "@id": "https://orcid.org/0000-0002-6539-638X",
-            "givenName": "George",
-            "familyName": "Porter",
-            "email": "george@library.caltech.edu",
+            "@id": "https://orcid.org/0000-0002-0026-2516",
+            "givenName": "Kathy",
+            "familyName": "Johnson",
+            "email": "kjohnson@caltech.edu",
             "affiliation": {
                 "@type": "Organization",
                 "name": "Caltech Library, Caltech"
@@ -71,10 +71,10 @@
         },
         {
             "@type": "Person",
-            "@id": "https://orcid.org/0000-0002-0026-2516",
-            "givenName": "Kathy",
-            "familyName": "Johnson",
-            "email": "kjohnson@caltech.edu",
+            "@id": "https://orcid.org/0000-0002-6539-638X",
+            "givenName": "George",
+            "familyName": "Porter",
+            "email": "george@library.caltech.edu",
             "affiliation": {
                 "@type": "Organization",
                 "name": "Caltech Library, Caltech"

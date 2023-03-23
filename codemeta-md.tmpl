@@ -30,14 +30,31 @@ ${for(author)}
 ${endfor}
 ${endif}
 
+${if(contributor)}
+### Contributors
+
+${for(contributor)}
+- ${it.givenName} ${it.familyName}
+${endfor}
+${endif}
+
 ${if(description)}
 ${description}
 ${endif}
 
+${if(keywords)}
+### Keywords
 
-${if(license)}- License: ${license}${endif}
-${if(codeRepository)}- GitHub: ${codeRepository}${endif}
-${if(issueTracker)}- Issues: ${issueTracker}${endif}
+${for(keywords)}
+- ${it}
+${endfor}
+${endif}
+
+### Software
+
+${if(license)}- License: [${license}](${license} "link to license")${endif}
+${if(codeRepository)}- GitHub: [${codeRepository}](${codeRepository} "link to GitHub")${endif}
+${if(issueTracker)}- Issues: [${issueTracker}](${issueTracker} "link to GitHub issues")${endif}
 
 
 ${if(programmingLanguage)}

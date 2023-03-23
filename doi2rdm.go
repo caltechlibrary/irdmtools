@@ -6,21 +6,21 @@
 //
 // Copyright (c) 2023, Caltech
 // All rights not granted herein are expressly reserved by Caltech.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 // 1. Redistributions of source code must retain the above copyright notice,
 // this list of conditions and the following disclaimer.
-// 
+//
 // 2. Redistributions in binary form must reproduce the above copyright notice,
 // this list of conditions and the following disclaimer in the documentation
 // and/or other materials provided with the distribution.
-// 
+//
 // 3. Neither the name of the copyright holder nor the names of its contributors
 // may be used to endorse or promote products derived from this software without
 // specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 // AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 // IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -35,11 +35,10 @@
 package irdmtools
 
 import (
-	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 )
-
 
 // Doi2Rdm holds the configuration for doi2rdm cli.
 type Doi2Rdm struct {
@@ -51,12 +50,14 @@ type Doi2Rdm struct {
 // if problem were encounter.
 //
 // ```
-//    app := new(irdmtools.Doi2Rdm)
-//    if err := app.Configure("irdmtools.json", "TEST_"); err != nil {
-//       // ... handle error ...
-//    }
-//    fmt.Printf("Invenio RDM API UTL: %q\n", app.Cfg.IvenioAPI)   
-//    fmt.Printf("Invenio RDM token: %q\n", app.Cfg.InvenioToken)   
+//
+//	app := new(irdmtools.Doi2Rdm)
+//	if err := app.Configure("irdmtools.json", "TEST_"); err != nil {
+//	   // ... handle error ...
+//	}
+//	fmt.Printf("Invenio RDM API UTL: %q\n", app.Cfg.IvenioAPI)
+//	fmt.Printf("Invenio RDM token: %q\n", app.Cfg.InvenioToken)
+//
 // ```
 func (app *Doi2Rdm) Configure(configFName string, envPrefix string, debug bool) error {
 	if app == nil {
@@ -90,31 +91,76 @@ func (app *Doi2Rdm) Configure(configFName string, envPrefix string, debug bool) 
 // Run.
 //
 // ```
-//    app := new(irdmtools.Doi2Rdm)
-//    if err := app.LoadConfig("irdmtools.json"); err != nil {
-//       // ... handle error ...
-//    }
-//    recordId := "wx0w-2231"
-//    src, err := app.Run(os.Stdin, os.Stdout, os.Stderr, 
-//                         "get_record", []string{recordId})
-//    if err != nil {
-//        // ... handle error ...
-//    }
-//    fmt.Printf("%s\n", src)
+//
+//	app := new(irdmtools.Doi2Rdm)
+//	if err := app.LoadConfig("irdmtools.json"); err != nil {
+//	   // ... handle error ...
+//	}
+//	recordId := "wx0w-2231"
+//	src, err := app.Run(os.Stdin, os.Stdout, os.Stderr,
+//	                     "get_record", []string{recordId})
+//	if err != nil {
+//	    // ... handle error ...
+//	}
+//	fmt.Printf("%s\n", src)
+//
 // ```
-func (app *Doi2Rdm) Run(in io.Reader, out io.Writer, eout io.Writer, options map[string]string, action string, params []string) error {
-	switch action {
-	case "setup":
-		if len(params) == 0 {
-			return fmt.Errorf("missing configuration name")
+func (app *Doi2Rdm) Run(in io.Reader, out io.Writer, eout io.Writer, options map[string]string, doi string) error {
+	queryCrossRef, queryDataCite, debug := true, true, false
+	dotInitials, downloadDocument := false, false
+	mailTo := ""
+	for opt, val := range options {
+		switch opt {
+		case "crossref_only":
+			queryCrossRef = true
+			queryDataCite = false
+		case "datacite_only":
+			queryCrossRef = false
+			queryDataCite = true
+		case "dot-initials":
+			dotInitials = true
+		case "download":
+			downloadDocument = true
+		case "mailto":
+			mailTo = val
+		case "debug":
+			debug = true
+		default:
+			return fmt.Errorf("%q parameter is not supported", opt)
 		}
-		src, err := SampleConfig(params[0])
+	}
+
+	if queryCrossRef {
+		obj, err := QueryCrossRef(app.Cfg, doi, mailTo, dotInitials, downloadDocument, debug)
 		if err != nil {
 			return err
 		}
-		fmt.Fprintf(out, "%s\n", bytes.TrimSpace(src))
-	default:
-		return fmt.Errorf("%q action is not supported", action)
+		rec, err := CrosswalkCrossRef(app.Cfg, obj, debug)
+		if err != nil {
+			return err
+		}
+		src, err := json.MarshalIndent(rec, "", "    ")
+		if err != nil {
+			return err
+		}
+		fmt.Fprintf(out, "%s\n", src)
+		return nil
 	}
-	return nil
+	if queryDataCite {
+		obj, err := QueryDataCite(app.Cfg, doi, mailTo, dotInitials, downloadDocument, debug)
+		if err != nil {
+			return err
+		}
+		rec, err := CrosswalkDataCite(app.Cfg, obj, debug)
+		if err != nil {
+			return err
+		}
+		src, err := json.MarshalIndent(rec, "", "    ")
+		if err != nil {
+			return err
+		}
+		fmt.Fprintf(out, "%s\n", src)
+		return nil
+	}
+	return fmt.Errorf("%s not found", doi)
 }

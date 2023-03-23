@@ -24,15 +24,12 @@ doi2rdm
 doi2rdm OPTIONS DOI_OR_FILENAME
 .SH DESCRIPTION
 .PP
-doi2rdm is a Caltech Library centric application that takes one or more
-DOI, queries the CrossRef API and if that fails the DataCite API and
-returns a JSON document suitable for import into Invenio RDM.
+doi2rdm is a Caltech Library centric command line application that takes
+a DOI, queries the CrossRef API and if that fails the DataCite API
+before returning a JSON document suitable for import into Invenio RDM.
 The DOI can be in either their canonical form or URL form
 (e.g.\ \[lq]10.1021/acsami.7b15651\[rq] or
 \[lq]https://doi.org/10.1021/acsami.7b15651\[rq]).
-.PP
-If you pass a filename instead of a DOI then the DOI will be read from
-the the file expecting one DOI per line.
 .SH OPTIONS
 .TP
 -help
@@ -43,6 +40,9 @@ display license
 .TP
 -version
 display version
+.TP
+-config FILENAME
+use configuration file
 .TP
 -crossref
 only search CrossRef API for DOI records
@@ -59,7 +59,19 @@ attempt to download the digital object if object URL provided
 -mailto
 (string) set the mailto value for CrossRef API access (default
 \[lq]helpdesk\[at]library.caltech.edu\[rq])
+.TP
+-setup
+Display an example configuration or the configuration
 .SH EXAMPLES
+.PP
+Example generating a configuration example irdmtools saving the
+configuration to a text file named \[lq]doi2rdm.json\[rq].
+.IP
+.nf
+\f[C]
+doi2rdm -setup >doi2rdm.json
+\f[R]
+.fi
 .PP
 Example generating a JSON document for a single DOI.
 The resulting text file is called \[lq]article.json\[rq].
@@ -67,25 +79,6 @@ The resulting text file is called \[lq]article.json\[rq].
 .nf
 \f[C]
     doi2rdm \[dq]10.1021/acsami.7b15651\[dq] >article.json
-\f[R]
-.fi
-.PP
-Example generating a JSON document for two DOI.
-The resulting text file is called \[lq]articles.json\[rq].
-.IP
-.nf
-\f[C]
-    doi2rdm \[dq]10.1021/acsami.7b15651\[dq] \[dq]10.1093/mnras/stu2495\[dq] >articles.json
-\f[R]
-.fi
-.PP
-Example processing a list of DOIs in a text file called
-\[lq]doi-list.txt\[rq] and writing the output to a JSON document called
-\[lq]articles.json\[rq].
-.IP
-.nf
-\f[C]
-    doi2rdm doi-list.txt >articles.json
 \f[R]
 .fi
 .SH AUTHORS

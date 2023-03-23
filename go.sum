@@ -1,5 +1,14 @@
+github.com/caltechlibrary/cli v0.0.17/go.mod h1:9crFPycCNeyTWautZ0t/YjaW8Clsr9uQZfq/SNNwhak=
+github.com/caltechlibrary/crossrefapi v1.0.0 h1:GzEuJkfXhpA/GGQiDQxmKz3p0FCPBjm7fuwfvQi0yR4=
+github.com/caltechlibrary/crossrefapi v1.0.0/go.mod h1:r4FOWs1SNtDW45UGKAwC73Ohg4T1sJlVmUrfInrVvi8=
+github.com/caltechlibrary/dataciteapi v1.0.1 h1:qFkqdbEOT4trKcpqeLg08NUgDObMOgjAJhegP0sop8Q=
+github.com/caltechlibrary/dataciteapi v1.0.1/go.mod h1:T6oYVCoQyHRi/0qPI+K5PM//F7M5YkrHqzVMfrPlsn8=
 github.com/caltechlibrary/dataset/v2 v2.1.1 h1:sjBX22tPKYxhb6++K5EHzQK+OLqJWcfOFnVVL4YWij4=
 github.com/caltechlibrary/dataset/v2 v2.1.1/go.mod h1:2m+INaWKriTLr9ZJXu5viKlGAxxfdVUvTLZUfgEzTlQ=
+github.com/caltechlibrary/doitools v0.0.0-20190910184449-c524f84bb2b3 h1:CPVAtgb3KfFDvN/LA6lk3JGT76tVC+PohQWynTkS52s=
+github.com/caltechlibrary/doitools v0.0.0-20190910184449-c524f84bb2b3/go.mod h1:dBtDM+sEd5W27XSuPTcYGUNmkO9PWJ4JMh5bW1EO8L0=
+github.com/caltechlibrary/doitools v0.0.1 h1:c6lvI5l9juo019GGUvuwbzeyv1c6VtSi8mkUv1drgwY=
+github.com/caltechlibrary/doitools v0.0.1/go.mod h1:1K36p/UIkIFM0JVaIVtFStKsFu5xjjYWMWAUExmFnP0=
 github.com/caltechlibrary/dotpath v0.0.4 h1:ghc3XZefLPDhQnUo9oXqvz8vfh52QOE0BjK5qOD9RQU=
 github.com/caltechlibrary/dotpath v0.0.4/go.mod h1:rAu0NPuhTaEa9szxXq92x/JmMmedjsEEdHl5uTxzzs0=
 github.com/caltechlibrary/dsv1 v0.0.0-20220817192039-7c2741c5699d h1:SGz3rTkjsp/8tEkFXTRHaJxqyeeDiL210QD69Bn7bd0=

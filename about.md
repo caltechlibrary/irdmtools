@@ -31,13 +31,26 @@ About this software
 - R. S. Doiel
 - Tom Morrell
 
+### Contributors
+
+- Kathy Johnson
+- George Porter
+
 Tools for working with institutional repositories and data management
 systems. Current implementation targets Invenio-RDM.
 
+### Keywords
 
-- License: https://spdx.org/licenses/BSD-3-Clause-Clear
-- GitHub: https://github.com/caltechlibrary/irdmtools
-- Issues: https://github.com/caltechlibrary/irdmtools/issues
+- institutional repository
+- data management
+- Invenio
+- Invenio-RDM
+
+### Software
+
+- License: [https://spdx.org/licenses/BSD-3-Clause-Clear](https://spdx.org/licenses/BSD-3-Clause-Clear "link to license")
+- GitHub: [https://github.com/caltechlibrary/irdmtools](https://github.com/caltechlibrary/irdmtools "link to GitHub")
+- Issues: [https://github.com/caltechlibrary/irdmtools/issues](https://github.com/caltechlibrary/irdmtools/issues "link to GitHub issues")
 
 
 ### Programming languages
