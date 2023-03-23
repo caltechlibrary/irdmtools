@@ -6,21 +6,21 @@
 //
 // Copyright (c) 2023, Caltech
 // All rights not granted herein are expressly reserved by Caltech.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 // 1. Redistributions of source code must retain the above copyright notice,
 // this list of conditions and the following disclaimer.
-// 
+//
 // 2. Redistributions in binary form must reproduce the above copyright notice,
 // this list of conditions and the following disclaimer in the documentation
 // and/or other materials provided with the distribution.
-// 
+//
 // 3. Neither the name of the copyright holder nor the names of its contributors
 // may be used to endorse or promote products derived from this software without
 // specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 // AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 // IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -45,7 +45,7 @@ import (
 	"github.com/caltechlibrary/dataset/v2"
 )
 
-func Harvest(cfg *Config, fName string) error {
+func Harvest(cfg *Config, fName string, debug bool) error {
 	cName := cfg.CName
 	if cName == "" {
 		return fmt.Errorf("dataset collection not configured")
@@ -69,27 +69,49 @@ func Harvest(cfg *Config, fName string) error {
 	l := log.New(os.Stderr, "", 1)
 	const maxErrors = 100
 	eCnt, hCnt, tot := 0, 0, len(recordIds)
+	if debug {
+		l.Printf("%d records ids", tot)
+	}
 	t0 := time.Now()
 	for i, id := range recordIds {
-		l.Printf("DEBUG getting record %q", id)
-		rec, err := GetRecord(cfg, id)
+		if debug {
+			l.Printf("getting record %q (%d/%d)", id, i, tot)
+		}
+		rec, rl, err := GetRecord(cfg, id)
+		// The rest API seems to have two rate limits, 5000 requests per hour and 500 requests per minute
+		timeToWait := rl.TimeToWait()
+		timeUntilReset, resetAt := rl.TimeToReset()
+		if debug {
+			rl.Fprintf(os.Stderr)
+		}
+		if rl.Remaining < 10 {
+			// Throttle for which ever is further in the future
+			if timeUntilReset > timeToWait {
+				l.Printf("waiting %s for reset (%s) before continuing (%d/%d)", timeUntilReset.Truncate(time.Second), resetAt.Format("3:04PM"), i, tot)
+				time.Sleep(timeUntilReset)
+			} else {
+				l.Printf("waiting %s before continuing requests (%d/%d)", timeToWait.Truncate(time.Second), i, tot)
+				time.Sleep(timeToWait)
+			}
+		}
 		if err != nil {
 			l.Printf("failed to get (%d) %q, %s", i, id, err)
 			eCnt++
-		}
-		if c.HasKey(id) {
-			if err := c.Update(id, rec); err != nil {
-				l.Printf("failed to write %q to %s, %s", id, cName, err)
-				eCnt++
-			} else {
-				hCnt++
-			}
 		} else {
-			if err := c.Create(id, rec); err != nil {
-				l.Printf("failed to write %q to %s, %s", id, cName, err)
-				eCnt++
+			if c.HasKey(id) {
+				if err := c.Update(id, rec); err != nil {
+					l.Printf("failed to write %q to %s, %s", id, cName, err)
+					eCnt++
+				} else {
+					hCnt++
+				}
 			} else {
-				hCnt++
+				if err := c.Create(id, rec); err != nil {
+					l.Printf("failed to write %q to %s, %s", id, cName, err)
+					eCnt++
+				} else {
+					hCnt++
+				}
 			}
 		}
 		if eCnt > maxErrors {

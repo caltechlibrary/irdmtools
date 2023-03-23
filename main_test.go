@@ -6,21 +6,21 @@
 //
 // Copyright (c) 2023, Caltech
 // All rights not granted herein are expressly reserved by Caltech.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 // 1. Redistributions of source code must retain the above copyright notice,
 // this list of conditions and the following disclaimer.
-// 
+//
 // 2. Redistributions in binary form must reproduce the above copyright notice,
 // this list of conditions and the following disclaimer in the documentation
 // and/or other materials provided with the distribution.
-// 
+//
 // 3. Neither the name of the copyright holder nor the names of its contributors
 // may be used to endorse or promote products derived from this software without
 // specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 // AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 // IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -42,7 +42,7 @@ import (
 )
 
 var (
-	cfg *Config
+	cfg      *Config
 	useQuery string
 	idsFName string
 )
@@ -50,9 +50,10 @@ var (
 func TestMain(m *testing.M) {
 	var (
 		configFName string
-		envPrefix string
+		envPrefix   string
 	)
 	envPrefix = "TEST_"
+	l := log.New(os.Stderr, "", 1)
 
 	// call flag.Parse() here if TestMain uses flags
 	flag.StringVar(&configFName, "config", configFName, "config file for testing")
@@ -64,26 +65,26 @@ func TestMain(m *testing.M) {
 		cfg = new(Config)
 	}
 	if configFName != "" {
-		log.Printf("loading %s\n", configFName)
+		l.Printf("loading %s\n", configFName)
 		if err := cfg.LoadConfig(configFName); err != nil {
-			log.Fatal(err)
+			l.Fatal(err)
 		}
 	}
-	log.Printf("loading env using prefix %s\n", envPrefix)
+	if cfg.Debug {
+		l.Printf("loading env using prefix %s\n", envPrefix)
+	}
 	if err := cfg.LoadEnv(envPrefix); err != nil {
-		log.Fatal(err)
+		l.Fatal(err)
 	}
 	cfg.Debug = true
 	if cfg.InvenioAPI == "" {
-		log.Fatal("invenio api not configured")
+		l.Fatal("invenio api not configured")
 	}
 	if cfg.InvenioToken == "" {
-		log.Fatal("invenio troken not configured")
+		l.Fatal("invenio troken not configured")
 	}
-	if idsFName == "" {
-		log.Printf("missing testing Harvest, no ids file")
+	if idsFName == "" && cfg.Debug {
+		l.Printf("skipping testing Harvest, no ids file")
 	}
-	log.Printf("DEBUG testing Harvest with %q", idsFName)
 	os.Exit(m.Run())
 }
-

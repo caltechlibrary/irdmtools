@@ -6,21 +6,21 @@
 //
 // Copyright (c) 2023, Caltech
 // All rights not granted herein are expressly reserved by Caltech.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 // 1. Redistributions of source code must retain the above copyright notice,
 // this list of conditions and the following disclaimer.
-// 
+//
 // 2. Redistributions in binary form must reproduce the above copyright notice,
 // this list of conditions and the following disclaimer in the documentation
 // and/or other materials provided with the distribution.
-// 
+//
 // 3. Neither the name of the copyright holder nor the names of its contributors
 // may be used to endorse or promote products derived from this software without
 // specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 // AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 // IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -41,7 +41,6 @@ import (
 	"io"
 )
 
-
 // RdmUtil holds the configuration for rdmutil cli.
 type RdmUtil struct {
 	Cfg *Config
@@ -52,12 +51,14 @@ type RdmUtil struct {
 // if problem were encounter.
 //
 // ```
-//    app := new(irdmtools.RdmUtil)
-//    if err := app.Configure("irdmtools.json", "TEST_"); err != nil {
-//       // ... handle error ...
-//    }
-//    fmt.Printf("Invenio RDM API UTL: %q\n", app.Cfg.IvenioAPI)   
-//    fmt.Printf("Invenio RDM token: %q\n", app.Cfg.InvenioToken)   
+//
+//	app := new(irdmtools.RdmUtil)
+//	if err := app.Configure("irdmtools.json", "TEST_"); err != nil {
+//	   // ... handle error ...
+//	}
+//	fmt.Printf("Invenio RDM API UTL: %q\n", app.Cfg.IvenioAPI)
+//	fmt.Printf("Invenio RDM token: %q\n", app.Cfg.InvenioToken)
+//
 // ```
 func (app *RdmUtil) Configure(configFName string, envPrefix string, debug bool) error {
 	if app == nil {
@@ -86,20 +87,21 @@ func (app *RdmUtil) Configure(configFName string, envPrefix string, debug bool) 
 	return nil
 }
 
-
 // Query returns a byte slice for a JSON encode list
 // of record summaries or an error.
 //
 // ```
-//    app := new(irdmtools.RdmUtil)
-//    if err := app.LoadConfig("irdmtools.json"); err != nil {
-//       // ... handle error ...
-//    }
-//    src, err := app.Query("My favorite book", -1, "newest")
-//    if err != nil {
-//        // ... handle error ...
-//    }
-//    fmt.Printf("%s\n", src)
+//
+//	app := new(irdmtools.RdmUtil)
+//	if err := app.LoadConfig("irdmtools.json"); err != nil {
+//	   // ... handle error ...
+//	}
+//	src, err := app.Query("My favorite book", -1, "newest")
+//	if err != nil {
+//	    // ... handle error ...
+//	}
+//	fmt.Printf("%s\n", src)
+//
 // ```
 func (app *RdmUtil) Query(q string, sort string) ([]byte, error) {
 	records, err := Query(app.Cfg, q, sort)
@@ -118,15 +120,17 @@ func (app *RdmUtil) Query(q string, sort string) ([]byte, error) {
 // the given time range. If a problem occurs an error is returned.
 //
 // ```
-//    app := new(irdmtools.RdmUtil)
-//    if err := app.LoadConfig("irdmtools.json"); err != nil {
-//       // ... handle error ...
-//    }
-//    src, err := app.GetModifiedIds("2020-01-01", "2020-12-31")
-//    if err != nil {
-//        // ... handle error ...
-//    }
-//    fmt.Printf("%s\n", src)
+//
+//	app := new(irdmtools.RdmUtil)
+//	if err := app.LoadConfig("irdmtools.json"); err != nil {
+//	   // ... handle error ...
+//	}
+//	src, err := app.GetModifiedIds("2020-01-01", "2020-12-31")
+//	if err != nil {
+//	    // ... handle error ...
+//	}
+//	fmt.Printf("%s\n", src)
+//
 // ```
 func (app *RdmUtil) GetModifiedIds(start string, end string) ([]byte, error) {
 	ids, err := GetModifiedRecordIds(app.Cfg, start, end)
@@ -140,20 +144,21 @@ func (app *RdmUtil) GetModifiedIds(start string, end string) ([]byte, error) {
 	return src, nil
 }
 
-
 // GetRecordIds returns a byte slice for a JSON encode list
 // of record ids or an error.
 //
 // ```
-//    app := new(irdmtools.RdmUtil)
-//    if err := app.LoadConfig("irdmtools.json"); err != nil {
-//       // ... handle error ...
-//    }
-//    src, err := app.GetRecordIds()
-//    if err != nil {
-//        // ... handle error ...
-//    }
-//    fmt.Printf("%s\n", src)
+//
+//	app := new(irdmtools.RdmUtil)
+//	if err := app.LoadConfig("irdmtools.json"); err != nil {
+//	   // ... handle error ...
+//	}
+//	src, err := app.GetRecordIds()
+//	if err != nil {
+//	    // ... handle error ...
+//	}
+//	fmt.Printf("%s\n", src)
+//
 // ```
 func (app *RdmUtil) GetRecordIds() ([]byte, error) {
 	ids, err := GetRecordIds(app.Cfg)
@@ -171,19 +176,21 @@ func (app *RdmUtil) GetRecordIds() ([]byte, error) {
 // or an error.
 //
 // ```
-//    app := new(irdmtools.RdmUtil)
-//    if err := app.LoadConfig("irdmtools.json"); err != nil {
-//       // ... handle error ...
-//    }
-//    recordId := "woie-x0121"
-//    src, err := app.GetRecord(recordId)
-//    if err != nil {
-//        // ... handle error ...
-//    }
-//    fmt.Printf("%s\n", src)
+//
+//	app := new(irdmtools.RdmUtil)
+//	if err := app.LoadConfig("irdmtools.json"); err != nil {
+//	   // ... handle error ...
+//	}
+//	recordId := "woie-x0121"
+//	src, err := app.GetRecord(recordId)
+//	if err != nil {
+//	    // ... handle error ...
+//	}
+//	fmt.Printf("%s\n", src)
+//
 // ```
 func (app *RdmUtil) GetRecord(id string) ([]byte, error) {
-	rec, err := GetRecord(app.Cfg, id)
+	rec, _, err := GetRecord(app.Cfg, id)
 	if err != nil {
 		return nil, err
 	}
@@ -199,7 +206,7 @@ func (app *RdmUtil) GetRecord(id string) ([]byte, error) {
 // must exist and be configured in either the environment or
 // configuration file.
 func (app *RdmUtil) Harvest(fName string) error {
-	return Harvest(app.Cfg, fName)
+	return Harvest(app.Cfg, fName, app.Cfg.Debug)
 }
 
 // Run implements the irdmapp cli behaviors. With the exception of the
@@ -207,17 +214,19 @@ func (app *RdmUtil) Harvest(fName string) error {
 // Run.
 //
 // ```
-//    app := new(irdmtools.RdmUtil)
-//    if err := app.LoadConfig("irdmtools.json"); err != nil {
-//       // ... handle error ...
-//    }
-//    recordId := "wx0w-2231"
-//    src, err := app.Run(os.Stdin, os.Stdout, os.Stderr, 
-//                         "get_record", []string{recordId})
-//    if err != nil {
-//        // ... handle error ...
-//    }
-//    fmt.Printf("%s\n", src)
+//
+//	app := new(irdmtools.RdmUtil)
+//	if err := app.LoadConfig("irdmtools.json"); err != nil {
+//	   // ... handle error ...
+//	}
+//	recordId := "wx0w-2231"
+//	src, err := app.Run(os.Stdin, os.Stdout, os.Stderr,
+//	                     "get_record", []string{recordId})
+//	if err != nil {
+//	    // ... handle error ...
+//	}
+//	fmt.Printf("%s\n", src)
+//
 // ```
 func (app *RdmUtil) Run(in io.Reader, out io.Writer, eout io.Writer, action string, params []string) error {
 	switch action {

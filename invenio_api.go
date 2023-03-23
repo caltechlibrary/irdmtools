@@ -6,21 +6,21 @@
 //
 // Copyright (c) 2023, Caltech
 // All rights not granted herein are expressly reserved by Caltech.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are met:
-// 
+//
 // 1. Redistributions of source code must retain the above copyright notice,
 // this list of conditions and the following disclaimer.
-// 
+//
 // 2. Redistributions in binary form must reproduce the above copyright notice,
 // this list of conditions and the following disclaimer in the documentation
 // and/or other materials provided with the distribution.
-// 
+//
 // 3. Neither the name of the copyright holder nor the names of its contributors
 // may be used to endorse or promote products derived from this software without
 // specific prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 // AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 // IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -43,10 +43,8 @@ import (
 	"net/http"
 	"net/url"
 	"os"
-	"strconv"
 	"strings"
 	"time"
-
 	// Caltech Library Packages
 	//	"github.com/caltechlibrary/simplified"
 )
@@ -99,62 +97,45 @@ type Links struct {
 	Prev string `json:"prev,omitempty"`
 }
 
-func dbgPrintf(cfg *Config, s string, args... interface{}) {
+func dbgPrintf(cfg *Config, s string, args ...interface{}) {
 	if cfg.Debug {
 		if strings.HasSuffix(s, "\n") {
-			fmt.Fprintf(os.Stderr, s , args...)
+			fmt.Fprintf(os.Stderr, s, args...)
 		} else {
-			fmt.Fprintf(os.Stderr, s + "\n", args...)
+			fmt.Fprintf(os.Stderr, s+"\n", args...)
 		}
 	}
-}
-
-func ratelimitPrintf(resp *http.Response) {
-		limit := resp.Header.Values("X-RateLimit-Limit")
-		remaining := resp.Header.Values("X-RateLimit-Remaining")
-		reset := resp.Header.Values("X-RateLimit-Reset")
-		if len(limit) > 0 {
-			fmt.Fprintf(os.Stderr, "limit %s\n", limit[0])
-		}
-		if len(remaining) > 0 {
-			fmt.Fprintf(os.Stderr, "remaining %s\n", limit[0])
-		}
-		if len(reset) > 0 {
-			t, err := strconv.Atoi(reset[0])
-			if err == nil {
-				tm := time.Unix(int64(t), 0);
-				fmt.Fprintf(os.Stderr, "rate limit reset at %s\n", tm.Format(time.RFC1123))
-			}
-		}
 }
 
 // getJSON sends a request to the InvenioAPI using
 // a token, url and values as parameters. It return a
 // JSON encoded response as byte slice
-func getJSON(token string, uri string) ([]byte, error) {
+func getJSON(token string, uri string) ([]byte, *RateLimit, error) {
+	rl := new(RateLimit)
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", uri, nil)
 	if err != nil {
-		return nil, err
+		return nil, rl, err
 	}
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
 	req.Header.Add("Content-type", "application/json")
 	resp, err := client.Do(req)
+	rl.FromResponse(resp, time.Minute)
 	if err != nil {
-		return nil, err
+		return nil, rl, err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode == 429 {
-		ratelimitPrintf(resp)
-	} 
+		rl.Fprintf(os.Stderr)
+	}
 	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("%s %s", resp.Status, uri)
-	} 
+		return nil, rl, fmt.Errorf("%s %s", resp.Status, uri)
+	}
 	src, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, rl, err
 	}
-	return src, nil
+	return src, rl, nil
 }
 
 // getXML sends a request to the Invenio API (e.g. OAI-PMH) using
@@ -173,12 +154,9 @@ func getXML(token string, uri string) ([]byte, http.Header, error) {
 		return nil, resp.Header, err
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode == 429 {
-		ratelimitPrintf(resp)
-	}
 	if resp.StatusCode != 200 {
 		return nil, resp.Header, fmt.Errorf("%s %s", resp.Status, uri)
-	} 
+	}
 	src, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, resp.Header, err
@@ -213,30 +191,43 @@ func Query(cfg *Config, q string, sort string) ([]map[string]interface{}, error)
 	uri := fmt.Sprintf("%s/api/records?sort=%s&q=%s", u.String(), sort, q)
 	tot := 0
 	results := new(QueryResponse)
-   	records := []map[string]interface{}{}
+	records := []map[string]interface{}{}
 	for uri != "" {
 		dbgPrintf(cfg, "requesting %s", uri)
-    	src, err := getJSON(cfg.InvenioToken, uri)
-    	if err != nil {
-    		return nil, err
-    	}
-    	// NOTE: Need to unparse the response structure and
-    	// then extract the IDs from the individual Hits results
-    	if err := json.Unmarshal(src, &results); err != nil {
-    		return nil, err
-    	}
-    	if results != nil && results.Hits != nil &&
-    		results.Hits.Hits != nil && len(results.Hits.Hits) > 0 {
-    		for _, hit := range results.Hits.Hits {
-    			records = append(records, hit)
-    		}
-    		tot = results.Hits.Total
-    		dbgPrintf(cfg, "(%d/%d) %s\n", len(records), tot, q)
-    	}
+		src, rl, err := getJSON(cfg.InvenioToken, uri)
+		if err != nil {
+			return nil, err
+		}
+		// NOTE: Need to unparse the response structure and
+		// then extract the IDs from the individual Hits results
+		if err := json.Unmarshal(src, &results); err != nil {
+			return nil, err
+		}
+		if results != nil && results.Hits != nil &&
+			results.Hits.Hits != nil && len(results.Hits.Hits) > 0 {
+			for _, hit := range results.Hits.Hits {
+				records = append(records, hit)
+			}
+			tot = results.Hits.Total
+			dbgPrintf(cfg, "(%d/%d) %s\n", len(records), tot, q)
+		}
 		if results.Links != nil && results.Links.Self != results.Links.Next {
-			uri = results.Links.Next;
+			uri = results.Links.Next
 		} else {
 			uri = ""
+		}
+		if uri != "" {
+			timeToWait := rl.TimeToWait()
+			timeToReset, resetAt := rl.TimeToReset()
+			if rl.Remaining < 10 {
+				if timeToWait > timeToReset {
+					dbgPrintf(cfg, "waiting %s", timeToWait)
+					time.Sleep(timeToWait)
+				} else {
+					dbgPrintf(cfg, "reset in %s at %s", timeToReset, resetAt.Format("03:04PM"))
+					time.Sleep(timeToReset)
+				}
+			}
 		}
 	}
 	return records, nil
@@ -255,34 +246,31 @@ func GetRecordIds(cfg *Config) ([]string, error) {
 	resumptionToken := "     "
 	uri := fmt.Sprintf("%s/oai2d?verb=ListIdentifiers&metadataPrefix=oai_dc", cfg.InvenioAPI)
 	for i := 0; resumptionToken != ""; i++ {
-		if i > 0 {	
+		if i > 0 {
 			v := url.Values{}
 			v.Set("resumptionToken", resumptionToken)
 			uri = fmt.Sprintf("%s/oai2d?verb=ListIdentifiers&%s", cfg.InvenioAPI, v.Encode())
 		}
 		src, headers, err := getXML(cfg.InvenioToken, uri)
-		xRateLimitLimit := headers.Values("X-RateLimit-Limit")
-		xRateLimitRemaining := headers.Values("X-RateLimit-Remaining")
 		if err != nil {
 			return nil, err
 		}
-
-		rateLimit, err := strconv.Atoi(xRateLimitLimit[0])
-		if err != nil {
-			rateLimit = 60
-		}
-		remaining, err := strconv.Atoi(xRateLimitRemaining[0])
-		if err != nil {
-			remaining = 0
-		}
-		secondsToWait := time.Duration(int(rateLimit/60)) * time.Second
+		rl := new(RateLimit)
+		rl.FromHeader(headers, time.Minute)
+		timeToWait := rl.TimeToWait()
+		timeToReset, resetAt := rl.TimeToReset()
 
 		// Pause to respect rate limits
 		// NOTE: Calculate when I can request more ids
-		if float64(remaining)/float64(rateLimit) <= 0.5 {
-			dbgPrintf(cfg, "waiting %s, %s\n", secondsToWait, uri)
-   			time.Sleep(secondsToWait)
-		} 
+		if rl.Remaining < 10 {
+			if timeToWait > timeToReset {
+				dbgPrintf(cfg, "waiting %s, %s\n", timeToWait, uri)
+				time.Sleep(timeToWait)
+			} else {
+				dbgPrintf(cfg, "resetting in %s at %s, %s\n", timeToReset, resetAt.Format("3:04PM"), uri)
+				time.Sleep(timeToReset)
+			}
+		}
 		if cfg.Debug {
 			os.WriteFile("oai-pmh-list-identifiers.xml", src, 0660)
 		}
@@ -292,32 +280,32 @@ func GetRecordIds(cfg *Config) ([]string, error) {
 			}
 			resumptionToken = ""
 		} else {
-    		oai := new(OAIListIdentifiersResponse)
-    		if err := xml.Unmarshal(src, oai); err != nil {
+			oai := new(OAIListIdentifiersResponse)
+			if err := xml.Unmarshal(src, oai); err != nil {
 				if cfg.Debug {
 					os.WriteFile("oai-pmh-error.html", src, 0660)
 				}
 				resumptionToken = ""
-    			return nil, err
-    		}
-    		if oai.ListIdentifiers != nil {
-    			resumptionToken = oai.ListIdentifiers.ResumptionToken
-    			if oai.ListIdentifiers.Headers != nil {
-    				for _, obj := range oai.ListIdentifiers.Headers {
-    					if obj.Identifier != "" {
-    						parts := strings.Split(obj.Identifier, ":")
-    						last := len(parts) - 1
-    						if last < 0 {
-    							last = 0
-    						}
-    						id := parts[len(parts)-1]
-    						ids = append(ids, id)
-    					}
-    				}
-    			}
-    		} else {
-    			resumptionToken = ""
-    		}
+				return nil, err
+			}
+			if oai.ListIdentifiers != nil {
+				resumptionToken = oai.ListIdentifiers.ResumptionToken
+				if oai.ListIdentifiers.Headers != nil {
+					for _, obj := range oai.ListIdentifiers.Headers {
+						if obj.Identifier != "" {
+							parts := strings.Split(obj.Identifier, ":")
+							last := len(parts) - 1
+							if last < 0 {
+								last = 0
+							}
+							id := parts[len(parts)-1]
+							ids = append(ids, id)
+						}
+					}
+				}
+			} else {
+				resumptionToken = ""
+			}
 		}
 		if (len(ids) % 500) == 0 {
 			dbgPrintf(cfg, "%d ids retrieved", len(ids))
@@ -348,63 +336,59 @@ func GetModifiedRecordIds(cfg *Config, start string, end string) ([]string, erro
 	uri := fmt.Sprintf("%s/oai2d?verb=ListIdentifiers&metadataPrefix=oai_dc&from=%s&until=%s", cfg.InvenioAPI, start, end)
 	dbgPrintf(cfg, "requesting %s", uri)
 	for i := 0; resumptionToken != ""; i++ {
-		if i > 0 {	
+		if i > 0 {
 			v := url.Values{}
 			v.Set("resumptionToken", resumptionToken)
 			uri = fmt.Sprintf("%s/oai2d?verb=ListIdentifiers&%s", cfg.InvenioAPI, v.Encode())
 		}
 		src, headers, err := getXML(cfg.InvenioToken, uri)
-		xRateLimitLimit := headers.Values("X-RateLimit-Limit")
-		xRateLimitRemaining := headers.Values("X-RateLimit-Remaining")
 		if err != nil {
 			return nil, err
 		}
-
-		rateLimit, err := strconv.Atoi(xRateLimitLimit[0])
-		if err != nil {
-			rateLimit = 60
-		}
-		remaining, err := strconv.Atoi(xRateLimitRemaining[0])
-		if err != nil {
-			remaining = 0
-		}
-		secondsToWait := time.Duration(int(rateLimit/60)) * time.Second
+		rl := new(RateLimit)
+		rl.FromHeader(headers, time.Minute)
+		timeToWait := rl.TimeToWait()
+		timeToReset, resetAt := rl.TimeToReset()
 
 		// Pause to respect rate limits
-		//FIXME: Need to calculate when I can request more ids
-		if float64(remaining)/float64(rateLimit) <= 0.5 {
-			dbgPrintf(cfg, "waiting %s, %s", secondsToWait, uri)
-   			time.Sleep(secondsToWait)
-		} 
-		//os.WriteFile("oai-pmh-list-identifiers.xml", src, 0660) // DEBUG
+		// NOTE: Need to calculate when I can request more ids
+		if rl.Remaining < 10 {
+			if timeToWait > timeToReset {
+				dbgPrintf(cfg, "waiting %s, %s", timeToWait, uri)
+				time.Sleep(timeToWait)
+			} else {
+				dbgPrintf(cfg, "reseting in %s at %s, %s", timeToReset, resetAt.Format("03:04PM"), uri)
+				time.Sleep(timeToReset)
+			}
+		}
 		if bytes.HasPrefix(src, []byte("<html")) {
+			// FIXME: Need to display error contained in the HTML response
 			os.WriteFile("oai-pmh-error.html", src, 0660) // DEBUG
 			resumptionToken = ""
 		} else {
-    		oai := new(OAIListIdentifiersResponse)
-    		if err := xml.Unmarshal(src, oai); err != nil {
-				os.WriteFile("oai-pmh-error.html", src, 0660) // DEBUG
+			oai := new(OAIListIdentifiersResponse)
+			if err := xml.Unmarshal(src, oai); err != nil {
 				resumptionToken = ""
-    			return nil, err
-    		}
-    		if oai.ListIdentifiers != nil {
-    			resumptionToken = oai.ListIdentifiers.ResumptionToken
-    			if oai.ListIdentifiers.Headers != nil {
-    				for _, obj := range oai.ListIdentifiers.Headers {
-    					if obj.Identifier != "" {
-    						parts := strings.Split(obj.Identifier, ":")
-    						last := len(parts) - 1
-    						if last < 0 {
-    							last = 0
-    						}
-    						id := parts[len(parts)-1]
-    						ids = append(ids, id)
-    					}
-    				}
-    			}
-    		} else {
-    			resumptionToken = ""
-    		}
+				return nil, err
+			}
+			if oai.ListIdentifiers != nil {
+				resumptionToken = oai.ListIdentifiers.ResumptionToken
+				if oai.ListIdentifiers.Headers != nil {
+					for _, obj := range oai.ListIdentifiers.Headers {
+						if obj.Identifier != "" {
+							parts := strings.Split(obj.Identifier, ":")
+							last := len(parts) - 1
+							if last < 0 {
+								last = 0
+							}
+							id := parts[len(parts)-1]
+							ids = append(ids, id)
+						}
+					}
+				}
+			} else {
+				resumptionToken = ""
+			}
 		}
 		if (len(ids) % 500) == 0 {
 			dbgPrintf(cfg, "%d ids retrieved for %s - %s", len(ids), start, end)
@@ -414,32 +398,40 @@ func GetModifiedRecordIds(cfg *Config, start string, end string) ([]string, erro
 	return ids, nil
 }
 
-
-
-
 // GetRecord takes a configuration object and record id,
-// contacts an RDM instance and returns a simplified record
-// and error.
+// contacts an RDM instance and returns a simplified record, a rate limit struct
+// and an error value.
 //
 // The configuration object must have the InvenioAPI and
 // InvenioToken attributes set.
-func GetRecord(cfg *Config, id string) (map[string]interface{}, error) {
+//
+// ```
+// cfg, _ := LoadConfig("config.json")
+// id := "qez01-2309a"
+// record, rateLimit, err := GetConfig(cfg, id)
+//
+//	if err != nil {
+//		  // ... handle error ...
+//	}
+//
+// ```
+func GetRecord(cfg *Config, id string) (map[string]interface{}, *RateLimit, error) {
 	// Make sure we have a valid URL
 	u, err := url.Parse(cfg.InvenioAPI)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	// Setup API request for a record
 	uri := fmt.Sprintf("%s/api/records/%s", u.String(), id)
 
-	// FIXME need to handle paged response from Invenio
-	src, err := getJSON(cfg.InvenioToken, uri)
+	// NOTE: rl is necessary to handle repeat requests to Invenio
+	src, rl, err := getJSON(cfg.InvenioToken, uri)
 	if err != nil {
-		return nil, err
+		return nil, rl, err
 	}
 	rec := map[string]interface{}{}
 	if err := json.Unmarshal(src, &rec); err != nil {
-		return nil, err
+		return nil, rl, err
 	}
-	return rec, nil
+	return rec, rl, nil
 }

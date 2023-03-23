@@ -5,7 +5,6 @@ github.com/caltechlibrary/dataciteapi v1.0.1 h1:qFkqdbEOT4trKcpqeLg08NUgDObMOgjA
 github.com/caltechlibrary/dataciteapi v1.0.1/go.mod h1:T6oYVCoQyHRi/0qPI+K5PM//F7M5YkrHqzVMfrPlsn8=
 github.com/caltechlibrary/dataset/v2 v2.1.1 h1:sjBX22tPKYxhb6++K5EHzQK+OLqJWcfOFnVVL4YWij4=
 github.com/caltechlibrary/dataset/v2 v2.1.1/go.mod h1:2m+INaWKriTLr9ZJXu5viKlGAxxfdVUvTLZUfgEzTlQ=
-github.com/caltechlibrary/doitools v0.0.0-20190910184449-c524f84bb2b3 h1:CPVAtgb3KfFDvN/LA6lk3JGT76tVC+PohQWynTkS52s=
 github.com/caltechlibrary/doitools v0.0.0-20190910184449-c524f84bb2b3/go.mod h1:dBtDM+sEd5W27XSuPTcYGUNmkO9PWJ4JMh5bW1EO8L0=
 github.com/caltechlibrary/doitools v0.0.1 h1:c6lvI5l9juo019GGUvuwbzeyv1c6VtSi8mkUv1drgwY=
 github.com/caltechlibrary/doitools v0.0.1/go.mod h1:1K36p/UIkIFM0JVaIVtFStKsFu5xjjYWMWAUExmFnP0=
@@ -17,8 +16,6 @@ github.com/caltechlibrary/pairtree v1.0.2 h1:zcsFibPW7tBvjOvbxHzkE1CIPm0BxUCfQrL
 github.com/caltechlibrary/pairtree v1.0.2/go.mod h1:VZdWqmXgJ+tMxM37n/W+CjS8CQVPus+0ReFdRL10AS4=
 github.com/caltechlibrary/semver v0.0.0-20220817184719-a504da2d5c6a h1:3q6ct6FfFDF2dEiW06Ran7iEOZ4d9HBiMbkqJUOO2oU=
 github.com/caltechlibrary/semver v0.0.0-20220817184719-a504da2d5c6a/go.mod h1:LxzDpCilL3QqjL8qdirgmlo8riDkSFNsTALfIYYyQtE=
-github.com/caltechlibrary/simplified v0.0.0-20230201231043-dc3b4ddcdfc8 h1:1QlOVNRReZYip/HDm0hPlt0MaGSiGZ6q+u7NvapZ7iw=
-github.com/caltechlibrary/simplified v0.0.0-20230201231043-dc3b4ddcdfc8/go.mod h1:RvSI2HUe5EEf4xLjza0+pv5BviOqmwUpAFV7af37fJI=
 github.com/dustin/go-humanize v1.0.0/go.mod h1:HtrtbFcZ19U5GC7JDqmcUSB87Iq5E25KnS6fMYU6eOk=
 github.com/glebarez/go-sqlite v1.18.1 h1:w0xtxKWktqYsUsXg//SQK+l1IcpKb3rGOQHmMptvL2U=
 github.com/glebarez/go-sqlite v1.18.1/go.mod h1:ydXIGq2M4OzF4YyNhH129SPp7jWoVvgkEgb6pldmS0s=
