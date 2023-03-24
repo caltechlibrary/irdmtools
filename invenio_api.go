@@ -120,7 +120,7 @@ func getJSON(token string, uri string) ([]byte, *RateLimit, error) {
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
 	req.Header.Add("Content-type", "application/json")
 	resp, err := client.Do(req)
-	rl.FromResponse(resp, time.Minute)
+	rl.FromResponse(resp)
 	if err != nil {
 		return nil, rl, err
 	}
@@ -192,7 +192,7 @@ func Query(cfg *Config, q string, sort string) ([]map[string]interface{}, error)
 	tot := 0
 	results := new(QueryResponse)
 	records := []map[string]interface{}{}
-	for uri != "" {
+	for i := 0; uri != ""; i++ {
 		dbgPrintf(cfg, "requesting %s", uri)
 		src, rl, err := getJSON(cfg.InvenioToken, uri)
 		if err != nil {
@@ -217,17 +217,8 @@ func Query(cfg *Config, q string, sort string) ([]map[string]interface{}, error)
 			uri = ""
 		}
 		if uri != "" {
-			timeToWait := rl.TimeToWait()
-			timeToReset, resetAt := rl.TimeToReset()
-			if rl.Remaining < 10 {
-				if timeToWait > timeToReset {
-					dbgPrintf(cfg, "waiting %s", timeToWait)
-					time.Sleep(timeToWait)
-				} else {
-					dbgPrintf(cfg, "reset in %s at %s", timeToReset, resetAt.Format("03:04PM"))
-					time.Sleep(timeToReset)
-				}
-			}
+			// NOTE: We need to respect the rate limits of RDM's API
+			rl.Throttle(i, tot)
 		}
 	}
 	return records, nil
@@ -256,21 +247,10 @@ func GetRecordIds(cfg *Config) ([]string, error) {
 			return nil, err
 		}
 		rl := new(RateLimit)
-		rl.FromHeader(headers, time.Minute)
-		timeToWait := rl.TimeToWait()
-		timeToReset, resetAt := rl.TimeToReset()
+		rl.FromHeader(headers)
+		// NOTE: We need to respect rate limits of the RDM API
+		rl.Throttle(i, 1)
 
-		// Pause to respect rate limits
-		// NOTE: Calculate when I can request more ids
-		if rl.Remaining < 10 {
-			if timeToWait > timeToReset {
-				dbgPrintf(cfg, "waiting %s, %s\n", timeToWait, uri)
-				time.Sleep(timeToWait)
-			} else {
-				dbgPrintf(cfg, "resetting in %s at %s, %s\n", timeToReset, resetAt.Format("3:04PM"), uri)
-				time.Sleep(timeToReset)
-			}
-		}
 		if cfg.Debug {
 			os.WriteFile("oai-pmh-list-identifiers.xml", src, 0660)
 		}
@@ -346,21 +326,10 @@ func GetModifiedRecordIds(cfg *Config, start string, end string) ([]string, erro
 			return nil, err
 		}
 		rl := new(RateLimit)
-		rl.FromHeader(headers, time.Minute)
-		timeToWait := rl.TimeToWait()
-		timeToReset, resetAt := rl.TimeToReset()
+		rl.FromHeader(headers)
+		// NOTE: We need to respect rate limits for RDM API, unfortunately we don't know the total number of keys from this API request ...
+		rl.Throttle(i, 1)
 
-		// Pause to respect rate limits
-		// NOTE: Need to calculate when I can request more ids
-		if rl.Remaining < 10 {
-			if timeToWait > timeToReset {
-				dbgPrintf(cfg, "waiting %s, %s", timeToWait, uri)
-				time.Sleep(timeToWait)
-			} else {
-				dbgPrintf(cfg, "reseting in %s at %s, %s", timeToReset, resetAt.Format("03:04PM"), uri)
-				time.Sleep(timeToReset)
-			}
-		}
 		if bytes.HasPrefix(src, []byte("<html")) {
 			// FIXME: Need to display error contained in the HTML response
 			os.WriteFile("oai-pmh-error.html", src, 0660) // DEBUG

@@ -79,21 +79,11 @@ func Harvest(cfg *Config, fName string, debug bool) error {
 		}
 		rec, rl, err := GetRecord(cfg, id)
 		// The rest API seems to have two rate limits, 5000 requests per hour and 500 requests per minute
-		timeToWait := rl.TimeToWait()
-		timeUntilReset, resetAt := rl.TimeToReset()
 		if debug {
 			rl.Fprintf(os.Stderr)
 		}
-		if rl.Remaining < 10 {
-			// Throttle for which ever is further in the future
-			if timeUntilReset > timeToWait {
-				l.Printf("waiting %s for reset (%s) before continuing (%d/%d)", timeUntilReset.Truncate(time.Second), resetAt.Format("3:04PM"), i, tot)
-				time.Sleep(timeUntilReset)
-			} else {
-				l.Printf("waiting %s before continuing requests (%d/%d)", timeToWait.Truncate(time.Second), i, tot)
-				time.Sleep(timeToWait)
-			}
-		}
+		// NOTE: We need to respect rate limits of RDM API
+		rl.Throttle(i, tot)
 		if err != nil {
 			l.Printf("failed to get (%d) %q, %s", i, id, err)
 			eCnt++
