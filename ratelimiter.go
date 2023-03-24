@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -95,43 +94,34 @@ func (rl *RateLimit) FromHeader(header http.Header) {
 	}
 }
 
-func (rl *RateLimit) Fprintf(out io.Writer) {
-	fmt.Fprintf(out, "limit %d, ", rl.Limit)
-	fmt.Fprintf(out, "remaining %d, ", rl.Remaining)
+func (rl *RateLimit) ResetString() string {
+	var s string
 	if rl.Reset > 0 {
 		resetTime := time.Unix(int64(rl.Reset), 0)
-		fmt.Fprintf(os.Stderr, "reset in %s at %s", resetTime.Sub(time.Now()).Truncate(time.Second), resetTime.Format("03:04PM"))
+		s = fmt.Sprintf("reset in %s at %s", resetTime.Sub(time.Now()).Truncate(time.Second), resetTime.Format("03:04PM"))
 	}
-	fmt.Fprintln(out, "")
+	return s
 }
 
 func (rl *RateLimit) String() string {
-	s := []string{}
-	s[0] = fmt.Sprintf("limit %d", rl.Limit)
-	s[1] = fmt.Sprintf("remaining %d", rl.Remaining)
-	if rl.Reset > 0 {
-		resetTime := time.Unix(int64(rl.Reset), 0)
-		s[2] = fmt.Sprintf("reset in %s at %s", resetTime.Sub(time.Now()).Truncate(time.Second), resetTime.Format("03:04PM"))
-	}
-	return strings.Join(s, ", ")
+	return fmt.Sprintf("limits %d/%d, %s", rl.Remaining, rl.Limit, rl.ResetString())
+}
+
+func (rl *RateLimit) Fprintf(out io.Writer) {
+	fmt.Fprintln(out, rl.String())
 }
 
 // SecondsToWait returns the number of seconds (as a time.Duratin) to wait to avoid
 // a http status code 429 and a ratio (float64) of remaining per request limit.
 //
 // ```
-//
-//	rl := new(RateLimit)
-//	rl.FromHeader(response.Header)
-//	rl.TimeUnit = time.Minute
-//	secondsToWait, remainingPerLimit := rl.TimeToWait()
-//	if remainingPerLimit <= 0.5 {
-//	    time.Sleep(secondsToWait)
-//	}
-//
+// rl := new(RateLimit)
+// rl.FromHeader(response.Header)
+// timeToWait := rl.TimeToWait()
+// time.Sleep(timeToWait)
 // ```
-func (rl *RateLimit) TimeToWait() time.Duration {
-	return time.Duration(int(float64(rl.Limit)/60.0))
+func (rl *RateLimit) TimeToWait(unit time.Duration) time.Duration {
+	return time.Duration(int64(unit) / int64(rl.Limit))
 }
 
 func (rl *RateLimit) TimeToReset() (time.Duration, time.Time) {
@@ -139,34 +129,44 @@ func (rl *RateLimit) TimeToReset() (time.Duration, time.Time) {
 	return resetTime.Sub(time.Now()), resetTime
 }
 
+// Throttle looks at the rate limit structure and implements
+// an appropriate sleep time based on rate limits.
+//
+// ```
+//
+//	rl := new(RateLimit)
+//	// Set our rate limit from
+//	rl.FromResponse(response)
 func (rl *RateLimit) Throttle(i int, tot int) {
-	// Caltech the rate, rounding up
-	// log wait to Stderr
 	var speedBump time.Duration
 	// NOTE: 5000 per hour rate from some RDM API
 	// 500 per minutes for others. We need to throttle accordingly
-	// An hout == 3600 seconds, a minute is 60 seconds
-	if rl.Limit == 5000 {
-		// Restart with Rate Limit is 500 per minute
-		speedBump = time.Duration(int(rl.Limit/60)) * time.Second
-	} else {
+	// An hout == 3600 seconds, a minute is 60 seconds.
+	//
+	// wait time = time unit / request limit
+	//
+	if tot == 1 || tot >= 5000 {
+		// NOTE: Picking slower of the two rate limits, otherwise I stalling for an hour
+		// at each 5000 records retrieved.
+		speedBump = time.Duration(int64(time.Hour) / int64(5000))
+	} else if rl.Limit == 5000 {
 		// Slow down to Rate Limit is 5000 per hour
-		speedBump = time.Duration(int(rl.Limit/3600)) * time.Second
+		speedBump = time.Duration(int64(time.Hour) / int64(rl.Limit))
+	} else {
+		// Restart with Rate Limit is 500 per minute
+		speedBump = time.Duration(int64(time.Minute) / int64(rl.Limit))
 	}
-	//fmt.Fprintf(os.Stderr, "DEBUG should throttle for %s\n", speedLimit.Truncate(time.Second))
+
 	callsRemaining := 0.0
 	if rl.Limit > 0 {
-		callsRemaining = float64(rl.Remaining)/float64(rl.Limit)
+		callsRemaining = float64(rl.Remaining) / float64(rl.Limit)
 	}
-	if callsRemaining <= 0.1 {
+	if callsRemaining <= 0.25 {
 		timeUntilReset, resetAt := rl.TimeToReset()
 		// We're throttled for which ever is further in the future
 		fmt.Fprintf(os.Stderr, "waiting %s for reset (%s) before continuing (%d/%d)\n", timeUntilReset.Truncate(time.Second), resetAt.Format("3:04PM"), i, tot)
 		time.Sleep(timeUntilReset)
-	} else if callsRemaining <= 0.5 {
-		fmt.Fprintf(os.Stderr, "waiting %s before continuing (%d/%d)\n", speedBump.Truncate(time.Second), i, tot)
-		time.Sleep(speedBump)
 	} else {
-		time.Sleep(200 * time.Millisecond)
+		time.Sleep(speedBump)
 	}
 }
