@@ -235,6 +235,7 @@ func Query(cfg *Config, q string, sort string) ([]map[string]interface{}, error)
 func GetRecordIds(cfg *Config) ([]string, error) {
 	ids := []string{}
 	resumptionToken := "     "
+	debug := cfg.Debug
 	uri := fmt.Sprintf("%s/oai2d?verb=ListIdentifiers&metadataPrefix=oai_dc", cfg.InvenioAPI)
 	for i := 0; resumptionToken != ""; i++ {
 		if i > 0 {
@@ -250,21 +251,21 @@ func GetRecordIds(cfg *Config) ([]string, error) {
 		rl.FromHeader(headers)
 		// NOTE: We need to respect rate limits of the RDM API
 		rl.Throttle(i, 1)
-
-		if cfg.Debug {
-			os.WriteFile("oai-pmh-list-identifiers.xml", src, 0660)
+		if debug && ((i % 10) == 0) {
+			cfgPrintf("retrieved record %q (%d/%d), %s", id, i, tot, rl.String())
 		}
-		if bytes.HasPrefix(src, []byte("<html")) {
+		/*
 			if cfg.Debug {
-				os.WriteFile("oai-pmh-error.html", src, 0660)
+				os.WriteFile("oai-pmh-list-identifiers.xml", src, 0660)
 			}
+		*/
+		if bytes.HasPrefix(src, []byte("<html")) {
+			dbgPrintf("\n%s\n", src)
 			resumptionToken = ""
 		} else {
 			oai := new(OAIListIdentifiersResponse)
 			if err := xml.Unmarshal(src, oai); err != nil {
-				if cfg.Debug {
-					os.WriteFile("oai-pmh-error.html", src, 0660)
-				}
+				dbgPrintf("\n%s\n", src)
 				resumptionToken = ""
 				return nil, err
 			}
@@ -311,6 +312,7 @@ func GetModifiedRecordIds(cfg *Config, start string, end string) ([]string, erro
 	if end == "" {
 		end = time.Now().Format("2006-01-02")
 	}
+	debug := cfg.Debug
 	ids := []string{}
 	resumptionToken := "     "
 	uri := fmt.Sprintf("%s/oai2d?verb=ListIdentifiers&metadataPrefix=oai_dc&from=%s&until=%s", cfg.InvenioAPI, start, end)
@@ -329,10 +331,15 @@ func GetModifiedRecordIds(cfg *Config, start string, end string) ([]string, erro
 		rl.FromHeader(headers)
 		// NOTE: We need to respect rate limits for RDM API, unfortunately we don't know the total number of keys from this API request ...
 		rl.Throttle(i, 1)
+		if debug && ((i % 10) == 0) {
+			dbgPrintf("retrieved record %q (%d/%d), %s", id, i, tot, rl.String())
+		}
 
 		if bytes.HasPrefix(src, []byte("<html")) {
 			// FIXME: Need to display error contained in the HTML response
-			os.WriteFile("oai-pmh-error.html", src, 0660) // DEBUG
+			if debug {
+				dbgPrintf("\n%s\n", src)
+			}
 			resumptionToken = ""
 		} else {
 			oai := new(OAIListIdentifiersResponse)
@@ -359,7 +366,7 @@ func GetModifiedRecordIds(cfg *Config, start string, end string) ([]string, erro
 				resumptionToken = ""
 			}
 		}
-		if (len(ids) % 500) == 0 {
+		if debug && (len(ids)%500) == 0 {
 			dbgPrintf(cfg, "%d ids retrieved for %s - %s", len(ids), start, end)
 		}
 	}
