@@ -108,9 +108,11 @@ func (app *Doi2Rdm) Configure(configFName string, envPrefix string, debug bool) 
 func (app *Doi2Rdm) Run(in io.Reader, out io.Writer, eout io.Writer, options map[string]string, doi string) error {
 	queryCrossRef, queryDataCite, debug := true, true, false
 	dotInitials, downloadDocument := false, false
-	mailTo := ""
+	mailTo, diffFName := "", ""
 	for opt, val := range options {
 		switch opt {
+		case "diff":
+			diffFName = val
 		case "crossref_only":
 			queryCrossRef = true
 			queryDataCite = false
@@ -130,16 +132,39 @@ func (app *Doi2Rdm) Run(in io.Reader, out io.Writer, eout io.Writer, options map
 		}
 	}
 
+	var (
+		oRecord *simplified.Record
+		nRecord *simplified.Record
+	)
 	if queryCrossRef {
-		obj, err := QueryCrossRef(app.Cfg, doi, mailTo, dotInitials, downloadDocument, debug)
+		if diffFName != "" {
+			oWork := new(crossrefapi.Works)
+			src, err := os.ReadFile(diffFName)
+			if err != nil {
+				return err
+			}
+			if err := json.Unmarshal(src, &oWork); err != nil {
+				return err
+			}
+			oRecord, err = CrosswalkCrosRef(app.Cfg, oWork, debug)
+			if err != nil {
+				return err
+			}
+		}
+		nWork, err := QueryCrossRef(app.Cfg, doi, mailTo, dotInitials, downloadDocument, debug)
 		if err != nil {
 			return err
 		}
-		rec, err := CrosswalkCrossRef(app.Cfg, obj, debug)
+		nRecord, err := CrosswalkCrossRef(app.Cfg, work, debug)
 		if err != nil {
 			return err
 		}
-		src, err := json.MarshalIndent(rec, "", "    ")
+		var src []byte
+		if diffFName != "" {
+			src, err = oRecord.DiffAsJSON(nRecord)
+		} else {
+			src, err = json.MarshalIndent(nRecord, "", "    ")
+		}
 		if err != nil {
 			return err
 		}
@@ -151,11 +176,11 @@ func (app *Doi2Rdm) Run(in io.Reader, out io.Writer, eout io.Writer, options map
 		if err != nil {
 			return err
 		}
-		rec, err := CrosswalkDataCite(app.Cfg, obj, debug)
+		nRecord, err = CrosswalkDataCite(app.Cfg, obj, debug)
 		if err != nil {
 			return err
 		}
-		src, err := json.MarshalIndent(rec, "", "    ")
+		src, err := json.MarshalIndent(nRecord, "", "    ")
 		if err != nil {
 			return err
 		}

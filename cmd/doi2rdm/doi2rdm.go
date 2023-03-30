@@ -80,11 +80,8 @@ DOI can be in either their canonical form or URL form
 -config FILENAME
 : use configuration file
 
--crossref
-: only search CrossRef API for DOI records
-
--datacite
-: only search DataCite API for DOI records
+-diff JSON_FILENAME
+: compare the JSON_FILENAME contents with record generated from CrossRef works record
 
 -dot-initials
 : Add period to initials in given name
@@ -114,6 +111,12 @@ text file is called "article.json".
 	{app_name} "10.1021/acsami.7b15651" >article.json
 ~~~
 
+Check to see the difference from the saved "article.json" and
+the current metadata retrieved from CrossRef.
+
+~~~
+	{app_name} -diff article.json "10.1021/acsami.7b15651
+~~~
 
 `
 )
@@ -126,15 +129,16 @@ func main() {
 	appName := path.Base(os.Args[0])
 	showHelp, showVersion, showLicense := false, false, false
 	configFName, debug, downloadDocument := "", false, false
-	useCrossRef, useDataCite, dotInitials := false, false, false
-	mailTo, showSetup := "", false
+	onlyCrossRef, onlyDataCite, dotInitials := false, false, false
+	mailTo, diffFName, showSetup := "", "", false
 	flag.BoolVar(&showHelp, "help", false, "display help")
 	flag.BoolVar(&showVersion, "version", false, "display version")
 	flag.BoolVar(&showLicense, "license", false, "display license")
 	flag.BoolVar(&showSetup, "setup", false, "show (example) configuration file for "+appName)
 	flag.StringVar(&configFName, "config", configFName, "use a config file")
-	flag.BoolVar(&useCrossRef, "crossref", useCrossRef, "only search CrossRef API for DOI records")
-	flag.BoolVar(&useDataCite, "datacite", useDataCite, "only search DataCite API for DOI records")
+	flag.BoolVar(&onlyCrossRef, "crossref", onlyCrossRef, "only search CrossRef API for DOI records")
+	flag.BoolVar(&onlyDataCite, "datacite", onlyDataCite, "only search DataCite API for DOI records")
+	flag.BoolVar(&diffFName, "diff", diffFName, "compare the JSON file with the current record generated from CrossRef or DataCite")
 	flag.BoolVar(&dotInitials, "dot-initials", dotInitials, "Add period to initials in given name")
 	flag.BoolVar(&downloadDocument, "download", downloadDocument, "attempt to download the digital object if object URL provided")
 	flag.StringVar(&mailTo, "mailto", mailTo, "set the mail to value for CrossRef API access")
@@ -156,10 +160,13 @@ func main() {
 		os.Exit(0)
 	}
 	options := map[string]string{}
-	if useCrossRef {
+	if diffFName != "" {
+		options["diff"] = diffFName
+	}
+	if onlyCrossRef {
 		options["crossref_only"] = "true"
 	}
-	if useDataCite {
+	if onlyDataCite {
 		options["datacite_only"] = "true"
 	}
 	if dotInitials {
