@@ -38,6 +38,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"os"
+
+	// Caltech Library packages
+	"github.com/caltechlibrary/crossrefapi"
+	"github.com/caltechlibrary/simplified"
 )
 
 // Doi2Rdm holds the configuration for doi2rdm cli.
@@ -146,16 +151,16 @@ func (app *Doi2Rdm) Run(in io.Reader, out io.Writer, eout io.Writer, options map
 			if err := json.Unmarshal(src, &oWork); err != nil {
 				return err
 			}
-			oRecord, err = CrosswalkCrosRef(app.Cfg, oWork, debug)
+			oRecord, err = CrosswalkCrossRefWork(app.Cfg, oWork)
 			if err != nil {
 				return err
 			}
 		}
-		nWork, err := QueryCrossRef(app.Cfg, doi, mailTo, dotInitials, downloadDocument, debug)
+		nWork, err := QueryCrossRefWork(app.Cfg, doi, mailTo, dotInitials, downloadDocument)
 		if err != nil {
 			return err
 		}
-		nRecord, err := CrosswalkCrossRef(app.Cfg, work, debug)
+		nRecord, err := CrosswalkCrossRefWork(app.Cfg, nWork)
 		if err != nil {
 			return err
 		}

@@ -95,3 +95,4 @@ testout
 bin/*
 dist/*
 _codemeta.json
+reference/*
