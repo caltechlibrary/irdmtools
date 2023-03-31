@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Bottler Concept</title>
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="/css/site.css">
+</head>
+<body>
+<header>
+<a href="http://library.caltech.edu" title="link to Caltech Library Homepage"><img src="/assets/liblogo.gif" alt="Caltech Library logo"></a>
+</header>
+<nav>
+<ul>
+    <li><a href="/">Home</a></li>
+    <li><a href="index.html">README</a></li>
+    <li><a href="LICENSE">LICENSE</a></li>
+    <li><a href="install.html">INSTALL</a></li>
+    <li><a href="user-manual.html">User Manual</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="https://github.com/caltechlibrary/irdmtools">GitHub</a></li>
+</ul>
+</nav>
+
+<section>
+<h1 id="name">NAME</h1>
+<p>eprint2rdm</p>
+<h1 id="synopsis">SYNOPSIS</h1>
+<p>eprint2rdm <a href="#options">OPTIONS</a> EPRINT_HOSTNANE
+EPRINT_ID</p>
+<h1 id="description">DESCRIPTION</h1>
+<p>eprint2rdm is a Caltech Library centric command line application that
+takes an EPrint hostname and EPrint ID and returns a JSON document
+suitable to import into Invenio RDM. It relies on access to EPrint’s
+REST API. It uses EPRINT_USER and EPRINT_PASSWORD environment variables
+to access the API.</p>
+<h1 id="options">OPTIONS</h1>
+<dl>
+<dt>-help</dt>
+<dd>
+display help
+</dd>
+<dt>-license</dt>
+<dd>
+display license
+</dd>
+<dt>-version</dt>
+<dd>
+display version
+</dd>
+</dl>
+<h1 id="example">EXAMPLE</h1>
+<p>Example generating a JSON document for from the EPrints repository
+hosted as “eprints.example.edu” for EPrint ID 118621. Access to the
+EPrint REST API is configured in the environment. The result is saved in
+“article.json”.</p>
+<pre><code>EPRINT_USER=&quot;__USERNAME_GOES_HERE__&quot;
+EPRINT_PASSWORD=&quot;__PASSWORD_GOES_HERE__&quot;
+eprint2rdm eprints.example.edu 118621 \
+    &gt;article.json</code></pre>
+</section>
+
+<footer>
+<span>&copy; 2022 <a href="https://www.library.caltech.edu/copyright">Caltech Library</a></span>
+<address>1200 E California Blvd, Mail Code 1-32, Pasadena, CA 91125-3200</address>
+<span><a href="mailto:library@caltech.edu">Email Us</a></span>
+<span>Phone: <a href="tel:+1-626-395-3405">(626)395-3405</a></span>
+</footer>
+</body>
+</html>

@@ -3,7 +3,7 @@
 #
 PROJECT = irdmtools
 
-PROGRAMS = $(shell ls -1 cmd)
+PROGRAMS = rdmutil eprint2rdm # $(shell ls -1 cmd)
 
 MAN_PAGES = $(shell ls -1 *.1.md | sed -E 's/\.1.md/.1/g')
 

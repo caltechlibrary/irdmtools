@@ -4,6 +4,7 @@
     "license": "https://spdx.org/licenses/BSD-3-Clause-Clear",
     "codeRepository": "https://github.com/caltechlibrary/irdmtools",
     "dateCreated": "2022-10-27",
+	"dateRelease": "2023-03-31",
     "issueTracker": "https://github.com/caltechlibrary/irdmtools/issues",
     "name": "irdmtools",
     "version": "0.0.1",
