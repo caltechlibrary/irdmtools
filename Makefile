@@ -93,6 +93,7 @@ publish: build save .FORCE
 	git fetch origin
 	git pull origin gh-pages
 	git pull origin $(BRANCH)
+	touch README.md CITATION.cff about.md
 	$(MK_WEBSITE)
 	git add *.html
 	git add pagefind
