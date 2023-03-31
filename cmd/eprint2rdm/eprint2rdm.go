@@ -1,4 +1,4 @@
-// eprint2rdm is a command line program for harvesting an EPrint metadata record and return a Invenio RDM style record. 
+// eprint2rdm is a command line program for harvesting an EPrint metadata record and return a Invenio RDM style record.
 //
 // @author R. S. Doiel, <rsdoiel@caltech.edu>
 // @author Tom Morrell, <tmorrell@caltech.edu>
@@ -34,7 +34,6 @@
 package main
 
 import (
-	"bytes"
 	"flag"
 	"fmt"
 	"os"
@@ -82,12 +81,12 @@ environment variables to access the API.
 Example generating a JSON document for from the EPrints repository
 hosted as "eprints.example.edu" for EPrint ID 118621.  Access to
 the EPrint REST API is configured in the environment.  The result
-is saved in "article.json". 
+is saved in "article.json".
 
 ~~~
 EPRINT_USER="__USERNAME_GOES_HERE__"
 EPRINT_PASSWORD="__PASSWORD_GOES_HERE__"
-{app_name} eprints.example.edu 118621.xml \
+{app_name} eprints.example.edu 118621 \
 	>article.json
 ~~~
 
@@ -132,7 +131,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "expected an EPrint hostname and EPrint ID")
 		os.Exit(1)
 	}
-	if err := app.Run(os.Stdin, os.Stdout, os.Stderr, eprintUsername, eprintPassword, args[0], args[1], debug); err != nil {
+	if err := app.Run(os.Stdin, os.Stdout, os.Stderr, eprintUser, eprintPassword, args[0], args[1], debug); err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
 		os.Exit(1)
 	}

@@ -80,172 +80,202 @@ func getPublication(work *crossrefapi.Works) string {
 	return ""
 }
 
+// getSeries
+func getSeries(work *crossrefapi.Works) string {
+	if work.Message != nil && work.Message.ShortContainerTitle != nil && len(work.Message.ShortContainerTitle) > 0 {
+		return work.Message.ShortContainerTitle[0]
+	}
+	return ""
+}
+
+// getVolume
+func getVolume(work *crossrefapi.Works) string {
+	if work.Message != nil && work.Message.JournalIssue != nil && work.Message.JournalIssue.Issue != "" {
+		return work.Message.JournalIssue.Issue
+	}
+	return ""
+}
+
+// getPublisherLocation
+func getPublisherLocation(work *crossrefapi.Works) string {
+	if work.Message != nil && work.Message.PublisherLocation != "" {
+		return work.Message.PublisherLocation
+	}
+	return ""
+}
+
+// getPageRange
+func getPageRange(work *crossrefapi.Works) string {
+	/*
+		// FIXME: this needs to be article number, per migration committee
+		// PageRange
+		if s, ok := indexInto(obj, "message", "page"); ok == true {
+			eprint.PageRange = s.(string)
+		}
+	*/
+	if work.Message != nil && work.Message.Page != "" {
+		return work.Message.Page
+	}
+	return ""
+}
+
+// getArticleNumber
+func getArticleNumber(work *crossrefapi.Works) string {
+	/* FIXME: Not sure where article numbers map from in the CrossRef API
+	- ComponentNumber
+	- PartNumber
+	*/
+	if work.Message != nil && work.Message.ArticleNumber != "" {
+		return work.Message.ArticleNumber
+	}
+	return ""
+}
+
+// getISBNs
+func getISBNs(work *crossrefapi.Works) []*simplified.Identifier {
+	isbns := []*simplified.Identifier{}
+	if work.Message != nil && work.Message.ISBN != nil {
+		for _, value := range work.Message.ISBN {
+			isbns = append(isbns, &simplified.Identifier{Scheme: "ISBN", Identifier: value})
+		}
+	}
+	return isbns
+}
+
+// getISSNs
+func getISSNs(work *crossrefapi.Works) []*simplified.Identifier {
+	issns := []*simplified.Identifier{}
+	if work.Message != nil && work.Message.ISSN != nil {
+		for _, value := range work.Message.ISSN {
+			issns = append(issns, &simplified.Identifier{Scheme: "ISSN", Identifier: value})
+		}
+	}
+	return issns
+}
+
+// getFunding
+func getFunding(work *crossrefapi.Works) []*simplified.Funder {
+	funding := []*simplified.Funder{}
+	if work.Message != nil && work.Message.Funder != nil && len(work.Message.Funder) > 0 {
+		for _, funder := range work.Message.Funder {
+			for _, award := range funder.Award {
+				funding = append(funding, &simplified.Funder{
+					Funder: &simplified.Identifier{
+						Name: funder.Name,
+					},
+					Award: &simplified.Identifier{
+						Number: award,
+					},
+				})
+			}
+		}
+	}
+	return funding
+}
+
+// getDOI
+func getDOI(work *crossrefapi.Works) string {
+	if work.Message != nil && work.Message.DOI != "" {
+		return work.Message.DOI
+	}
+	return ""
+}
+
+// getLinks
+func getLinks(work *crossrefapi.Works) []*simplified.Identifier {
+	identifiers := []*simplified.Identifier{}
+	if work.Message != nil && work.Message.Link != nil && len(work.Message.Link) > 0 {
+		for _, link := range work.Message.Link {
+			identifiers = append(identifiers, &simplified.Identifier{
+				Scheme:     "URL",
+				Identifier: link.URL,
+				Name:       link.ContentType,
+			})
+		}
+	}
+	return identifiers
+}
+
 // CrosswalkCrossRefWork takes a Works object from the CrossRef API
 // and maps the fields into an simplified Record struct return a new struct or
 // error.
 func CrosswalkCrossRefWork(cfg *Config, work *crossrefapi.Works) (*simplified.Record, error) {
 	rec := new(simplified.Record)
 	// .message.type -> .record.metadata.resource_type (via controlled vocabulary)
-	if resourceType := getResourceType(work); resourceType != "" {
-		if err := SetResourceType(rec, resourceType); err != nil {
+	if value := getResourceType(work); value != "" {
+		if err := SetResourceType(rec, value); err != nil {
 			return nil, err
 		}
 	}
-	if titles := getTitles(work); len(titles) > 0 {
-		if err := SetTitles(rec, titles); err != nil {
+	if values := getTitles(work); len(values) > 0 {
+		if err := SetTitles(rec, values); err != nil {
 			return nil, err
 		}
 	}
-	if publisher := getPublisher(work); publisher != "" {
-		if err := SetPublisher(rec, publisher); err != nil {
+	if value := getPublisher(work); value != "" {
+		if err := SetPublisher(rec, value); err != nil {
 			return nil, err
 		}
 	}
-	if publication := getPublication(work); publication != "" {
-		if err := SetPublication(rec, publication); err != nil {
+	if value := getPublication(work); value != "" {
+		if err := SetPublication(rec, value); err != nil {
 			return nil, err
 		}
 	}
+	if value := getSeries(work); value != "" {
+		if err := SetSeries(rec, value); err != nil {
+			return nil, err
+		}
+	}
+	if value := getVolume(work); value != "" {
+		if err := SetVolume(rec, value); err != nil {
+			return nil, err
+		}
+	}
+	if value := getPublisherLocation(work); value != "" {
+		if err := SetPublisherLocation(rec, value); err != nil {
+			return nil, err
+		}
+	}
+	if value := getPageRange(work); value != "" {
+		if err := SetPageRange(rec, value); err != nil {
+			return nil, err
+		}
+	}
+	if value := getArticleNumber(work); value != "" {
+		if err := SetArticleNumber(rec, value); err != nil {
+			return nil, err
+		}
+	}
+	if values := getISBNs(work); values != nil && len(values) > 0 {
+		if err := SetISBNs(rec, values); err != nil {
+			return nil, err
+		}
+	}
+	if values := getISSNs(work); values != nil && len(values) > 0 {
+		if err := SetISSNs(rec, values); err != nil {
+			return nil, err
+		}
+	}
+	if values := getFunding(work); values != nil && len(values) > 0 {
+		if err := SetFunding(rec, values); err != nil {
+			return nil, err
+		}
+	}
+	if value := getDOI(work); value != "" {
+		if err := SetDOI(rec, value); err != nil {
+			return nil, err
+		}
+	}
+	if values := getLinks(work); values != nil && len(values) > 0 {
+		if err := SetRelatedIdentifiers(rec, values); err != nil {
+			return nil, err
+		}
+	}
+	// FIXME: Need to map related titles, e.g. when a section/article is part of a book (anthology) or proceedings
+	// FIXME: Need to crosswalk any related identifiers into the simple model
 	return rec, fmt.Errorf("CrosswalkCrossRefWorks() not implemented")
-	//	if series :=
 	/*
-		// Series
-		if eprint.Type == "book" {
-			if l, ok := indexInto(obj, "message", "container-title"); ok == true {
-				if len(l.([]interface{})) > 0 {
-					eprint.Series = l.([]interface{})[0].(string)
-				}
-			}
-		}
-		if l, ok := indexInto(obj, "message", "short-container-title"); ok == true {
-			if len(l.([]interface{})) > 0 {
-				eprint.Series = l.([]interface{})[0].(string)
-			}
-		}
-
-		// Volume
-		if eprint.Type == "article" {
-			if s, ok := indexInto(obj, "message", "volume"); ok == true {
-				eprint.Volume = fmt.Sprintf("%s", s)
-			}
-			// Number
-			if s, ok := indexInto(obj, "message", "journal-issue", "issue"); ok == true {
-				eprint.Number = fmt.Sprintf("%s", s)
-			}
-
-		}
-
-		// PlaceOfPub taken from publisher-location in CrossRef
-		if s, ok := indexInto(obj, "message", "publisher-location"); ok == true {
-			eprint.PlaceOfPub = s.(string)
-		}
-
-		// FIXME: this needs to be article number, per migration committee
-		// PageRange
-		if s, ok := indexInto(obj, "message", "page"); ok == true {
-			eprint.PageRange = s.(string)
-
-		}
-
-		// ISBN
-		if a, ok := indexInto(obj, "message", "ISBN"); ok == true {
-			if len(a.([]interface{})) > 0 {
-				s := a.([]interface{})[0]
-				eprint.ISBN = s.(string)
-			}
-		}
-
-		// ISSN
-		if a, ok := indexInto(obj, "message", "ISSN"); ok == true {
-			if len(a.([]interface{})) > 0 {
-				s := a.([]interface{})[0]
-				eprint.ISSN = s.(string)
-			}
-		}
-
-		// NOTE: This doesn't appear to be used by CaltechAUTHORS for full book
-		// BookTitle
-		if eprint.Title != "" && eprint.Type == "book" {
-			eprint.BookTitle = eprint.Title
-		}
-
-		// Funders
-		if a, ok := indexInto(obj, "message", "funder"); ok == true {
-			eprint.Funders = new(FunderItemList)
-			for _, entry := range a.([]interface{}) {
-				var agency string
-				m := entry.(map[string]interface{})
-				if name, ok := indexInto(m, "name"); ok == true && name != "N/A" {
-					agency = name.(string)
-				}
-				if a2, ok := indexInto(m, "award"); ok == true && a2 != "N/A" {
-					for _, number := range a2.([]interface{}) {
-						item := new(Item)
-						item.Agency = agency
-						item.GrantNumber = number.(string)
-						eprint.Funders.Append(item)
-					}
-				} else {
-					item := new(Item)
-					item.Agency = agency
-					if item.Agency != "" || item.GrantNumber != "" {
-						eprint.Funders.Append(item)
-					}
-				}
-			}
-		}
-
-		// NOTE: Caltech Library puts the DOI in the related URL field rather than
-		// in EPrint's default location. This code puts the DOI in the default
-		// location. If you need Caltech Library's bahavior use clsrules.Apply()
-		// to conform to that regime.
-		if doi, ok := indexInto(obj, "message", "DOI"); ok == true {
-			eprint.DOI = doi.(string)
-		}
-		if l, ok := indexInto(obj, "message", "update-to"); ok == true {
-			for _, o := range l.([]interface{}) {
-				m := o.(map[string]interface{})
-				if newDoi, ok := indexInto(m, "DOI"); ok == true && newDoi != "" {
-					dt, _ := indexInto(m, "updated", "date-time")
-					when := dt.(string)
-					l, _ := indexInto(m, "label")
-					label := l.(string)
-					if len(when) > 10 {
-						when = when[0:10]
-					}
-					entry := new(Item)
-					entry.Type = "doi"
-					entry.URL = fmt.Sprintf("https://doi.org/%s", newDoi)
-					entry.Description = fmt.Sprintf("%s, %s", label, when)
-					if eprint.RelatedURL == nil {
-						eprint.RelatedURL = new(RelatedURLItemList)
-					}
-					eprint.RelatedURL.Append(entry)
-				}
-			}
-		}
-
-		// RelatedURLs (links in message of CrossRef works object)
-		if l, ok := indexInto(obj, "message", "link"); ok == true {
-			if eprint.RelatedURL == nil {
-				eprint.RelatedURL = new(RelatedURLItemList)
-			}
-			for _, o := range l.([]interface{}) {
-				entry := new(Item)
-				if s, ok := indexInto(o.(map[string]interface{}), "URL"); ok == true {
-					entry.URL = s.(string)
-				}
-				// NOTE: Related URL Type is not related to mime-type,
-				// import related URLs without type information.
-				if s, ok := indexInto(o.(map[string]interface{}), "type"); ok == true {
-					entry.Type = s.(string)
-				}
-				if len(entry.URL) > 0 { //&& len(entry.Type) > 0 {
-					eprint.RelatedURL.Append(entry)
-				}
-			}
-		}
-
 		// NOTE: We prefer the publication date of published-print and
 		// fallback to issued date then finally created date.
 		eprint.DateType = "published"

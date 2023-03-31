@@ -1,11 +1,17 @@
 package irdmtools
 
 import (
+	"fmt"
+
 	// Caltech Library Package
 	"github.com/caltechlibrary/simplified"
 )
 
-// Wrapps the simplified package with crosswalks
+// Wraps the simplified package with crosswalks
+
+func SetRelatedIdentifiers(rec *simplified.Record, identifiers []*simplified.Identifier) error {
+	return fmt.Errorf("SetRelatedDOI() not implemented")
+}
 
 func SetResourceType(rec *simplified.Record, resourceType string) error {
 	return fmt.Errorf("SetResourceType() not implemented")
@@ -39,11 +45,15 @@ func SetPageRange(rec *simplified.Record, pageRange string) error {
 	return fmt.Errorf("SetPageRange() not implemented")
 }
 
-func AddISBN(rec *simplified.Record, isbn string, isbnType string) error {
+func SetArticleNumber(rec *simplified.Record, articleNo string) error {
+	return fmt.Errorf("SetArticleNumber() not implemented")
+}
+
+func SetISBNs(rec *simplified.Record, isbns []*simplified.Identifier) error {
 	return fmt.Errorf("AddISBN() not implemented")
 }
 
-func AddISSN(rec *simplified.Record, issn string, issnType string) error {
+func SetISSNs(rec *simplified.Record, issns []*simplified.Identifier) error {
 	return fmt.Errorf("AddISSN() not implemented")
 }
 
@@ -115,3 +125,6 @@ func PresentationType(rec *simplified.Record, presentationType string) error {
 	return fmt.Errorf("SetPresentationType() not implemented")
 }
 
+func SetFunding(rec *simplified.Record, funding []*simplified.Funder) error {
+	return fmt.Errorf("SetFunding() not implemented")
+}

@@ -44,11 +44,9 @@ display version
 -config FILENAME
 use configuration file
 .TP
--crossref
-only search CrossRef API for DOI records
-.TP
--datacite
-only search DataCite API for DOI records
+-diff JSON_FILENAME
+compare the JSON_FILENAME contents with record generated from CrossRef
+works record
 .TP
 -dot-initials
 Add period to initials in given name
@@ -79,6 +77,15 @@ The resulting text file is called \[lq]article.json\[rq].
 .nf
 \f[C]
     doi2rdm \[dq]10.1021/acsami.7b15651\[dq] >article.json
+\f[R]
+.fi
+.PP
+Check to see the difference from the saved \[lq]article.json\[rq] and
+the current metadata retrieved from CrossRef.
+.IP
+.nf
+\f[C]
+    doi2rdm -diff article.json \[dq]10.1021/acsami.7b15651
 \f[R]
 .fi
 .SH AUTHORS

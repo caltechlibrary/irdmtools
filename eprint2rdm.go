@@ -37,6 +37,7 @@ package irdmtools
 import (
 	"bytes"
 	"encoding/json"
+	"encoding/xml"
 	"fmt"
 	"io"
 	"strings"
@@ -47,6 +48,10 @@ import (
 	"github.com/caltechlibrary/simplified"
 )
 
+const (
+	timestamp = `2006-01-02 15:04:05`
+	datestamp = `2006-01-02`
+)
 
 // EPrint2Rdm holds the configuration for rdmutil cli.
 type EPrint2Rdm struct {
@@ -54,8 +59,8 @@ type EPrint2Rdm struct {
 }
 
 /**
- * Implements a crosswalk from EPrints to an Invenio RDM JSON 
- * representation. 
+ * Implements a crosswalk from EPrints to an Invenio RDM JSON
+ * representation.
  *
  * See documentation and example on Invenio's structured data:
  *
@@ -98,107 +103,185 @@ func CrosswalkEPrintToRecord(eprint *eprinttools.EPrint, rec *simplified.Record)
 		return err
 	}
 	/*
-	if err := pidFromEPrint(eprint, rec); err != nil {
-		return err
-	}
+		if err := pidFromEPrint(eprint, rec); err != nil {
+			return err
+		}
 	*/
 	// Now finish simple record normalization ...
-	if err := mapResourceType(rec); err != nil {
+	if err := mapResourceType(eprint, rec); err != nil {
 		return err
 	}
-	if err := simplifyCreators(rec); err != nil {
+	if err := simplifyCreators(eprint, rec); err != nil {
 		return err
 	}
-	if err := simplifyContributors(rec); err != nil {
+	if err := simplifyContributors(eprint, rec); err != nil {
 		return err
 	}
 	// FIXME: Map eprint record types to invenio RDM record types we've
 	// decided on.
 	// FIXME: Funders must have a title, could just copy in the funder
 	// name for now.
-	if err := simplifyFunding(rec); err != nil {
+	if err := simplifyFunding(eprint, rec); err != nil {
 		return err
 	}
 	return nil
 }
 
+func itemToPersonOrOrg(item *eprinttools.Item) *simplified.PersonOrOrg {
+	var (
+		clPeopleID string
+		orcid      string
+		ror        string
+	)
+	person := new(simplified.PersonOrOrg)
+	person.Type = "person"
+	if item.Name != nil {
+		person.FamilyName = item.Name.Family
+		person.GivenName = item.Name.Given
+		// FIXME: How do we map honorific and lineage? E.g. William Goddard versus William A. Goddard III
+		//honorific := item.Name.Honourific
+		//lineage := item.Name.Lineage
+		if person.FamilyName != "" || person.GivenName != "" {
+			person.Name = fmt.Sprintf("%s, %s", person.FamilyName, person.GivenName)
+			clPeopleID = item.Name.ID
+			orcid = item.Name.ORCID
+		} else {
+			person.Type = "organizaton"
+			person.Name = item.Name.Value
+		}
+	}
+	ror = item.ROR
+	if clPeopleID != "" {
+		person.Identifiers = append(person.Identifiers, mkSimpleIdentifier("clpid", clPeopleID))
+	}
+	if orcid != "" {
+		person.Identifiers = append(person.Identifiers, mkSimpleIdentifier("ORCID", orcid))
+	}
+	if ror != "" {
+		person.Identifiers = append(person.Identifiers, mkSimpleIdentifier("ROR", ror))
+	}
+	return person
+}
+
 // simplifyCreators make sure the identifiers are mapped to Invenio-RDM
 // identifiers.
-func simplifyCreators(rec *simplified.Record) error {
-	if rec.Metadata.Creators != nil && len(rec.Metadata.Creators) > 0 {
-		creators := []*eprinttools.Creator{}
-		for _, creator := range rec.Metadata.Creators {
-			//FIXME: do I need to handle assigning a role here?
-			appendCreator := false
-			if creator.PersonOrOrg != nil && creator.PersonOrOrg.FamilyName != "" {
-				if creator.PersonOrOrg.Identifiers != nil && len(creator.PersonOrOrg.Identifiers) > 0 {
-					for _, identifier := range creator.PersonOrOrg.Identifiers {
-						if identifier.Scheme == "creator_id" {
-							identifier.Scheme = "clpid"
-						}
-					}
-					appendCreator = true
+func simplifyCreators(eprint *eprinttools.EPrint, rec *simplified.Record) error {
+	// First map the creators (person) to RDM .metadata.creators
+	// FIXME: Then map the corpCreators (org) to RDM .metadata.creators
+	creators := []*simplified.Creator{}
+	if eprint.Creators != nil && eprint.Creators.Length() > 0 {
+		for i := 0; i < eprint.Creators.Length(); i++ {
+			if item := eprint.Creators.IndexOf(i); item != nil {
+				if person := itemToPersonOrOrg(item); person != nil {
+					creators = append(creators, &simplified.Creator{
+						PersonOrOrg: person,
+						//Role:        &simplified.Role{},
+					})
 				}
 			}
-			if appendCreator {
-				creators = append(creators, creator)
+		}
+	}
+	if eprint.CorpCreators != nil && eprint.CorpCreators.Length() > 0 {
+		for i := 0; i < eprint.CorpCreators.Length(); i++ {
+			if item := eprint.CorpCreators.IndexOf(i); item != nil {
+				if org := itemToPersonOrOrg(item); org != nil {
+					creators = append(creators, &simplified.Creator{
+						PersonOrOrg: org,
+						//Role:        &simplified.Role{},
+					})
+				}
 			}
 		}
-		if len(creators) > 0 {
-			rec.Metadata.Creators = creators
-		}
+	}
+	if len(creators) > 0 {
+		rec.Metadata.Creators = creators
 	}
 	return nil
 }
 
 // simplifyContributors make sure the identifiers are mapped to Invenio-RDM
 // identifiers.
-func simplifyContributors(rec *simplified.Record) error {
-	if rec.Metadata.Contributors != nil && len(rec.Metadata.Contributors) > 0 {
-		contributors := []*eprinttools.Creator{}
-		for _, contributor := range rec.Metadata.Contributors {
-			appendContributor := false
-			if contributor.PersonOrOrg != nil && contributor.PersonOrOrg.FamilyName != "" {
-				appendContributor = true
-				if contributor.PersonOrOrg.Identifiers != nil && len(contributor.PersonOrOrg.Identifiers) > 0 {
-					for _, identifier := range contributor.PersonOrOrg.Identifiers {
-						switch identifier.Scheme {
-							// conf_creators_id
-							// corp_creators_id
-							// creators_id 
-							// exhibitors_id 
-							// lyricists_id 
-							// producers_id 
-							case "thesis_advisor_id":
-								identifier.Scheme = "clpid"
-							case "thesis_committee_id":
-								identifier.Scheme = "clpid"
-							case "author_id": 
-								identifier.Scheme = "clpid"
-							case "editor_id": 
-								identifier.Scheme = "clpid"
-							case "contributor_id": 
-								identifier.Scheme = "clpid"
-						}
-					}
+func simplifyContributors(eprint *eprinttools.EPrint, rec *simplified.Record) error {
+	contributors := []*simplified.Creator{}
+	// First add contributors, then editors, etc.
+	if eprint.Contributors != nil && eprint.Contributors.Length() > 0 {
+		for i := 0; i < eprint.Contributors.Length(); i++ {
+			if item := eprint.Contributors.IndexOf(i); item != nil {
+				if person := itemToPersonOrOrg(item); person != nil {
+					contributors = append(contributors, &simplified.Creator{
+						PersonOrOrg: person,
+						Role: &simplified.Role{
+							Title: uriToContributorType(item.Role),
+						},
+					})
 				}
 			}
-			if appendContributor {
-				if contributor.Role == nil {
-					return fmt.Errorf("contributor is missing role -> %+v", contributor)
+		}
+	}
+	if eprint.CorpContributors != nil && eprint.CorpContributors.Length() > 0 {
+		for i := 0; i < eprint.Contributors.Length(); i++ {
+			if item := eprint.Contributors.IndexOf(i); item != nil {
+				if org := itemToPersonOrOrg(item); org != nil {
+					contributors = append(contributors, &simplified.Creator{
+						PersonOrOrg: org,
+						Role: &simplified.Role{
+							Title: "contributor",
+						},
+					})
 				}
-				contributors = append(contributors, contributor)
 			}
 		}
-		if len(contributors) > 0 {
-			rec.Metadata.Contributors = contributors
+	}
+	// Add Editors, Adivisors, Committee Members, Thesis Chair, Reviewers, Translators, etc.
+	if eprint.Editors != nil && eprint.Editors.Length() > 0 {
+		for i := 0; i < eprint.Editors.Length(); i++ {
+			if item := eprint.Editors.IndexOf(i); item != nil {
+				if person := itemToPersonOrOrg(item); person != nil {
+					contributors = append(contributors, &simplified.Creator{
+						PersonOrOrg: person,
+						Role: &simplified.Role{
+							Title: "editor",
+						},
+					})
+				}
+			}
 		}
+	}
+	if eprint.ThesisAdvisor != nil && eprint.ThesisAdvisor.Length() > 0 {
+		for i := 0; i < eprint.ThesisAdvisor.Length(); i++ {
+			if item := eprint.ThesisAdvisor.IndexOf(i); item != nil {
+				if person := itemToPersonOrOrg(item); person != nil {
+					contributors = append(contributors, &simplified.Creator{
+						PersonOrOrg: person,
+						Role: &simplified.Role{
+							Title: "thesis_advisor",
+						},
+					})
+				}
+			}
+		}
+	}
+	if eprint.ThesisCommittee != nil && eprint.ThesisCommittee.Length() > 0 {
+		for i := 0; i < eprint.ThesisCommittee.Length(); i++ {
+			if item := eprint.ThesisCommittee.IndexOf(i); item != nil {
+				if person := itemToPersonOrOrg(item); person != nil {
+					contributors = append(contributors, &simplified.Creator{
+						PersonOrOrg: person,
+						Role: &simplified.Role{
+							Title: "thesis_committee",
+						},
+					})
+				}
+			}
+		}
+	}
+	if len(contributors) > 0 {
+		rec.Metadata.Contributors = contributors
 	}
 	return nil
 }
 
-
-func simplifyFunding(rec *simplified.Record) error {
+func simplifyFunding(eprint *eprinttools.EPrint, rec *simplified.Record) error {
 	if rec.Metadata.Funding != nil && len(rec.Metadata.Funding) > 0 {
 		for _, funder := range rec.Metadata.Funding {
 			if funder.Funder != nil {
@@ -225,21 +308,20 @@ func simplifyFunding(rec *simplified.Record) error {
 
 // mapResourceType maps the EPrints record types to a predetermined
 // Invenio-RDM record type.
-func mapResourceType(rec *simplified.Record) error {
-	// FIXME: need to load this from a configuration file
+func mapResourceType(eprint *eprinttools.EPrint, rec *simplified.Record) error {
+	if rec.Metadata.ResourceType == nil {
+		rec.Metadata.ResourceType = map[string]string{}
+	}
+	// FIXME: I need to implement a full map of default resource types.
+	// FIXME: need to load this from an optional configuration file
 	crosswalkResourceTypes := map[string]string{
 		"article": "publication-article",
 	}
-	if rec.Metadata.ResourceType != nil {
-		// Should always have an id for a reource_type
-		if id, ok := rec.Metadata.ResourceType["id"]; ok {
-			if val, hasID := crosswalkResourceTypes[id]; hasID {
-				rec.Metadata.ResourceType["id"] = val
-				//} else { // FIXME: I don't want to implement a full mapping yet.
-				//	return fmt.Errorf("failed to find id %q in record type crosswalk", id)
-			}
-		}
+	val, ok := crosswalkResourceTypes[eprint.Type]
+	if !ok {
+		return fmt.Errorf("unable to map %q to simple record type", eprint.Type)
 	}
+	rec.Metadata.ResourceType["id"] = val
 	return nil
 }
 
@@ -263,10 +345,10 @@ func pidFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record) error {
 // parentFromEPrint crosswalks the Perent unique ID from EPrint record.
 func parentFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record) error {
 	if eprint.Reviewer != "" {
-		parent := new(RecordIdentifier)
+		parent := new(simplified.RecordIdentifier)
 		parent.ID = fmt.Sprintf("%s:%d", eprint.Collection, eprint.EPrintID)
-		parent.Access = new(Access)
-		ownedBy := new(User)
+		parent.Access = new(simplified.Access)
+		ownedBy := new(simplified.User)
 		ownedBy.User = eprint.UserID
 		ownedBy.DisplayName = eprint.Reviewer
 		parent.Access.OwnedBy = append(parent.Access.OwnedBy, ownedBy)
@@ -280,10 +362,10 @@ func parentFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record) error 
 // externalPIDFromEPrint aggregates all the external identifiers
 // from the EPrint record into Record
 func externalPIDFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record) error {
-	rec.ExternalPIDs = map[string]*PersistentIdentifier{}
+	rec.ExternalPIDs = map[string]*simplified.PersistentIdentifier{}
 	// Pickup DOI
 	if eprint.DOI != "" {
-		pid := new(PersistentIdentifier)
+		pid := new(simplified.PersistentIdentifier)
 		pid.Identifier = eprint.DOI
 		pid.Provider = "datacite"
 		pid.Client = ""
@@ -291,7 +373,7 @@ func externalPIDFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record) e
 	}
 	// Pickup ISSN
 	if eprint.ISBN != "" {
-		pid := new(PersistentIdentifier)
+		pid := new(simplified.PersistentIdentifier)
 		pid.Identifier = eprint.ISSN
 		pid.Provider = ""
 		pid.Client = ""
@@ -299,7 +381,7 @@ func externalPIDFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record) e
 	}
 	// Pickup ISBN
 	if eprint.ISBN != "" {
-		pid := new(PersistentIdentifier)
+		pid := new(simplified.PersistentIdentifier)
 		pid.Identifier = eprint.ISBN
 		pid.Provider = ""
 		pid.Client = ""
@@ -322,7 +404,7 @@ func recordAccessFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record) 
 	if eprint.EPrintStatus != "archive" || eprint.MetadataVisibility != "show" {
 		isPublic = false
 	}
-	rec.RecordAccess = new(RecordAccess)
+	rec.RecordAccess = new(simplified.RecordAccess)
 	// By default lets assume the files are restricted.
 	rec.RecordAccess.Files = "resticted"
 	if isPublic {
@@ -335,7 +417,7 @@ func recordAccessFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record) 
 		for i := 0; i < eprint.Documents.Length(); i++ {
 			doc := eprint.Documents.IndexOf(i)
 			if doc.DateEmbargo != "" {
-				embargo := new(Embargo)
+				embargo := new(simplified.Embargo)
 				embargo.Until = doc.DateEmbargo
 				if eprint.Suggestions != "" {
 					embargo.Reason = eprint.Suggestions
@@ -354,99 +436,59 @@ func recordAccessFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record) 
 }
 
 func uriToContributorType(role_uri string) string {
-    roles := map[string]string{
-        // Article Author
-        "http://coda.library.caltech.edu/ARA": "author_section",
-        // Astronaut
-        "http://coda.library.caltech.edu/AST": "astronaut",
-        // Author of afterword, colophon, etc.
-        "http://www.loc.gov/loc.terms/relators/AFT": "aft",
-        // Bibliographic antecedent
-        "http://www.loc.gov/loc.terms/relators/ANT": "ant",
-        // Author in quotations or text abstracts
-        "http://www.loc.gov/loc.terms/relators/AQT": "aqt",
-        // Screenwriter
-        "http://www.loc.gov/loc.terms/relators/AUS": "screenwriter",
-        // Author, joint author
-        "http://www.loc.gov/loc.terms/relators/AUT": "author",
-        // Collaborator
-        "http://www.loc.gov/loc.terms/relators/CLB": "collaborator",
-        // Compiler
-        "http://www.loc.gov/loc.terms/relators/COM": "compiler",
-        // Contributor
-        "http://www.loc.gov/loc.terms/relators/CTB": "contributor",
-        // Directory
-        "http://www.loc.gov/loc.terms/relators/DRT": "director",
-        // Editor
-        "http://www.loc.gov/loc.terms/relators/EDT": "editor",
-        // Narrator
-        "http://www.loc.gov/loc.terms/relators/NRT": "narrator",
-        // Other
-        "http://www.loc.gov/loc.terms/relators/OTH": "other",
-        // Publishing director
-        "http://www.loc.gov/loc.terms/relators/PBD": "publishing_director",
-        // Programmer
-        "http://www.loc.gov/loc.terms/relators/PRG": "programmer",
-        // Reviewer
-        "http://www.loc.gov/loc.terms/relators/REV": "reviewer",
-        // Research team member
-        "http://www.loc.gov/loc.terms/relators/RTM": "research_team",
-        // Speaker
-        "http://www.loc.gov/loc.terms/relators/SPK": "speaker",
-        // Teacher
-        "http://www.loc.gov/loc.terms/relators/TCH": "teacher",
-        // Translator
-        "http://www.loc.gov/loc.terms/relators/TRL": "translator",
-    }
+	roles := map[string]string{
+		// Article Author
+		"http://coda.library.caltech.edu/ARA": "author_section",
+		// Astronaut
+		"http://coda.library.caltech.edu/AST": "astronaut",
+		// Author of afterword, colophon, etc.
+		"http://www.loc.gov/loc.terms/relators/AFT": "aft",
+		// Bibliographic antecedent
+		"http://www.loc.gov/loc.terms/relators/ANT": "ant",
+		// Author in quotations or text abstracts
+		"http://www.loc.gov/loc.terms/relators/AQT": "aqt",
+		// Screenwriter
+		"http://www.loc.gov/loc.terms/relators/AUS": "screenwriter",
+		// Author, joint author
+		"http://www.loc.gov/loc.terms/relators/AUT": "author",
+		// Collaborator
+		"http://www.loc.gov/loc.terms/relators/CLB": "collaborator",
+		// Compiler
+		"http://www.loc.gov/loc.terms/relators/COM": "compiler",
+		// Contributor
+		"http://www.loc.gov/loc.terms/relators/CTB": "contributor",
+		// Directory
+		"http://www.loc.gov/loc.terms/relators/DRT": "director",
+		// Editor
+		"http://www.loc.gov/loc.terms/relators/EDT": "editor",
+		// Narrator
+		"http://www.loc.gov/loc.terms/relators/NRT": "narrator",
+		// Other
+		"http://www.loc.gov/loc.terms/relators/OTH": "other",
+		// Publishing director
+		"http://www.loc.gov/loc.terms/relators/PBD": "publishing_director",
+		// Programmer
+		"http://www.loc.gov/loc.terms/relators/PRG": "programmer",
+		// Reviewer
+		"http://www.loc.gov/loc.terms/relators/REV": "reviewer",
+		// Research team member
+		"http://www.loc.gov/loc.terms/relators/RTM": "research_team",
+		// Speaker
+		"http://www.loc.gov/loc.terms/relators/SPK": "speaker",
+		// Teacher
+		"http://www.loc.gov/loc.terms/relators/TCH": "teacher",
+		// Translator
+		"http://www.loc.gov/loc.terms/relators/TRL": "translator",
+	}
 	if val, ok := roles[role_uri]; ok {
 		return val
 	}
 	return "contributor"
 }
 
-func creatorFromItem(item *eprinttools.Item, objType string, objRoleSrc string, objIdType string) *eprinttools.Creator {
-	person := new(PersonOrOrg)
-	person.Type = objType
-	if item.Name != nil {
-		person.FamilyName = item.Name.Family
-		person.GivenName = item.Name.Given
-	}
-	if item.ORCID != "" {
-		identifier := new(Identifier)
-		identifier.Scheme = "orcid"
-		identifier.Identifier = item.ORCID
-		person.Identifiers = append(person.Identifiers, identifier)
-	}
-	if item.ID != "" {
-		identifier := new(Identifier)
-		identifier.Scheme = objIdType
-		identifier.Identifier = item.ID
-		person.Identifiers = append(person.Identifiers, identifier)
-	}
-	creator := new(Creator)
-	creator.PersonOrOrg = person
-	switch objRoleSrc{
-		case "contributor":
-			//NOTE: for contributors we need to map the type as LOC URI
-			// to a person's role.
-			contributorType := "contributor"
-			if item != nil {
-				contributorType = uriToContributorType(item.Type)
-			}
-			creator.Role = &Role{ ID: contributorType }
-		case "editor":
-			creator.Role = &Role{ ID: "editor" }
-	}
-	// FIXME: For Creators we skip adding the role and affiliation for now,
-	// it break RDM.
-	//creator.PersonOrOrg.Role = &Role{ ID: objRoleSrc }
-	//FIXME: Need to map affiliation here when we're ready.
-	return creator
-}
-
-func dateTypeFromTimestamp(dtType string, timestamp string, description string) *eprinttools.DateType {
-	dt := new(DateType)
-	dt.Type = new(Type)
+func dateTypeFromTimestamp(dtType string, timestamp string, description string) *simplified.DateType {
+	dt := new(simplified.DateType)
+	dt.Type = new(simplified.Type)
 	dt.Type.ID = dtType
 	dt.Type.Title = dtType
 	dt.Description = description
@@ -468,12 +510,12 @@ func mkSimpleIdentifier(scheme, value string) *simplified.Identifier {
 func funderFromItem(item *eprinttools.Item) *simplified.Funder {
 	funder := new(simplified.Funder)
 	if item.GrantNumber != "" {
-		funder.Award = new(Identifier)
+		funder.Award = new(simplified.Identifier)
 		funder.Award.Number = item.GrantNumber
 		funder.Award.Scheme = "eprints_grant_number"
 	}
 	if item.Agency != "" {
-		org := new(Identifier)
+		org := new(simplified.Identifier)
 		org.Name = item.Agency
 		org.Scheme = "eprints_agency"
 		funder.Funder = org
@@ -483,103 +525,66 @@ func funderFromItem(item *eprinttools.Item) *simplified.Funder {
 
 // metadataFromEPrint extracts metadata from the EPrint record
 func metadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record) error {
-	metadata := new(Metadata)
-	metadata.ResourceType = map[string]string{}
-	metadata.ResourceType["id"] = eprint.Type
 	// NOTE: Creators get listed in the citation, Contributors do not.
-	if (eprint.Creators != nil) && (eprint.Creators.Items != nil) {
-		for _, item := range eprint.Creators.Items {
-			creator := creatorFromItem(item, "personal", "creator", "creator_id")
-			metadata.Creators = append(metadata.Creators, creator)
-		}
+	if rec.Metadata == nil {
+		rec.Metadata = new(simplified.Metadata)
 	}
-	if (eprint.CorpCreators != nil) && (eprint.CorpCreators.Items != nil) {
-		for _, item := range eprint.CorpCreators.Items {
-			creator := creatorFromItem(item, "organizational", "corporate_creator", "organization_id")
-			metadata.Creators = append(metadata.Creators, creator)
-		}
-	}
-	if (eprint.Contributors != nil) && (eprint.Contributors.Items != nil) {
-		for _, item := range eprint.Contributors.Items {
-			contributor := creatorFromItem(item, "personal", "contributor", "contributor_id")
-
-			metadata.Contributors = append(metadata.Contributors, contributor)
-		}
-	}
-	if (eprint.CorpContributors != nil) && (eprint.CorpContributors.Items != nil) {
-		for _, item := range eprint.CorpContributors.Items {
-			contributor := creatorFromItem(item, "organizational", "corporate_contributor", "organization_id")
-			metadata.Contributors = append(metadata.Contributors, contributor)
-		}
-	}
-	if (eprint.Editors != nil) && (eprint.Editors.Items != nil) {
-		for _, item := range eprint.Editors.Items {
-			editor := creatorFromItem(item, "personal", "editor", "editor_id")
-			metadata.Contributors = append(metadata.Contributors, editor)
-		}
-	}
-	if (eprint.ThesisAdvisor != nil) && (eprint.ThesisAdvisor.Items != nil) {
-		for _, item := range eprint.ThesisAdvisor.Items {
-			advisor := creatorFromItem(item, "personal", "thesis_advisor", "thesis_advisor_id")
-			metadata.Contributors = append(metadata.Contributors, advisor)
-		}
-	}
-	if (eprint.ThesisCommittee != nil) && (eprint.ThesisCommittee.Items != nil) {
-		for _, item := range eprint.ThesisCommittee.Items {
-			committee := creatorFromItem(item, "personal", "thesis_committee", "thesis_committee_id")
-			metadata.Contributors = append(metadata.Contributors, committee)
-		}
-	}
-	metadata.Title = eprint.Title
+	rec.Metadata.Title = eprint.Title
 	if (eprint.AltTitle != nil) && (eprint.AltTitle.Items != nil) {
 		for _, item := range eprint.AltTitle.Items {
 			if strings.TrimSpace(item.Value) != "" {
-				title := new(TitleDetail)
+				title := new(simplified.TitleDetail)
 				title.Title = item.Value
-				metadata.AdditionalTitles = append(metadata.AdditionalTitles, title)
+				rec.Metadata.AdditionalTitles = append(rec.Metadata.AdditionalTitles, title)
 			}
 		}
 	}
-	if eprint.Abstract != "" {
-		metadata.Description = eprint.Abstract
+	if err := simplifyCreators(eprint, rec); err != nil {
+		return err
 	}
-	metadata.PublicationDate = eprint.PubDate()
+	if err := simplifyContributors(eprint, rec); err != nil {
+		return err
+	}
+	if eprint.Abstract != "" {
+		rec.Metadata.Description = eprint.Abstract
+	}
+	rec.Metadata.PublicationDate = eprint.PubDate()
 
 	// Rights are scattered in several EPrints fields, they need to
 	// be evaluated to create a "Rights" object used in DataCite/Invenio
 	addRights := false
-	rights := new(Right)
+	rights := new(simplified.Right)
 	if eprint.Rights != "" {
 		addRights = true
-		rights.Description = &Description{
+		rights.Description = &simplified.Description{
 			Description: eprint.Rights,
 		}
 	}
 	// Figure out if our copyright information is in the Note field.
 	if (eprint.Note != "") && (strings.Contains(eprint.Note, "©") || strings.Contains(eprint.Note, "copyright") || strings.Contains(eprint.Note, "(c)")) {
 		addRights = true
-		rights.Description = &Description{
+		rights.Description = &simplified.Description{
 			Description: fmt.Sprintf("%s", eprint.Note),
 		}
 	}
 	if addRights {
-		metadata.Rights = append(metadata.Rights, rights)
+		rec.Metadata.Rights = append(rec.Metadata.Rights, rights)
 	}
 	if eprint.CopyrightStatement != "" {
-		rights := new(Right)
-		rights.Description = &Description{
+		rights := new(simplified.Right)
+		rights.Description = &simplified.Description{
 			Description: eprint.CopyrightStatement,
 		}
-		metadata.Rights = append(metadata.Rights, rights)
+		rec.Metadata.Rights = append(rec.Metadata.Rights, rights)
 	}
 	// FIXME: work with Tom to sort out how "Rights" and document level
 	// copyright info should work.
 
 	if (eprint.Subjects != nil) && (eprint.Subjects.Items != nil) {
 		for _, item := range eprint.Subjects.Items {
-			subject := new(Subject)
+			subject := new(simplified.Subject)
 			subject.Subject = item.Value
-			metadata.Subjects = append(metadata.Subjects, subject)
+			rec.Metadata.Subjects = append(rec.Metadata.Subjects, subject)
 		}
 	}
 
@@ -588,58 +593,57 @@ func metadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record) erro
 
 	// Dates are scattered through the primary eprint table.
 	if (eprint.DateType != "published") && (eprint.Date != "") {
-		metadata.Dates = append(metadata.Dates, dateTypeFromTimestamp("pub_date", eprint.Date, "Publication Date"))
+		rec.Metadata.Dates = append(rec.Metadata.Dates, dateTypeFromTimestamp("pub_date", eprint.Date, "Publication Date"))
 	}
 	if eprint.Datestamp != "" {
-		metadata.Dates = append(metadata.Dates, dateTypeFromTimestamp("created", eprint.Datestamp, "Created from EPrint's datestamp field"))
+		rec.Metadata.Dates = append(rec.Metadata.Dates, dateTypeFromTimestamp("created", eprint.Datestamp, "Created from EPrint's datestamp field"))
 	}
 	if eprint.LastModified != "" {
-		metadata.Dates = append(metadata.Dates, dateTypeFromTimestamp("updated", eprint.LastModified, "Created from EPrint's last_modified field"))
+		rec.Metadata.Dates = append(rec.Metadata.Dates, dateTypeFromTimestamp("updated", eprint.LastModified, "Created from EPrint's last_modified field"))
 	}
 	/*
 		// status_changed is not a date type in Invenio-RDM, might be mapped
 		// into available object.
 		// FIXME: is this date reflect when it changes status or when it was made available?
 		if eprint.StatusChanged != "" {
-			metadata.Dates = append(metadata.Dates, dateTypeFromTimestamp("status_changed", eprint.StatusChanged, "Created from EPrint's status_changed field"))
+			rec.Metadata.Dates = append(rec.Metadata.Dates, dateTypeFromTimestamp("status_changed", eprint.StatusChanged, "Created from EPrint's status_changed field"))
 		}
 	*/
 	if eprint.RevNumber != 0 {
-		metadata.Version = fmt.Sprintf("v%d", eprint.RevNumber)
+		rec.Metadata.Version = fmt.Sprintf("v%d", eprint.RevNumber)
 	}
 	if eprint.Publisher != "" {
-		metadata.Publisher = eprint.Publisher
+		rec.Metadata.Publisher = eprint.Publisher
 	} else if eprint.Publication != "" {
-		metadata.Publisher = eprint.Publication
+		rec.Metadata.Publisher = eprint.Publication
 	} else if eprint.DOI == "" {
-		metadata.Publisher = "Caltech Library"
+		rec.Metadata.Publisher = "Caltech Library"
 	}
-	
+
 	// Pickup EPrint ID as "external identifier" in .metadata.identifier
 	if eprint.EPrintID > 0 {
-		metadata.Identifiers = append(metadata.Identifiers, mkSimpleIdentifier("eprintid", fmt.Sprintf("%d", eprint.EPrintID)))
+		rec.Metadata.Identifiers = append(rec.Metadata.Identifiers, mkSimpleIdentifier("eprintid", fmt.Sprintf("%d", eprint.EPrintID)))
 	}
 
 	if eprint.DOI != "" {
-		metadata.Identifiers = append(metadata.Identifiers, mkSimpleIdentifier("doi", eprint.DOI))
+		rec.Metadata.Identifiers = append(rec.Metadata.Identifiers, mkSimpleIdentifier("doi", eprint.DOI))
 	}
 	if eprint.ISBN != "" {
-		metadata.Identifiers = append(metadata.Identifiers, mkSimpleIdentifier("isbn", eprint.ISBN))
+		rec.Metadata.Identifiers = append(rec.Metadata.Identifiers, mkSimpleIdentifier("isbn", eprint.ISBN))
 	}
 	if eprint.ISSN != "" {
-		metadata.Identifiers = append(metadata.Identifiers, mkSimpleIdentifier("issn", eprint.ISSN))
+		rec.Metadata.Identifiers = append(rec.Metadata.Identifiers, mkSimpleIdentifier("issn", eprint.ISSN))
 	}
 	if eprint.PMCID != "" {
-		metadata.Identifiers = append(metadata.Identifiers, mkSimpleIdentifier("pmcid", eprint.PMCID))
+		rec.Metadata.Identifiers = append(rec.Metadata.Identifiers, mkSimpleIdentifier("pmcid", eprint.PMCID))
 	}
 	if (eprint.Funders != nil) && (eprint.Funders.Items != nil) {
 		for _, item := range eprint.Funders.Items {
 			if item.Agency != "" {
-				metadata.Funding = append(metadata.Funding, funderFromItem(item))
+				rec.Metadata.Funding = append(rec.Metadata.Funding, funderFromItem(item))
 			}
 		}
 	}
-	rec.Metadata = metadata
 	return nil
 }
 
@@ -649,16 +653,16 @@ func filesFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record) error {
 	// crosswalk Files from EPrints DocumentList
 	if (eprint != nil) && (eprint.Documents != nil) && (eprint.Documents.Length() > 0) {
 		addFiles := false
-		files := new(Files)
+		files := new(simplified.Files)
 		files.Order = []string{}
 		files.Enabled = true
-		files.Entries = map[string]*Entry{}
+		files.Entries = map[string]*simplified.Entry{}
 		for i := 0; i < eprint.Documents.Length(); i++ {
 			doc := eprint.Documents.IndexOf(i)
 			if len(doc.Files) > 0 {
 				for _, docFile := range doc.Files {
 					addFiles = true
-					entry := new(Entry)
+					entry := new(simplified.Entry)
 					entry.FileID = docFile.URL
 					entry.Size = docFile.FileSize
 					entry.MimeType = docFile.MimeType
@@ -686,8 +690,8 @@ func filesFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record) error {
 func tombstoneFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record) error {
 	// FIXME: crosswalk Tombstone
 	if eprint.EPrintStatus == "deletion" {
-		tombstone := new(Tombstone)
-		tombstone.RemovedBy = new(User)
+		tombstone := new(simplified.Tombstone)
+		tombstone.RemovedBy = new(simplified.User)
 		tombstone.RemovedBy.DisplayName = eprint.Reviewer
 		tombstone.RemovedBy.User = eprint.UserID
 		if eprint.Suggestions != "" {
@@ -731,22 +735,22 @@ func createdUpdatedFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record
 	return nil
 }
 
-// Run implements the eprint2rdm cli behaviors. 
+// Run implements the eprint2rdm cli behaviors.
 //
 // ```
 //
-//	app := new(irdmtools.EPrint2Rdm)
-//  eprintUsername := os.Getenv("EPRINT_USERNAME")
-//  eprintPassword := os.Getenv("EPRINT_PASSWORD")
-//	eprintHost := "eprints.example.edu"
-//  eprintId := "11822"
-//	src, err := app.Run(os.Stdin, os.Stdout, os.Stderr,
-//	                     eprintUser, eprintPassword,
-//                       eprintHost, eprintId, debug)
-//	if err != nil {
-//	    // ... handle error ...
-//	}
-//	fmt.Printf("%s\n", src)
+//		app := new(irdmtools.EPrint2Rdm)
+//	 eprintUsername := os.Getenv("EPRINT_USERNAME")
+//	 eprintPassword := os.Getenv("EPRINT_PASSWORD")
+//		eprintHost := "eprints.example.edu"
+//	 eprintId := "11822"
+//		src, err := app.Run(os.Stdin, os.Stdout, os.Stderr,
+//		                     eprintUser, eprintPassword,
+//	                      eprintHost, eprintId, debug)
+//		if err != nil {
+//		    // ... handle error ...
+//		}
+//		fmt.Printf("%s\n", src)
 //
 // ```
 func (app *EPrint2Rdm) Run(in io.Reader, out io.Writer, eout io.Writer, username string, password string, host string, eprintId string, debug bool) error {
@@ -761,12 +765,12 @@ func (app *EPrint2Rdm) Run(in io.Reader, out io.Writer, eout io.Writer, username
 		return fmt.Errorf("failed to retrieve %q\n", getURL)
 	}
 	src := buf.Bytes()
-	eprint := new(eprinttools.EPrints)
-	if err := json.Unmarshal(src, &eprint); err != nil {
+	eprints := new(eprinttools.EPrints)
+	if err := xml.Unmarshal(src, &eprints); err != nil {
 		return err
 	}
 	record := new(simplified.Record)
-	err := CrosswalkEPrintToRecord(eprint, record)
+	err := CrosswalkEPrintToRecord(eprints.EPrint[0], record)
 	if err != nil {
 		return err
 	}

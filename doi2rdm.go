@@ -1,4 +1,4 @@
-// irdmtools is a package for working with institutional repositories and
+// / irdmtools is a package for working with institutional repositories and
 // data management systems. Current implementation targets Invenio-RDM.
 //
 // @author R. S. Doiel, <rsdoiel@caltech.edu>
@@ -111,7 +111,7 @@ func (app *Doi2Rdm) Configure(configFName string, envPrefix string, debug bool) 
 //
 // ```
 func (app *Doi2Rdm) Run(in io.Reader, out io.Writer, eout io.Writer, options map[string]string, doi string) error {
-	queryCrossRef, queryDataCite, debug := true, true, false
+	queryCrossRef, queryDataCite := true, true
 	dotInitials, downloadDocument := false, false
 	mailTo, diffFName := "", ""
 	for opt, val := range options {
@@ -131,7 +131,7 @@ func (app *Doi2Rdm) Run(in io.Reader, out io.Writer, eout io.Writer, options map
 		case "mailto":
 			mailTo = val
 		case "debug":
-			debug = true
+			app.Cfg.Debug = true
 		default:
 			return fmt.Errorf("%q parameter is not supported", opt)
 		}
@@ -160,7 +160,7 @@ func (app *Doi2Rdm) Run(in io.Reader, out io.Writer, eout io.Writer, options map
 		if err != nil {
 			return err
 		}
-		nRecord, err := CrosswalkCrossRefWork(app.Cfg, nWork)
+		nRecord, err = CrosswalkCrossRefWork(app.Cfg, nWork)
 		if err != nil {
 			return err
 		}
@@ -177,20 +177,23 @@ func (app *Doi2Rdm) Run(in io.Reader, out io.Writer, eout io.Writer, options map
 		return nil
 	}
 	if queryDataCite {
-		obj, err := QueryDataCite(app.Cfg, doi, mailTo, dotInitials, downloadDocument, debug)
-		if err != nil {
-			return err
-		}
-		nRecord, err = CrosswalkDataCite(app.Cfg, obj, debug)
-		if err != nil {
-			return err
-		}
-		src, err := json.MarshalIndent(nRecord, "", "    ")
-		if err != nil {
-			return err
-		}
-		fmt.Fprintf(out, "%s\n", src)
-		return nil
+		return fmt.Errorf("DataCite support not implemented.")
+		/*
+			obj, err := QueryDataCite(app.Cfg, doi, mailTo, dotInitials, downloadDocument, debug)
+			if err != nil {
+				return err
+			}
+			nRecord, err = CrosswalkDataCite(app.Cfg, obj, debug)
+			if err != nil {
+				return err
+			}
+			src, err := json.MarshalIndent(nRecord, "", "    ")
+			if err != nil {
+				return err
+			}
+			fmt.Fprintf(out, "%s\n", src)
+			return nil
+		*/
 	}
 	return fmt.Errorf("%s not found", doi)
 }

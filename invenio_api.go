@@ -252,20 +252,15 @@ func GetRecordIds(cfg *Config) ([]string, error) {
 		// NOTE: We need to respect rate limits of the RDM API
 		rl.Throttle(i, 1)
 		if debug && ((i % 10) == 0) {
-			cfgPrintf("retrieved record %q (%d/%d), %s", id, i, tot, rl.String())
+			dbgPrintf(cfg, "retrieved xml (%d), %s", i, rl.String())
 		}
-		/*
-			if cfg.Debug {
-				os.WriteFile("oai-pmh-list-identifiers.xml", src, 0660)
-			}
-		*/
 		if bytes.HasPrefix(src, []byte("<html")) {
-			dbgPrintf("\n%s\n", src)
+			dbgPrintf(cfg, "\n%s\n", src)
 			resumptionToken = ""
 		} else {
 			oai := new(OAIListIdentifiersResponse)
 			if err := xml.Unmarshal(src, oai); err != nil {
-				dbgPrintf("\n%s\n", src)
+				dbgPrintf(cfg, "\n%s\n", src)
 				resumptionToken = ""
 				return nil, err
 			}
@@ -332,13 +327,13 @@ func GetModifiedRecordIds(cfg *Config, start string, end string) ([]string, erro
 		// NOTE: We need to respect rate limits for RDM API, unfortunately we don't know the total number of keys from this API request ...
 		rl.Throttle(i, 1)
 		if debug && ((i % 10) == 0) {
-			dbgPrintf("retrieved record %q (%d/%d), %s", id, i, tot, rl.String())
+			dbgPrintf(cfg, "retrieved xml (%d), %s", i, rl.String())
 		}
 
 		if bytes.HasPrefix(src, []byte("<html")) {
 			// FIXME: Need to display error contained in the HTML response
 			if debug {
-				dbgPrintf("\n%s\n", src)
+				dbgPrintf(cfg, "\n%s\n", src)
 			}
 			resumptionToken = ""
 		} else {

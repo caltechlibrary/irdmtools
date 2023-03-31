@@ -138,7 +138,7 @@ func main() {
 	flag.StringVar(&configFName, "config", configFName, "use a config file")
 	flag.BoolVar(&onlyCrossRef, "crossref", onlyCrossRef, "only search CrossRef API for DOI records")
 	flag.BoolVar(&onlyDataCite, "datacite", onlyDataCite, "only search DataCite API for DOI records")
-	flag.BoolVar(&diffFName, "diff", diffFName, "compare the JSON file with the current record generated from CrossRef or DataCite")
+	flag.StringVar(&diffFName, "diff", diffFName, "compare the JSON file with the current record generated from CrossRef or DataCite")
 	flag.BoolVar(&dotInitials, "dot-initials", dotInitials, "Add period to initials in given name")
 	flag.BoolVar(&downloadDocument, "download", downloadDocument, "attempt to download the digital object if object URL provided")
 	flag.StringVar(&mailTo, "mailto", mailTo, "set the mail to value for CrossRef API access")

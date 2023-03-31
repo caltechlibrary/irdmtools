@@ -32,11 +32,8 @@ DOI can be in either their canonical form or URL form
 -config FILENAME
 : use configuration file
 
--crossref
-: only search CrossRef API for DOI records
-
--datacite
-: only search DataCite API for DOI records
+-diff JSON_FILENAME
+: compare the JSON_FILENAME contents with record generated from CrossRef works record
 
 -dot-initials
 : Add period to initials in given name
@@ -66,5 +63,11 @@ text file is called "article.json".
 	doi2rdm "10.1021/acsami.7b15651" >article.json
 ~~~
 
+Check to see the difference from the saved "article.json" and
+the current metadata retrieved from CrossRef.
+
+~~~
+	doi2rdm -diff article.json "10.1021/acsami.7b15651
+~~~
 
 
