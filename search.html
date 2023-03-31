@@ -23,15 +23,20 @@
 </nav>
 
 <section>
-<h1 id="user-manual">User manual</h1>
-<h2 id="tools">Tools</h2>
-<ul>
-<li><a href="rdmutil.1.html">rdmutil</a> work with Invenio RDM metadata
-from the command line</li>
-<li><a href="eprint2rdm.1.html">eprint2rdm</a> retrieve an EPrint record
-via the EPrint REST API and return a simplified JSON record almost ready
-for important into Invenio RDM</li>
-</ul>
+<h1 id="project-search">project search</h1>
+<link href="./pagefind/pagefind-ui.css" rel="stylesheet">
+<script src="./pagefind/pagefind-ui.js" type="text/javascript"></script>
+<div id="search">
+
+</div>
+<script>
+    window.addEventListener('DOMContentLoaded', (event) => {
+        new PagefindUI({ 
+            element: "#search",
+            baseUrl: "./"
+        });
+    });
+</script>
 </section>
 
 <footer>
