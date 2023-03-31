@@ -94,7 +94,7 @@ publish: build save .FORCE
 	git pull origin gh-pages
 	git pull origin $(BRANCH)
 	touch README.md CITATION.cff about.md
-	$(MK_WEBSITE)
+	make -f website.mak
 	git add *.html
 	git add pagefind
 	git commit -am "publishing website"
