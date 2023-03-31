@@ -88,7 +88,7 @@ refresh:
 	git fetch origin
 	git pull origin $(BRANCH)
 
-publish: build save
+publish: build save .FORCE
 	git checkout gh-pages
 	git fetch origin
 	git pull origin gh-pages
