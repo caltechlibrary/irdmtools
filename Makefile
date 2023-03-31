@@ -74,7 +74,7 @@ test: $(PACKAGE)
 	go test -timeout 20m -run TestGetRecordIds
 	go test -timeout 20m -run TestGetModifiedIds
 
-website: clean-website
+website: clean-website .FORCE
 	make -f website.mak
 
 status:
