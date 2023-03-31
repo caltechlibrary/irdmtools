@@ -90,10 +90,14 @@ refresh:
 
 publish: build save
 	git checkout gh-pages
+	git fetch origin
+	git pull origin gh-pages
 	git pull origin $(BRANCH)
 	$(MK_WEBSITE)
-	-git commit -am "publishing website"
-	-git push origin gh-pages
+	git add *.html
+	git add pagefind
+	git commit -am "publishing website"
+	git push origin gh-pages
 	git checkout $(BRANCH)
 
 clean:
