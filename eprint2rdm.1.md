@@ -77,16 +77,31 @@ saving the results in a dataset collection for analysis or
 migration.
 
 1. create a dataset collection
-2. get the EPrint ids to harvest applying a resource type map, "resource-types.csv"
+2. get the EPrint ids to harvest applying a resource type map, "resource_types.csv"
 3. Harvest the eprint records and save in our dataset collection
 
 ~~~
 dataset init example_edu.ds
 eprint2rdm -all-ids eprints.example.edu >eprintids.txt
-while read EPRINTID; do
-    eprint2rdm -resource-map resource-types.csv \
-       eprints.example.edu "${EPRINTID}" |\
-	   dataset create -i - example_edu.ds "${EPRINTID}"
+while read -r EPRINTID; do
+	if [ "${EPRINTID}" != "" ]; then
+	    if eprint2rdm -resource-map resource_types.csv \
+	        eprints.example.edu "${EPRINTID}" \
+	        >record.json; then
+	        echo "fetched ${EPRINTID} as record.json"
+	    else
+	        echo "Something went wrong exporting ${EPRINTID}, stopping"
+	        exit 1
+	    fi
+	    if [ -f record.json ]; then
+	        echo "Adding ${EPRINTID} to example_edu.ds"
+	        dataset create -i record.json example_edu.ds "${EPRINTID}"
+	        rm record.json
+	    else
+	        echo "Something went wrong, could not read record.json for ${EPRINTID}, stopping"
+	        exit 1
+	    fi
+	fi
 done <eprintids.txt
 ~~~
 
