@@ -33,7 +33,8 @@ EPRINT_ID</p>
 takes an EPrint hostname and EPrint ID and returns a JSON document
 suitable to import into Invenio RDM. It relies on access to EPrint’s
 REST API. It uses EPRINT_USER and EPRINT_PASSWORD environment variables
-to access the API.</p>
+to access the API. Using the “-keys” options you can get a list of keys
+available from the EPrints REST API.</p>
 <h1 id="options">OPTIONS</h1>
 <dl>
 <dt>-help</dt>
@@ -48,6 +49,17 @@ display license
 <dd>
 display version
 </dd>
+<dt>-all-ids</dt>
+<dd>
+return a list of EPrint ids, one per line.
+</dd>
+<dt>-resource-map FILENAME</dt>
+<dd>
+use this comma delimited resource map from EPrints to RDM resource
+types. The resource map file is a comma delimited file without a header
+row. first column is the EPrint resource type string, the second is the
+RDM resource type string.
+</dd>
 </dl>
 <h1 id="example">EXAMPLE</h1>
 <p>Example generating a JSON document for from the EPrints repository
@@ -58,6 +70,28 @@ EPrint REST API is configured in the environment. The result is saved in
 EPRINT_PASSWORD=&quot;__PASSWORD_GOES_HERE__&quot;
 eprint2rdm eprints.example.edu 118621 \
     &gt;article.json</code></pre>
+<p>Generate a list of EPrint ids from a repository
+(e.g. eprints.example.edu).</p>
+<pre><code>eprint2rdm -all-ids eprints.example.edu &gt;eprintids.txt</code></pre>
+<p>Generate a JSON document from the EPrints repository hosted as
+“eprints.example.edu” for EPrint ID 118621 using a resource map file to
+map the EPrints resource type to an Invenio RDM resource type.</p>
+<pre><code>eprint2rdm --resource-map resource-types.csv \
+      eprints.example.edu 118621 \
+      &gt;article.json</code></pre>
+<p>Putting it together in the to harvest an EPrints repository saving
+the results in a dataset collection for analysis or migration.</p>
+<ol type="1">
+<li>create a dataset collection</li>
+<li>get the EPrint ids to harvest</li>
+<li>Harvest the eprint records and save in our dataset collection</li>
+</ol>
+<pre><code>dataset init example_edu.ds
+eprint2rdm -all-ids eprints.example.edu &gt;eprintids.txt
+while read EPRINTID; do
+    eprint2rdm eprints.example.edu &quot;${EPRINTID}&quot; |\
+       dataset create -i - example_edu.ds &quot;${EPRINTID}&quot;
+done &lt;eprintids.txt</code></pre>
 </section>
 
 <footer>
