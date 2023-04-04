@@ -94,7 +94,8 @@ results in a dataset collection for analysis or migration.
 .IP "1." 3
 create a dataset collection
 .IP "2." 3
-get the EPrint ids to harvest
+get the EPrint ids to harvest applying a resource type map,
+\[lq]resource-types.csv\[rq]
 .IP "3." 3
 Harvest the eprint records and save in our dataset collection
 .IP
@@ -103,10 +104,14 @@ Harvest the eprint records and save in our dataset collection
 dataset init example_edu.ds
 eprint2rdm -all-ids eprints.example.edu >eprintids.txt
 while read EPRINTID; do
-    eprint2rdm eprints.example.edu \[dq]${EPRINTID}\[dq] |\[rs]
+    eprint2rdm -resource-map resource-types.csv \[rs]
+       eprints.example.edu \[dq]${EPRINTID}\[dq] |\[rs]
        dataset create -i - example_edu.ds \[dq]${EPRINTID}\[dq]
 done <eprintids.txt
 \f[R]
 .fi
+.PP
+At this point you would be ready to improve the records in
+example_edu.ds before migrating them into Invenio RDM.
 .SH AUTHORS
 R. S. Doiel and Tom Morrell.

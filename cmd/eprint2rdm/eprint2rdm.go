@@ -110,7 +110,7 @@ Generate a list of EPrint ids from a repository (e.g. eprints.example.edu).
 
 Generate a JSON document from the EPrints repository
 hosted as "eprints.example.edu" for EPrint ID 118621 using a
-resource map file to map the EPrints resource type to an 
+resource map file to map the EPrints resource type to an
 Invenio RDM resource type.
 
 ~~~
@@ -124,18 +124,21 @@ saving the results in a dataset collection for analysis or
 migration.
 
 1. create a dataset collection
-2. get the EPrint ids to harvest
+2. get the EPrint ids to harvest applying a resource type map, "resource-types.csv"
 3. Harvest the eprint records and save in our dataset collection
 
 ~~~
 dataset init example_edu.ds
 {app_name} -all-ids eprints.example.edu >eprintids.txt
 while read EPRINTID; do
-    {app_name} eprints.example.edu "${EPRINTID}" |\
+    {app_name} -resource-map resource-types.csv \
+       eprints.example.edu "${EPRINTID}" |\
 	   dataset create -i - example_edu.ds "${EPRINTID}"
 done <eprintids.txt
 ~~~
 
+At this point you would be ready to improve the records in
+example_edu.ds before migrating them into Invenio RDM.
 `
 )
 
