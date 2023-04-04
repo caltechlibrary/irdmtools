@@ -84,15 +84,30 @@ the results in a dataset collection for analysis or migration.</p>
 <ol type="1">
 <li>create a dataset collection</li>
 <li>get the EPrint ids to harvest applying a resource type map,
-“resource-types.csv”</li>
+“resource_types.csv”</li>
 <li>Harvest the eprint records and save in our dataset collection</li>
 </ol>
 <pre><code>dataset init example_edu.ds
 eprint2rdm -all-ids eprints.example.edu &gt;eprintids.txt
-while read EPRINTID; do
-    eprint2rdm -resource-map resource-types.csv \
-       eprints.example.edu &quot;${EPRINTID}&quot; |\
-       dataset create -i - example_edu.ds &quot;${EPRINTID}&quot;
+while read -r EPRINTID; do
+    if [ &quot;${EPRINTID}&quot; != &quot;&quot; ]; then
+        if eprint2rdm -resource-map resource_types.csv \
+            eprints.example.edu &quot;${EPRINTID}&quot; \
+            &gt;record.json; then
+            echo &quot;fetched ${EPRINTID} as record.json&quot;
+        else
+            echo &quot;Something went wrong exporting ${EPRINTID}, stopping&quot;
+            exit 1
+        fi
+        if [ -f record.json ]; then
+            echo &quot;Adding ${EPRINTID} to example_edu.ds&quot;
+            dataset create -i record.json example_edu.ds &quot;${EPRINTID}&quot;
+            rm record.json
+        else
+            echo &quot;Something went wrong, could not read record.json for ${EPRINTID}, stopping&quot;
+            exit 1
+        fi
+    fi
 done &lt;eprintids.txt</code></pre>
 <p>At this point you would be ready to improve the records in
 example_edu.ds before migrating them into Invenio RDM.</p>
