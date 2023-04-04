@@ -36,10 +36,12 @@ package irdmtools
 
 import (
 	"bytes"
+	"encoding/csv"
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
 	"io"
+	"os"
 	"strings"
 	"time"
 
@@ -58,6 +60,13 @@ type EPrint2Rdm struct {
 	Cfg *Config
 }
 
+// EPrintKeysPage holds the structure of the HTML page with the
+// EPrint IDs embedded from the EPrint REST API.
+type EPrintKeysPage struct {
+	XMLName xml.Name `xml:"html"`
+	Anchors []string `xml:"body>ul>li>a"`
+}
+
 /**
  * Implements a crosswalk from EPrints to an Invenio RDM JSON
  * representation.
@@ -72,7 +81,7 @@ type EPrint2Rdm struct {
 // CrosswalkEPrintToRecord implements a crosswalk between
 // an EPrint 3.x EPrint XML record as struct to a Invenio RDM
 // record as struct.
-func CrosswalkEPrintToRecord(eprint *eprinttools.EPrint, rec *simplified.Record) error {
+func CrosswalkEPrintToRecord(eprint *eprinttools.EPrint, rec *simplified.Record, resourceTypes map[string]string) error {
 	rec.Schema = `local://records/record-v2.0.0.json`
 	rec.ID = fmt.Sprintf("%s:%d", eprint.Collection, eprint.EPrintID)
 
@@ -108,7 +117,7 @@ func CrosswalkEPrintToRecord(eprint *eprinttools.EPrint, rec *simplified.Record)
 		}
 	*/
 	// Now finish simple record normalization ...
-	if err := mapResourceType(eprint, rec); err != nil {
+	if err := mapResourceType(eprint, rec, resourceTypes); err != nil {
 		return err
 	}
 	if err := simplifyCreators(eprint, rec); err != nil {
@@ -306,18 +315,91 @@ func simplifyFunding(eprint *eprinttools.EPrint, rec *simplified.Record) error {
 	return nil
 }
 
+// LoadResourceType map parses a CSV file where column zero is the EPrint resource type string
+// and colume one is the IvenioRDM resource type string. If the file cannot be read or parsed it
+// will return an error otherwise the map[string]string value will be updated with the contents of
+// the mapping.
+//
+// ```
+// resourceTypes := map[string]string{}
+// err := LoadResourceTypeMap("resource-types.csv", resourceTypes)
+//
+//	// ... handle error or continie processing...
+//
+// ```
+func LoadResourceTypeMap(fName string, resourceTypes map[string]string) error {
+	if resourceTypes == nil {
+		resourceTypes = map[string]string{}
+	}
+	src, err := os.ReadFile(fName)
+	if err != nil {
+		return err
+	}
+	reader := csv.NewReader(bytes.NewBuffer(src))
+	table, err := reader.ReadAll()
+	if err != nil {
+		return err
+	}
+	for _, row := range table {
+		if len(row) == 2 {
+			resourceTypes[row[0]] = row[1]
+		}
+	}
+	return err
+}
+
 // mapResourceType maps the EPrints record types to a predetermined
 // Invenio-RDM record type.
-func mapResourceType(eprint *eprinttools.EPrint, rec *simplified.Record) error {
+func mapResourceType(eprint *eprinttools.EPrint, rec *simplified.Record, resourceTypesMap map[string]string) error {
 	if rec.Metadata.ResourceType == nil {
 		rec.Metadata.ResourceType = map[string]string{}
 	}
-	// FIXME: I need to implement a full map of default resource types.
-	// FIXME: need to load this from an optional configuration file
-	crosswalkResourceTypes := map[string]string{
-		"article": "publication-article",
+	if len(resourceTypesMap) == 0 {
+		// NOTE: This is a default map used of no resource type map is provided.
+		resourceTypesMap = map[string]string{
+			"publication":             "publication",
+			"annoatation_collection":  "publication-annotationcollection",
+			"atlas":                   "publication-atlas",
+			"book":                    "publication-book",
+			"book_section":            "publication-section",
+			"conference":              "conference",
+			"conference_item":         "conference",
+			"conference_paper":        "conference-paper",
+			"conference_poster":       "conference-poster",
+			"conference_presentation": "conference-presentation",
+			"data_management_plan":    "publication-datamanagementplan",
+			"article":                 "publication-article",
+			"patent":                  "publication-patent",
+			"preprint":                "publication-preprint",
+			"deliverable":             "publication-deliverable",
+			"tech_report":             "publication-report",
+			"monograph":               "publication-report",
+			"software_documentation":  "publication-softwaredocumentation",
+			"technote":                "publication-technicalnote",
+			"thesis":                  "publication-thesis",
+			"working_paper":           "publication-workingpaper",
+			"other_publication":       "publication-other",
+			"documentation":           "publication-documentation",
+			"journal_issue":           "publication-issue",
+			"newspaper_issue":         "publication-newspaperissue",
+			"erratum":                 "publication-erratum",
+			"oral_history":            "publication-oralhistory",
+			"map":                     "publication-map",
+			"whitepaper":              "publication-whitepaper",
+			"lab_notes":               "labnotebook",
+			"presentation":            "presentation",
+			"dataset":                 "dataset",
+			"image":                   "image",
+			"image_map":               "image-map",
+			"video":                   "video",
+			"software":                "software",
+			"teaching_resource":       "teachingresource",
+			"lecture_notes":           "teachingresource-lecturenotes",
+			"textbook":                "teachingresource-textbook",
+			"other":                   "other",
+		}
 	}
-	val, ok := crosswalkResourceTypes[eprint.Type]
+	val, ok := resourceTypesMap[eprint.Type]
 	if !ok {
 		return fmt.Errorf("unable to map %q to simple record type", eprint.Type)
 	}
@@ -753,9 +835,14 @@ func createdUpdatedFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record
 //		fmt.Printf("%s\n", src)
 //
 // ```
-func (app *EPrint2Rdm) Run(in io.Reader, out io.Writer, eout io.Writer, username string, password string, host string, eprintId string, debug bool) error {
+func (app *EPrint2Rdm) Run(in io.Reader, out io.Writer, eout io.Writer, username string, password string, host string, eprintId string, resourceTypesFName string, allIds bool, debug bool) error {
+	var getURL string
 	buf := new(bytes.Buffer)
-	getURL := fmt.Sprintf("https://%s/rest/eprint/%s.xml", host, eprintId)
+	if allIds {
+		getURL = fmt.Sprintf("https://%s/rest/eprint/", host)
+	} else {
+		getURL = fmt.Sprintf("https://%s/rest/eprint/%s.xml", host, eprintId)
+	}
 	auth := "basic"
 	options := map[string]bool{
 		"debug": debug,
@@ -764,20 +851,39 @@ func (app *EPrint2Rdm) Run(in io.Reader, out io.Writer, eout io.Writer, username
 	if exitCode != 0 {
 		return fmt.Errorf("failed to retrieve %q\n", getURL)
 	}
-	src := buf.Bytes()
-	eprints := new(eprinttools.EPrints)
-	if err := xml.Unmarshal(src, &eprints); err != nil {
-		return err
+	if allIds {
+		keysPage := new(EPrintKeysPage)
+		src := buf.Bytes()
+		if err := xml.Unmarshal(src, &keysPage); err != nil {
+			return err
+		}
+		// Build a list of Unique IDs in a map, then convert
+		// unique querys to results array
+		for _, val := range keysPage.Anchors {
+			if strings.HasSuffix(val, ".xml") == true {
+				fmt.Fprintf(out, "%s\n", strings.TrimSuffix(val, ".xml"))
+			}
+		}
+	} else {
+		resourceTypes := map[string]string{}
+		if err := LoadResourceTypeMap(resourceTypesFName, resourceTypes); err != nil {
+			return err
+		}
+		src := buf.Bytes()
+		eprints := new(eprinttools.EPrints)
+		if err := xml.Unmarshal(src, &eprints); err != nil {
+			return err
+		}
+		record := new(simplified.Record)
+		err := CrosswalkEPrintToRecord(eprints.EPrint[0], record, resourceTypes)
+		if err != nil {
+			return err
+		}
+		src, err = json.MarshalIndent(record, "", "   ")
+		if err != nil {
+			return err
+		}
+		fmt.Fprintf(out, "%s\n", src)
 	}
-	record := new(simplified.Record)
-	err := CrosswalkEPrintToRecord(eprints.EPrint[0], record)
-	if err != nil {
-		return err
-	}
-	src, err = json.MarshalIndent(record, "", "   ")
-	if err != nil {
-		return err
-	}
-	fmt.Fprintf(out, "%s\n", src)
 	return nil
 }

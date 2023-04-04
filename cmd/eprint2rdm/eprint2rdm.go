@@ -63,7 +63,8 @@ var (
 that takes an EPrint hostname and EPrint ID and returns a JSON
 document suitable to import into Invenio RDM. It relies on
 access to EPrint's REST API. It uses EPRINT_USER and EPRINT_PASSWORD
-environment variables to access the API.
+environment variables to access the API. Using the "-keys" options
+you can get a list of keys available from the EPrints REST API.
 
 # OPTIONS
 
@@ -76,7 +77,18 @@ environment variables to access the API.
 -version
 : display version
 
+-all-ids
+: return a list of EPrint ids, one per line.
+
+-resource-map FILENAME
+: use this comma delimited resource map from EPrints to RDM resource types.
+The resource map file is a comma delimited file without a header row.
+first column is the EPrint resource type string, the second is the
+RDM resource type string.
+
+
 # EXAMPLE
+
 
 Example generating a JSON document for from the EPrints repository
 hosted as "eprints.example.edu" for EPrint ID 118621.  Access to
@@ -90,6 +102,40 @@ EPRINT_PASSWORD="__PASSWORD_GOES_HERE__"
 	>article.json
 ~~~
 
+Generate a list of EPrint ids from a repository (e.g. eprints.example.edu).
+
+~~~
+{app_name} -all-ids eprints.example.edu >eprintids.txt
+~~~
+
+Generate a JSON document from the EPrints repository
+hosted as "eprints.example.edu" for EPrint ID 118621 using a
+resource map file to map the EPrints resource type to an 
+Invenio RDM resource type.
+
+~~~
+{app_name} --resource-map resource-types.csv \
+      eprints.example.edu 118621 \
+	  >article.json
+~~~
+
+Putting it together in the to harvest an EPrints repository
+saving the results in a dataset collection for analysis or
+migration.
+
+1. create a dataset collection
+2. get the EPrint ids to harvest
+3. Harvest the eprint records and save in our dataset collection
+
+~~~
+dataset init example_edu.ds
+{app_name} -all-ids eprints.example.edu >eprintids.txt
+while read EPRINTID; do
+    {app_name} eprints.example.edu "${EPRINTID}" |\
+	   dataset create -i - example_edu.ds "${EPRINTID}"
+done <eprintids.txt
+~~~
+
 `
 )
 
@@ -100,11 +146,14 @@ func fmtTxt(txt string, appName string) string {
 func main() {
 	appName := path.Base(os.Args[0])
 	showHelp, showVersion, showLicense := false, false, false
-	debug := false
+	allIds, debug := false, false
+	resourceTypesFName := ""
 	flag.BoolVar(&showHelp, "help", false, "display help")
 	flag.BoolVar(&showVersion, "version", false, "display version")
 	flag.BoolVar(&showLicense, "license", false, "display license")
 	flag.BoolVar(&debug, "debug", debug, "display additional info to stderr")
+	flag.BoolVar(&allIds, "all-ids", false, "retrieve all the eprintids from an EPrints repository via REST API, one per line")
+	flag.StringVar(&resourceTypesFName, "resource-map", resourceTypesFName, "use this file to map resource types from EPrints to Invenio RDM")
 	flag.Parse()
 	args := flag.Args()
 
@@ -126,12 +175,24 @@ func main() {
 	}
 
 	// Create a appity object
+	host, eprintid := "", ""
 	app := new(irdmtools.EPrint2Rdm)
-	if len(args) != 2 {
-		fmt.Fprintf(os.Stderr, "expected an EPrint hostname and EPrint ID")
-		os.Exit(1)
+	if allIds {
+		if len(args) != 1 {
+			fmt.Fprintf(os.Stderr, "expected an EPrint hostname and -keys option")
+			os.Exit(1)
+		} else {
+			host = args[0]
+		}
+	} else {
+		if len(args) != 2 {
+			fmt.Fprintf(os.Stderr, "expected an EPrint hostname and EPrint ID")
+			os.Exit(1)
+		} else {
+			host, eprintid = args[0], args[1]
+		}
 	}
-	if err := app.Run(os.Stdin, os.Stdout, os.Stderr, eprintUser, eprintPassword, args[0], args[1], debug); err != nil {
+	if err := app.Run(os.Stdin, os.Stdout, os.Stderr, eprintUser, eprintPassword, host, eprintid, resourceTypesFName, allIds, debug); err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
 		os.Exit(1)
 	}

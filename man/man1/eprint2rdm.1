@@ -30,6 +30,8 @@ suitable to import into Invenio RDM.
 It relies on access to EPrint\[cq]s REST API.
 It uses EPRINT_USER and EPRINT_PASSWORD environment variables to access
 the API.
+Using the \[lq]-keys\[rq] options you can get a list of keys available
+from the EPrints REST API.
 .SH OPTIONS
 .TP
 -help
@@ -40,6 +42,16 @@ display license
 .TP
 -version
 display version
+.TP
+-all-ids
+return a list of EPrint ids, one per line.
+.TP
+-resource-map FILENAME
+use this comma delimited resource map from EPrints to RDM resource
+types.
+The resource map file is a comma delimited file without a header row.
+first column is the EPrint resource type string, the second is the RDM
+resource type string.
 .SH EXAMPLE
 .PP
 Example generating a JSON document for from the EPrints repository
@@ -53,6 +65,47 @@ EPRINT_USER=\[dq]__USERNAME_GOES_HERE__\[dq]
 EPRINT_PASSWORD=\[dq]__PASSWORD_GOES_HERE__\[dq]
 eprint2rdm eprints.example.edu 118621 \[rs]
     >article.json
+\f[R]
+.fi
+.PP
+Generate a list of EPrint ids from a repository
+(e.g.\ eprints.example.edu).
+.IP
+.nf
+\f[C]
+eprint2rdm -all-ids eprints.example.edu >eprintids.txt
+\f[R]
+.fi
+.PP
+Generate a JSON document from the EPrints repository hosted as
+\[lq]eprints.example.edu\[rq] for EPrint ID 118621 using a resource map
+file to map the EPrints resource type to an Invenio RDM resource type.
+.IP
+.nf
+\f[C]
+eprint2rdm --resource-map resource-types.csv \[rs]
+      eprints.example.edu 118621 \[rs]
+      >article.json
+\f[R]
+.fi
+.PP
+Putting it together in the to harvest an EPrints repository saving the
+results in a dataset collection for analysis or migration.
+.IP "1." 3
+create a dataset collection
+.IP "2." 3
+get the EPrint ids to harvest
+.IP "3." 3
+Harvest the eprint records and save in our dataset collection
+.IP
+.nf
+\f[C]
+dataset init example_edu.ds
+eprint2rdm -all-ids eprints.example.edu >eprintids.txt
+while read EPRINTID; do
+    eprint2rdm eprints.example.edu \[dq]${EPRINTID}\[dq] |\[rs]
+       dataset create -i - example_edu.ds \[dq]${EPRINTID}\[dq]
+done <eprintids.txt
 \f[R]
 .fi
 .SH AUTHORS
