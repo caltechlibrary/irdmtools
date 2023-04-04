@@ -95,7 +95,7 @@ results in a dataset collection for analysis or migration.
 create a dataset collection
 .IP "2." 3
 get the EPrint ids to harvest applying a resource type map,
-\[lq]resource-types.csv\[rq]
+\[lq]resource_types.csv\[rq]
 .IP "3." 3
 Harvest the eprint records and save in our dataset collection
 .IP
@@ -103,10 +103,25 @@ Harvest the eprint records and save in our dataset collection
 \f[C]
 dataset init example_edu.ds
 eprint2rdm -all-ids eprints.example.edu >eprintids.txt
-while read EPRINTID; do
-    eprint2rdm -resource-map resource-types.csv \[rs]
-       eprints.example.edu \[dq]${EPRINTID}\[dq] |\[rs]
-       dataset create -i - example_edu.ds \[dq]${EPRINTID}\[dq]
+while read -r EPRINTID; do
+    if [ \[dq]${EPRINTID}\[dq] != \[dq]\[dq] ]; then
+        if eprint2rdm -resource-map resource_types.csv \[rs]
+            eprints.example.edu \[dq]${EPRINTID}\[dq] \[rs]
+            >record.json; then
+            echo \[dq]fetched ${EPRINTID} as record.json\[dq]
+        else
+            echo \[dq]Something went wrong exporting ${EPRINTID}, stopping\[dq]
+            exit 1
+        fi
+        if [ -f record.json ]; then
+            echo \[dq]Adding ${EPRINTID} to example_edu.ds\[dq]
+            dataset create -i record.json example_edu.ds \[dq]${EPRINTID}\[dq]
+            rm record.json
+        else
+            echo \[dq]Something went wrong, could not read record.json for ${EPRINTID}, stopping\[dq]
+            exit 1
+        fi
+    fi
 done <eprintids.txt
 \f[R]
 .fi
