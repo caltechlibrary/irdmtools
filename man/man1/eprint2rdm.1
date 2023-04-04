@@ -14,7 +14,7 @@
 . ftr VB CB
 . ftr VBI CBI
 .\}
-.TH "eprint2rdm" "1" "2023-03-30" "eprint2rdm user manual" "Version 0.0.2"
+.TH "eprint2rdm" "1" "2023-04-04" "eprint2rdm user manual" "Version 0.0.2"
 .hy
 .SH NAME
 .PP
@@ -94,7 +94,8 @@ results in a dataset collection for analysis or migration.
 .IP "1." 3
 create a dataset collection
 .IP "2." 3
-get the EPrint ids to harvest
+get the EPrint ids to harvest applying a resource type map,
+\[lq]resource_types.csv\[rq]
 .IP "3." 3
 Harvest the eprint records and save in our dataset collection
 .IP
@@ -102,11 +103,30 @@ Harvest the eprint records and save in our dataset collection
 \f[C]
 dataset init example_edu.ds
 eprint2rdm -all-ids eprints.example.edu >eprintids.txt
-while read EPRINTID; do
-    eprint2rdm eprints.example.edu \[dq]${EPRINTID}\[dq] |\[rs]
-       dataset create -i - example_edu.ds \[dq]${EPRINTID}\[dq]
+while read -r EPRINTID; do
+    if [ \[dq]${EPRINTID}\[dq] != \[dq]\[dq] ]; then
+        if eprint2rdm -resource-map resource_types.csv \[rs]
+            eprints.example.edu \[dq]${EPRINTID}\[dq] \[rs]
+            >record.json; then
+            echo \[dq]fetched ${EPRINTID} as record.json\[dq]
+        else
+            echo \[dq]Something went wrong exporting ${EPRINTID}, stopping\[dq]
+            exit 1
+        fi
+        if [ -f record.json ]; then
+            echo \[dq]Adding ${EPRINTID} to example_edu.ds\[dq]
+            dataset create -i record.json example_edu.ds \[dq]${EPRINTID}\[dq]
+            rm record.json
+        else
+            echo \[dq]Something went wrong, could not read record.json for ${EPRINTID}, stopping\[dq]
+            exit 1
+        fi
+    fi
 done <eprintids.txt
 \f[R]
 .fi
+.PP
+At this point you would be ready to improve the records in
+example_edu.ds before migrating them into Invenio RDM.
 .SH AUTHORS
 R. S. Doiel and Tom Morrell.

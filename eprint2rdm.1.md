@@ -1,6 +1,6 @@
 % eprint2rdm(1) eprint2rdm user manual | Version 0.0.2
 % R. S. Doiel and Tom Morrell
-% 2023-03-30
+% 2023-04-04
 
 # NAME
 
@@ -63,7 +63,7 @@ eprint2rdm -all-ids eprints.example.edu >eprintids.txt
 
 Generate a JSON document from the EPrints repository
 hosted as "eprints.example.edu" for EPrint ID 118621 using a
-resource map file to map the EPrints resource type to an 
+resource map file to map the EPrints resource type to an
 Invenio RDM resource type.
 
 ~~~
@@ -77,16 +77,34 @@ saving the results in a dataset collection for analysis or
 migration.
 
 1. create a dataset collection
-2. get the EPrint ids to harvest
+2. get the EPrint ids to harvest applying a resource type map, "resource_types.csv"
 3. Harvest the eprint records and save in our dataset collection
 
 ~~~
 dataset init example_edu.ds
 eprint2rdm -all-ids eprints.example.edu >eprintids.txt
-while read EPRINTID; do
-    eprint2rdm eprints.example.edu "${EPRINTID}" |\
-	   dataset create -i - example_edu.ds "${EPRINTID}"
+while read -r EPRINTID; do
+	if [ "${EPRINTID}" != "" ]; then
+	    if eprint2rdm -resource-map resource_types.csv \
+	        eprints.example.edu "${EPRINTID}" \
+	        >record.json; then
+	        echo "fetched ${EPRINTID} as record.json"
+	    else
+	        echo "Something went wrong exporting ${EPRINTID}, stopping"
+	        exit 1
+	    fi
+	    if [ -f record.json ]; then
+	        echo "Adding ${EPRINTID} to example_edu.ds"
+	        dataset create -i record.json example_edu.ds "${EPRINTID}"
+	        rm record.json
+	    else
+	        echo "Something went wrong, could not read record.json for ${EPRINTID}, stopping"
+	        exit 1
+	    fi
+	fi
 done <eprintids.txt
 ~~~
 
+At this point you would be ready to improve the records in
+example_edu.ds before migrating them into Invenio RDM.
 
