@@ -42,6 +42,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -836,6 +837,11 @@ func createdUpdatedFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record
 //
 // ```
 func (app *EPrint2Rdm) Run(in io.Reader, out io.Writer, eout io.Writer, username string, password string, host string, eprintId string, resourceTypesFName string, allIds bool, debug bool) error {
+	if username == "" || password == "" {
+		return fmt.Errorf("username or password missing")
+	}
+	baseURL := fmt.Sprintf("https://%s:%s@%s", username, password, host)
+	/*
 	var getURL string
 	buf := new(bytes.Buffer)
 	if allIds {
@@ -843,15 +849,15 @@ func (app *EPrint2Rdm) Run(in io.Reader, out io.Writer, eout io.Writer, username
 	} else {
 		getURL = fmt.Sprintf("https://%s/rest/eprint/%s.xml", host, eprintId)
 	}
-	auth := "basic"
 	options := map[string]bool{
 		"debug": debug,
 	}
 	exitCode := eprinttools.RunEPrintsRESTClient(buf, getURL, auth, username, password, options)
 	if exitCode != 0 {
-		return fmt.Errorf("failed to retrieve %q\n", getURL)
+		return fmt.Errorf("\nfailed to retrieve %q\n", getURL)
 	}
 	if allIds {
+		}
 		keysPage := new(EPrintKeysPage)
 		src := buf.Bytes()
 		if err := xml.Unmarshal(src, &keysPage); err != nil {
@@ -880,6 +886,38 @@ func (app *EPrint2Rdm) Run(in io.Reader, out io.Writer, eout io.Writer, username
 			return err
 		}
 		src, err = json.MarshalIndent(record, "", "   ")
+		if err != nil {
+			return err
+		}
+		fmt.Fprintf(out, "%s\n", src)
+	}
+	*/
+	if allIds {
+		eprintids, err := eprinttools.GetKeys(baseURL)
+		if err != nil {
+			return err
+		}
+		for _, eprintid := range eprintids {
+			fmt.Fprintf(out, "%d\n", eprintid)
+		}
+	} else {
+		resourceTypes := map[string]string{}
+		if err := LoadResourceTypeMap(resourceTypesFName, resourceTypes); err != nil {
+			return err
+		}
+		id, err := strconv.Atoi(eprintId)
+		if err != nil {
+			return err
+		}
+		eprints, err := eprinttools.GetEPrint(baseURL, id)
+		if err != nil {
+			return err
+		}
+		record := new(simplified.Record)
+		if err := CrosswalkEPrintToRecord(eprints.EPrint[0], record, resourceTypes); err != nil {
+			return err
+		}
+		src, err := json.MarshalIndent(record, "", "   ")
 		if err != nil {
 			return err
 		}
