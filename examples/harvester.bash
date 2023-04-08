@@ -13,10 +13,15 @@ if [ "$3" = "" ]; then
 	echo "Missing the CSV filename for the resource map"
 	exit 1
 fi
+if [ "$4" = "" ]; then
+    echo "Missing the CSV filename for the contributor map"
+    exit 1
+fi
 
 REPO="$1"
 C_NAME="$2"
-MAP_NAME="$3"
+RESOURCE_MAP="$3"
+CONTRIBUTOR_MAP="$4"
 
 if [ ! -d "${C_NAME}" ]; then
 	dataset init "${C_NAME}"
@@ -26,7 +31,9 @@ if [ ! -f eprintids.txt ]; then
 fi
 while read -r EPRINTID; do
 	if [ "${EPRINTID}" != "" ]; then
-	    if ./bin/eprint2rdm -resource-map "${MAP_NAME}" \
+	    if ./bin/eprint2rdm \
+					-resource-map "${RESOURCE_MAP}" \
+					-contributor-map "${CONTRIBUTOR_MAP}" \
 	        "${REPO}" "${EPRINTID}" \
 	        >record.json; then
 	        echo "fetched ${EPRINTID} as record.json"
@@ -50,6 +57,6 @@ while read -r EPRINTID; do
 	    fi
 		# NOTE: Harvesting can overwhelm EPrints's REST API. Including
 		# a sleep for a few seconds between calls to be polite.
-		sleep 3
+		#sleep 2
 	fi
 done <eprintids.txt

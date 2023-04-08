@@ -111,19 +111,17 @@ func (app *Doi2Rdm) Configure(configFName string, envPrefix string, debug bool) 
 //
 // ```
 func (app *Doi2Rdm) Run(in io.Reader, out io.Writer, eout io.Writer, options map[string]string, doi string) error {
-	queryCrossRef, queryDataCite := true, true
 	dotInitials, downloadDocument := false, false
 	mailTo, diffFName := "", ""
+	resourceTypeFName, contributorTypeFName := "", ""
 	for opt, val := range options {
 		switch opt {
+		case "resource-map":
+			resourceTypeFName = val
+		case "contributor-map":
+			contributorTypeFName = val
 		case "diff":
 			diffFName = val
-		case "crossref_only":
-			queryCrossRef = true
-			queryDataCite = false
-		case "datacite_only":
-			queryCrossRef = false
-			queryDataCite = true
 		case "dot-initials":
 			dotInitials = true
 		case "download":
@@ -141,59 +139,51 @@ func (app *Doi2Rdm) Run(in io.Reader, out io.Writer, eout io.Writer, options map
 		oRecord *simplified.Record
 		nRecord *simplified.Record
 	)
-	if queryCrossRef {
-		if diffFName != "" {
-			oWork := new(crossrefapi.Works)
-			src, err := os.ReadFile(diffFName)
-			if err != nil {
-				return err
-			}
-			if err := json.Unmarshal(src, &oWork); err != nil {
-				return err
-			}
-			oRecord, err = CrosswalkCrossRefWork(app.Cfg, oWork)
-			if err != nil {
-				return err
-			}
-		}
-		nWork, err := QueryCrossRefWork(app.Cfg, doi, mailTo, dotInitials, downloadDocument)
-		if err != nil {
-			return err
-		}
-		nRecord, err = CrosswalkCrossRefWork(app.Cfg, nWork)
-		if err != nil {
-			return err
-		}
-		var src []byte
-		if diffFName != "" {
-			src, err = oRecord.DiffAsJSON(nRecord)
-		} else {
-			src, err = json.MarshalIndent(nRecord, "", "    ")
-		}
-		if err != nil {
-			return err
-		}
-		fmt.Fprintf(out, "%s\n", src)
-		return nil
+	resourceType := map[string]string{
+		"journal-article": "publication-article",
 	}
-	if queryDataCite {
-		return fmt.Errorf("DataCite support not implemented.")
-		/*
-			obj, err := QueryDataCite(app.Cfg, doi, mailTo, dotInitials, downloadDocument, debug)
-			if err != nil {
-				return err
-			}
-			nRecord, err = CrosswalkDataCite(app.Cfg, obj, debug)
-			if err != nil {
-				return err
-			}
-			src, err := json.MarshalIndent(nRecord, "", "    ")
-			if err != nil {
-				return err
-			}
-			fmt.Fprintf(out, "%s\n", src)
-			return nil
-		*/
+	if resourceTypeFName != "" {
+		if err := LoadTypesMap(resourceTypeFName, resourceType); err != nil {
+			return fmt.Errorf("failed to load resource type map, %s", err)
+		}
 	}
-	return fmt.Errorf("%s not found", doi)
+	contributorType := map[string]string{}
+	if contributorTypeFName != "" {
+		if err := LoadTypesMap(contributorTypeFName, contributorType); err != nil {
+			return fmt.Errorf("failed to load contributor type map, %s", err)
+		}
+	}
+	if diffFName != "" {
+		oWork := new(crossrefapi.Works)
+		src, err := os.ReadFile(diffFName)
+		if err != nil {
+			return err
+		}
+		if err := json.Unmarshal(src, &oWork); err != nil {
+			return err
+		}
+		oRecord, err = CrosswalkCrossRefWork(app.Cfg, oWork, resourceType, contributorType)
+		if err != nil {
+			return err
+		}
+	}
+	nWork, err := QueryCrossRefWork(app.Cfg, doi, mailTo, dotInitials, downloadDocument)
+	if err != nil {
+		return err
+	}
+	nRecord, err = CrosswalkCrossRefWork(app.Cfg, nWork, resourceType, contributorType)
+	if err != nil {
+		return err
+	}
+	var src []byte
+	if diffFName != "" {
+		src, err = oRecord.DiffAsJSON(nRecord)
+	} else {
+		src, err = json.MarshalIndent(nRecord, "", "    ")
+	}
+	if err != nil {
+		return err
+	}
+	fmt.Fprintf(out, "%s\n", src)
+	return nil
 }

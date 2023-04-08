@@ -42,6 +42,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -81,7 +82,7 @@ type EPrintKeysPage struct {
 // CrosswalkEPrintToRecord implements a crosswalk between
 // an EPrint 3.x EPrint XML record as struct to a Invenio RDM
 // record as struct.
-func CrosswalkEPrintToRecord(eprint *eprinttools.EPrint, rec *simplified.Record, resourceTypes map[string]string) error {
+func CrosswalkEPrintToRecord(eprint *eprinttools.EPrint, rec *simplified.Record, resourceTypes map[string]string, contributorTypes map[string]string) error {
 	rec.Schema = `local://records/record-v2.0.0.json`
 	rec.ID = fmt.Sprintf("%s:%d", eprint.Collection, eprint.EPrintID)
 
@@ -95,7 +96,7 @@ func CrosswalkEPrintToRecord(eprint *eprinttools.EPrint, rec *simplified.Record,
 		return err
 	}
 
-	if err := metadataFromEPrint(eprint, rec); err != nil {
+	if err := metadataFromEPrint(eprint, rec, contributorTypes); err != nil {
 		return err
 	}
 	if err := filesFromEPrint(eprint, rec); err != nil {
@@ -123,7 +124,7 @@ func CrosswalkEPrintToRecord(eprint *eprinttools.EPrint, rec *simplified.Record,
 	if err := simplifyCreators(eprint, rec); err != nil {
 		return err
 	}
-	if err := simplifyContributors(eprint, rec); err != nil {
+	if err := simplifyContributors(eprint, rec, contributorTypes); err != nil {
 		return err
 	}
 	// FIXME: Map eprint record types to invenio RDM record types we've
@@ -210,7 +211,7 @@ func simplifyCreators(eprint *eprinttools.EPrint, rec *simplified.Record) error 
 
 // simplifyContributors make sure the identifiers are mapped to Invenio-RDM
 // identifiers.
-func simplifyContributors(eprint *eprinttools.EPrint, rec *simplified.Record) error {
+func simplifyContributors(eprint *eprinttools.EPrint, rec *simplified.Record, contributorTypes map[string]string) error {
 	contributors := []*simplified.Creator{}
 	// First add contributors, then editors, etc.
 	if eprint.Contributors != nil && eprint.Contributors.Length() > 0 {
@@ -220,7 +221,7 @@ func simplifyContributors(eprint *eprinttools.EPrint, rec *simplified.Record) er
 					contributors = append(contributors, &simplified.Creator{
 						PersonOrOrg: person,
 						Role: &simplified.Role{
-							Title: uriToContributorType(item.Role),
+							Title: uriToContributorType(item.Role, contributorTypes),
 						},
 					})
 				}
@@ -315,21 +316,26 @@ func simplifyFunding(eprint *eprinttools.EPrint, rec *simplified.Record) error {
 	return nil
 }
 
-// LoadResourceType map parses a CSV file where column zero is the EPrint resource type string
-// and colume one is the IvenioRDM resource type string. If the file cannot be read or parsed it
-// will return an error otherwise the map[string]string value will be updated with the contents of
-// the mapping.
+// LoadTypesMap map parses a CSV file where first column is the EPrint value
+// and second colume is the Ivenio RDM type string. If the file cannot be
+// read or parsed it will return an error otherwise the map[string]string
+// value will be updated with the contents of the mapping.
 //
 // ```
 // resourceTypes := map[string]string{}
-// err := LoadResourceTypeMap("resource-types.csv", resourceTypes)
-//
+// if err := LoadTypesMap("resource-types.csv", resourceTypes); err != nil {
 //	// ... handle error or continie processing...
+// }
 //
+// contribTypes := map[string]string{}
+// if err := LoadTypesMap("contrib-types.csv", contribTypes); err != nil {
+//	// ... handle error or continie processing...
+// }
+
 // ```
-func LoadResourceTypeMap(fName string, resourceTypes map[string]string) error {
-	if resourceTypes == nil {
-		resourceTypes = map[string]string{}
+func LoadTypesMap(fName string, mapTypes map[string]string) error {
+	if mapTypes == nil {
+		mapTypes = map[string]string{}
 	}
 	src, err := os.ReadFile(fName)
 	if err != nil {
@@ -342,7 +348,7 @@ func LoadResourceTypeMap(fName string, resourceTypes map[string]string) error {
 	}
 	for _, row := range table {
 		if len(row) == 2 {
-			resourceTypes[row[0]] = row[1]
+			mapTypes[row[0]] = row[1]
 		}
 	}
 	return err
@@ -406,23 +412,6 @@ func mapResourceType(eprint *eprinttools.EPrint, rec *simplified.Record, resourc
 	rec.Metadata.ResourceType["id"] = val
 	return nil
 }
-
-/*
-// PIDFromEPrint crosswalks the PID from an EPrint record.
-func pidFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record) error {
-	data := map[string]interface{}{}
-	src := fmt.Sprintf(`{
-"id": %d,
-"pid": { "eprint": "eprintid"}
-}`, eprint.EPrintID)
-	err := jsonDecode([]byte(src), &data)
-	if err != nil {
-		return fmt.Errorf("Cannot generate PID from EPrint %d", eprint.EPrintID)
-	}
-	rec.PID = data
-	return nil
-}
-*/
 
 // parentFromEPrint crosswalks the Perent unique ID from EPrint record.
 func parentFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record) error {
@@ -517,55 +506,14 @@ func recordAccessFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record) 
 	return nil
 }
 
-func uriToContributorType(role_uri string) string {
-	roles := map[string]string{
-		// Article Author
-		"http://coda.library.caltech.edu/ARA": "author_section",
-		// Astronaut
-		"http://coda.library.caltech.edu/AST": "astronaut",
-		// Author of afterword, colophon, etc.
-		"http://www.loc.gov/loc.terms/relators/AFT": "aft",
-		// Bibliographic antecedent
-		"http://www.loc.gov/loc.terms/relators/ANT": "ant",
-		// Author in quotations or text abstracts
-		"http://www.loc.gov/loc.terms/relators/AQT": "aqt",
-		// Screenwriter
-		"http://www.loc.gov/loc.terms/relators/AUS": "screenwriter",
-		// Author, joint author
-		"http://www.loc.gov/loc.terms/relators/AUT": "author",
-		// Collaborator
-		"http://www.loc.gov/loc.terms/relators/CLB": "collaborator",
-		// Compiler
-		"http://www.loc.gov/loc.terms/relators/COM": "compiler",
-		// Contributor
-		"http://www.loc.gov/loc.terms/relators/CTB": "contributor",
-		// Directory
-		"http://www.loc.gov/loc.terms/relators/DRT": "director",
-		// Editor
-		"http://www.loc.gov/loc.terms/relators/EDT": "editor",
-		// Narrator
-		"http://www.loc.gov/loc.terms/relators/NRT": "narrator",
-		// Other
-		"http://www.loc.gov/loc.terms/relators/OTH": "other",
-		// Publishing director
-		"http://www.loc.gov/loc.terms/relators/PBD": "publishing_director",
-		// Programmer
-		"http://www.loc.gov/loc.terms/relators/PRG": "programmer",
-		// Reviewer
-		"http://www.loc.gov/loc.terms/relators/REV": "reviewer",
-		// Research team member
-		"http://www.loc.gov/loc.terms/relators/RTM": "research_team",
-		// Speaker
-		"http://www.loc.gov/loc.terms/relators/SPK": "speaker",
-		// Teacher
-		"http://www.loc.gov/loc.terms/relators/TCH": "teacher",
-		// Translator
-		"http://www.loc.gov/loc.terms/relators/TRL": "translator",
-	}
-	if val, ok := roles[role_uri]; ok {
+func uriToContributorType(role_uri string, contributorTypes map[string]string) string {
+	if val, ok := contributorTypes[role_uri]; ok {
 		return val
 	}
-	return "contributor"
+	// FIXME: The default mapping is "other" since we don't know what it should be.
+	// Per slack conversation but I'm using "unknown" to confirm that the resource mapping
+	// is happening.
+	return "unknown"
 }
 
 func dateTypeFromTimestamp(dtType string, timestamp string, description string) *simplified.DateType {
@@ -606,7 +554,7 @@ func funderFromItem(item *eprinttools.Item) *simplified.Funder {
 }
 
 // metadataFromEPrint extracts metadata from the EPrint record
-func metadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record) error {
+func metadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record, contributorTypes map[string]string) error {
 	// NOTE: Creators get listed in the citation, Contributors do not.
 	if rec.Metadata == nil {
 		rec.Metadata = new(simplified.Metadata)
@@ -624,7 +572,7 @@ func metadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record) erro
 	if err := simplifyCreators(eprint, rec); err != nil {
 		return err
 	}
-	if err := simplifyContributors(eprint, rec); err != nil {
+	if err := simplifyContributors(eprint, rec, contributorTypes); err != nil {
 		return err
 	}
 	if eprint.Abstract != "" {
@@ -822,64 +770,68 @@ func createdUpdatedFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record
 // ```
 //
 //		app := new(irdmtools.EPrint2Rdm)
-//	 eprintUsername := os.Getenv("EPRINT_USERNAME")
-//	 eprintPassword := os.Getenv("EPRINT_PASSWORD")
+//		eprintUsername := os.Getenv("EPRINT_USERNAME")
+//		eprintPassword := os.Getenv("EPRINT_PASSWORD")
 //		eprintHost := "eprints.example.edu"
-//	 eprintId := "11822"
+//		eprintId := "11822"
+//		resourceTypes := map[string]string{}
+//	 if err := LoadTypesMap("resource-types.csv", resourceTypes);
+//			err != nil {
+//			// ... handle error ...
+//		}
+//	 contributorTypes := map[string]string{}
+//	 if err := LoadTypesMap("contributor-types.csv", contributorTypes);
+//			err != nil {
+//			// ... handle error ...
+//		}
 //		src, err := app.Run(os.Stdin, os.Stdout, os.Stderr,
-//		                     eprintUser, eprintPassword,
-//	                      eprintHost, eprintId, debug)
+//							eprintUser, eprintPassword,
+//							eprintHost, eprintId,
+//	                     resourceTypes, contributorsTypes,
+//							debug)
 //		if err != nil {
-//		    // ... handle error ...
+//			// ... handle error ...
 //		}
 //		fmt.Printf("%s\n", src)
 //
 // ```
-func (app *EPrint2Rdm) Run(in io.Reader, out io.Writer, eout io.Writer, username string, password string, host string, eprintId string, resourceTypesFName string, allIds bool, debug bool) error {
-	var getURL string
-	buf := new(bytes.Buffer)
+func (app *EPrint2Rdm) Run(in io.Reader, out io.Writer, eout io.Writer, username string, password string, host string, eprintId string, resourceTypesFName string, contributorTypesFName string, allIds bool, debug bool) error {
+	if username == "" || password == "" {
+		return fmt.Errorf("username or password missing")
+	}
+	timeout := time.Duration(timeoutSeconds)
+	baseURL := fmt.Sprintf("https://%s:%s@%s", username, password, host)
 	if allIds {
-		getURL = fmt.Sprintf("https://%s/rest/eprint/", host)
-	} else {
-		getURL = fmt.Sprintf("https://%s/rest/eprint/%s.xml", host, eprintId)
-	}
-	auth := "basic"
-	options := map[string]bool{
-		"debug": debug,
-	}
-	exitCode := eprinttools.RunEPrintsRESTClient(buf, getURL, auth, username, password, options)
-	if exitCode != 0 {
-		return fmt.Errorf("failed to retrieve %q\n", getURL)
-	}
-	if allIds {
-		keysPage := new(EPrintKeysPage)
-		src := buf.Bytes()
-		if err := xml.Unmarshal(src, &keysPage); err != nil {
-			return err
-		}
-		// Build a list of Unique IDs in a map, then convert
-		// unique querys to results array
-		for _, val := range keysPage.Anchors {
-			if strings.HasSuffix(val, ".xml") == true {
-				fmt.Fprintf(out, "%s\n", strings.TrimSuffix(val, ".xml"))
-			}
-		}
-	} else {
-		resourceTypes := map[string]string{}
-		if err := LoadResourceTypeMap(resourceTypesFName, resourceTypes); err != nil {
-			return err
-		}
-		src := buf.Bytes()
-		eprints := new(eprinttools.EPrints)
-		if err := xml.Unmarshal(src, &eprints); err != nil {
-			return err
-		}
-		record := new(simplified.Record)
-		err := CrosswalkEPrintToRecord(eprints.EPrint[0], record, resourceTypes)
+		eprintids, err := GetKeys(baseURL, timeout, 3)
 		if err != nil {
 			return err
 		}
-		src, err = json.MarshalIndent(record, "", "   ")
+		for _, eprintid := range eprintids {
+			fmt.Fprintf(out, "%d\n", eprintid)
+		}
+	} else {
+		resourceTypes := map[string]string{}
+		if err := LoadTypesMap(resourceTypesFName, resourceTypes); err != nil {
+			return err
+		}
+		contributorTypes := map[string]string{}
+		if err := LoadTypesMap(contributorTypesFName, contributorTypes); err != nil {
+			return err
+		}
+
+		id, err := strconv.Atoi(eprintId)
+		if err != nil {
+			return err
+		}
+		eprints, err := GetEPrint(baseURL, id, timeout, 3)
+		if err != nil {
+			return err
+		}
+		record := new(simplified.Record)
+		if err := CrosswalkEPrintToRecord(eprints.EPrint[0], record, resourceTypes, contributorTypes); err != nil {
+			return err
+		}
+		src, err := json.MarshalIndent(record, "", "   ")
 		if err != nil {
 			return err
 		}

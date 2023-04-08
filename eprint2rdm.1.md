@@ -1,4 +1,4 @@
-% eprint2rdm(1) eprint2rdm user manual | Version 0.0.2
+% eprint2rdm(1) eprint2rdm user manual | Version 0.0.3
 % R. S. Doiel and Tom Morrell
 % 2023-04-04
 
@@ -36,8 +36,15 @@ you can get a list of keys available from the EPrints REST API.
 -resource-map FILENAME
 : use this comma delimited resource map from EPrints to RDM resource types.
 The resource map file is a comma delimited file without a header row.
-first column is the EPrint resource type string, the second is the
+The First column is the EPrint resource type string, the second is the
 RDM resource type string.
+
+-contributor-map FILENAME
+: use this comma delimited contributor type map from EPrints to RDM
+contributor types.  The contributor map file is a comma delimited file
+without a header row. The first column is the value stored in the EPrints
+table "eprint_contributor_type" and the second value is the string used
+in the RDM instance.
 
 
 # EXAMPLE
@@ -64,10 +71,12 @@ eprint2rdm -all-ids eprints.example.edu >eprintids.txt
 Generate a JSON document from the EPrints repository
 hosted as "eprints.example.edu" for EPrint ID 118621 using a
 resource map file to map the EPrints resource type to an
-Invenio RDM resource type.
+Invenio RDM resource type and a contributor type map for
+the contributors type between EPrints and RDM.
 
 ~~~
-eprint2rdm --resource-map resource-types.csv \
+eprint2rdm -resource-map resource_types.csv \
+      -contributor-map contributor_types.csv \
       eprints.example.edu 118621 \
 	  >article.json
 ~~~
@@ -78,6 +87,7 @@ migration.
 
 1. create a dataset collection
 2. get the EPrint ids to harvest applying a resource type map, "resource_types.csv"
+   and "contributor_types.csv" for contributor type mapping
 3. Harvest the eprint records and save in our dataset collection
 
 ~~~
@@ -85,7 +95,9 @@ dataset init example_edu.ds
 eprint2rdm -all-ids eprints.example.edu >eprintids.txt
 while read -r EPRINTID; do
 	if [ "${EPRINTID}" != "" ]; then
-	    if eprint2rdm -resource-map resource_types.csv \
+	    if eprint2rdm \
+			-resource-map resource_types.csv \
+			-contributor-map contributor_types.csv \
 	        eprints.example.edu "${EPRINTID}" \
 	        >record.json; then
 	        echo "fetched ${EPRINTID} as record.json"

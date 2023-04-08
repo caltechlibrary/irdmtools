@@ -14,7 +14,7 @@
 . ftr VB CB
 . ftr VBI CBI
 .\}
-.TH "eprint2rdm" "1" "2023-04-04" "eprint2rdm user manual" "Version 0.0.2"
+.TH "eprint2rdm" "1" "2023-04-04" "eprint2rdm user manual" "Version 0.0.3"
 .hy
 .SH NAME
 .PP
@@ -50,8 +50,16 @@ return a list of EPrint ids, one per line.
 use this comma delimited resource map from EPrints to RDM resource
 types.
 The resource map file is a comma delimited file without a header row.
-first column is the EPrint resource type string, the second is the RDM
-resource type string.
+The First column is the EPrint resource type string, the second is the
+RDM resource type string.
+.TP
+-contributor-map FILENAME
+use this comma delimited contributor type map from EPrints to RDM
+contributor types.
+The contributor map file is a comma delimited file without a header row.
+The first column is the value stored in the EPrints table
+\[lq]eprint_contributor_type\[rq] and the second value is the string
+used in the RDM instance.
 .SH EXAMPLE
 .PP
 Example generating a JSON document for from the EPrints repository
@@ -79,11 +87,14 @@ eprint2rdm -all-ids eprints.example.edu >eprintids.txt
 .PP
 Generate a JSON document from the EPrints repository hosted as
 \[lq]eprints.example.edu\[rq] for EPrint ID 118621 using a resource map
-file to map the EPrints resource type to an Invenio RDM resource type.
+file to map the EPrints resource type to an Invenio RDM resource type
+and a contributor type map for the contributors type between EPrints and
+RDM.
 .IP
 .nf
 \f[C]
-eprint2rdm --resource-map resource-types.csv \[rs]
+eprint2rdm -resource-map resource_types.csv \[rs]
+      -contributor-map contributor_types.csv \[rs]
       eprints.example.edu 118621 \[rs]
       >article.json
 \f[R]
@@ -95,7 +106,8 @@ results in a dataset collection for analysis or migration.
 create a dataset collection
 .IP "2." 3
 get the EPrint ids to harvest applying a resource type map,
-\[lq]resource_types.csv\[rq]
+\[lq]resource_types.csv\[rq] and \[lq]contributor_types.csv\[rq] for
+contributor type mapping
 .IP "3." 3
 Harvest the eprint records and save in our dataset collection
 .IP
@@ -105,7 +117,9 @@ dataset init example_edu.ds
 eprint2rdm -all-ids eprints.example.edu >eprintids.txt
 while read -r EPRINTID; do
     if [ \[dq]${EPRINTID}\[dq] != \[dq]\[dq] ]; then
-        if eprint2rdm -resource-map resource_types.csv \[rs]
+        if eprint2rdm \[rs]
+            -resource-map resource_types.csv \[rs]
+            -contributor-map contributor_types.csv \[rs]
             eprints.example.edu \[dq]${EPRINTID}\[dq] \[rs]
             >record.json; then
             echo \[dq]fetched ${EPRINTID} as record.json\[dq]

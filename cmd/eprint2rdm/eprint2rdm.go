@@ -83,8 +83,15 @@ you can get a list of keys available from the EPrints REST API.
 -resource-map FILENAME
 : use this comma delimited resource map from EPrints to RDM resource types.
 The resource map file is a comma delimited file without a header row.
-first column is the EPrint resource type string, the second is the
+The First column is the EPrint resource type string, the second is the
 RDM resource type string.
+
+-contributor-map FILENAME
+: use this comma delimited contributor type map from EPrints to RDM
+contributor types.  The contributor map file is a comma delimited file
+without a header row. The first column is the value stored in the EPrints
+table "eprint_contributor_type" and the second value is the string used
+in the RDM instance.
 
 
 # EXAMPLE
@@ -111,10 +118,12 @@ Generate a list of EPrint ids from a repository (e.g. eprints.example.edu).
 Generate a JSON document from the EPrints repository
 hosted as "eprints.example.edu" for EPrint ID 118621 using a
 resource map file to map the EPrints resource type to an
-Invenio RDM resource type.
+Invenio RDM resource type and a contributor type map for
+the contributors type between EPrints and RDM.
 
 ~~~
-{app_name} --resource-map resource-types.csv \
+{app_name} -resource-map resource_types.csv \
+      -contributor-map contributor_types.csv \
       eprints.example.edu 118621 \
 	  >article.json
 ~~~
@@ -125,6 +134,7 @@ migration.
 
 1. create a dataset collection
 2. get the EPrint ids to harvest applying a resource type map, "resource_types.csv"
+   and "contributor_types.csv" for contributor type mapping
 3. Harvest the eprint records and save in our dataset collection
 
 ~~~
@@ -132,7 +142,9 @@ dataset init example_edu.ds
 {app_name} -all-ids eprints.example.edu >eprintids.txt
 while read -r EPRINTID; do
 	if [ "${EPRINTID}" != "" ]; then
-	    if {app_name} -resource-map resource_types.csv \
+	    if {app_name} \
+			-resource-map resource_types.csv \
+			-contributor-map contributor_types.csv \
 	        eprints.example.edu "${EPRINTID}" \
 	        >record.json; then
 	        echo "fetched ${EPRINTID} as record.json"
@@ -165,13 +177,14 @@ func main() {
 	appName := path.Base(os.Args[0])
 	showHelp, showVersion, showLicense := false, false, false
 	allIds, debug := false, false
-	resourceTypesFName := ""
+	resourceTypesFName, contributorTypesFName := "", ""
 	flag.BoolVar(&showHelp, "help", false, "display help")
 	flag.BoolVar(&showVersion, "version", false, "display version")
 	flag.BoolVar(&showLicense, "license", false, "display license")
 	flag.BoolVar(&debug, "debug", debug, "display additional info to stderr")
 	flag.BoolVar(&allIds, "all-ids", false, "retrieve all the eprintids from an EPrints repository via REST API, one per line")
 	flag.StringVar(&resourceTypesFName, "resource-map", resourceTypesFName, "use this file to map resource types from EPrints to Invenio RDM")
+	flag.StringVar(&contributorTypesFName, "contributor-map", contributorTypesFName, "use this file to map contributor types from EPrints to Invenio RDM")
 	flag.Parse()
 	args := flag.Args()
 
@@ -210,7 +223,7 @@ func main() {
 			host, eprintid = args[0], args[1]
 		}
 	}
-	if err := app.Run(os.Stdin, os.Stdout, os.Stderr, eprintUser, eprintPassword, host, eprintid, resourceTypesFName, allIds, debug); err != nil {
+	if err := app.Run(os.Stdin, os.Stdout, os.Stderr, eprintUser, eprintPassword, host, eprintid, resourceTypesFName, contributorTypesFName, allIds, debug); err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
 		os.Exit(1)
 	}
