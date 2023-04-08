@@ -507,56 +507,13 @@ func recordAccessFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record) 
 }
 
 func uriToContributorType(role_uri string, contributorTypes map[string]string) string {
-	if len(contributorTypes) == 0 {
-		contributorTypes = map[string]string{
-			// Article Author
-			"http://coda.library.caltech.edu/ARA": "author_section",
-			// Astronaut
-			"http://coda.library.caltech.edu/AST": "astronaut",
-			// Author of afterword, colophon, etc.
-			"http://www.loc.gov/loc.terms/relators/AFT": "aft",
-			// Bibliographic antecedent
-			"http://www.loc.gov/loc.terms/relators/ANT": "ant",
-			// Author in quotations or text abstracts
-			"http://www.loc.gov/loc.terms/relators/AQT": "aqt",
-			// Screenwriter
-			"http://www.loc.gov/loc.terms/relators/AUS": "screenwriter",
-			// Author, joint author
-			"http://www.loc.gov/loc.terms/relators/AUT": "author",
-			// Collaborator
-			"http://www.loc.gov/loc.terms/relators/CLB": "collaborator",
-			// Compiler
-			"http://www.loc.gov/loc.terms/relators/COM": "compiler",
-			// Contributor
-			"http://www.loc.gov/loc.terms/relators/CTB": "contributor",
-			// Directory
-			"http://www.loc.gov/loc.terms/relators/DRT": "director",
-			// Editor
-			"http://www.loc.gov/loc.terms/relators/EDT": "editor",
-			// Narrator
-			"http://www.loc.gov/loc.terms/relators/NRT": "narrator",
-			// Other
-			"http://www.loc.gov/loc.terms/relators/OTH": "other",
-			// Publishing director
-			"http://www.loc.gov/loc.terms/relators/PBD": "publishing_director",
-			// Programmer
-			"http://www.loc.gov/loc.terms/relators/PRG": "programmer",
-			// Reviewer
-			"http://www.loc.gov/loc.terms/relators/REV": "reviewer",
-			// Research team member
-			"http://www.loc.gov/loc.terms/relators/RTM": "research_team",
-			// Speaker
-			"http://www.loc.gov/loc.terms/relators/SPK": "speaker",
-			// Teacher
-			"http://www.loc.gov/loc.terms/relators/TCH": "teacher",
-			// Translator
-			"http://www.loc.gov/loc.terms/relators/TRL": "translator",
-		}
-	}
 	if val, ok := contributorTypes[role_uri]; ok {
 		return val
 	}
-	return "contributor"
+	// FIXME: The default mapping is "other" since we don't know what it should be.
+	// Per slack conversation but I'm using "unknown" to confirm that the resource mapping
+	// is happening.
+	return "unknown"
 }
 
 func dateTypeFromTimestamp(dtType string, timestamp string, description string) *simplified.DateType {
@@ -842,9 +799,10 @@ func (app *EPrint2Rdm) Run(in io.Reader, out io.Writer, eout io.Writer, username
 	if username == "" || password == "" {
 		return fmt.Errorf("username or password missing")
 	}
+	timeout := time.Duration(timeoutSeconds)
 	baseURL := fmt.Sprintf("https://%s:%s@%s", username, password, host)
 	if allIds {
-		eprintids, err := eprinttools.GetKeys(baseURL)
+		eprintids, err := GetKeys(baseURL, timeout, 3)
 		if err != nil {
 			return err
 		}
@@ -865,7 +823,7 @@ func (app *EPrint2Rdm) Run(in io.Reader, out io.Writer, eout io.Writer, username
 		if err != nil {
 			return err
 		}
-		eprints, err := eprinttools.GetEPrint(baseURL, id)
+		eprints, err := GetEPrint(baseURL, id, timeout, 3)
 		if err != nil {
 			return err
 		}

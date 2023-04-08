@@ -5,6 +5,8 @@ Action Items
 Bugs
 ----
 
+- [ ] I'm getting a response timeout after 100 to 500 records, retrying ther request yields a successful fetch, need to implement some sort of retry
+
 Next
 ----
 

@@ -2,31 +2,98 @@ package irdmtools
 
 import (
 	"fmt"
+	"os"
 
 	// Caltech Library Package
 	"github.com/caltechlibrary/simplified"
 )
 
 // Wraps the simplified package with crosswalks
-
-func SetRelatedIdentifiers(rec *simplified.Record, identifiers []*simplified.Identifier) error {
-	return fmt.Errorf("SetRelatedDOI() not implemented")
+func SetDOI(rec *simplified.Record, doi string) error {
+	pid := new(simplified.PersistentIdentifier)
+	pid.Identifier = doi
+	// NOTE: This makes this mapping Caltech Specific, should really check who the provider is.
+	pid.Provider = "datacite"
+	pid.Client = ""
+	if rec.ExternalPIDs == nil {
+		rec.ExternalPIDs = make(map[string]*simplified.PersistentIdentifier)
+	}
+	rec.ExternalPIDs["doi"] = pid
+	return nil
 }
 
-func SetResourceType(rec *simplified.Record, resourceType string) error {
-	return fmt.Errorf("SetResourceType() not implemented")
+func SetResourceType(rec *simplified.Record, resourceType string, resourceTypeMap map[string]string) error {
+	val, ok := resourceTypeMap[resourceType]
+	if !ok {
+		fmt.Fprintf(os.Stderr, "DEBUG resourceTypeMap -> %+v\n", resourceTypeMap)
+		return fmt.Errorf("resource type %q not mapped", resourceType)
+	}
+	if rec.Metadata == nil {
+		rec.Metadata = new(simplified.Metadata)
+	}
+	if rec.Metadata.ResourceType == nil {
+		rec.Metadata.ResourceType = make(map[string]string)
+	}
+	rec.Metadata.ResourceType["id"] = val
+	return nil
 }
 
-func SetTitles(rec *simplified.Record, titles []string) error {
-	return fmt.Errorf("SetTitle() not implemented")
+func SetTitle(rec *simplified.Record, title string) error {
+	rec.Metadata.Title = title
+	return nil
+}
+
+func AddAdditionalTitles(rec *simplified.Record, title *simplified.TitleDetail) error {
+	rec.Metadata.AdditionalTitles = append(rec.Metadata.AdditionalTitles, title)
+	return nil
+}
+
+func SetDescription(rec *simplified.Record, description string) error {
+	if rec.Metadata == nil {
+		rec.Metadata = new(simplified.Metadata)
+	}
+	rec.Metadata.Description = description
+	return nil
+}
+
+func SetCreators(rec *simplified.Record, creators []*simplified.Creator) error {
+	if rec.Metadata == nil {
+		rec.Metadata = new(simplified.Metadata)
+	}
+	rec.Metadata.Contributors = creators
+	return nil
+}
+
+func SetContributors(rec *simplified.Record, creators []*simplified.Creator) error {
+	return fmt.Errorf("SetContributors() not implemented")
+}
+
+func AddRelatedIdentifiers(rec *simplified.Record, identifiers []*simplified.Identifier) error {
+	for _, identifier := range identifiers {
+		rec.Metadata.Identifiers = append(rec.Metadata.Identifiers, identifier)
+	}
+	return nil
 }
 
 func SetPublication(rec *simplified.Record, publication string) error {
-	return fmt.Errorf("SetPublication() not implemented")
+	if rec.Metadata == nil {
+		rec.Metadata = new(simplified.Metadata)
+	}
+	// FIXME: Need to verify that we want to save the publication name as publisher
+	if rec.CLAnnotations == nil {
+		rec.CLAnnotations = make(map[string]interface{})
+	}
+	rec.CLAnnotations["publication"] = publication
+	rec.Metadata.Publisher = publication
+	return nil
 }
 
 func SetPublisher(rec *simplified.Record, publisher string) error {
-	return fmt.Errorf("SetPublisher() not implemented")
+	if rec.Metadata == nil {
+		rec.Metadata = new(simplified.Metadata)
+	}
+	rec.Metadata.Publisher = publisher
+	return nil
 }
 
 func SetPublisherLocation(rec *simplified.Record, publisherLocation string) error {
@@ -34,27 +101,51 @@ func SetPublisherLocation(rec *simplified.Record, publisherLocation string) erro
 }
 
 func SetSeries(rec *simplified.Record, series string) error {
-	return fmt.Errorf("SetSeries() not implemented")
+	if rec.Metadata == nil {
+		rec.Metadata = new(simplified.Metadata)
+	}
+	// FIXME: Need to figure out where this goes
+	if rec.CLAnnotations == nil {
+		rec.CLAnnotations = make(map[string]interface{})
+	}
+	rec.CLAnnotations["series"] = series
+	return nil
 }
 
 func SetVolume(rec *simplified.Record, volume string) error {
-	return fmt.Errorf("SetVolume() not implemented")
+	if rec.Metadata == nil {
+		rec.Metadata = new(simplified.Metadata)
+	}
+	// FIXME: Need to figure out where this goes
+	if rec.CLAnnotations == nil {
+		rec.CLAnnotations = make(map[string]interface{})
+	}
+	rec.CLAnnotations["volume"] = volume
+	return nil
 }
 
 func SetPageRange(rec *simplified.Record, pageRange string) error {
-	return fmt.Errorf("SetPageRange() not implemented")
+	if rec.Metadata == nil {
+		rec.Metadata = new(simplified.Metadata)
+	}
+	// FIXME: Need to figure out where this goes
+	if rec.CLAnnotations == nil {
+		rec.CLAnnotations = make(map[string]interface{})
+	}
+	rec.CLAnnotations["page_range"] = pageRange
+	return nil
 }
 
 func SetArticleNumber(rec *simplified.Record, articleNo string) error {
-	return fmt.Errorf("SetArticleNumber() not implemented")
-}
-
-func SetISBNs(rec *simplified.Record, isbns []*simplified.Identifier) error {
-	return fmt.Errorf("AddISBN() not implemented")
-}
-
-func SetISSNs(rec *simplified.Record, issns []*simplified.Identifier) error {
-	return fmt.Errorf("AddISSN() not implemented")
+	if rec.Metadata == nil {
+		rec.Metadata = new(simplified.Metadata)
+	}
+	// FIXME: Need to figure out where this goes
+	if rec.CLAnnotations == nil {
+		rec.CLAnnotations = make(map[string]interface{})
+	}
+	rec.CLAnnotations["article_number"] = articleNo
+	return nil
 }
 
 func AddBookTitle(rec *simplified.Record, bookTitle string) error {
@@ -65,32 +156,8 @@ func AddFunder(rec *simplified.Record, funder string, ror string, award string) 
 	return fmt.Errorf("AddFunder() not implemented.")
 }
 
-func SetDOI(rec *simplified.Record, doi string) error {
-	return fmt.Errorf("SetDOI() not implemented.")
-}
-
-func AddRelatedDOI(rec *simplified.Record, doi string) error {
-	return fmt.Errorf("AddRelatedDOI() not implemented.")
-}
-
-func AddRelatedURL(rec *simplified.Record, url string) error {
-	return fmt.Errorf("AddRelatedURL() not implemented.")
-}
-
 func AddPublicationDate(rec *simplified.Record, dt string, publicationType string) error {
 	return fmt.Errorf("AddPublicationDate() not implemented.")
-}
-
-func AddCreator(rec *simplified.Record, creator *simplified.PersonOrOrg, role *simplified.Role) error {
-	return fmt.Errorf("AddCreator() not implemented.")
-}
-
-func AddContributors(rec *simplified.Record, contributor *simplified.PersonOrOrg, role *simplified.Role) error {
-	return fmt.Errorf("AddContributor() not implemented.")
-}
-
-func SetDescription(rec *simplified.Record, description string) error {
-	return fmt.Errorf("SetDescription() not implemented.")
 }
 
 func SetEdition(rec *simplified.Record, edition string) error {
@@ -121,7 +188,7 @@ func SetMonographType(rec *simplified.Record, monographType string) error {
 	return fmt.Errorf("SetMonographType() not implemented")
 }
 
-func PresentationType(rec *simplified.Record, presentationType string) error {
+func SetPresentationType(rec *simplified.Record, presentationType string) error {
 	return fmt.Errorf("SetPresentationType() not implemented")
 }
 

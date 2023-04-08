@@ -57,6 +57,6 @@ while read -r EPRINTID; do
 	    fi
 		# NOTE: Harvesting can overwhelm EPrints's REST API. Including
 		# a sleep for a few seconds between calls to be polite.
-		sleep 2
+		#sleep 2
 	fi
 done <eprintids.txt

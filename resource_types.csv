@@ -1,4 +1,5 @@
 article,publication-article
+journal-article,publication-article
 book,publication-book
 book_section,publication-section
 conference_item,conference-paper
@@ -15,3 +16,4 @@ thesis,publication-thesis
 video,video
 website,other
 other,other
+image,other
