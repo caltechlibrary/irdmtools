@@ -949,36 +949,35 @@ func (app *EPrint2Rdm) Run(in io.Reader, out io.Writer, eout io.Writer, username
 			// Figure out when to report out records processed, e.g. each 1% of records
 			t0 := time.Now()
 			rptTime := time.Now()
+			reportProgress := false
 			log.Printf("Start processing %d records", tot)
-			for _, eprintId := range eprintIds {
-				if time.Since(rptTime) >= (30 * time.Second) {
-					log.Printf("%d/%d record processed, running time %s", i, tot, time.Since(t0).Round(time.Second))
-					rptTime = time.Now()
+			for i, eprintId := range eprintIds {
+				if rptTime, reportProgress = CheckWaitInterval(rptTime, (1 * time.Minute)); reportProgress || i == 0 {
+					log.Printf("processing id %s (%d/%d): %s", eprintId, i, tot, ProgressETR(t0, i, tot))
 				}
-				i++
 				// Handle the case when you're harvesting a single record id
 				id, err := strconv.Atoi(eprintId)
 				if err != nil {
-					log.Printf("line %d, concverting %q, %s", i, eprintId, err)
+					log.Printf("line %d, concverting %q, %s", i+1, eprintId, err)
 					continue
 				}
 				eprints, err := GetEPrint(baseURL, id, timeout, 3)
 				if err != nil {
-					log.Printf("line %d, retrieving %q, %s", i, eprintId, err)
+					log.Printf("line %d, retrieving %q, %s", i+1, eprintId, err)
 					continue
 				}
 				record := new(simplified.Record)
 				if err := CrosswalkEPrintToRecord(eprints.EPrint[0], record, resourceTypes, contributorTypes); err != nil {
-					log.Print("line %d, crosswalking %q, %s", i, eprintId, err)
+					log.Print("line %d, crosswalking %q, %s", i+1, eprintId, err)
 					continue
 				}
 				if c.HasKey(eprintId) {
 					if err := c.UpdateObject(eprintId, record); err != nil {
-						return fmt.Errorf("error saving %q, line %d, %s", eprintId, i, err)
+						return fmt.Errorf("error saving %q, line %d, %s", eprintId, i+1, err)
 					}
 				} else {
 					if err := c.CreateObject(eprintId, record); err != nil {
-						return fmt.Errorf("error saving %q, line %d, %s", eprintId, i, err)
+						return fmt.Errorf("error saving %q, line %d, %s", eprintId, i+1, err)
 					}
 				}
 			}

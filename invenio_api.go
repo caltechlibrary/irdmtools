@@ -40,13 +40,12 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
 	"strings"
 	"time"
-	// Caltech Library Packages
-	//	"github.com/caltechlibrary/simplified"
 )
 
 const (
@@ -168,14 +167,15 @@ func getXML(token string, uri string) ([]byte, http.Header, error) {
 // results as a slice of `map[string]interface{}`
 //
 // ```
+// records, err := Query(cfg, "Geological History in Southern California", "newest")
 //
-//		   records, err := Query(cfg, "Geological History in Southern California", "newest")
-//	    if err != nil {
-//	        // ... handle error ...
-//	    }
-//	    for _, rec := ranges {
-//	        // ... process results ...
-//	    }
+//	if err != nil {
+//	    // ... handle error ...
+//	}
+//
+//	for _, rec := ranges {
+//	    // ... process results ...
+//	}
 //
 // ```
 func Query(cfg *Config, q string, sort string) ([]map[string]interface{}, error) {
@@ -190,9 +190,15 @@ func Query(cfg *Config, q string, sort string) ([]map[string]interface{}, error)
 	// Setup our query parameters, i.e. q=*
 	uri := fmt.Sprintf("%s/api/records?sort=%s&q=%s", u.String(), sort, q)
 	tot := 0
+	t0 := time.Now()
+	reportProgress := false
+	iTime := time.Now()
 	results := new(QueryResponse)
 	records := []map[string]interface{}{}
 	for i := 0; uri != ""; i++ {
+		if iTime, reportProgress = CheckWaitInterval(iTime, time.Minute); reportProgress || (i == 0) {
+			log.Printf("(%d/%d) %s", len(records), tot, ProgressETR(t0, len(records), tot))
+		}
 		dbgPrintf(cfg, "requesting %s", uri)
 		src, rl, err := getJSON(cfg.InvenioToken, uri)
 		if err != nil {
@@ -236,8 +242,13 @@ func GetRecordIds(cfg *Config) ([]string, error) {
 	ids := []string{}
 	resumptionToken := "     "
 	debug := cfg.Debug
+	t0 := time.Now()
+	iTime, reportProgress := time.Now(), false
 	uri := fmt.Sprintf("%s/oai2d?verb=ListIdentifiers&metadataPrefix=oai_dc", cfg.InvenioAPI)
 	for i := 0; resumptionToken != ""; i++ {
+		if iTime, reportProgress = CheckWaitInterval(iTime, time.Minute); reportProgress || i == 0 {
+			log.Printf("%s", ProgressIPS(t0, i, time.Minute))
+		}
 		if i > 0 {
 			v := url.Values{}
 			v.Set("resumptionToken", resumptionToken)
@@ -245,7 +256,7 @@ func GetRecordIds(cfg *Config) ([]string, error) {
 		}
 		src, headers, err := getXML(cfg.InvenioToken, uri)
 		if err != nil {
-			return nil, err
+			return ids, err
 		}
 		rl := new(RateLimit)
 		rl.FromHeader(headers)
@@ -262,7 +273,7 @@ func GetRecordIds(cfg *Config) ([]string, error) {
 			if err := xml.Unmarshal(src, oai); err != nil {
 				dbgPrintf(cfg, "\n%s\n", src)
 				resumptionToken = ""
-				return nil, err
+				return ids, err
 			}
 			if oai.ListIdentifiers != nil {
 				resumptionToken = oai.ListIdentifiers.ResumptionToken
@@ -283,8 +294,12 @@ func GetRecordIds(cfg *Config) ([]string, error) {
 				resumptionToken = ""
 			}
 		}
-		if (len(ids) % 500) == 0 {
-			dbgPrintf(cfg, "%d ids retrieved", len(ids))
+		if iTime, reportProgress = CheckWaitInterval(iTime, (1 * time.Minute)); reportProgress || (len(ids) == 0) {
+			var lastId string
+			if len(ids) > 0 {
+				lastId = ids[len(ids)-1]
+			}
+			log.Printf("last fetched id %q: %s", lastId, ProgressIPS(t0, len(ids), time.Minute))
 		}
 	}
 	dbgPrintf(cfg, "%d ids retrieved (total)", len(ids))
@@ -312,7 +327,11 @@ func GetModifiedRecordIds(cfg *Config, start string, end string) ([]string, erro
 	resumptionToken := "     "
 	uri := fmt.Sprintf("%s/oai2d?verb=ListIdentifiers&metadataPrefix=oai_dc&from=%s&until=%s", cfg.InvenioAPI, start, end)
 	dbgPrintf(cfg, "requesting %s", uri)
+	t0, iTime, reportProgress := time.Now(), time.Now(), false
 	for i := 0; resumptionToken != ""; i++ {
+		if iTime, reportProgress = CheckWaitInterval(iTime, time.Minute); reportProgress || i == 0 {
+			log.Printf("%s", ProgressIPS(t0, i, time.Minute))
+		}
 		if i > 0 {
 			v := url.Values{}
 			v.Set("resumptionToken", resumptionToken)

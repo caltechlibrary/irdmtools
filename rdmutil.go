@@ -172,6 +172,7 @@ func (app *RdmUtil) GetRecordIds() ([]byte, error) {
 	return src, nil
 }
 
+
 // GetRecord returns a byte slice for a JSON encoded record
 // or an error.
 //
