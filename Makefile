@@ -92,6 +92,7 @@ publish: build save website .FORCE
 	git checkout gh-pages
 	git fetch origin
 	git pull origin gh-pages
+	git rm -r -f pagefind
 	git pull origin $(BRANCH)
 	touch README.md CITATION.cff about.md
 	make -f website.mak
