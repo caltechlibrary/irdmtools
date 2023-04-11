@@ -937,7 +937,6 @@ func (app *EPrint2Rdm) Run(in io.Reader, out io.Writer, eout io.Writer, username
 			}
 			defer fp.Close()
 			scanner := bufio.NewScanner(fp)
-			i := 0
 			eprintIds := []string{}
 			for scanner.Scan() {
 				eprintId = scanner.Text()
@@ -981,7 +980,7 @@ func (app *EPrint2Rdm) Run(in io.Reader, out io.Writer, eout io.Writer, username
 					}
 				}
 			}
-			log.Printf("Finished, processed %d records in %s", i, time.Since(t0).Round(time.Second))
+			log.Printf("Finished, processed %d records in %s", tot, time.Since(t0).Round(time.Second))
 			if err := scanner.Err(); err != nil {
 				return fmt.Errorf("failed to scaner %q, %s", idList, err)
 			}

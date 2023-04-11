@@ -299,10 +299,10 @@ func GetRecordIds(cfg *Config) ([]string, error) {
 			if len(ids) > 0 {
 				lastId = ids[len(ids)-1]
 			}
-			log.Printf("last fetched id %q: %s", lastId, ProgressIPS(t0, len(ids), time.Minute))
+			log.Printf("last id %q: %s", lastId, ProgressIPS(t0, len(ids), time.Minute))
 		}
 	}
-	dbgPrintf(cfg, "%d ids retrieved (total)", len(ids))
+	log.Printf("%d total retrieved in %s", len(ids), time.Since(t0).Round(time.Second))
 	return ids, nil
 }
 
@@ -384,7 +384,7 @@ func GetModifiedRecordIds(cfg *Config, start string, end string) ([]string, erro
 			dbgPrintf(cfg, "%d ids retrieved for %s - %s", len(ids), start, end)
 		}
 	}
-	dbgPrintf(cfg, "%d ids retrieved (total)", len(ids))
+	log.Printf("%d total retrieved in %s", len(ids), time.Since(t0).Round(time.Second))
 	return ids, nil
 }
 
