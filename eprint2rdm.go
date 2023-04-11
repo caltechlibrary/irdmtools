@@ -35,18 +35,21 @@
 package irdmtools
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/csv"
 	"encoding/json"
 	"encoding/xml"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"strconv"
 	"strings"
 	"time"
 
 	// Caltech Library Packages
+	"github.com/caltechlibrary/dataset/v2"
 	"github.com/caltechlibrary/eprinttools"
 	"github.com/caltechlibrary/simplified"
 )
@@ -68,6 +71,123 @@ type EPrintKeysPage struct {
 	Anchors []string `xml:"body>ul>li>a"`
 }
 
+var (
+	defaultEPrintContributorTypeMap = map[string]string{
+		// Caltech Library Roles
+
+		// Author of section
+		"http://coda.library.caltech.edu/ARA": "author_section",
+		// Astronaut
+		"http://coda.library.caltech.edu/AST": "astronaut",
+
+		// LOC Terms and URI
+
+		// Author of afterword, colophon, etc.
+		"http://www.loc.gov/loc.terms/relators/AFT": "other",
+		// Bibliographic antecedent
+		"http://www.loc.gov/loc.terms/relators/ANT": "other",
+		// Author in quotations or text abstracts
+		"http://www.loc.gov/loc.terms/relators/AQT": "other",
+		// Screenwriter or co-Screenwriter
+		"http://www.loc.gov/loc.terms/relators/AUS": "screenwriter",
+		// Author, co-Author
+		"http://www.loc.gov/loc.terms/relators/AUT": "author",
+		// Collaborator
+		"http://www.loc.gov/loc.terms/relators/CLB": "collaborator",
+		// Compiler
+		"http://www.loc.gov/loc.terms/relators/COM": "compiler",
+		// Contributor
+		"http://www.loc.gov/loc.terms/relators/CTB": "contributor",
+		// Director (e.g. Movie, theatre)
+		"http://www.loc.gov/loc.terms/relators/DRT": "director",
+		// Editor
+		"http://www.loc.gov/loc.terms/relators/EDT": "editor",
+		// Narrator
+		"http://www.loc.gov/loc.terms/relators/NRT": "narrator",
+		// Other
+		"http://www.loc.gov/loc.terms/relators/OTH": "other",
+		// Publishing Directory (publications)
+		"http://www.loc.gov/loc.terms/relators/PBD": "publishing_directory",
+		// Programming
+		"http://www.loc.gov/loc.terms/relators/PRG": "programmer",
+		// Reviewer
+		"http://www.loc.gov/loc.terms/relators/REV": "reviewer",
+		// Research Team Member
+		"http://www.loc.gov/loc.terms/relators/RTM": "research_team",
+		// Speaker
+		"http://www.loc.gov/loc.terms/relators/SPK": "speaker",
+		// Teacher
+		"http://www.loc.gov/loc.terms/relators/TCH": "teacher",
+		// Translator
+		"http://www.loc.gov/loc.terms/relators/TRL": "translator",
+
+		// LOC Term URI to DataCite terms
+
+		// Process Contact -> ContactPerson
+		"https://www.loc.gov/loc.terms/relators/prc": "contact_person",
+		// DataCollector <- Data Contributor
+		"https://www.loc.gov/loc.terms/relators/dtc": "data_collector",
+		// DataCurator <- ???
+		//"https://www.loc.gov/loc.terms/relators/???": "data_curator",
+		// DataManager -> DataManager
+		"https://www.loc.gov/loc.terms/relators/dtm": "data_manager",
+		// Distributor -> Distrubtor
+		"https://www.loc.gov/loc.terms/relators/dst": "distributor",
+		// Host Institution -> HostingInstitution
+		"https://www.loc.gov/loc.terms/relators/his": "hosting_institution",
+		// Producer -> Producer
+		"https://www.loc.gov/loc.terms/relators/pro": "producer",
+		// ??? -> Project Leader
+		// "https://www.loc.gov/loc.terms/relators/pdr": "project_leader",
+		// Project Directory -> Project Manager
+		"https://www.loc.gov/loc.terms/relators/pdr": "project_manager",
+		// ??? -> ProjectMember
+		// ??? -> RegistrationAgency
+		// ??? -> RegistrationAuthority
+		// ??? -> RelatedPerson
+		// Researcher -> Researcher
+		"https://www.loc.gov/loc.terms/relators/res": "researcher",
+		// ??? -> ResearchGroup
+		// Copyright Holder -> RightsHolder
+		"https://www.loc.gov/loc.terms/relators/cph": "rights_holder",
+		// Sponsor -> Sponsor
+		"https://www.loc.gov/loc.terms/relators/spn": "sponsor",
+		// ??? -> Supervisor
+		// ??? -> WorkPackageLeader
+
+		// Additional LOC -> Caltech Library RDM person or org types
+
+		// Interviewee -> interviewee
+		"https://www.loc.gov/loc.terms/relators/ive": "interviewee",
+		// Interviewer -> interviewer
+		"https://www.loc.gov/loc.terms/relators/ivr": "interviewer",
+	}
+
+	defaultEPrintResourceTypeMap = map[string]string{
+		"article":           "publication-article",
+		"journal-article":   "publication-article",
+		"book":              "publication-book",
+		"book_section":      "publication-section",
+		"conference_item":   "conference-paper",
+		"dataset":           "dataset",
+		"experiment":        "publication-deliverable",
+		"journal_issue":     "publication-issue",
+		"lab_notes":         "labnotebook",
+		"monograph":         "publication-report",
+		"oral_history":      "publication-oralhistory",
+		"patent":            "publication-patent",
+		"software":          "software",
+		"teaching_resource": "teachingresource",
+		"thesis":            "publication-thesis",
+		"video":             "video",
+		// This following will need to be updated and added to RDM
+		"geospatial_resource": "other",
+		"website":             "other",
+		"other":               "other",
+		"image":               "other",
+	}
+)
+
 /**
  * Implements a crosswalk from EPrints to an Invenio RDM JSON
  * representation.
@@ -86,6 +206,14 @@ func CrosswalkEPrintToRecord(eprint *eprinttools.EPrint, rec *simplified.Record,
 	rec.Schema = `local://records/record-v2.0.0.json`
 	rec.ID = fmt.Sprintf("%s:%d", eprint.Collection, eprint.EPrintID)
 
+	// NOTE: If an eprint is "deleted" we need to render a tombsone record then return
+	if eprint.EPrintStatus == "deletion" {
+		if err := tombstoneFromEPrint(eprint, rec); err != nil {
+			return err
+		}
+		return nil
+	}
+
 	if err := parentFromEPrint(eprint, rec); err != nil {
 		return err
 	}
@@ -101,12 +229,6 @@ func CrosswalkEPrintToRecord(eprint *eprinttools.EPrint, rec *simplified.Record,
 	}
 	if err := filesFromEPrint(eprint, rec); err != nil {
 		return err
-	}
-
-	if eprint.EPrintStatus == "deletion" {
-		if err := tombstoneFromEPrint(eprint, rec); err != nil {
-			return err
-		}
 	}
 
 	if err := createdUpdatedFromEPrint(eprint, rec); err != nil {
@@ -127,10 +249,6 @@ func CrosswalkEPrintToRecord(eprint *eprinttools.EPrint, rec *simplified.Record,
 	if err := simplifyContributors(eprint, rec, contributorTypes); err != nil {
 		return err
 	}
-	// FIXME: Map eprint record types to invenio RDM record types we've
-	// decided on.
-	// FIXME: Funders must have a title, could just copy in the funder
-	// name for now.
 	if err := simplifyFunding(eprint, rec); err != nil {
 		return err
 	}
@@ -362,52 +480,13 @@ func mapResourceType(eprint *eprinttools.EPrint, rec *simplified.Record, resourc
 	}
 	if len(resourceTypesMap) == 0 {
 		// NOTE: This is a default map used of no resource type map is provided.
-		resourceTypesMap = map[string]string{
-			"publication":             "publication",
-			"annoatation_collection":  "publication-annotationcollection",
-			"atlas":                   "publication-atlas",
-			"book":                    "publication-book",
-			"book_section":            "publication-section",
-			"conference":              "conference",
-			"conference_item":         "conference",
-			"conference_paper":        "conference-paper",
-			"conference_poster":       "conference-poster",
-			"conference_presentation": "conference-presentation",
-			"data_management_plan":    "publication-datamanagementplan",
-			"article":                 "publication-article",
-			"patent":                  "publication-patent",
-			"preprint":                "publication-preprint",
-			"deliverable":             "publication-deliverable",
-			"tech_report":             "publication-report",
-			"monograph":               "publication-report",
-			"software_documentation":  "publication-softwaredocumentation",
-			"technote":                "publication-technicalnote",
-			"thesis":                  "publication-thesis",
-			"working_paper":           "publication-workingpaper",
-			"other_publication":       "publication-other",
-			"documentation":           "publication-documentation",
-			"journal_issue":           "publication-issue",
-			"newspaper_issue":         "publication-newspaperissue",
-			"erratum":                 "publication-erratum",
-			"oral_history":            "publication-oralhistory",
-			"map":                     "publication-map",
-			"whitepaper":              "publication-whitepaper",
-			"lab_notes":               "labnotebook",
-			"presentation":            "presentation",
-			"dataset":                 "dataset",
-			"image":                   "image",
-			"image_map":               "image-map",
-			"video":                   "video",
-			"software":                "software",
-			"teaching_resource":       "teachingresource",
-			"lecture_notes":           "teachingresource-lecturenotes",
-			"textbook":                "teachingresource-textbook",
-			"other":                   "other",
+		for k, v := range defaultEPrintResourceTypeMap {
+			resourceTypesMap[k] = v
 		}
 	}
 	val, ok := resourceTypesMap[eprint.Type]
 	if !ok {
-		return fmt.Errorf("unable to map %q to simple record type", eprint.Type)
+		return fmt.Errorf("unable to map eprint.type to %q RDM resource type", eprint.Type)
 	}
 	rec.Metadata.ResourceType["id"] = val
 	return nil
@@ -507,13 +586,18 @@ func recordAccessFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record) 
 }
 
 func uriToContributorType(role_uri string, contributorTypes map[string]string) string {
+	if len(contributorTypes) == 0 {
+		for k, v := range defaultEPrintContributorTypeMap {
+			contributorTypes[k] = v
+		}
+	}
 	if val, ok := contributorTypes[role_uri]; ok {
 		return val
 	}
 	// FIXME: The default mapping is "other" since we don't know what it should be.
 	// Per slack conversation but I'm using "unknown" to confirm that the resource mapping
 	// is happening.
-	return "unknown"
+	return "other"
 }
 
 func dateTypeFromTimestamp(dtType string, timestamp string, description string) *simplified.DateType {
@@ -795,7 +879,7 @@ func createdUpdatedFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record
 //		fmt.Printf("%s\n", src)
 //
 // ```
-func (app *EPrint2Rdm) Run(in io.Reader, out io.Writer, eout io.Writer, username string, password string, host string, eprintId string, resourceTypesFName string, contributorTypesFName string, allIds bool, debug bool) error {
+func (app *EPrint2Rdm) Run(in io.Reader, out io.Writer, eout io.Writer, username string, password string, host string, eprintId string, resourceTypesFName string, contributorTypesFName string, allIds bool, idList string, cName string, debug bool) error {
 	if username == "" || password == "" {
 		return fmt.Errorf("username or password missing")
 	}
@@ -810,15 +894,101 @@ func (app *EPrint2Rdm) Run(in io.Reader, out io.Writer, eout io.Writer, username
 			fmt.Fprintf(out, "%d\n", eprintid)
 		}
 	} else {
+		var (
+			c   *dataset.Collection
+			err error
+		)
+		if cName != "" {
+			c, err = dataset.Open(cName)
+			if err != nil {
+				return err
+			}
+			defer c.Close()
+		}
 		resourceTypes := map[string]string{}
-		if err := LoadTypesMap(resourceTypesFName, resourceTypes); err != nil {
-			return err
+		if resourceTypesFName != "" {
+			if err := LoadTypesMap(resourceTypesFName, resourceTypes); err != nil {
+				return fmt.Errorf("loading resource type map, %q, %s", resourceTypesFName, err)
+			}
+		} else {
+			for k, v := range defaultEPrintResourceTypeMap {
+				resourceTypes[k] = v
+			}
 		}
 		contributorTypes := map[string]string{}
-		if err := LoadTypesMap(contributorTypesFName, contributorTypes); err != nil {
-			return err
+		if contributorTypesFName != "" {
+			if err := LoadTypesMap(contributorTypesFName, contributorTypes); err != nil {
+				return fmt.Errorf("loading contributor type map, %q, %s", contributorTypesFName, err)
+			}
+		} else {
+			for k, v := range defaultEPrintContributorTypeMap {
+				contributorTypes[k] = v
+			}
 		}
 
+		// Handle the case when you're havesting an id list.
+		if idList != "" {
+			if cName == "" {
+				return fmt.Errorf("id list must be used with -harvest option")
+			}
+			fp, err := os.Open(idList)
+			if err != nil {
+				return fmt.Errorf("read id list failed, %q, %s", idList, err)
+			}
+			defer fp.Close()
+			scanner := bufio.NewScanner(fp)
+			i := 0
+			eprintIds := []string{}
+			for scanner.Scan() {
+				eprintId = scanner.Text()
+				if eprintId != "" {
+					eprintIds = append(eprintIds, eprintId)
+				}
+			}
+			tot := len(eprintIds)
+			// Figure out when to report out records processed, e.g. each 1% of records
+			t0 := time.Now()
+			rptTime := time.Now()
+			log.Printf("Start processing %d records", tot)
+			for _, eprintId := range eprintIds {
+				if time.Since(rptTime) >= (30 * time.Second) {
+					log.Printf("%d/%d record processed, running time %s", i, tot, time.Since(t0).Round(time.Second))
+					rptTime = time.Now()
+				}
+				i++
+				// Handle the case when you're harvesting a single record id
+				id, err := strconv.Atoi(eprintId)
+				if err != nil {
+					log.Printf("line %d, concverting %q, %s", i, eprintId, err)
+					continue
+				}
+				eprints, err := GetEPrint(baseURL, id, timeout, 3)
+				if err != nil {
+					log.Printf("line %d, retrieving %q, %s", i, eprintId, err)
+					continue
+				}
+				record := new(simplified.Record)
+				if err := CrosswalkEPrintToRecord(eprints.EPrint[0], record, resourceTypes, contributorTypes); err != nil {
+					log.Print("line %d, crosswalking %q, %s", i, eprintId, err)
+					continue
+				}
+				if c.HasKey(eprintId) {
+					if err := c.UpdateObject(eprintId, record); err != nil {
+						return fmt.Errorf("error saving %q, line %d, %s", eprintId, i, err)
+					}
+				} else {
+					if err := c.CreateObject(eprintId, record); err != nil {
+						return fmt.Errorf("error saving %q, line %d, %s", eprintId, i, err)
+					}
+				}
+			}
+			log.Printf("Finished, processed %d records in %s", i, time.Since(t0).Round(time.Second))
+			if err := scanner.Err(); err != nil {
+				return fmt.Errorf("failed to scaner %q, %s", idList, err)
+			}
+			return nil
+		}
+		// Handle the case when you're harvesting a single record id
 		id, err := strconv.Atoi(eprintId)
 		if err != nil {
 			return err
@@ -830,6 +1000,18 @@ func (app *EPrint2Rdm) Run(in io.Reader, out io.Writer, eout io.Writer, username
 		record := new(simplified.Record)
 		if err := CrosswalkEPrintToRecord(eprints.EPrint[0], record, resourceTypes, contributorTypes); err != nil {
 			return err
+		}
+		if cName != "" {
+			if c.HasKey(eprintId) {
+				if err := c.UpdateObject(eprintId, record); err != nil {
+					return err
+				}
+			} else {
+				if err := c.CreateObject(eprintId, record); err != nil {
+					return err
+				}
+			}
+			return nil
 		}
 		src, err := json.MarshalIndent(record, "", "   ")
 		if err != nil {

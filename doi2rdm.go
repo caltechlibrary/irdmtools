@@ -51,52 +51,18 @@ type Doi2Rdm struct {
 }
 
 var (
-	DefaultContributorTypeMap = map[string]string{
-		// Author of section
-		"http://coda.library.caltech.edu/ARA": "author_section",
-		// Astronaut
-		"http://coda.library.caltech.edu/AST": "astronaut",
-		// Author of afterword, colophon, etc.
-		"http://www.loc.gov/loc.terms/relators/AFT": "other",
-		// Bibliographic antecedent
-		"http://www.loc.gov/loc.terms/relators/ANT": "other",
-		// Author in quotations or text abstracts
-		"http://www.loc.gov/loc.terms/relators/AQT": "other",
-		// Screenwriter or co-Screenwriter
-		"http://www.loc.gov/loc.terms/relators/AUS": "screenwriter",
-		// Author, co-Author
-		"http://www.loc.gov/loc.terms/relators/AUT": "author",
-		// Collaborator
-		"http://www.loc.gov/loc.terms/relators/CLB": "collaborator",
-		// Compiler
-		"http://www.loc.gov/loc.terms/relators/COM": "compiler",
-		// Contributor
-		"http://www.loc.gov/loc.terms/relators/CTB": "contributor",
-		// Director (e.g. Movie, theatre)
-		"http://www.loc.gov/loc.terms/relators/DRT": "director",
-		// Editor
-		"http://www.loc.gov/loc.terms/relators/EDT": "editor",
-		// Narrator
-		"http://www.loc.gov/loc.terms/relators/NRT": "narrator",
-		// Other
-		"http://www.loc.gov/loc.terms/relators/OTH": "other",
-		// Publishing Directory (publications)
-		"http://www.loc.gov/loc.terms/relators/PBD": "publishing_directory",
-		// Programming
-		"http://www.loc.gov/loc.terms/relators/PRG": "programmer",
-		// Reviewer
-		"http://www.loc.gov/loc.terms/relators/REV": "reviewer",
-		// Research Team Member
-		"http://www.loc.gov/loc.terms/relators/RTM": "research_team",
-		// Speaker
-		"http://www.loc.gov/loc.terms/relators/SPK": "speaker",
-		// Teacher
-		"http://www.loc.gov/loc.terms/relators/TCH": "teacher",
-		// Translator
-		"http://www.loc.gov/loc.terms/relators/TRL": "translator",
+	// From CrossRef https://www.crossref.org/documentation/schema-library/markup-guide-metadata-segments/contributors/
+	defaultCrossRefContributorTypeMap = map[string]string{
+		"author":           "author",
+		"editor":           "editor",
+		"reviewer":         "reviewer",
+		"review-assistent": "other",
+		"stats-reviewer":   "other",
+		"reader":           "other",
+		"translator":       "translator",
 	}
 
-	DefaultResourceTypeMap = map[string]string{
+	defaultCrossRefResourceTypeMap = map[string]string{
 		"article":           "publication-article",
 		"journal-article":   "publication-article",
 		"book":              "publication-book",
@@ -220,7 +186,7 @@ func (app *Doi2Rdm) Run(in io.Reader, out io.Writer, eout io.Writer, options map
 			return fmt.Errorf("failed to load resource type map, %s", err)
 		}
 	} else {
-		for k, v := range DefaultResourceTypeMap {
+		for k, v := range defaultCrossRefResourceTypeMap {
 			resourceType[k] = v
 		}
 	}
@@ -230,7 +196,7 @@ func (app *Doi2Rdm) Run(in io.Reader, out io.Writer, eout io.Writer, options map
 			return fmt.Errorf("failed to load contributor type map, %s", err)
 		}
 	} else {
-		for k, v := range DefaultContributorTypeMap {
+		for k, v := range defaultCrossRefContributorTypeMap {
 			contributorType[k] = v
 		}
 	}

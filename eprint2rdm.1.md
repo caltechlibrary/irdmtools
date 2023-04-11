@@ -33,6 +33,13 @@ you can get a list of keys available from the EPrints REST API.
 -all-ids
 : return a list of EPrint ids, one per line.
 
+-harvest DATASET_NAME
+: Harvest content to a dataset collection rather than standard out
+
+-id-list ID_FILE_LIST
+: (used with harvest) Retrieve records based on the ids in a file,
+one line per id.
+
 -resource-map FILENAME
 : use this comma delimited resource map from EPrints to RDM resource types.
 The resource map file is a comma delimited file without a header row.

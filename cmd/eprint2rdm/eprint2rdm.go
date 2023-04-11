@@ -80,6 +80,13 @@ you can get a list of keys available from the EPrints REST API.
 -all-ids
 : return a list of EPrint ids, one per line.
 
+-harvest DATASET_NAME
+: Harvest content to a dataset collection rather than standard out
+
+-id-list ID_FILE_LIST
+: (used with harvest) Retrieve records based on the ids in a file,
+one line per id.
+
 -resource-map FILENAME
 : use this comma delimited resource map from EPrints to RDM resource types.
 The resource map file is a comma delimited file without a header row.
@@ -177,12 +184,15 @@ func main() {
 	appName := path.Base(os.Args[0])
 	showHelp, showVersion, showLicense := false, false, false
 	allIds, debug := false, false
+	idList, cName := "", ""
 	resourceTypesFName, contributorTypesFName := "", ""
 	flag.BoolVar(&showHelp, "help", false, "display help")
 	flag.BoolVar(&showVersion, "version", false, "display version")
 	flag.BoolVar(&showLicense, "license", false, "display license")
 	flag.BoolVar(&debug, "debug", debug, "display additional info to stderr")
 	flag.BoolVar(&allIds, "all-ids", false, "retrieve all the eprintids from an EPrints repository via REST API, one per line")
+	flag.StringVar(&idList, "id-list", idList, "retrieve the record ids in the list")
+	flag.StringVar(&cName, "harvest", cName, "harvest the record into a dataset collection")
 	flag.StringVar(&resourceTypesFName, "resource-map", resourceTypesFName, "use this file to map resource types from EPrints to Invenio RDM")
 	flag.StringVar(&contributorTypesFName, "contributor-map", contributorTypesFName, "use this file to map contributor types from EPrints to Invenio RDM")
 	flag.Parse()
@@ -208,9 +218,9 @@ func main() {
 	// Create a appity object
 	host, eprintid := "", ""
 	app := new(irdmtools.EPrint2Rdm)
-	if allIds {
+	if allIds || idList != "" {
 		if len(args) != 1 {
-			fmt.Fprintf(os.Stderr, "expected an EPrint hostname and -keys option")
+			fmt.Fprintf(os.Stderr, "expected an EPrint hostname with either -all-ids or -ids-list and -harvest options")
 			os.Exit(1)
 		} else {
 			host = args[0]
@@ -223,7 +233,7 @@ func main() {
 			host, eprintid = args[0], args[1]
 		}
 	}
-	if err := app.Run(os.Stdin, os.Stdout, os.Stderr, eprintUser, eprintPassword, host, eprintid, resourceTypesFName, contributorTypesFName, allIds, debug); err != nil {
+	if err := app.Run(os.Stdin, os.Stdout, os.Stderr, eprintUser, eprintPassword, host, eprintid, resourceTypesFName, contributorTypesFName, allIds, idList, cName, debug); err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
 		os.Exit(1)
 	}
