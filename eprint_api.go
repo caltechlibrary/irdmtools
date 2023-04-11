@@ -101,7 +101,7 @@ func restClient(urlEndPoint string, timeout time.Duration, retryCount int) ([]by
 				if i < retryCount {
 					fmt.Fprintf(os.Stderr, "will retry, ")
 				}
-				fmt.Fprintf(os.Stderr, "%s,\n", err)
+				fmt.Fprintf(os.Stderr, "%s\n", err)
 				time.Sleep(timeout * time.Second)
 			} else {
 				return nil, err
@@ -119,7 +119,8 @@ func restClient(urlEndPoint string, timeout time.Duration, retryCount int) ([]by
 			return nil, err
 		}
 	} else {
-		return nil, fmt.Errorf("%s for %s", res.Status, urlEndPoint)
+		//FIXME: urlEndPoint is exposing the password, need to replace with asterisks
+		return nil, fmt.Errorf("%s for %s", res.Status, strings.Replace(urlEndPoint, ":"+password, ":***", 1))
 	}
 	if len(bytes.TrimSpace(src)) == 0 {
 		return nil, fmt.Errorf("No data")

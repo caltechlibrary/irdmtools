@@ -73,28 +73,29 @@ func Harvest(cfg *Config, fName string, debug bool) error {
 		l.Printf("%d records ids", tot)
 	}
 	t0 := time.Now()
+	iTime, reportProgress := time.Now(), false
 	for i, id := range recordIds {
 		rec, rl, err := GetRecord(cfg, id)
 		// The rest API seems to have two rate limits, 5000 requests per hour and 500 requests per minute
-		if debug && ((i % 10) == 0) {
-			l.Printf("retrieved record %q (%d/%d), %s", id, i, tot, rl.String())
+		if iTime, reportProgress = CheckWaitInterval(iTime, time.Minute); reportProgress || i == 0 {
+			log.Printf("last id %q (%d/%d) %s", id, i, tot, ProgressETR(t0, i, tot))
 		}
 		// NOTE: We need to respect rate limits of RDM API
 		rl.Throttle(i, tot)
 		if err != nil {
-			l.Printf("failed to get (%d) %q, %s", i, id, err)
+			log.Printf("failed to get (%d) %q, %s", i, id, err)
 			eCnt++
 		} else {
 			if c.HasKey(id) {
 				if err := c.Update(id, rec); err != nil {
-					l.Printf("failed to write %q to %s, %s", id, cName, err)
+					log.Printf("failed to write %q to %s, %s", id, cName, err)
 					eCnt++
 				} else {
 					hCnt++
 				}
 			} else {
 				if err := c.Create(id, rec); err != nil {
-					l.Printf("failed to write %q to %s, %s", id, cName, err)
+					log.Printf("failed to write %q to %s, %s", id, cName, err)
 					eCnt++
 				} else {
 					hCnt++
@@ -104,10 +105,7 @@ func Harvest(cfg *Config, fName string, debug bool) error {
 		if eCnt > maxErrors {
 			return fmt.Errorf("Stopped, %d errors encountered", eCnt)
 		}
-		if (i % 250) == 0 {
-			l.Printf("%d/%d (%q) records processed to %s %s", i, tot, id, cName, time.Since(t0))
-		}
 	}
-	l.Printf("%d harvested, %d errors, running time %s", hCnt, eCnt, time.Since(t0))
+	log.Printf("%d harvested, %d errors, running time %s", hCnt, eCnt, time.Since(t0).Round(time.Second))
 	return nil
 }

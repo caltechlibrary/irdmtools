@@ -152,8 +152,15 @@ func AddBookTitle(rec *simplified.Record, bookTitle string) error {
 	return fmt.Errorf("AddBookTitle() not implemented.")
 }
 
-func AddFunder(rec *simplified.Record, funder string, ror string, award string) error {
-	return fmt.Errorf("AddFunder() not implemented.")
+func AddFunder(rec *simplified.Record, funder *simplified.Funder) error {
+	if rec.Metadata == nil {
+		rec.Metadata = new(simplified.Metadata)
+	}
+	if rec.Metadata.Funding == nil {
+		rec.Metadata.Funding = []*simplified.Funder{}
+	}
+	rec.Metadata.Funding = append(rec.Metadata.Funding, funder)
+	return nil
 }
 
 func AddPublicationDate(rec *simplified.Record, dt string, publicationType string) error {
@@ -193,5 +200,10 @@ func SetPresentationType(rec *simplified.Record, presentationType string) error 
 }
 
 func SetFunding(rec *simplified.Record, funding []*simplified.Funder) error {
-	return fmt.Errorf("SetFunding() not implemented")
+	for _, funder := range funding {
+		if err := AddFunder(rec, funder); err != nil {
+			return err
+		}
+	}
+	return nil
 }

@@ -27,11 +27,11 @@ if [ ! -d "${C_NAME}" ]; then
 	dataset init "${C_NAME}"
 fi
 if [ ! -f eprintids.txt ]; then
-	./bin/eprint2rdm -all-ids "${REPO}" >eprintids.txt
+	eprint2rdm -all-ids "${REPO}" >eprintids.txt
 fi
 while read -r EPRINTID; do
 	if [ "${EPRINTID}" != "" ]; then
-	    if ./bin/eprint2rdm \
+	    if eprint2rdm \
 					-resource-map "${RESOURCE_MAP}" \
 					-contributor-map "${CONTRIBUTOR_MAP}" \
 	        "${REPO}" "${EPRINTID}" \

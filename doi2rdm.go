@@ -50,6 +50,41 @@ type Doi2Rdm struct {
 	Cfg *Config
 }
 
+var (
+	// From CrossRef https://www.crossref.org/documentation/schema-library/markup-guide-metadata-segments/contributors/
+	defaultCrossRefContributorTypeMap = map[string]string{
+		"author":           "author",
+		"editor":           "editor",
+		"reviewer":         "reviewer",
+		"review-assistent": "other",
+		"stats-reviewer":   "other",
+		"reader":           "other",
+		"translator":       "translator",
+	}
+
+	defaultCrossRefResourceTypeMap = map[string]string{
+		"article":           "publication-article",
+		"journal-article":   "publication-article",
+		"book":              "publication-book",
+		"book_section":      "publication-section",
+		"conference_item":   "conference-paper",
+		"dataset":           "dataset",
+		"experiment":        "publication-deliverable",
+		"journal_issue":     "publication-issue",
+		"lab_notes":         "labnotebook",
+		"monograph":         "publication-report",
+		"oral_history":      "publication-oralhistory",
+		"patent":            "publication-patent",
+		"software":          "software",
+		"teaching_resource": "teachingresource",
+		"thesis":            "publication-thesis",
+		"video":             "video",
+		"website":           "other",
+		"other":             "other",
+		"image":             "other",
+	}
+)
+
 // Configure reads the configuration file and environtment
 // initialing the Cfg attribute of a Doi2Rdm object. It returns an error
 // if problem were encounter.
@@ -135,6 +170,10 @@ func (app *Doi2Rdm) Run(in io.Reader, out io.Writer, eout io.Writer, options map
 		}
 	}
 
+	if mailTo == "" {
+		//mailTo = fmt.Sprintf("%s@%s", os.Getenv("USER"), os.Getenv("HOSTNAME"))
+		mailTo = "helpdesk@library.caltech.edu"
+	}
 	var (
 		oRecord *simplified.Record
 		nRecord *simplified.Record
@@ -146,11 +185,19 @@ func (app *Doi2Rdm) Run(in io.Reader, out io.Writer, eout io.Writer, options map
 		if err := LoadTypesMap(resourceTypeFName, resourceType); err != nil {
 			return fmt.Errorf("failed to load resource type map, %s", err)
 		}
+	} else {
+		for k, v := range defaultCrossRefResourceTypeMap {
+			resourceType[k] = v
+		}
 	}
 	contributorType := map[string]string{}
 	if contributorTypeFName != "" {
 		if err := LoadTypesMap(contributorTypeFName, contributorType); err != nil {
 			return fmt.Errorf("failed to load contributor type map, %s", err)
+		}
+	} else {
+		for k, v := range defaultCrossRefContributorTypeMap {
+			contributorType[k] = v
 		}
 	}
 	if diffFName != "" {
