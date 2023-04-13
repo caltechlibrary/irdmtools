@@ -6,7 +6,14 @@ Bugs
 ----
 
 - [x] I'm getting a response timeout after 100 to 500 records, retrying ther request yields a successful fetch, need to implement some sort of retry
-- [ ] Go's "x" packages include "rate" which implements a rate limiter, look at for RDM API
+- [ ] .metadata.creators is not completing crosswalk in doi2rdm but does in doi2eprintxml saved as simple record.
+- [ ] doi2rdm missing metadata attributes, test DOI "10.1063/5.0122760", compared with `doi2eprintxml -simple "10.1063/5.0122760" | jq .[0]`
+	- [ ] .metadata.publication_date is not completing the crosswalk
+	- [ ] .metadata.description is not completing the crosswalk
+	- [ ] .metadata.rights is not completing the crosswalk
+	- [ ] .metadata.subjects is not completing the crosswalk
+	- [ ] .metadata.publisher has wrong value
+
 
 Next
 ----
@@ -23,5 +30,6 @@ Next
 - [x] Implement a first pass at a harvester
 - [x] Figure out a way to retrieve RDM ids without using the API. The API max results returned is 10K and we're going to have many more records than that (e.g. OAI-PMH)
 - [ ] Need to discuss with Tom is we really want to bother with rdm2eprint crosswalk, I can implement it but I'm not sure it is necessary
+- [ ] Go's "x" packages include "rate" which implements a rate limiter, look at for RDM API
 
 
