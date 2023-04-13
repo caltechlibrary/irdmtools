@@ -32,7 +32,7 @@ func SetResourceType(rec *simplified.Record, resourceType string, resourceTypeMa
 		rec.Metadata = new(simplified.Metadata)
 	}
 	if rec.Metadata.ResourceType == nil {
-		rec.Metadata.ResourceType = make(map[string]string)
+		rec.Metadata.ResourceType = make(map[string]interface{})
 	}
 	rec.Metadata.ResourceType["id"] = val
 	return nil

@@ -476,7 +476,7 @@ func LoadTypesMap(fName string, mapTypes map[string]string) error {
 // Invenio-RDM record type.
 func mapResourceType(eprint *eprinttools.EPrint, rec *simplified.Record, resourceTypesMap map[string]string) error {
 	if rec.Metadata.ResourceType == nil {
-		rec.Metadata.ResourceType = map[string]string{}
+		rec.Metadata.ResourceType = make(map[string]interface{})
 	}
 	if len(resourceTypesMap) == 0 {
 		// NOTE: This is a default map used of no resource type map is provided.
@@ -624,7 +624,7 @@ func mkSimpleIdentifier(scheme, value string) *simplified.Identifier {
 func funderFromItem(item *eprinttools.Item) *simplified.Funder {
 	funder := new(simplified.Funder)
 	if item.GrantNumber != "" {
-		funder.Award = new(simplified.Identifier)
+		funder.Award = new(simplified.AwardIdentifier)
 		funder.Award.Number = item.GrantNumber
 		funder.Award.Scheme = "eprints_grant_number"
 	}

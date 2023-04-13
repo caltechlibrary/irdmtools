@@ -171,8 +171,11 @@ func getFunding(work *crossrefapi.Works) []*simplified.Funder {
 					Funder: &simplified.Identifier{
 						Name: funder.Name,
 					},
-					Award: &simplified.Identifier{
+					Award: &simplified.AwardIdentifier{
 						Number: award,
+						Title: &simplified.TitleDetail{
+							Encoding: "unav",
+						},
 					},
 				})
 			}
