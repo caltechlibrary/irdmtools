@@ -79,12 +79,12 @@ func SetPublication(rec *simplified.Record, publication string) error {
 	if rec.Metadata == nil {
 		rec.Metadata = new(simplified.Metadata)
 	}
-	// FIXME: Need to verify that we want to save the publication name as publisher
-	if rec.CLAnnotations == nil {
-		rec.CLAnnotations = make(map[string]interface{})
+	// NOTE: Journal fields are going under the "custom_fields" off the root
+	// metadata object in RDM 12.
+	if rec.CustomFields == nil {
+		rec.CustomFields = make(map[string]interface{})
 	}
-	rec.CLAnnotations["publication"] = publication
-	rec.Metadata.Publisher = publication
+	rec.CustomFields["rdm:publication"] = publication
 	return nil
 }
 
@@ -104,11 +104,22 @@ func SetSeries(rec *simplified.Record, series string) error {
 	if rec.Metadata == nil {
 		rec.Metadata = new(simplified.Metadata)
 	}
-	// FIXME: Need to figure out where this goes
-	if rec.CLAnnotations == nil {
-		rec.CLAnnotations = make(map[string]interface{})
+	// NOTE: Journal content goes in rdm:journal custom fields.
+	if rec.CustomFields == nil {
+		rec.CustomFields = make(map[string]interface{})
 	}
-	rec.CLAnnotations["series"] = series
+	_, ok := rec.CustomFields["rdm:journal"]
+	if ! ok {
+		rec.CustomFields["rdm:journal"] = make(map[string]interface{})
+	}
+	if journal, ok := rec.CustomFields["rdm:journal"]; ok {
+		if journal == nil {
+			journal = make(map[string]interface{})
+		}
+		m := journal.(map[string]interface{})
+		m["series"] = series
+		rec.CustomFields["rdm:journal"] = journal
+	}
 	return nil
 }
 
@@ -116,11 +127,22 @@ func SetVolume(rec *simplified.Record, volume string) error {
 	if rec.Metadata == nil {
 		rec.Metadata = new(simplified.Metadata)
 	}
-	// FIXME: Need to figure out where this goes
-	if rec.CLAnnotations == nil {
-		rec.CLAnnotations = make(map[string]interface{})
+	// NOTE: Journal content goes in rdm:journal custom fields.
+	if rec.CustomFields == nil {
+		rec.CustomFields = make(map[string]interface{})
 	}
-	rec.CLAnnotations["volume"] = volume
+	_, ok := rec.CustomFields["rdm:journal"]
+	if ! ok {
+		rec.CustomFields["rdm:journal"] = make(map[string]interface{})
+	}
+	if journal, ok := rec.CustomFields["rdm:journal"]; ok {
+		if journal == nil {
+			journal = make(map[string]interface{})
+		}
+		m := journal.(map[string]interface{})
+		m["volume"] = volume
+		rec.CustomFields["rdm:journal"] = journal
+	}
 	return nil
 }
 
@@ -128,11 +150,22 @@ func SetPageRange(rec *simplified.Record, pageRange string) error {
 	if rec.Metadata == nil {
 		rec.Metadata = new(simplified.Metadata)
 	}
-	// FIXME: Need to figure out where this goes
-	if rec.CLAnnotations == nil {
-		rec.CLAnnotations = make(map[string]interface{})
+	// NOTE: Journal content goes in rdm:journal custom fields.
+	if rec.CustomFields == nil {
+		rec.CustomFields = make(map[string]interface{})
 	}
-	rec.CLAnnotations["page_range"] = pageRange
+	_, ok := rec.CustomFields["rdm:journal"]
+	if ! ok {
+		rec.CustomFields["rdm:journal"] = make(map[string]interface{})
+	}
+	if journal, ok := rec.CustomFields["rdm:journal"]; ok {
+		if journal == nil {
+			journal = make(map[string]interface{})
+		}
+		m := journal.(map[string]interface{})
+		m["pages"] = pageRange
+		rec.CustomFields["rdm:journal"] = journal
+	}
 	return nil
 }
 
@@ -140,11 +173,22 @@ func SetArticleNumber(rec *simplified.Record, articleNo string) error {
 	if rec.Metadata == nil {
 		rec.Metadata = new(simplified.Metadata)
 	}
-	// FIXME: Need to figure out where this goes
-	if rec.CLAnnotations == nil {
-		rec.CLAnnotations = make(map[string]interface{})
+	// NOTE: Journal content goes in rdm:journal custom fields.
+	if rec.CustomFields == nil {
+		rec.CustomFields = make(map[string]interface{})
 	}
-	rec.CLAnnotations["article_number"] = articleNo
+	_, ok := rec.CustomFields["rdm:journal"]
+	if ! ok {
+		rec.CustomFields["rdm:journal"] = map[string]interface{}{}
+	}
+	if journal, ok := rec.CustomFields["rdm:journal"]; ok {
+		if journal == nil {
+			journal = make(map[string]interface{})
+		}
+		m := journal.(map[string]interface{})
+		m["article_number"] = articleNo
+		rec.CustomFields["rdm:journal"] = journal
+	}
 	return nil
 }
 

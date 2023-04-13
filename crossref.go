@@ -35,9 +35,9 @@ func QueryCrossRefWork(cfg *Config, doi string, mailTo string, dotInitials bool,
 func normalizeCrossRefType(s string) string {
 	//FIXME: Ideally this should take a resource type map.
 	switch strings.ToLower(s) {
-	case "proceedings-article":
-		//FIXME: this mapping may not be correct, was book_section in EPrints CaltechAUTHORS
-		return "publication-section"
+	//	case "proceedings-article":
+	//		//FIXME: this mapping may not be correct, was book_section in EPrints CaltechAUTHORS
+	//		return "publication-section"
 	case "journal-article":
 		return "publication-article"
 	case "book-chapter":
@@ -68,6 +68,7 @@ func getTitles(work *crossrefapi.Works) []string {
 
 // getPublisher
 func getPublisher(work *crossrefapi.Works) string {
+	// FIXME: Need to know if publisher holds the publisher and container type holds publication based on work.Message.Type
 	if work.Message != nil && work.Message.Publisher != "" {
 		return work.Message.Publisher
 	}
@@ -76,7 +77,9 @@ func getPublisher(work *crossrefapi.Works) string {
 
 // getPublication
 func getPublication(work *crossrefapi.Works) string {
-	if work.Message != nil && work.Message.ContainerTitle != nil && len(work.Message.ContainerTitle) > 0 {
+	// FIXME: Need to know if publisher holds the publisher and container type holds publication based on work.Message.Type
+	if work.Message != nil && work.Message.Type == "publication-article" &&
+		work.Message.ContainerTitle != nil && len(work.Message.ContainerTitle) > 0 {
 		return work.Message.ContainerTitle[0]
 	}
 	return ""
@@ -84,7 +87,9 @@ func getPublication(work *crossrefapi.Works) string {
 
 // getSeries
 func getSeries(work *crossrefapi.Works) string {
-	if work.Message != nil && work.Message.ShortContainerTitle != nil && len(work.Message.ShortContainerTitle) > 0 {
+	// FIXME: Need to know if publisher holds the publisher and container type holds publication based on work.Message.Type
+	if work.Message != nil && work.Message.Type == "publication-article" &&
+		work.Message.ShortContainerTitle != nil && len(work.Message.ShortContainerTitle) > 0 {
 		return work.Message.ShortContainerTitle[0]
 	}
 	return ""
@@ -92,7 +97,8 @@ func getSeries(work *crossrefapi.Works) string {
 
 // getVolume
 func getVolume(work *crossrefapi.Works) string {
-	if work.Message != nil && work.Message.JournalIssue != nil && work.Message.JournalIssue.Issue != "" {
+	if work.Message != nil && work.Message.Type == "publication-article" &&
+		work.Message.JournalIssue != nil && work.Message.JournalIssue.Issue != "" {
 		return work.Message.JournalIssue.Issue
 	}
 	return ""

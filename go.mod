@@ -7,7 +7,7 @@ require (
 	github.com/caltechlibrary/dataciteapi v1.0.1
 	github.com/caltechlibrary/dataset/v2 v2.1.1
 	github.com/caltechlibrary/eprinttools v1.2.5
-	github.com/caltechlibrary/simplified v0.0.4-0.20230410193330-06179a6f94de
+	github.com/caltechlibrary/simplified v0.0.5
 )
 
 require (

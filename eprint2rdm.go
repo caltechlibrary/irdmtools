@@ -967,7 +967,7 @@ func (app *EPrint2Rdm) Run(in io.Reader, out io.Writer, eout io.Writer, username
 				}
 				record := new(simplified.Record)
 				if err := CrosswalkEPrintToRecord(eprints.EPrint[0], record, resourceTypes, contributorTypes); err != nil {
-					log.Print("line %d, crosswalking %q, %s", i+1, eprintId, err)
+					log.Printf("line %d, crosswalking %q, %s", i+1, eprintId, err)
 					continue
 				}
 				if c.HasKey(eprintId) {

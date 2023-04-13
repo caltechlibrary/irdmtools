@@ -1,6 +1,6 @@
 % rdmutil(1) rdmutil user manual | Version 0.0.4
 % R. S. Doiel and Tom Morrell
-% 2023-04-04
+% 2023-04-13
 
 # NAME
 
@@ -65,7 +65,10 @@ query QUERY_STRING [size | size sort]
 : Returns a result using RDM's search engine. It is limited to about 10K total results. You can use the see RDM's documentation for query construction.  See <https://inveniordm.docs.cern.ch/customize/search/>, <https://inveniordm.docs.cern.ch/reference/rest_api_requests/> and https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-query-string-query.html#query-string-syntax. Query takes one required parameter and two option.
 
 get_record RECORD_ID
-: Returns a specific record indicated by RECORD_ID, e.g. bq3se-47g50. The REORCID_ID is a required parameter.
+: Returns a specific simplified record indicated by RECORD_ID, e.g. bq3se-47g50. The REORCID_ID is a required parameter.
+
+get_raw_record RECORD_ID
+: Returns a specific map/dictionary record indicated by RECORD_ID, e.g. bq3se-47g50. The REORCID_ID is a required parameter.
 
 harvest KEY_JSON
 : harvest takes a JSON file containing a list of keys and harvests each record into the dataset collection.
@@ -99,11 +102,17 @@ Get a list of all Invenio-RDM record ids.
 rdmutil get_all_ids
 ~~~
 
-Get a specific Invenio-RDM record.
+Get a specific Invenio-RDM record. Record is validated
+against irdmtool model.
 
 ~~~
 rdmutil get_record bq3se-47g50
 ~~~
 
+Get a specific Invenio-RDM record as it is returned by
+the RDM API.
 
+~~~
+rdmutil get_raw_record bq3se-47g50
+~~~
 

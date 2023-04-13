@@ -46,6 +46,9 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	// Caltech Library Packages
+	"github.com/caltechlibrary/simplified"
 )
 
 const (
@@ -388,24 +391,20 @@ func GetModifiedRecordIds(cfg *Config, start string, end string) ([]string, erro
 	return ids, nil
 }
 
-// GetRecord takes a configuration object and record id,
-// contacts an RDM instance and returns a simplified record, a rate limit struct
-// and an error value.
-//
-// The configuration object must have the InvenioAPI and
-// InvenioToken attributes set.
+// GetRawRecord takes a configuration object and record id,
+// contacts an RDM instance and returns a map[string]interface{} record
 //
 // ```
 // cfg, _ := LoadConfig("config.json")
 // id := "qez01-2309a"
-// record, rateLimit, err := GetConfig(cfg, id)
+// mapRecord, rateLimit, err := GetRawRecord(cfg, id)
 //
 //	if err != nil {
-//		  // ... handle error ...
+//		 // ... handle error ...
 //	}
 //
 // ```
-func GetRecord(cfg *Config, id string) (map[string]interface{}, *RateLimit, error) {
+func GetRawRecord(cfg *Config, id string) (map[string]interface{}, *RateLimit, error) {
 	// Make sure we have a valid URL
 	u, err := url.Parse(cfg.InvenioAPI)
 	if err != nil {
@@ -420,6 +419,44 @@ func GetRecord(cfg *Config, id string) (map[string]interface{}, *RateLimit, erro
 		return nil, rl, err
 	}
 	rec := map[string]interface{}{}
+	if err := json.Unmarshal(src, &rec); err != nil {
+		return nil, rl, err
+	}
+	return rec, rl, nil
+}
+
+// GetRecord takes a configuration object and record id,
+// contacts an RDM instance and returns a simplified record, a rate limit struct
+// and an error value.
+//
+// The configuration object must have the InvenioAPI and
+// InvenioToken attributes set.
+//
+// ```
+// cfg, _ := LoadConfig("config.json")
+// id := "qez01-2309a"
+// record, rateLimit, err := GetRecord(cfg, id)
+//
+//	if err != nil {
+//		 // ... handle error ...
+//	}
+//
+// ```
+func GetRecord(cfg *Config, id string) (*simplified.Record, *RateLimit, error) {
+	// Make sure we have a valid URL
+	u, err := url.Parse(cfg.InvenioAPI)
+	if err != nil {
+		return nil, nil, err
+	}
+	// Setup API request for a record
+	uri := fmt.Sprintf("%s/api/records/%s", u.String(), id)
+
+	// NOTE: rl is necessary to handle repeat requests to Invenio
+	src, rl, err := getJSON(cfg.InvenioToken, uri)
+	if err != nil {
+		return nil, rl, err
+	}
+	rec := new(simplified.Record)
 	if err := json.Unmarshal(src, &rec); err != nil {
 		return nil, rl, err
 	}

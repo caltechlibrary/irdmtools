@@ -87,14 +87,14 @@ func Harvest(cfg *Config, fName string, debug bool) error {
 			eCnt++
 		} else {
 			if c.HasKey(id) {
-				if err := c.Update(id, rec); err != nil {
+				if err := c.UpdateObject(id, rec); err != nil {
 					log.Printf("failed to write %q to %s, %s", id, cName, err)
 					eCnt++
 				} else {
 					hCnt++
 				}
 			} else {
-				if err := c.Create(id, rec); err != nil {
+				if err := c.CreateObject(id, rec); err != nil {
 					log.Printf("failed to write %q to %s, %s", id, cName, err)
 					eCnt++
 				} else {
