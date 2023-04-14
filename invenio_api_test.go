@@ -38,9 +38,38 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path"
 	"testing"
 	"time"
 )
+
+const (
+	maxIdListSize = 1000
+)
+
+func saveIdsFile(fName string, ids []string, maxLength int) error {
+	if _, err := os.Stat(idsFName); os.IsNotExist(err) {
+		dName := path.Dir(idsFName)
+		if _, err := os.Stat(dName); os.IsNotExist(err) {
+			os.MkdirAll(dName, 0775)
+		}
+		s := ids[:]
+		if len(s) > maxLength {
+			s = s[0:maxLength]
+		}
+		if len(s) == 0 {
+			return fmt.Errorf("no ids to save")
+		}
+		src, err := json.MarshalIndent(s, "", "    ")
+		if err != nil {
+			return err
+		}
+		if err := os.WriteFile(fName, src, 0664); err != nil {
+			return err
+		}
+	}
+	return nil
+}
 
 func TestConfig(t *testing.T) {
 	if cfg == nil {
@@ -72,13 +101,21 @@ func TestQuery(t *testing.T) {
 		t.Errorf("failed to find any records")
 		t.FailNow()
 	}
+	ids := []string{}
 	for i, rec := range records {
-		if _, ok := rec["id"]; ok == false {
+		if id, ok := rec["id"]; ok == false {
 			t.Errorf("record (%d) is missing id, %+v", i, rec)
+			t.FailNow()
+		} else {
+			ids = append(ids, fmt.Sprintf("%s", id))
+		}
+	}
+	if idsFName != "" {
+		if err := saveIdsFile(idsFName, ids, maxIdListSize); err != nil {
+			t.Errorf("failed to write %q, %s", idsFName, err)
 			t.FailNow()
 		}
 	}
-	//t.FailNow() // DEBUG
 }
 
 func TestGetModifiedRecordIds(t *testing.T) {
@@ -87,15 +124,21 @@ func TestGetModifiedRecordIds(t *testing.T) {
 	}
 	today := time.Now()
 	end := today.Format("2006-01-02")
-	start := today.AddDate(0, 0, -30).Format("2006-01-02")
-	records, err := GetModifiedRecordIds(cfg, start, end)
+	start := today.AddDate(0, 0, -7).Format("2006-01-02")
+	ids, err := GetModifiedRecordIds(cfg, start, end)
 	if err != nil {
 		t.Error(err)
 	}
-	for i, rec := range records {
-		s := fmt.Sprintf("%T", rec)
+	for i, id := range ids {
+		s := fmt.Sprintf("%T", id)
 		if s != "string" {
 			t.Errorf("expected (%d) a string, got %s", i, s)
+			t.FailNow()
+		}
+	}
+	if idsFName != "" {
+		if err := saveIdsFile(idsFName, ids, maxIdListSize); err != nil {
+			t.Errorf("failed to write %q, %s", idsFName, err)
 			t.FailNow()
 		}
 	}
@@ -105,23 +148,30 @@ func TestGetRecordIds(t *testing.T) {
 	if cfg == nil {
 		t.Skipf("Not configured for testing")
 	}
-	records, err := GetRecordIds(cfg)
+	ids, err := GetRecordIds(cfg)
 	if err != nil {
 		t.Error(err)
 	}
-	for i, rec := range records {
-		s := fmt.Sprintf("%T", rec)
+	for i, id := range ids {
+		s := fmt.Sprintf("%T", id)
 		if s != "string" {
 			t.Errorf("expected (%d) a string, got %s", i, s)
+			t.FailNow()
+		}
+	}
+	if idsFName != "" {
+		if err := saveIdsFile(idsFName, ids, maxIdListSize); err != nil {
+			t.Errorf("failed to write %q, %s", idsFName, err)
 			t.FailNow()
 		}
 	}
 }
 
 func TestGetRecord(t *testing.T) {
-	if cfg == nil {
+	if cfg == nil || idsFName == "" {
 		t.Skipf("Not configured for testing")
 	}
+	fmt.Fprintf(os.Stderr, "DEBUG idsFName -> %q\n", idsFName)
 	src, err := os.ReadFile(idsFName)
 	if err != nil {
 		t.Errorf("failed to read ids from file %q, %s", idsFName, err)
@@ -132,7 +182,7 @@ func TestGetRecord(t *testing.T) {
 		t.Error(err)
 		t.FailNow()
 	}
-
+	fmt.Fprintf(os.Stderr, "DEBUG len(ids) -> %d\n", len(ids))
 	for i, id := range ids {
 		_, rl, err := GetRecord(cfg, id)
 		if err != nil {

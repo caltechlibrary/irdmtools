@@ -67,12 +67,13 @@ about.md: codemeta.json $(PROGRAMS)
 
 
 test: $(PACKAGE)
-	go test -run TestConfig
-	go test -run TestQuery
-	go test -timeout 20m -ids test_record_ids.json -run TestGetRecord
-	go test -timeout 20m -ids test_record_ids.json -run Harvest
-	go test -timeout 20m -run TestGetRecordIds
-	go test -timeout 20m -run TestGetModifiedIds
+	go test -timeout 120m
+	#go test -run TestConfig
+	#go test -run TestQuery
+	#go test -timeout 20m -ids test_record_ids.json -run TestGetRecord
+	#go test -timeout 20m -ids test_record_ids.json -run Harvest
+	#go test -timeout 20m -run TestGetRecordIds
+	#go test -timeout 20m -run TestGetModifiedIds
 
 website: clean-website .FORCE
 	make -f website.mak

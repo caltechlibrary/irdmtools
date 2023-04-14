@@ -244,13 +244,16 @@ func Query(cfg *Config, q string, sort string) ([]map[string]interface{}, error)
 func GetRecordIds(cfg *Config) ([]string, error) {
 	ids := []string{}
 	resumptionToken := "     "
-	debug := cfg.Debug
 	t0 := time.Now()
 	iTime, reportProgress := time.Now(), false
 	uri := fmt.Sprintf("%s/oai2d?verb=ListIdentifiers&metadataPrefix=oai_dc", cfg.InvenioAPI)
 	for i := 0; resumptionToken != ""; i++ {
-		if iTime, reportProgress = CheckWaitInterval(iTime, time.Minute); reportProgress || i == 0 {
-			log.Printf("%s", ProgressIPS(t0, i, time.Minute))
+		if iTime, reportProgress = CheckWaitInterval(iTime, (1 * time.Minute)); reportProgress || (len(ids) == 0) {
+			var lastId string
+			if len(ids) > 0 {
+				lastId = ids[len(ids)-1]
+			}
+			log.Printf("GetRecordIds(cfg) last id %q: %s", lastId, ProgressIPS(t0, len(ids), time.Minute))
 		}
 		if i > 0 {
 			v := url.Values{}
@@ -265,9 +268,6 @@ func GetRecordIds(cfg *Config) ([]string, error) {
 		rl.FromHeader(headers)
 		// NOTE: We need to respect rate limits of the RDM API
 		rl.Throttle(i, 1)
-		if debug && ((i % 10) == 0) {
-			dbgPrintf(cfg, "retrieved xml (%d), %s", i, rl.String())
-		}
 		if bytes.HasPrefix(src, []byte("<html")) {
 			dbgPrintf(cfg, "\n%s\n", src)
 			resumptionToken = ""
@@ -297,13 +297,6 @@ func GetRecordIds(cfg *Config) ([]string, error) {
 				resumptionToken = ""
 			}
 		}
-		if iTime, reportProgress = CheckWaitInterval(iTime, (1 * time.Minute)); reportProgress || (len(ids) == 0) {
-			var lastId string
-			if len(ids) > 0 {
-				lastId = ids[len(ids)-1]
-			}
-			log.Printf("last id %q: %s", lastId, ProgressIPS(t0, len(ids), time.Minute))
-		}
 	}
 	log.Printf("%d total retrieved in %s", len(ids), time.Since(t0).Round(time.Second))
 	return ids, nil
@@ -332,8 +325,16 @@ func GetModifiedRecordIds(cfg *Config, start string, end string) ([]string, erro
 	dbgPrintf(cfg, "requesting %s", uri)
 	t0, iTime, reportProgress := time.Now(), time.Now(), false
 	for i := 0; resumptionToken != ""; i++ {
-		if iTime, reportProgress = CheckWaitInterval(iTime, time.Minute); reportProgress || i == 0 {
-			log.Printf("%s", ProgressIPS(t0, i, time.Minute))
+		if iTime, reportProgress = CheckWaitInterval(iTime, (1 * time.Minute)); reportProgress || (len(ids) == 0) {
+			var lastId string
+			if len(ids) > 0 {
+				lastId = ids[len(ids)-1]
+			}
+			if lastId != "" {
+				log.Printf("GetModifiedRecordIDs(cfg, %q, %q) last id %q: %s", start, end, lastId, ProgressIPS(t0, len(ids), time.Minute))
+			} else {
+				log.Printf("GetModifiedRecordIDs(cfg, %q, %q) %s", start, end, ProgressIPS(t0, len(ids), time.Minute))
+			}
 		}
 		if i > 0 {
 			v := url.Values{}
@@ -348,9 +349,6 @@ func GetModifiedRecordIds(cfg *Config, start string, end string) ([]string, erro
 		rl.FromHeader(headers)
 		// NOTE: We need to respect rate limits for RDM API, unfortunately we don't know the total number of keys from this API request ...
 		rl.Throttle(i, 1)
-		if debug && ((i % 10) == 0) {
-			dbgPrintf(cfg, "retrieved xml (%d), %s", i, rl.String())
-		}
 
 		if bytes.HasPrefix(src, []byte("<html")) {
 			// FIXME: Need to display error contained in the HTML response
@@ -382,9 +380,6 @@ func GetModifiedRecordIds(cfg *Config, start string, end string) ([]string, erro
 			} else {
 				resumptionToken = ""
 			}
-		}
-		if debug && (len(ids)%500) == 0 {
-			dbgPrintf(cfg, "%d ids retrieved for %s - %s", len(ids), start, end)
 		}
 	}
 	log.Printf("%d total retrieved in %s", len(ids), time.Since(t0).Round(time.Second))

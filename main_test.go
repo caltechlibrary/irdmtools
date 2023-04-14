@@ -38,6 +38,7 @@ import (
 	"flag"
 	"log"
 	"os"
+	"path"
 	"testing"
 )
 
@@ -83,8 +84,16 @@ func TestMain(m *testing.M) {
 	if cfg.InvenioToken == "" {
 		l.Fatal("invenio troken not configured")
 	}
-	if idsFName == "" && cfg.Debug {
+	if idsFName == "" {
+		idsFName = path.Join("testdata", "test_record_ids.json")
+	}
+
+	if _, err := os.Stat(idsFName); err == nil {
+		l.Printf("using %s for test record ids in Harvest and TestGetRecord", idsFName)
+	} else {
 		l.Printf("skipping testing Harvest, no ids file")
+		l.Printf("skipping testing TestGetRecord, no ids file")
+
 	}
 	os.Exit(m.Run())
 }
