@@ -604,7 +604,9 @@ func dateTypeFromTimestamp(dtType string, timestamp string, description string) 
 	dt := new(simplified.DateType)
 	dt.Type = new(simplified.Type)
 	dt.Type.ID = dtType
-	dt.Type.Title = dtType
+	dt.Type.Title = map[string]string{
+		"en": dtType,
+	}
 	dt.Description = description
 	if len(timestamp) > 9 {
 		dt.Date = timestamp[0:10]
