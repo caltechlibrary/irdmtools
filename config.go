@@ -65,6 +65,9 @@ type Config struct {
 	MailTo string `json:"mailto,omitempty"`
 	// ds his a non-public point to an dataset collection structure
 	ds *dataset.Collection
+
+	// rl holds rate limiter data for throttling API requests
+	rl *RateLimit
 }
 
 // prefixVar applies returns an variable name apply
@@ -74,6 +77,13 @@ func prefixVar(varname string, prefix string) string {
 		return varname
 	}
 	return fmt.Sprintf("%s%s", prefix, varname)
+}
+
+// NewConfig generates an empty configuration struct.
+func NewConfig() *Config {
+	cfg := new(Config)
+	cfg.rl = new(RateLimit)
+	return cfg
 }
 
 // LoadEnv checks the environment for configuration values if not
@@ -90,7 +100,7 @@ func prefixVar(varname string, prefix string) string {
 // ```
 func (cfg *Config) LoadEnv(prefix string) error {
 	if cfg == nil {
-		cfg = new(Config)
+		cfg = NewConfig()
 	}
 	// Read in the configuration from the environment
 	if api := os.Getenv(prefixVar("INVENIO_API", prefix)); api != "" && cfg.InvenioAPI == "" {
@@ -115,7 +125,7 @@ func (cfg *Config) LoadEnv(prefix string) error {
 //
 // ```
 //
-//	cfg := new(Config)
+//	cfg := NewConfig()
 //	if err := cfg.LoadConfig("irdmtools.json"); err != nil {
 //	   // ... handle error ...
 //	}
@@ -127,7 +137,7 @@ func (cfg *Config) LoadEnv(prefix string) error {
 // ```
 func (cfg *Config) LoadConfig(configFName string) error {
 	if cfg == nil {
-		cfg = new(Config)
+		cfg = NewConfig()
 	}
 	if configFName == "" {
 		return fmt.Errorf("configuration filename is an empty string")

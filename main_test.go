@@ -55,7 +55,6 @@ func TestMain(m *testing.M) {
 	)
 	envPrefix = "TEST_"
 	l := log.New(os.Stderr, "", 1)
-
 	// call flag.Parse() here if TestMain uses flags
 	flag.StringVar(&configFName, "config", configFName, "config file for testing")
 	flag.StringVar(&useQuery, "q", useQuery, "use this test query")
@@ -63,7 +62,7 @@ func TestMain(m *testing.M) {
 	flag.Parse()
 
 	if cfg == nil {
-		cfg = new(Config)
+		cfg = NewConfig()
 	}
 	if configFName != "" {
 		l.Printf("loading %s\n", configFName)
@@ -88,11 +87,9 @@ func TestMain(m *testing.M) {
 		idsFName = path.Join("testdata", "test_record_ids.json")
 	}
 
-	if _, err := os.Stat(idsFName); err == nil {
-		l.Printf("using %s for test record ids in Harvest and TestGetRecord", idsFName)
-	} else {
-		l.Printf("skipping testing Harvest, no ids file")
-		l.Printf("skipping testing TestGetRecord, no ids file")
+	if _, err := os.Stat(idsFName); os.IsNotExist(err) {
+		l.Printf("skipping testing Test02GetRecord, no ids file")
+		l.Printf("skipping testing Test03Harvest, no ids file")
 
 	}
 	os.Exit(m.Run())

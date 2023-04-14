@@ -64,7 +64,7 @@ func (app *RdmUtil) Configure(configFName string, envPrefix string, debug bool) 
 	if app == nil {
 		app = new(RdmUtil)
 	}
-	cfg := new(Config)
+	cfg := NewConfig()
 	// Load the config file if name isn't an empty string
 	if configFName != "" {
 		err := cfg.LoadConfig(configFName)
@@ -190,7 +190,7 @@ func (app *RdmUtil) GetRecordIds() ([]byte, error) {
 //
 // ```
 func (app *RdmUtil) GetRecord(id string) ([]byte, error) {
-	rec, _, err := GetRecord(app.Cfg, id)
+	rec, err := GetRecord(app.Cfg, id)
 	if err != nil {
 		return nil, err
 	}
@@ -219,7 +219,7 @@ func (app *RdmUtil) GetRecord(id string) ([]byte, error) {
 //
 // ```
 func (app *RdmUtil) GetRawRecord(id string) ([]byte, error) {
-	rec, _, err := GetRawRecord(app.Cfg, id)
+	rec, err := GetRawRecord(app.Cfg, id)
 	if err != nil {
 		return nil, err
 	}

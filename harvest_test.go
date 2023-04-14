@@ -35,12 +35,11 @@
 package irdmtools
 
 import (
-	"fmt"
 	"os"
 	"testing"
 )
 
-func TestHarvest(t *testing.T) {
+func Test03Harvest(t *testing.T) {
 	if cfg == nil || cfg.InvenioAPI == "" || cfg.InvenioToken == "" {
 		t.Errorf("tests not configured")
 		t.FailNow()
@@ -58,7 +57,6 @@ func TestHarvest(t *testing.T) {
 		t.Errorf("%q %s", idsFName, err)
 		t.FailNow()
 	}
-	fmt.Fprintf(os.Stderr, "DEBUG test ids -> %q\n", idsFName)
 	err := Harvest(cfg, idsFName, true)
 	if err != nil {
 		t.Errorf("Havest(cfg, %q), %s", idsFName, err)

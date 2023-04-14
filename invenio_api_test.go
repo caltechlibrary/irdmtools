@@ -37,6 +37,7 @@ package irdmtools
 import (
 	"encoding/json"
 	"fmt"
+	//"math/rand"
 	"os"
 	"path"
 	"testing"
@@ -71,7 +72,7 @@ func saveIdsFile(fName string, ids []string, maxLength int) error {
 	return nil
 }
 
-func TestConfig(t *testing.T) {
+func Test01Config(t *testing.T) {
 	if cfg == nil {
 		t.Errorf("tests are not configured")
 		t.FailNow()
@@ -84,7 +85,7 @@ func TestConfig(t *testing.T) {
 	}
 }
 
-func TestQuery(t *testing.T) {
+func Test01Query(t *testing.T) {
 	if useQuery == "" {
 		useQuery = "gravity"
 	}
@@ -118,13 +119,13 @@ func TestQuery(t *testing.T) {
 	}
 }
 
-func TestGetModifiedRecordIds(t *testing.T) {
+func Test01GetModifiedRecordIds(t *testing.T) {
 	if cfg == nil {
 		t.Skipf("Not configured for testing")
 	}
 	today := time.Now()
 	end := today.Format("2006-01-02")
-	start := today.AddDate(0, 0, -7).Format("2006-01-02")
+	start := today.AddDate(0, 0, -3).Format("2006-01-02")
 	ids, err := GetModifiedRecordIds(cfg, start, end)
 	if err != nil {
 		t.Error(err)
@@ -144,7 +145,7 @@ func TestGetModifiedRecordIds(t *testing.T) {
 	}
 }
 
-func TestGetRecordIds(t *testing.T) {
+func Test01GetRecordIds(t *testing.T) {
 	if cfg == nil {
 		t.Skipf("Not configured for testing")
 	}
@@ -167,11 +168,10 @@ func TestGetRecordIds(t *testing.T) {
 	}
 }
 
-func TestGetRecord(t *testing.T) {
+func Test02GetRecord(t *testing.T) {
 	if cfg == nil || idsFName == "" {
 		t.Skipf("Not configured for testing")
 	}
-	fmt.Fprintf(os.Stderr, "DEBUG idsFName -> %q\n", idsFName)
 	src, err := os.ReadFile(idsFName)
 	if err != nil {
 		t.Errorf("failed to read ids from file %q, %s", idsFName, err)
@@ -182,11 +182,19 @@ func TestGetRecord(t *testing.T) {
 		t.Error(err)
 		t.FailNow()
 	}
-	fmt.Fprintf(os.Stderr, "DEBUG len(ids) -> %d\n", len(ids))
+	/*
+		// Randomize the order of the ids before running GetRecord test.
+		rand.Shuffle(len(ids), func(i int, j int) {
+			ids[i], ids[j] = ids[j], ids[i]
+		})
+	*/
 	for i, id := range ids {
-		_, rl, err := GetRecord(cfg, id)
+		_, err := GetRecord(cfg, id)
 		if err != nil {
-			t.Errorf("(%d) GetRecord(cfg, %q) %s\n%s", i, id, err, rl.String())
+			t.Errorf("(%d) GetRecord(cfg, %q) %s\n%s", i, id, err, cfg.rl)
+			t.FailNow()
 		}
+		//cfg.rl.Fprintf(os.Stderr)
+		cfg.rl.Throttle(i, len(ids))
 	}
 }

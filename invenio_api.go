@@ -111,38 +111,33 @@ func dbgPrintf(cfg *Config, s string, args ...interface{}) {
 
 // getJSON sends a request to the InvenioAPI using
 // a token, url and values as parameters. It return a
-// JSON encoded response as byte slice
-func getJSON(token string, uri string) ([]byte, *RateLimit, error) {
-	rl := new(RateLimit)
+// JSON encoded response as byte slice, the response header and error
+func getJSON(token string, uri string) ([]byte, http.Header, error) {
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", uri, nil)
 	if err != nil {
-		return nil, rl, err
+		return nil, nil, err
 	}
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
 	req.Header.Add("Content-type", "application/json")
 	resp, err := client.Do(req)
-	rl.FromResponse(resp)
 	if err != nil {
-		return nil, rl, err
+		return nil, resp.Header, err
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode == 429 {
-		rl.Fprintf(os.Stderr)
-	}
 	if resp.StatusCode != 200 {
-		return nil, rl, fmt.Errorf("%s %s", resp.Status, uri)
+		return nil, resp.Header, fmt.Errorf("%s %s", resp.Status, uri)
 	}
 	src, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, rl, err
+		return nil, resp.Header, err
 	}
-	return src, rl, nil
+	return src, resp.Header, nil
 }
 
 // getXML sends a request to the Invenio API (e.g. OAI-PMH) using
 // a token, url and values as parameters. It returns an
-// xml encoded response as byte slice
+// xml encoded response as byte slice, the response header and error
 func getXML(token string, uri string) ([]byte, http.Header, error) {
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", uri, nil)
@@ -203,10 +198,11 @@ func Query(cfg *Config, q string, sort string) ([]map[string]interface{}, error)
 			log.Printf("(%d/%d) %s", len(records), tot, ProgressETR(t0, len(records), tot))
 		}
 		dbgPrintf(cfg, "requesting %s", uri)
-		src, rl, err := getJSON(cfg.InvenioToken, uri)
+		src, headers, err := getJSON(cfg.InvenioToken, uri)
 		if err != nil {
 			return nil, err
 		}
+		cfg.rl.FromHeader(headers)
 		// NOTE: Need to unparse the response structure and
 		// then extract the IDs from the individual Hits results
 		if err := json.Unmarshal(src, &results); err != nil {
@@ -227,7 +223,7 @@ func Query(cfg *Config, q string, sort string) ([]map[string]interface{}, error)
 		}
 		if uri != "" {
 			// NOTE: We need to respect the rate limits of RDM's API
-			rl.Throttle(i, tot)
+			cfg.rl.Throttle(i, tot)
 		}
 	}
 	return records, nil
@@ -264,10 +260,9 @@ func GetRecordIds(cfg *Config) ([]string, error) {
 		if err != nil {
 			return ids, err
 		}
-		rl := new(RateLimit)
-		rl.FromHeader(headers)
+		cfg.rl.FromHeader(headers)
 		// NOTE: We need to respect rate limits of the RDM API
-		rl.Throttle(i, 1)
+		cfg.rl.Throttle(i, 1)
 		if bytes.HasPrefix(src, []byte("<html")) {
 			dbgPrintf(cfg, "\n%s\n", src)
 			resumptionToken = ""
@@ -345,10 +340,9 @@ func GetModifiedRecordIds(cfg *Config, start string, end string) ([]string, erro
 		if err != nil {
 			return nil, err
 		}
-		rl := new(RateLimit)
-		rl.FromHeader(headers)
+		cfg.rl.FromHeader(headers)
 		// NOTE: We need to respect rate limits for RDM API, unfortunately we don't know the total number of keys from this API request ...
-		rl.Throttle(i, 1)
+		cfg.rl.Throttle(i, 1)
 
 		if bytes.HasPrefix(src, []byte("<html")) {
 			// FIXME: Need to display error contained in the HTML response
@@ -392,32 +386,34 @@ func GetModifiedRecordIds(cfg *Config, start string, end string) ([]string, erro
 // ```
 // cfg, _ := LoadConfig("config.json")
 // id := "qez01-2309a"
-// mapRecord, rateLimit, err := GetRawRecord(cfg, id)
+// rl := new(RateLimit)
+// mapRecord, err := GetRawRecord(cfg, rl, id)
 //
 //	if err != nil {
 //		 // ... handle error ...
 //	}
 //
 // ```
-func GetRawRecord(cfg *Config, id string) (map[string]interface{}, *RateLimit, error) {
+func GetRawRecord(cfg *Config, id string) (map[string]interface{}, error) {
 	// Make sure we have a valid URL
 	u, err := url.Parse(cfg.InvenioAPI)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	// Setup API request for a record
 	uri := fmt.Sprintf("%s/api/records/%s", u.String(), id)
 
 	// NOTE: rl is necessary to handle repeat requests to Invenio
-	src, rl, err := getJSON(cfg.InvenioToken, uri)
+	src, headers, err := getJSON(cfg.InvenioToken, uri)
 	if err != nil {
-		return nil, rl, err
+		return nil, err
 	}
+	cfg.rl.FromHeader(headers)
 	rec := map[string]interface{}{}
 	if err := json.Unmarshal(src, &rec); err != nil {
-		return nil, rl, err
+		return nil, err
 	}
-	return rec, rl, nil
+	return rec, nil
 }
 
 // GetRecord takes a configuration object and record id,
@@ -430,30 +426,32 @@ func GetRawRecord(cfg *Config, id string) (map[string]interface{}, *RateLimit, e
 // ```
 // cfg, _ := LoadConfig("config.json")
 // id := "qez01-2309a"
-// record, rateLimit, err := GetRecord(cfg, id)
+// var rl *RateLimit
+// record, rateLimit, err := GetRecord(cfg, rl, id)
 //
 //	if err != nil {
 //		 // ... handle error ...
 //	}
 //
 // ```
-func GetRecord(cfg *Config, id string) (*simplified.Record, *RateLimit, error) {
+func GetRecord(cfg *Config, id string) (*simplified.Record, error) {
 	// Make sure we have a valid URL
 	u, err := url.Parse(cfg.InvenioAPI)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	// Setup API request for a record
 	uri := fmt.Sprintf("%s/api/records/%s", u.String(), id)
 
 	// NOTE: rl is necessary to handle repeat requests to Invenio
-	src, rl, err := getJSON(cfg.InvenioToken, uri)
+	src, headers, err := getJSON(cfg.InvenioToken, uri)
 	if err != nil {
-		return nil, rl, err
+		return nil, err
 	}
+	cfg.rl.FromHeader(headers)
 	rec := new(simplified.Record)
 	if err := json.Unmarshal(src, &rec); err != nil {
-		return nil, rl, err
+		return nil, err
 	}
-	return rec, rl, nil
+	return rec, nil
 }

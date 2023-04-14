@@ -103,7 +103,7 @@ func (app *Doi2Rdm) Configure(configFName string, envPrefix string, debug bool) 
 	if app == nil {
 		app = new(Doi2Rdm)
 	}
-	cfg := new(Config)
+	cfg := NewConfig()
 	// Load the config file if name isn't an empty string
 	if configFName != "" {
 		err := cfg.LoadConfig(configFName)
