@@ -217,7 +217,9 @@ func makeIdentifiers(scheme string, identifierList []string) []*simplified.Ident
 
 func mkSimpleRole(role string) *simplified.Role {
 	return &simplified.Role{
-		Title: role,
+		Title: map[string]string {
+			"en": role,
+		},
 	}
 }
 

@@ -339,7 +339,9 @@ func simplifyContributors(eprint *eprinttools.EPrint, rec *simplified.Record, co
 					contributors = append(contributors, &simplified.Creator{
 						PersonOrOrg: person,
 						Role: &simplified.Role{
-							Title: uriToContributorType(item.Role, contributorTypes),
+							Title: map[string]string {
+								"en": uriToContributorType(item.Role, contributorTypes),
+							},
 						},
 					})
 				}
@@ -353,7 +355,9 @@ func simplifyContributors(eprint *eprinttools.EPrint, rec *simplified.Record, co
 					contributors = append(contributors, &simplified.Creator{
 						PersonOrOrg: org,
 						Role: &simplified.Role{
-							Title: "contributor",
+							Title: map[string]string {
+								"en": "contributor",
+							},
 						},
 					})
 				}
@@ -368,7 +372,9 @@ func simplifyContributors(eprint *eprinttools.EPrint, rec *simplified.Record, co
 					contributors = append(contributors, &simplified.Creator{
 						PersonOrOrg: person,
 						Role: &simplified.Role{
-							Title: "editor",
+							Title: map[string]string{
+								"en": "editor",
+							},
 						},
 					})
 				}
@@ -382,7 +388,9 @@ func simplifyContributors(eprint *eprinttools.EPrint, rec *simplified.Record, co
 					contributors = append(contributors, &simplified.Creator{
 						PersonOrOrg: person,
 						Role: &simplified.Role{
-							Title: "thesis_advisor",
+							Title: map[string]string{
+								"en": "thesis_advisor",
+							},
 						},
 					})
 				}
@@ -396,7 +404,9 @@ func simplifyContributors(eprint *eprinttools.EPrint, rec *simplified.Record, co
 					contributors = append(contributors, &simplified.Creator{
 						PersonOrOrg: person,
 						Role: &simplified.Role{
-							Title: "thesis_committee",
+							Title: map[string]string {
+								"en": "thesis_committee",
+							},
 						},
 					})
 				}

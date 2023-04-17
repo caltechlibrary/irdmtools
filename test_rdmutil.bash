@@ -4,39 +4,59 @@
 # Run some command line tests to confirm working cli
 #
 
-if [[ -d "testout" ]]; then
-    rm -fR testout
-fi
-mkdir -p testout
+RC_FILE="test_rdmutil.rc"
 
-if [[ ! -f authors-test.rc ]]; then
-    echo "Missing authors-test.rc for testing rdmutil with authors.caltechlibrary.dev"
+if ! test -d "testout"; then
+	mkdir -p testout
+fi
+
+if [[ ! -f $RC_FILE ]]; then
+    echo "Missing $RC_FILE for testing rdmutil with authors.caltechlibrary.dev"
     exit 1
 fi
 
 #
 # Basic get keys and harvest
 #
-echo 'Testing Basics, Get All ids, Harvesting'
-. authors-test.rc
-# FIXME: Make sure dataset collection exists
-C_NAME="$TEST_C_NAME"
+
+# shellcheck source="test_rdmutil.rc"
+. "${RC_FILE}"
 if [[ "$C_NAME" = "" ]]; then
-    echo "TEST_C_NAME not set, aborting"
+    echo "C_NAME not set, aborting"
     exit 1
 fi
 if [[ -d "$C_NAME" ]]; then
-    echo "Removing stale collection, $C_NAME"
-    rm -fR "$C_NAME"
+    echo "Using existing collection, $C_NAME"
+    #rm -fR "$C_NAME"
 fi
-echo "Creating $C_NAME for test"
-dataset init "$C_NAME" "sqlite://collection.sqlite"
-if ! time ./bin/rdmutil -debug get_all_ids >testout/author_test_ids.json; then
-    echo "Failed to complete get_all_ids"
-    exit 1
+if [[ ! -d "$C_NAME" ]]; then
+	echo "Creating $C_NAME for test"
+	dataset init "$C_NAME" "sqlite://collection.sqlite"
 fi
-if ! time ./bin/rdmutil -debug harvest; then
-    ceho "Failed to complete harvest"
+if [[ "$RDM_C_NAME" = "" ]]; then
+	echo "RDM_C_NAME not set, aborting"
+	exit 1
+fi
+if [[ "$RDM_INVENIO_API" = "" ]]; then
+	echo "RDM_INVENIO_API not set, aborting"
+	exit 1
+fi
+if [[ "$RDM_INVENIO_TOKEN" = "" ]]; then
+	echo "RDM_INVENIO_TOKEN not set, aborting"
+	exit 1
+fi
+
+echo "Testing Basics using $RC_FILE, Get All ids and Harvest"
+if test -f testout/rdm_test_ids.json; then
+	echo "Using testout/rdm_test_ids.json"
+else
+	if ! time ./bin/rdmutil get_all_ids >testout/rdm_test_ids.json; then
+        echo "Failed to complete get_all_ids"
+    	exit 1
+	fi
+fi 
+if ! time ./bin/rdmutil harvest ./testout/rdm_test_ids.json; then
+    echo "Failed to complete harvest"
     exit 1
 fi
 echo "OK, Tests completed."

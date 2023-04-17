@@ -18,18 +18,21 @@ Bugs
 Next
 ----
 
-- [ ] Go's "x" packages include "rate" which implements a rate limiter, look at for RDM API
-- [x] decide if resource types CSV should have a header line, update eprint2rdm if needed
 - [ ] add put_record to rdmutil
-- [x] add option to save result directly in a collection from eprint2rdm
-- [x] add option to iterate overy many EPrint IDs saving to a dataset collection from eprint2rdm
 - [ ] Implement a CrossRef to Invenio RDM record
 	- [ ] Add option to save in dataset collection
 - [ ] Figure out a faster way to retrieve RDM ids without using the API or OAI-PMH. Possibly options would be to create an rdmapid service, or direct query via PostgreSQL. 
+- [x] decide if resource types CSV should have a header line, update eprint2rdm if needed
+- [x] add option to save result directly in a collection from eprint2rdm
+- [x] add option to iterate overy many EPrint IDs saving to a dataset collection from eprint2rdm
 - [x] implement a EPrints to RDM utility that supports customizable resource type mapping
 - [x] Implement a first pass at a harvester
 - [x] Figure out a way to retrieve RDM ids without using the API. The API max results returned is 10K and we're going to have many more records than that (e.g. OAI-PMH)
-- [ ] Need to discuss with Tom is we really want to bother with rdm2eprint crosswalk, I can implement it but I'm not sure it is necessary
+- [x] Need to discuss with Tom is we really want to bother with rdm2eprint crosswalk, I can implement it but I'm not sure it is necessary
+
+Someday, maybe
+--------------
+
 - [ ] Go's "x" packages include "rate" which implements a rate limiter, look at for RDM API
 
 
