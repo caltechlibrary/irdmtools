@@ -52,6 +52,7 @@ func SetDescription(rec *simplified.Record, description string) error {
 	if rec.Metadata == nil {
 		rec.Metadata = new(simplified.Metadata)
 	}
+	fmt.Fprintf(os.Stderr, "DEBUG setting description %q\n", description)
 	rec.Metadata.Description = description
 	return nil
 }

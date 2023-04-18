@@ -8,7 +8,7 @@ Bugs
 - [x] I'm getting a response timeout after 100 to 500 records, retrying ther request yields a successful fetch, need to implement some sort of retry
 - [ ] doi2rdm missing metadata attributes, test DOI "10.1063/5.0122760", compared with `doi2eprintxml -simple "10.1063/5.0122760" | jq .[0]`
 	- [ ] .metadata.publication_date is not completing the crosswalk
-	- [ ] .metadata.description is not completing the crosswalk
+	- [x] .metadata.description is not completing the crosswalk
 	- [ ] .metadata.rights is not completing the crosswalk
 	- [ ] .metadata.subjects is not completing the crosswalk
 	- [ ] .metadata.publisher has wrong value

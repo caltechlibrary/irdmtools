@@ -66,6 +66,14 @@ func getTitles(work *crossrefapi.Works) []string {
 	return []string{}
 }
 
+// getAbstract retrieves the abstract from the CrossRef Works
+func getAbstract(work *crossrefapi.Works) string {
+	if work.Message != nil && work.Message.Abstract != "" {
+		return work.Message.Abstract
+	}
+	return ""
+}
+
 // getPublisher
 func getPublisher(work *crossrefapi.Works) string {
 	// FIXME: Need to know if publisher holds the publisher and container type holds publication based on work.Message.Type
@@ -315,6 +323,12 @@ func CrosswalkCrossRefWork(cfg *Config, work *crossrefapi.Works, resourceTypeMap
 					return nil, err
 				}
 			}
+		}
+	}
+	// NOTE: Abstract becomes Description in simplified records
+	if value := getAbstract(work); value != "" {
+		if err := SetDescription(rec, value); err != nil {
+			return nil, err
 		}
 	}
 	if values := getCreators(work); values != nil && len(values) > 0 {
