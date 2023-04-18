@@ -60,7 +60,7 @@ func SetCreators(rec *simplified.Record, creators []*simplified.Creator) error {
 	if rec.Metadata == nil {
 		rec.Metadata = new(simplified.Metadata)
 	}
-	rec.Metadata.Contributors = creators
+	rec.Metadata.Creators = creators
 	return nil
 }
 
