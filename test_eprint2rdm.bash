@@ -41,9 +41,13 @@ else
     echo "Creating $C_NAME for test"
     dataset init "$C_NAME" "sqlite://collection.sqlite"
 fi
-if ! time ./bin/eprint2rdm -all-ids "$EPRINT_HOST" >testout/eprintids.txt; then
-    echo "Failed to complete eprint2rdm -all-ids $EPRINT_HOST"
-    exit 1
+if test -f testout/eprintids.txt; then
+	echo "Using testout/eprintids.txt"
+else
+	if ! time ./bin/eprint2rdm -all-ids "$EPRINT_HOST" >testout/eprintids.txt; then
+    	echo "Failed to complete eprint2rdm -all-ids $EPRINT_HOST"
+    	exit 1
+	fi
 fi
 if ! time ./bin/eprint2rdm -id-list testout/eprintids.txt -harvest "$C_NAME" "$EPRINT_HOST"; then
     ceho "Failed to complete eprint2rdm -id-list testout/eprintids.txt -harvest $C_NAME $EPRINT_HOST"
