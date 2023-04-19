@@ -6,10 +6,9 @@
 
 RC_FILE="test_doi2rdm.rc"
 
-if [[ -d "testout" ]]; then
-    rm -fR testout
+if ! test -d "testout"; then
+	mkdir -p testout
 fi
-mkdir -p testout
 
 #
 # Basic get keys and harvest

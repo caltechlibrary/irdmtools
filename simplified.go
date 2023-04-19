@@ -2,7 +2,6 @@ package irdmtools
 
 import (
 	"fmt"
-	"os"
 
 	// Caltech Library Package
 	"github.com/caltechlibrary/simplified"
@@ -25,7 +24,6 @@ func SetDOI(rec *simplified.Record, doi string) error {
 func SetResourceType(rec *simplified.Record, resourceType string, resourceTypeMap map[string]string) error {
 	val, ok := resourceTypeMap[resourceType]
 	if !ok {
-		fmt.Fprintf(os.Stderr, "DEBUG resourceTypeMap -> %+v\n", resourceTypeMap)
 		return fmt.Errorf("resource type %q not mapped", resourceType)
 	}
 	if rec.Metadata == nil {
@@ -52,7 +50,6 @@ func SetDescription(rec *simplified.Record, description string) error {
 	if rec.Metadata == nil {
 		rec.Metadata = new(simplified.Metadata)
 	}
-	fmt.Fprintf(os.Stderr, "DEBUG setting description %q\n", description)
 	rec.Metadata.Description = description
 	return nil
 }
@@ -190,6 +187,17 @@ func SetArticleNumber(rec *simplified.Record, articleNo string) error {
 		m["article_number"] = articleNo
 		rec.CustomFields["rdm:journal"] = journal
 	}
+	return nil
+}
+
+func AddRights(rec *simplified.Record, rights []*simplified.Right) error {
+	if rec.Metadata == nil {
+		rec.Metadata = new(simplified.Metadata)
+	}
+	if rec.Metadata.Rights == nil {
+		rec.Metadata.Rights = []*simplified.Right{}
+	}
+	rec.Metadata.Rights = append(rec.Metadata.Rights, rights...)
 	return nil
 }
 

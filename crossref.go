@@ -260,6 +260,19 @@ func crossrefPersonToCreator(author *crossrefapi.Person, role string) *simplifie
 	return creator
 }
 
+func crossrefLicenseToRight(license *crossrefapi.License) *simplified.Right {
+	if license.URL == "" {
+		return nil
+	}
+	right := new(simplified.Right)
+	right.Link = license.URL
+	right.Description = &simplified.Description {
+		Description: "url to license",
+		Type : &simplified.Type{ Name: "url" },
+	}
+	return right
+}
+
 func getCreators(work *crossrefapi.Works) []*simplified.Creator {
 	creators := []*simplified.Creator{}
 	if work.Message != nil && work.Message.Author != nil {
@@ -294,6 +307,19 @@ func getContributors(work *crossrefapi.Works) []*simplified.Creator {
 		}
 	}
 	return creators
+}
+
+func getLicenses(work *crossrefapi.Works) []*simplified.Right {
+	rights := []*simplified.Right{}
+	if work.Message != nil && work.Message.License != nil {
+		for _, license := range work.Message.License {
+			right := crossrefLicenseToRight(license)
+			if right != nil {
+				rights = append(rights, right)
+			}
+		}
+	}
+	return rights
 }
 
 // CrosswalkCrossRefWork takes a Works object from the CrossRef API
@@ -393,6 +419,11 @@ func CrosswalkCrossRefWork(cfg *Config, work *crossrefapi.Works, resourceTypeMap
 	}
 	if values := getLinks(work); values != nil && len(values) > 0 {
 		if err := AddRelatedIdentifiers(rec, values); err != nil {
+			return nil, err
+		}
+	}
+	if values := getLicenses(work); values != nil {
+		if err := AddRights(rec, values); err != nil {
 			return nil, err
 		}
 	}
