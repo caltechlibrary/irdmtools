@@ -14,7 +14,7 @@ authors:
 
 
 repository-code: "https://github.com/caltechlibrary/irdmtools"
-version: 0.0.4
+version: 0.0.5
 license-url: "https://spdx.org/licenses/BSD-3-Clause-Clear"
 keywords: [ "institutional repository", "data
 management", "Invenio", "Invenio-RDM" ]
