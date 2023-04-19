@@ -6,15 +6,19 @@ Bugs
 ----
 
 - [x] I'm getting a response timeout after 100 to 500 records, retrying ther request yields a successful fetch, need to implement some sort of retry
+- [ ] eprint2rdm missing metadata attributes
+	- [ ] journal related fields (e.g. journal:journal) in custom fields
+	- [ ] thesis related fields
+	- [ ] meeting:meeting in custom fields
 - [ ] doi2rdm missing metadata attributes, test DOI "10.1063/5.0122760", compared with `doi2eprintxml -simple "10.1063/5.0122760" | jq .[0]`
-	- [ ] .metadata.????publicatin_name???? need to figure out what publication name is called in v12
+	- [ ] .metadata.custom_fields["journal:journal"] fields 
 	- [x] .metadata.publication_date is not completing the crosswalk
 	- [x] .metadata.dates needs to be populated
 	- [x] .metadata.description is not completing the crosswalk
 	- [x] .metadata.rights is not completing the crosswalk
 	- [x] .metadata.subjects is not completing the crosswalk
 	- [x] .metadata.publisher has wrong value
-	- [x] .metadata.creators is not completing crosswalk in doi2rdm but does in doi2eprintxml saved as simple record.
+	- [x] .metadata.creators is not completing crosswalk in doi2rdm 
 		- cut and paste error, putting creators in contributor field
 
 
