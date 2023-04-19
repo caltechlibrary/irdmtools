@@ -94,6 +94,14 @@ func SetPublisher(rec *simplified.Record, publisher string) error {
 	return nil
 }
 
+func SetPublicationDate(rec *simplified.Record, pubDate string) error {
+	if rec.Metadata == nil {
+		rec.Metadata = new(simplified.Metadata)
+	}
+	rec.Metadata.PublicationDate = pubDate
+	return nil
+}
+
 func SetPublisherLocation(rec *simplified.Record, publisherLocation string) error {
 	return fmt.Errorf("SetPublisherLocation() not implemented")
 }
@@ -209,6 +217,19 @@ func AddSubjects(rec *simplified.Record, subjects []*simplified.Subject) error {
 		rec.Metadata.Subjects = []*simplified.Subject{}
 	}
 	rec.Metadata.Subjects = append(rec.Metadata.Subjects, subjects...)
+	return nil
+}
+
+func AddDate(rec *simplified.Record, dt *simplified.DateType) error {
+	if dt != nil {
+		if rec.Metadata == nil {
+			rec.Metadata = new(simplified.Metadata)
+		}
+		if rec.Metadata.Dates == nil {
+			rec.Metadata.Dates = []*simplified.DateType{}
+		}
+		rec.Metadata.Dates = append(rec.Metadata.Dates, dt)
+	}
 	return nil
 }
 

@@ -273,6 +273,19 @@ func crossrefLicenseToRight(license *crossrefapi.License) *simplified.Right {
 	return right
 }
 
+func crosswalkDateObjectToDateType(do *crossrefapi.DateObject, description string) *simplified.DateType {
+	dt := new(simplified.DateType)
+	ymd := []string{}
+	for _, aVal := range do.DateParts {
+		for _, val := range aVal {
+			ymd = append(ymd, fmt.Sprintf("%02d", val))
+		}
+	}
+	dt.Date = strings.Join(ymd, "-")
+	dt.Description = description
+	return dt
+}
+
 func getCreators(work *crossrefapi.Works) []*simplified.Creator {
 	creators := []*simplified.Creator{}
 	if work.Message != nil && work.Message.Author != nil {
@@ -337,6 +350,57 @@ func getSubjects(work *crossrefapi.Works) []*simplified.Subject {
 	}
 	return nil
 }
+
+func getPublishedPrint(work *crossrefapi.Works) *simplified.DateType {
+	if work.Message != nil && work.Message.PublishedPrint != nil {
+		return crosswalkDateObjectToDateType(work.Message.PublishedPrint, "published print")
+	}
+	return nil
+}
+
+func getPublishedOnline(work *crossrefapi.Works) *simplified.DateType {
+	if work.Message != nil && work.Message.PublishedPrint != nil {
+		return crosswalkDateObjectToDateType(work.Message.PublishedPrint, "published online")
+	}
+	return nil
+}
+
+func getPublicationDate(work *crossrefapi.Works) string {
+	printDate := getPublishedPrint(work)
+	onlineDate := getPublishedOnline(work)
+	if printDate == nil && onlineDate == nil {
+		return ""
+	}
+	if printDate == nil {
+		return onlineDate.Date
+	}
+	if onlineDate == nil {
+		return printDate.Date
+	}
+	// NOTE: If we get this far we need to compare dates' date strings.
+	// This is a naive compare it assumes the date string formats are
+	// alphabetical.
+	i := strings.Compare(printDate.Date, onlineDate.Date)
+	if i < 0 || i == 0 {
+		return printDate.Date
+	}
+	return onlineDate.Date
+}
+
+func getAccepted(work *crossrefapi.Works) *simplified.DateType {
+	if work.Message != nil && work.Message.Accepted != nil {
+		return crosswalkDateObjectToDateType(work.Message.Accepted, "accepted")
+	}
+	return nil
+}
+
+func getApproved(work *crossrefapi.Works) *simplified.DateType {
+	if work.Message != nil && work.Message.Approved != nil {
+		return crosswalkDateObjectToDateType(work.Message.Approved, "approved")
+	}
+	return nil
+}
+
 
 // CrosswalkCrossRefWork takes a Works object from the CrossRef API
 // and maps the fields into an simplified Record struct return a
@@ -448,16 +512,36 @@ func CrosswalkCrossRefWork(cfg *Config, work *crossrefapi.Works, resourceTypeMap
 			return nil, err
 		}
 	}
+	// NOTE: Crossref has many dates, e.g. publised print, published online
+	if value := getPublishedPrint(work); value != nil {
+		if err := AddDate(rec, value); err != nil {
+			return nil, err
+		}
+	}
+	if value := getPublishedOnline(work); value != nil {
+		if err := AddDate(rec, value); err != nil {
+			return nil, err
+		}
+	}
+	if value := getAccepted(work) ; value != nil {
+		if err := AddDate(rec, value); err != nil {
+			return nil, err
+		}
+	}
+	if value := getApproved(work) ; value != nil {
+		if err := AddDate(rec, value); err != nil {
+			return nil, err
+		}
+	}
+	// NOTE: Publication Date should be the earlier of print or online
+	if value := getPublicationDate(work); value != "" {
+		if err := SetPublicationDate(rec, value); err != nil {
+			return nil, err
+		}
+	}
+
 	// NOTE: We need to set the creation and updated time.
 	now := time.Now()
-	/*
-		createDate := now
-		if work.Message != nil && work.Message.Created != nil && work.Message.Created.Timestamp != 0 {
-			createDate = time.Unix(work.Message.Created.Timestamp, 0)
-		}
-		// FIXME: Should I use the created data from the source document or now?
-		//rec.Created = createDate.UTC()
-	*/
 	rec.Created = now
 	rec.Updated = now
 	return rec, nil
