@@ -310,16 +310,32 @@ func getContributors(work *crossrefapi.Works) []*simplified.Creator {
 }
 
 func getLicenses(work *crossrefapi.Works) []*simplified.Right {
-	rights := []*simplified.Right{}
 	if work.Message != nil && work.Message.License != nil {
+		rights := []*simplified.Right{}
 		for _, license := range work.Message.License {
 			right := crossrefLicenseToRight(license)
 			if right != nil {
 				rights = append(rights, right)
 			}
 		}
+		return rights
 	}
-	return rights
+	return nil
+}
+
+func getSubjects(work *crossrefapi.Works) []*simplified.Subject {
+	if work.Message != nil && work.Message.Subject != nil {
+		subjects := []*simplified.Subject{}
+		for _, s := range work.Message.Subject {
+			if s != "" {
+				subjects = append(subjects, &simplified.Subject {
+					Subject: s,
+				})
+			}
+		}
+		return subjects
+	}
+	return nil
 }
 
 // CrosswalkCrossRefWork takes a Works object from the CrossRef API
@@ -424,6 +440,11 @@ func CrosswalkCrossRefWork(cfg *Config, work *crossrefapi.Works, resourceTypeMap
 	}
 	if values := getLicenses(work); values != nil {
 		if err := AddRights(rec, values); err != nil {
+			return nil, err
+		}
+	}
+	if values := getSubjects(work); values != nil {
+		if err := AddSubjects(rec, values); err != nil {
 			return nil, err
 		}
 	}

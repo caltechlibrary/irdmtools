@@ -201,6 +201,18 @@ func AddRights(rec *simplified.Record, rights []*simplified.Right) error {
 	return nil
 }
 
+func AddSubjects(rec *simplified.Record, subjects []*simplified.Subject) error {
+	if rec.Metadata == nil {
+		rec.Metadata = new(simplified.Metadata)
+	}
+	if rec.Metadata.Subjects == nil {
+		rec.Metadata.Subjects = []*simplified.Subject{}
+	}
+	rec.Metadata.Subjects = append(rec.Metadata.Subjects, subjects...)
+	return nil
+}
+
+
 func AddBookTitle(rec *simplified.Record, bookTitle string) error {
 	return fmt.Errorf("AddBookTitle() not implemented.")
 }
