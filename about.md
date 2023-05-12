@@ -15,7 +15,7 @@ authors:
 
 repository-code: "https://github.com/caltechlibrary/irdmtools"
 version: 0.0.5
-license-url: "https://spdx.org/licenses/BSD-3-Clause-Clear"
+license-url: "https://caltechlibrary.github.io/irdmtools/LICENSE"
 keywords: [ "institutional repository", "data
 management", "Invenio", "Invenio-RDM" ]
 
@@ -40,7 +40,7 @@ About this software
 Tools for working with institutional repositories and data management
 systems. Current implementation targets Invenio-RDM.
 
-- License: <https://spdx.org/licenses/BSD-3-Clause-Clear>
+- License: <https://caltechlibrary.github.io/irdmtools/LICENSE>
 - GitHub: <https://github.com/caltechlibrary/irdmtools>
 - Issues: <https://github.com/caltechlibrary/irdmtools/issues>
 
@@ -58,4 +58,7 @@ systems. Current implementation targets Invenio-RDM.
 ### Software Requiremets
 
 - Go &gt;= 1.20.1
-- SQLite 3, MySQL 8 or PostgreSQL 14
+- PostgreSQL &gt;= 15
+- PostgREST &gt;= 11
+- MySQL &gt;= 8
+- SQLite &gt;= 3
