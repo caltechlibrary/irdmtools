@@ -7,6 +7,8 @@ PROGRAMS = rdmutil eprint2rdm doi2rdm # $(shell ls -1 cmd)
 
 MAN_PAGES = $(shell ls -1 *.1.md | sed -E 's/\.1.md/.1/g')
 
+HTML_PAGES = $(shell find . -type f | grep -E '\.html')
+
 PACKAGE = $(shell ls -1 *.go)
 
 PANDOC = $(shell which pandoc)
@@ -67,12 +69,13 @@ about.md: codemeta.json $(PROGRAMS)
 
 
 test: $(PACKAGE)
-	go test -run TestConfig
-	go test -run TestQuery
-	go test -timeout 20m -ids test_record_ids.json -run TestGetRecord
-	go test -timeout 20m -ids test_record_ids.json -run Harvest
-	go test -timeout 20m -run TestGetRecordIds
-	go test -timeout 20m -run TestGetModifiedIds
+	#go test -timeout 120h
+	go test -run Test01Config
+	go test -run Test01Query
+	go test -timeout 2h -ids testdata/test_record_ids.json -run Test02GetRecord
+	go test -timeout 2h -ids testdata/test_record_ids.json -run Test03Harvest
+	go test -timeout 2h -run Test01GetRecordIds
+	go test -timeout 2h -run Test01GetModifiedIds
 
 website: clean-website .FORCE
 	make -f website.mak
@@ -90,17 +93,17 @@ refresh:
 
 publish: build save website .FORCE
 	./publish.bash
-	#git checkout gh-pages
-	#git fetch origin
-	#git pull origin gh-pages
-	#git pull origin $(BRANCH)
-	#touch README.md CITATION.cff about.md
-	#make -f website.mak
-	#git add *.html
-	#git add pagefind
-	#git commit -am "publishing website"
-	#git push origin gh-pages
-	#git checkout $(BRANCH)
+	#-git checkout gh-pages
+	#-git fetch origin
+	#-git pull origin gh-pages
+	#-git pull origin $(BRANCH)
+	#-touch README.md CITATION.cff about.md
+	#-make -f website.mak
+	#-git add *.html
+	#-git add pagefind
+	#-git commit -am "publishing website"
+	#-git push origin gh-pages
+	#-git checkout $(BRANCH)
 
 clean:
 	@if [ -f version.go ]; then rm version.go; fi
@@ -110,7 +113,7 @@ clean:
 	@if [ -d testout ]; then rm -fR testout; fi
 
 clean-website:
-	@for FNAME in index.html install.html license.html; do if [ -f $$FNAME ]; then rm $$FNAME; fi; done
+	@for FNAME in $(HTML_PAGES); do if [ -f "$${FNAME}" ]; then rm "$${FNAME}"; fi; done
 
 install: build
 	@echo "Installing programs in $(PREFIX)/bin"

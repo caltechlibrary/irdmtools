@@ -2,7 +2,7 @@ package irdmtools
 
 import (
 	"fmt"
-	"os"
+	//"os"
 
 	// Caltech Library Package
 	"github.com/caltechlibrary/simplified"
@@ -25,14 +25,13 @@ func SetDOI(rec *simplified.Record, doi string) error {
 func SetResourceType(rec *simplified.Record, resourceType string, resourceTypeMap map[string]string) error {
 	val, ok := resourceTypeMap[resourceType]
 	if !ok {
-		fmt.Fprintf(os.Stderr, "DEBUG resourceTypeMap -> %+v\n", resourceTypeMap)
 		return fmt.Errorf("resource type %q not mapped", resourceType)
 	}
 	if rec.Metadata == nil {
 		rec.Metadata = new(simplified.Metadata)
 	}
 	if rec.Metadata.ResourceType == nil {
-		rec.Metadata.ResourceType = make(map[string]string)
+		rec.Metadata.ResourceType = make(map[string]interface{})
 	}
 	rec.Metadata.ResourceType["id"] = val
 	return nil
@@ -60,7 +59,7 @@ func SetCreators(rec *simplified.Record, creators []*simplified.Creator) error {
 	if rec.Metadata == nil {
 		rec.Metadata = new(simplified.Metadata)
 	}
-	rec.Metadata.Contributors = creators
+	rec.Metadata.Creators = creators
 	return nil
 }
 
@@ -79,12 +78,19 @@ func SetPublication(rec *simplified.Record, publication string) error {
 	if rec.Metadata == nil {
 		rec.Metadata = new(simplified.Metadata)
 	}
-	// FIXME: Need to verify that we want to save the publication name as publisher
-	if rec.CLAnnotations == nil {
-		rec.CLAnnotations = make(map[string]interface{})
+	// NOTE: Journal fields are going under the "custom_fields" off the root
+	// metadata object in RDM 12.
+	if rec.CustomFields == nil {
+		rec.CustomFields = make(map[string]interface{})
 	}
-	rec.CLAnnotations["publication"] = publication
-	rec.Metadata.Publisher = publication
+	_, ok := rec.CustomFields["journal:journal"]
+	if ! ok {
+		rec.CustomFields["journal:journal"] = make(map[string]interface{})
+	}
+	m := rec.CustomFields["journal:journal"].(map[string]interface{})
+	m["title"] = publication
+	rec.CustomFields["journal:journal"] = m
+	//fmt.Fprintf(os.Stderr, "DEBUG SetPublication() publication %+v\n", rec.CustomFields)
 	return nil
 }
 
@@ -96,6 +102,14 @@ func SetPublisher(rec *simplified.Record, publisher string) error {
 	return nil
 }
 
+func SetPublicationDate(rec *simplified.Record, pubDate string) error {
+	if rec.Metadata == nil {
+		rec.Metadata = new(simplified.Metadata)
+	}
+	rec.Metadata.PublicationDate = pubDate
+	return nil
+}
+
 func SetPublisherLocation(rec *simplified.Record, publisherLocation string) error {
 	return fmt.Errorf("SetPublisherLocation() not implemented")
 }
@@ -104,11 +118,18 @@ func SetSeries(rec *simplified.Record, series string) error {
 	if rec.Metadata == nil {
 		rec.Metadata = new(simplified.Metadata)
 	}
-	// FIXME: Need to figure out where this goes
-	if rec.CLAnnotations == nil {
-		rec.CLAnnotations = make(map[string]interface{})
+	// NOTE: Journal content goes in journal:journal custom fields.
+	if rec.CustomFields == nil {
+		rec.CustomFields = make(map[string]interface{})
 	}
-	rec.CLAnnotations["series"] = series
+	_, ok := rec.CustomFields["journal:journal"]
+	if ! ok {
+		rec.CustomFields["journal:journal"] = make(map[string]interface{})
+	}
+	m := rec.CustomFields["journal:journal"].(map[string]interface{})
+	m["series"] = series
+	rec.CustomFields["journal:journal"] = m
+	//fmt.Fprintf(os.Stderr, "DEBUG SetSeries() publication %+v\n", rec.CustomFields)
 	return nil
 }
 
@@ -116,11 +137,18 @@ func SetVolume(rec *simplified.Record, volume string) error {
 	if rec.Metadata == nil {
 		rec.Metadata = new(simplified.Metadata)
 	}
-	// FIXME: Need to figure out where this goes
-	if rec.CLAnnotations == nil {
-		rec.CLAnnotations = make(map[string]interface{})
+	// NOTE: Journal content goes in journal:journal custom fields.
+	if rec.CustomFields == nil {
+		rec.CustomFields = make(map[string]interface{})
 	}
-	rec.CLAnnotations["volume"] = volume
+	_, ok := rec.CustomFields["journal:journal"]
+	if ! ok {
+		rec.CustomFields["journal:journal"] = make(map[string]interface{})
+	}
+	m := rec.CustomFields["journal:journal"].(map[string]interface{})
+	m["volume"] = volume
+	rec.CustomFields["journal:journal"] = m
+	//fmt.Fprintf(os.Stderr, "DEBUG SetVolume() publication %+v\n", rec.CustomFields)
 	return nil
 }
 
@@ -128,11 +156,18 @@ func SetPageRange(rec *simplified.Record, pageRange string) error {
 	if rec.Metadata == nil {
 		rec.Metadata = new(simplified.Metadata)
 	}
-	// FIXME: Need to figure out where this goes
-	if rec.CLAnnotations == nil {
-		rec.CLAnnotations = make(map[string]interface{})
+	// NOTE: Journal content goes in journal:journal custom fields.
+	if rec.CustomFields == nil {
+		rec.CustomFields = make(map[string]interface{})
 	}
-	rec.CLAnnotations["page_range"] = pageRange
+	_, ok := rec.CustomFields["journal:journal"]
+	if ! ok {
+		rec.CustomFields["journal:journal"] = make(map[string]interface{})
+	}
+	m := rec.CustomFields["journal:journal"].(map[string]interface{})
+	m["pages"] = pageRange
+	rec.CustomFields["journal:journal"] = m
+	//fmt.Fprintf(os.Stderr, "DEBUG SetPageRange() publication %+v\n", rec.CustomFields)
 	return nil
 }
 
@@ -140,13 +175,56 @@ func SetArticleNumber(rec *simplified.Record, articleNo string) error {
 	if rec.Metadata == nil {
 		rec.Metadata = new(simplified.Metadata)
 	}
-	// FIXME: Need to figure out where this goes
-	if rec.CLAnnotations == nil {
-		rec.CLAnnotations = make(map[string]interface{})
+	// NOTE: Journal content goes in journal:journal custom fields.
+	if rec.CustomFields == nil {
+		rec.CustomFields = make(map[string]interface{})
 	}
-	rec.CLAnnotations["article_number"] = articleNo
+	_, ok := rec.CustomFields["journal:journal"]
+	if ! ok {
+		rec.CustomFields["journal:journal"] = map[string]interface{}{}
+	}
+	m := rec.CustomFields["journal:journal"].(map[string]interface{})
+	m["article_number"] = articleNo
+	rec.CustomFields["journal:journal"] = m
+	//fmt.Fprintf(os.Stderr, "DEBUG SetArticleNumber() publication %+v\n", rec.CustomFields)
 	return nil
 }
+
+func AddRights(rec *simplified.Record, rights []*simplified.Right) error {
+	if rec.Metadata == nil {
+		rec.Metadata = new(simplified.Metadata)
+	}
+	if rec.Metadata.Rights == nil {
+		rec.Metadata.Rights = []*simplified.Right{}
+	}
+	rec.Metadata.Rights = append(rec.Metadata.Rights, rights...)
+	return nil
+}
+
+func AddSubjects(rec *simplified.Record, subjects []*simplified.Subject) error {
+	if rec.Metadata == nil {
+		rec.Metadata = new(simplified.Metadata)
+	}
+	if rec.Metadata.Subjects == nil {
+		rec.Metadata.Subjects = []*simplified.Subject{}
+	}
+	rec.Metadata.Subjects = append(rec.Metadata.Subjects, subjects...)
+	return nil
+}
+
+func AddDate(rec *simplified.Record, dt *simplified.DateType) error {
+	if dt != nil {
+		if rec.Metadata == nil {
+			rec.Metadata = new(simplified.Metadata)
+		}
+		if rec.Metadata.Dates == nil {
+			rec.Metadata.Dates = []*simplified.DateType{}
+		}
+		rec.Metadata.Dates = append(rec.Metadata.Dates, dt)
+	}
+	return nil
+}
+
 
 func AddBookTitle(rec *simplified.Record, bookTitle string) error {
 	return fmt.Errorf("AddBookTitle() not implemented.")

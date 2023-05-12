@@ -14,6 +14,8 @@ import (
 type RateLimit struct {
 	// Limit maps to X-RateLimit-Limit
 	Limit int `json:"limit,omitempty"`
+	// OldLimit holds the last value of rate limit before change.
+	OldLimit int `json:"-"`
 	// Remaining maps to X-RateLimit-Remaining
 	Remaining int `json:"remaining,omitempty"`
 	// Reset maps to X-RateLimit-Reset
@@ -28,12 +30,12 @@ type RateLimit struct {
 // rl.FromResponse(response)
 // ```
 func (rl *RateLimit) FromResponse(resp *http.Response) {
-	if rl == nil {
-		rl = new(RateLimit)
-	}
 	l := resp.Header.Values("X-RateLimit-Limit")
 	if len(l) > 0 {
 		if val, err := strconv.Atoi(l[0]); err == nil {
+			if val != rl.OldLimit {
+				rl.OldLimit = rl.Limit
+			}
 			rl.Limit = val
 		} else {
 			rl.Limit = 0
@@ -65,12 +67,12 @@ func (rl *RateLimit) FromResponse(resp *http.Response) {
 // rl.FromHeader(header)
 // ```
 func (rl *RateLimit) FromHeader(header http.Header) {
-	if rl == nil {
-		rl = new(RateLimit)
-	}
 	l := header.Values("X-RateLimit-Limit")
 	if len(l) > 0 {
 		if val, err := strconv.Atoi(l[0]); err == nil {
+			if val != rl.OldLimit {
+				rl.OldLimit = rl.Limit
+			}
 			rl.Limit = val
 		} else {
 			rl.Limit = 0
@@ -134,9 +136,13 @@ func (rl *RateLimit) TimeToReset() (time.Duration, time.Time) {
 //
 // ```
 //
-//	rl := new(RateLimit)
-//	// Set our rate limit from
-//	rl.FromResponse(response)
+//	 i, tot := 0, 1000 // This ith' iteration and total number of records
+//		rl := new(RateLimit)
+//		// Set our rate limit from
+//		rl.FromResponse(response)
+//	 rl.Throttle(i, tot)
+//
+// ```
 func (rl *RateLimit) Throttle(i int, tot int) {
 	var speedBump time.Duration
 	// NOTE: 5000 per hour rate from some RDM API
@@ -152,21 +158,38 @@ func (rl *RateLimit) Throttle(i int, tot int) {
 	} else if rl.Limit == 5000 {
 		// Slow down to Rate Limit is 5000 per hour
 		speedBump = time.Duration(int64(time.Hour) / int64(rl.Limit))
-	} else {
+	} else if rl.Limit > 0 {
 		// Restart with Rate Limit is 500 per minute
 		speedBump = time.Duration(int64(time.Minute) / int64(rl.Limit))
+	} else {
+		// Default rate limit of one per second
+		speedBump = time.Second
+	}
+	if rl.OldLimit != rl.Limit {
+		if rl.OldLimit > 0 {
+			timeUntilReset, resetAt := rl.TimeToReset()
+			// We're throttled for whichever is further in the future plus some padding
+			timeUntilReset = timeUntilReset + (10 * time.Second)
+			fmt.Fprintf(os.Stderr, "limits changed, waiting %s for reset (%s) before continuing (%d/%d)\n", timeUntilReset.Truncate(time.Second), resetAt.Format("3:04PM"), i, tot)
+			time.Sleep(timeUntilReset)
+		}
+		// Update the old limit
+		rl.OldLimit = rl.Limit
+	} else {
+		callsRemaining := 0.0
+		if rl.Limit > 0 {
+			callsRemaining = float64(rl.Remaining) / float64(rl.Limit)
+		}
+		if callsRemaining <= 0.25 {
+			timeUntilReset, resetAt := rl.TimeToReset()
+			// We're throttled for whichever is further in the future plus some padding
+			timeUntilReset = timeUntilReset + (10 * time.Second)
+			fmt.Fprintf(os.Stderr, "waiting %s for reset (%s) before continuing (%d/%d)\n", timeUntilReset.Truncate(time.Second), resetAt.Format("3:04PM"), i, tot)
+
+			time.Sleep(timeUntilReset)
+		} else {
+			time.Sleep(speedBump)
+		}
 	}
 
-	callsRemaining := 0.0
-	if rl.Limit > 0 {
-		callsRemaining = float64(rl.Remaining) / float64(rl.Limit)
-	}
-	if callsRemaining <= 0.25 {
-		timeUntilReset, resetAt := rl.TimeToReset()
-		// We're throttled for which ever is further in the future
-		fmt.Fprintf(os.Stderr, "waiting %s for reset (%s) before continuing (%d/%d)\n", timeUntilReset.Truncate(time.Second), resetAt.Format("3:04PM"), i, tot)
-		time.Sleep(timeUntilReset)
-	} else {
-		time.Sleep(speedBump)
-	}
 }

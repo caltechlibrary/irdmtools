@@ -1,13 +1,13 @@
 {
     "@context": "https://doi.org/10.5063/schema/codemeta-2.0",
     "@type": "SoftwareSourceCode",
-    "license": "https://spdx.org/licenses/BSD-3-Clause-Clear",
+    "license": "https://caltechlibrary.github.io/irdmtools/LICENSE",
     "codeRepository": "https://github.com/caltechlibrary/irdmtools",
     "dateCreated": "2022-10-27",
-	"dateRelease": "2023-03-31",
+	"dateRelease": "2023-04-19",
     "issueTracker": "https://github.com/caltechlibrary/irdmtools/issues",
     "name": "irdmtools",
-    "version": "0.0.4",
+    "version": "0.0.5",
     "description": "Tools for working with institutional repositories and data management systems. Current implementation targets Invenio-RDM.",
     "applicationCategory": "library science",
     "releaseNotes": "This is a proof of concept",
@@ -28,7 +28,10 @@
     ],
     "softwareRequirements": [
         "Go >= 1.20.1",
-        "SQLite 3, MySQL 8 or PostgreSQL 14"
+		"PostgreSQL >= 15",
+		"PostgREST >= 11",
+		"MySQL >= 8",
+		"SQLite >= 3"
     ],
     "relatedLink": [
         "https://inveniosoftware.org/products/rdm/",

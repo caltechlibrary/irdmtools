@@ -46,6 +46,9 @@ import (
 	"os"
 	"strings"
 	"time"
+
+	// Caltech Library Packages
+	"github.com/caltechlibrary/simplified"
 )
 
 const (
@@ -108,38 +111,33 @@ func dbgPrintf(cfg *Config, s string, args ...interface{}) {
 
 // getJSON sends a request to the InvenioAPI using
 // a token, url and values as parameters. It return a
-// JSON encoded response as byte slice
-func getJSON(token string, uri string) ([]byte, *RateLimit, error) {
-	rl := new(RateLimit)
+// JSON encoded response as byte slice, the response header and error
+func getJSON(token string, uri string) ([]byte, http.Header, error) {
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", uri, nil)
 	if err != nil {
-		return nil, rl, err
+		return nil, nil, err
 	}
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
 	req.Header.Add("Content-type", "application/json")
 	resp, err := client.Do(req)
-	rl.FromResponse(resp)
 	if err != nil {
-		return nil, rl, err
+		return nil, resp.Header, err
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode == 429 {
-		rl.Fprintf(os.Stderr)
-	}
 	if resp.StatusCode != 200 {
-		return nil, rl, fmt.Errorf("%s %s", resp.Status, uri)
+		return nil, resp.Header, fmt.Errorf("%s %s", resp.Status, uri)
 	}
 	src, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, rl, err
+		return nil, resp.Header, err
 	}
-	return src, rl, nil
+	return src, resp.Header, nil
 }
 
 // getXML sends a request to the Invenio API (e.g. OAI-PMH) using
 // a token, url and values as parameters. It returns an
-// xml encoded response as byte slice
+// xml encoded response as byte slice, the response header and error
 func getXML(token string, uri string) ([]byte, http.Header, error) {
 	client := &http.Client{}
 	req, err := http.NewRequest("GET", uri, nil)
@@ -200,10 +198,11 @@ func Query(cfg *Config, q string, sort string) ([]map[string]interface{}, error)
 			log.Printf("(%d/%d) %s", len(records), tot, ProgressETR(t0, len(records), tot))
 		}
 		dbgPrintf(cfg, "requesting %s", uri)
-		src, rl, err := getJSON(cfg.InvenioToken, uri)
+		src, headers, err := getJSON(cfg.InvenioToken, uri)
 		if err != nil {
 			return nil, err
 		}
+		cfg.rl.FromHeader(headers)
 		// NOTE: Need to unparse the response structure and
 		// then extract the IDs from the individual Hits results
 		if err := json.Unmarshal(src, &results); err != nil {
@@ -224,7 +223,7 @@ func Query(cfg *Config, q string, sort string) ([]map[string]interface{}, error)
 		}
 		if uri != "" {
 			// NOTE: We need to respect the rate limits of RDM's API
-			rl.Throttle(i, tot)
+			cfg.rl.Throttle(i, tot)
 		}
 	}
 	return records, nil
@@ -241,13 +240,16 @@ func Query(cfg *Config, q string, sort string) ([]map[string]interface{}, error)
 func GetRecordIds(cfg *Config) ([]string, error) {
 	ids := []string{}
 	resumptionToken := "     "
-	debug := cfg.Debug
 	t0 := time.Now()
 	iTime, reportProgress := time.Now(), false
 	uri := fmt.Sprintf("%s/oai2d?verb=ListIdentifiers&metadataPrefix=oai_dc", cfg.InvenioAPI)
 	for i := 0; resumptionToken != ""; i++ {
-		if iTime, reportProgress = CheckWaitInterval(iTime, time.Minute); reportProgress || i == 0 {
-			log.Printf("%s", ProgressIPS(t0, i, time.Minute))
+		if iTime, reportProgress = CheckWaitInterval(iTime, (1 * time.Minute)); reportProgress || (len(ids) == 0) {
+			var lastId string
+			if len(ids) > 0 {
+				lastId = ids[len(ids)-1]
+			}
+			log.Printf("GetRecordIds(cfg) last id %q: %s", lastId, ProgressIPS(t0, len(ids), time.Minute))
 		}
 		if i > 0 {
 			v := url.Values{}
@@ -258,13 +260,9 @@ func GetRecordIds(cfg *Config) ([]string, error) {
 		if err != nil {
 			return ids, err
 		}
-		rl := new(RateLimit)
-		rl.FromHeader(headers)
+		cfg.rl.FromHeader(headers)
 		// NOTE: We need to respect rate limits of the RDM API
-		rl.Throttle(i, 1)
-		if debug && ((i % 10) == 0) {
-			dbgPrintf(cfg, "retrieved xml (%d), %s", i, rl.String())
-		}
+		cfg.rl.Throttle(i, 1)
 		if bytes.HasPrefix(src, []byte("<html")) {
 			dbgPrintf(cfg, "\n%s\n", src)
 			resumptionToken = ""
@@ -294,13 +292,6 @@ func GetRecordIds(cfg *Config) ([]string, error) {
 				resumptionToken = ""
 			}
 		}
-		if iTime, reportProgress = CheckWaitInterval(iTime, (1 * time.Minute)); reportProgress || (len(ids) == 0) {
-			var lastId string
-			if len(ids) > 0 {
-				lastId = ids[len(ids)-1]
-			}
-			log.Printf("last id %q: %s", lastId, ProgressIPS(t0, len(ids), time.Minute))
-		}
 	}
 	log.Printf("%d total retrieved in %s", len(ids), time.Since(t0).Round(time.Second))
 	return ids, nil
@@ -329,8 +320,16 @@ func GetModifiedRecordIds(cfg *Config, start string, end string) ([]string, erro
 	dbgPrintf(cfg, "requesting %s", uri)
 	t0, iTime, reportProgress := time.Now(), time.Now(), false
 	for i := 0; resumptionToken != ""; i++ {
-		if iTime, reportProgress = CheckWaitInterval(iTime, time.Minute); reportProgress || i == 0 {
-			log.Printf("%s", ProgressIPS(t0, i, time.Minute))
+		if iTime, reportProgress = CheckWaitInterval(iTime, (1 * time.Minute)); reportProgress || (len(ids) == 0) {
+			var lastId string
+			if len(ids) > 0 {
+				lastId = ids[len(ids)-1]
+			}
+			if lastId != "" {
+				log.Printf("GetModifiedRecordIDs(cfg, %q, %q) last id %q: %s", start, end, lastId, ProgressIPS(t0, len(ids), time.Minute))
+			} else {
+				log.Printf("GetModifiedRecordIDs(cfg, %q, %q) %s", start, end, ProgressIPS(t0, len(ids), time.Minute))
+			}
 		}
 		if i > 0 {
 			v := url.Values{}
@@ -341,13 +340,9 @@ func GetModifiedRecordIds(cfg *Config, start string, end string) ([]string, erro
 		if err != nil {
 			return nil, err
 		}
-		rl := new(RateLimit)
-		rl.FromHeader(headers)
+		cfg.rl.FromHeader(headers)
 		// NOTE: We need to respect rate limits for RDM API, unfortunately we don't know the total number of keys from this API request ...
-		rl.Throttle(i, 1)
-		if debug && ((i % 10) == 0) {
-			dbgPrintf(cfg, "retrieved xml (%d), %s", i, rl.String())
-		}
+		cfg.rl.Throttle(i, 1)
 
 		if bytes.HasPrefix(src, []byte("<html")) {
 			// FIXME: Need to display error contained in the HTML response
@@ -380,12 +375,45 @@ func GetModifiedRecordIds(cfg *Config, start string, end string) ([]string, erro
 				resumptionToken = ""
 			}
 		}
-		if debug && (len(ids)%500) == 0 {
-			dbgPrintf(cfg, "%d ids retrieved for %s - %s", len(ids), start, end)
-		}
 	}
 	log.Printf("%d total retrieved in %s", len(ids), time.Since(t0).Round(time.Second))
 	return ids, nil
+}
+
+// GetRawRecord takes a configuration object and record id,
+// contacts an RDM instance and returns a map[string]interface{} record
+//
+// ```
+// cfg, _ := LoadConfig("config.json")
+// id := "qez01-2309a"
+// rl := new(RateLimit)
+// mapRecord, err := GetRawRecord(cfg, rl, id)
+//
+//	if err != nil {
+//		 // ... handle error ...
+//	}
+//
+// ```
+func GetRawRecord(cfg *Config, id string) (map[string]interface{}, error) {
+	// Make sure we have a valid URL
+	u, err := url.Parse(cfg.InvenioAPI)
+	if err != nil {
+		return nil, err
+	}
+	// Setup API request for a record
+	uri := fmt.Sprintf("%s/api/records/%s", u.String(), id)
+
+	// NOTE: rl is necessary to handle repeat requests to Invenio
+	src, headers, err := getJSON(cfg.InvenioToken, uri)
+	if err != nil {
+		return nil, err
+	}
+	cfg.rl.FromHeader(headers)
+	rec := map[string]interface{}{}
+	if err := json.Unmarshal(src, &rec); err != nil {
+		return nil, err
+	}
+	return rec, nil
 }
 
 // GetRecord takes a configuration object and record id,
@@ -398,30 +426,32 @@ func GetModifiedRecordIds(cfg *Config, start string, end string) ([]string, erro
 // ```
 // cfg, _ := LoadConfig("config.json")
 // id := "qez01-2309a"
-// record, rateLimit, err := GetConfig(cfg, id)
+// var rl *RateLimit
+// record, rateLimit, err := GetRecord(cfg, rl, id)
 //
 //	if err != nil {
-//		  // ... handle error ...
+//		 // ... handle error ...
 //	}
 //
 // ```
-func GetRecord(cfg *Config, id string) (map[string]interface{}, *RateLimit, error) {
+func GetRecord(cfg *Config, id string) (*simplified.Record, error) {
 	// Make sure we have a valid URL
 	u, err := url.Parse(cfg.InvenioAPI)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 	// Setup API request for a record
 	uri := fmt.Sprintf("%s/api/records/%s", u.String(), id)
 
 	// NOTE: rl is necessary to handle repeat requests to Invenio
-	src, rl, err := getJSON(cfg.InvenioToken, uri)
+	src, headers, err := getJSON(cfg.InvenioToken, uri)
 	if err != nil {
-		return nil, rl, err
+		return nil, err
 	}
-	rec := map[string]interface{}{}
+	cfg.rl.FromHeader(headers)
+	rec := new(simplified.Record)
 	if err := json.Unmarshal(src, &rec); err != nil {
-		return nil, rl, err
+		return nil, err
 	}
-	return rec, rl, nil
+	return rec, nil
 }

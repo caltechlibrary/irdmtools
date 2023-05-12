@@ -1,7 +1,7 @@
 package irdmtools
 
 const (
-    Version = "0.0.4"
+    Version = "0.0.5"
 
     LicenseText = `
 Copyright (c) 2023, Caltech

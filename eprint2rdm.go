@@ -339,7 +339,9 @@ func simplifyContributors(eprint *eprinttools.EPrint, rec *simplified.Record, co
 					contributors = append(contributors, &simplified.Creator{
 						PersonOrOrg: person,
 						Role: &simplified.Role{
-							Title: uriToContributorType(item.Role, contributorTypes),
+							Title: map[string]string {
+								"en": uriToContributorType(item.Role, contributorTypes),
+							},
 						},
 					})
 				}
@@ -353,7 +355,9 @@ func simplifyContributors(eprint *eprinttools.EPrint, rec *simplified.Record, co
 					contributors = append(contributors, &simplified.Creator{
 						PersonOrOrg: org,
 						Role: &simplified.Role{
-							Title: "contributor",
+							Title: map[string]string {
+								"en": "contributor",
+							},
 						},
 					})
 				}
@@ -368,7 +372,9 @@ func simplifyContributors(eprint *eprinttools.EPrint, rec *simplified.Record, co
 					contributors = append(contributors, &simplified.Creator{
 						PersonOrOrg: person,
 						Role: &simplified.Role{
-							Title: "editor",
+							Title: map[string]string{
+								"en": "editor",
+							},
 						},
 					})
 				}
@@ -382,7 +388,9 @@ func simplifyContributors(eprint *eprinttools.EPrint, rec *simplified.Record, co
 					contributors = append(contributors, &simplified.Creator{
 						PersonOrOrg: person,
 						Role: &simplified.Role{
-							Title: "thesis_advisor",
+							Title: map[string]string{
+								"en": "thesis_advisor",
+							},
 						},
 					})
 				}
@@ -396,7 +404,9 @@ func simplifyContributors(eprint *eprinttools.EPrint, rec *simplified.Record, co
 					contributors = append(contributors, &simplified.Creator{
 						PersonOrOrg: person,
 						Role: &simplified.Role{
-							Title: "thesis_committee",
+							Title: map[string]string {
+								"en": "thesis_committee",
+							},
 						},
 					})
 				}
@@ -476,7 +486,7 @@ func LoadTypesMap(fName string, mapTypes map[string]string) error {
 // Invenio-RDM record type.
 func mapResourceType(eprint *eprinttools.EPrint, rec *simplified.Record, resourceTypesMap map[string]string) error {
 	if rec.Metadata.ResourceType == nil {
-		rec.Metadata.ResourceType = map[string]string{}
+		rec.Metadata.ResourceType = make(map[string]interface{})
 	}
 	if len(resourceTypesMap) == 0 {
 		// NOTE: This is a default map used of no resource type map is provided.
@@ -604,7 +614,9 @@ func dateTypeFromTimestamp(dtType string, timestamp string, description string) 
 	dt := new(simplified.DateType)
 	dt.Type = new(simplified.Type)
 	dt.Type.ID = dtType
-	dt.Type.Title = dtType
+	dt.Type.Title = map[string]string{
+		"en": dtType,
+	}
 	dt.Description = description
 	if len(timestamp) > 9 {
 		dt.Date = timestamp[0:10]
@@ -624,7 +636,7 @@ func mkSimpleIdentifier(scheme, value string) *simplified.Identifier {
 func funderFromItem(item *eprinttools.Item) *simplified.Funder {
 	funder := new(simplified.Funder)
 	if item.GrantNumber != "" {
-		funder.Award = new(simplified.Identifier)
+		funder.Award = new(simplified.AwardIdentifier)
 		funder.Award.Number = item.GrantNumber
 		funder.Award.Scheme = "eprints_grant_number"
 	}
@@ -967,7 +979,7 @@ func (app *EPrint2Rdm) Run(in io.Reader, out io.Writer, eout io.Writer, username
 				}
 				record := new(simplified.Record)
 				if err := CrosswalkEPrintToRecord(eprints.EPrint[0], record, resourceTypes, contributorTypes); err != nil {
-					log.Print("line %d, crosswalking %q, %s", i+1, eprintId, err)
+					log.Printf("line %d, crosswalking %q, %s", i+1, eprintId, err)
 					continue
 				}
 				if c.HasKey(eprintId) {

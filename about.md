@@ -14,8 +14,8 @@ authors:
     orcid: "https://orcid.org/0000-0001-9266-5146"
 
 repository-code: "https://github.com/caltechlibrary/irdmtools"
-version: 0.0.4
-license-url: "https://spdx.org/licenses/BSD-3-Clause-Clear"
+version: 0.0.5
+license-url: "https://caltechlibrary.github.io/irdmtools/LICENSE"
 keywords: [ "institutional repository", "data
 management", "Invenio", "Invenio-RDM" ]
 
@@ -24,7 +24,7 @@ management", "Invenio", "Invenio-RDM" ]
 About this software
 ===================
 
-## irdmtools 0.0.4
+## irdmtools 0.0.5
 
 ### Authors
 
@@ -36,21 +36,13 @@ About this software
 - Kathy Johnson
 - George Porter
 
+
 Tools for working with institutional repositories and data management
 systems. Current implementation targets Invenio-RDM.
 
-### Keywords
-
-- institutional repository
-- data management
-- Invenio
-- Invenio-RDM
-
-### Software
-
-- License: [https://spdx.org/licenses/BSD-3-Clause-Clear](https://spdx.org/licenses/BSD-3-Clause-Clear "link to license")
-- GitHub: [https://github.com/caltechlibrary/irdmtools](https://github.com/caltechlibrary/irdmtools "link to GitHub")
-- Issues: [https://github.com/caltechlibrary/irdmtools/issues](https://github.com/caltechlibrary/irdmtools/issues "link to GitHub issues")
+- License: <https://caltechlibrary.github.io/irdmtools/LICENSE>
+- GitHub: <https://github.com/caltechlibrary/irdmtools>
+- Issues: <https://github.com/caltechlibrary/irdmtools/issues>
 
 
 ### Programming languages
@@ -66,4 +58,7 @@ systems. Current implementation targets Invenio-RDM.
 ### Software Requiremets
 
 - Go &gt;= 1.20.1
-- SQLite 3, MySQL 8 or PostgreSQL 14
+- PostgreSQL &gt;= 15
+- PostgREST &gt;= 11
+- MySQL &gt;= 8
+- SQLite &gt;= 3

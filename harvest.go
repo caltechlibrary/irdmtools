@@ -39,6 +39,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	// Caltech Library packages
@@ -70,31 +71,30 @@ func Harvest(cfg *Config, fName string, debug bool) error {
 	const maxErrors = 100
 	eCnt, hCnt, tot := 0, 0, len(recordIds)
 	if debug {
-		l.Printf("%d records ids", tot)
+		l.Printf("%d record ids", tot)
 	}
 	t0 := time.Now()
 	iTime, reportProgress := time.Now(), false
+	cfg.rl = new(RateLimit)
 	for i, id := range recordIds {
-		rec, rl, err := GetRecord(cfg, id)
-		// The rest API seems to have two rate limits, 5000 requests per hour and 500 requests per minute
-		if iTime, reportProgress = CheckWaitInterval(iTime, time.Minute); reportProgress || i == 0 {
-			log.Printf("last id %q (%d/%d) %s", id, i, tot, ProgressETR(t0, i, tot))
-		}
-		// NOTE: We need to respect rate limits of RDM API
-		rl.Throttle(i, tot)
+		rec, err := GetRecord(cfg, id)
 		if err != nil {
+			msg := fmt.Sprintf("%s", err)
+			if strings.HasPrefix(msg, "429 ") {
+				cfg.rl.Fprintf(os.Stderr)
+			}
 			log.Printf("failed to get (%d) %q, %s", i, id, err)
 			eCnt++
 		} else {
 			if c.HasKey(id) {
-				if err := c.Update(id, rec); err != nil {
+				if err := c.UpdateObject(id, rec); err != nil {
 					log.Printf("failed to write %q to %s, %s", id, cName, err)
 					eCnt++
 				} else {
 					hCnt++
 				}
 			} else {
-				if err := c.Create(id, rec); err != nil {
+				if err := c.CreateObject(id, rec); err != nil {
 					log.Printf("failed to write %q to %s, %s", id, cName, err)
 					eCnt++
 				} else {
@@ -105,6 +105,12 @@ func Harvest(cfg *Config, fName string, debug bool) error {
 		if eCnt > maxErrors {
 			return fmt.Errorf("Stopped, %d errors encountered", eCnt)
 		}
+		// The rest API seems to have two rate limits, 5000 requests per hour and 500 requests per minute
+		if iTime, reportProgress = CheckWaitInterval(iTime, time.Minute); reportProgress || i == 0 {
+			log.Printf("last id %q (%d/%d) %s", id, i, tot, ProgressETR(t0, i, tot))
+		}
+		// NOTE: We need to respect rate limits of RDM API
+		cfg.rl.Throttle(i, tot)
 	}
 	log.Printf("%d harvested, %d errors, running time %s", hCnt, eCnt, time.Since(t0).Round(time.Second))
 	return nil
