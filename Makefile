@@ -92,18 +92,18 @@ refresh:
 	git pull origin $(BRANCH)
 
 publish: build save website .FORCE
-	#./publish.bash
-	-git checkout gh-pages
-	-git fetch origin
-	-git pull origin gh-pages
-	-git pull origin $(BRANCH)
-	-touch README.md CITATION.cff about.md
-	-make -f website.mak
-	-git add *.html
-	-git add pagefind
-	-git commit -am "publishing website"
-	-git push origin gh-pages
-	-git checkout $(BRANCH)
+	./publish.bash
+	#-git checkout gh-pages
+	#-git fetch origin
+	#-git pull origin gh-pages
+	#-git pull origin $(BRANCH)
+	#-touch README.md CITATION.cff about.md
+	#-make -f website.mak
+	#-git add *.html
+	#-git add pagefind
+	#-git commit -am "publishing website"
+	#-git push origin gh-pages
+	#-git checkout $(BRANCH)
 
 clean:
 	@if [ -f version.go ]; then rm version.go; fi
