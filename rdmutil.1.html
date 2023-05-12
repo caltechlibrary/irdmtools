@@ -112,8 +112,13 @@ Query takes one required parameter and two option.
 </dd>
 <dt>get_record RECORD_ID</dt>
 <dd>
-Returns a specific record indicated by RECORD_ID, e.g. bq3se-47g50. The
-REORCID_ID is a required parameter.
+Returns a specific simplified record indicated by RECORD_ID,
+e.g. bq3se-47g50. The REORCID_ID is a required parameter.
+</dd>
+<dt>get_raw_record RECORD_ID</dt>
+<dd>
+Returns a specific map/dictionary record indicated by RECORD_ID,
+e.g. bq3se-47g50. The REORCID_ID is a required parameter.
 </dd>
 <dt>harvest KEY_JSON</dt>
 <dd>
@@ -135,8 +140,12 @@ nano rdmtools.json</code></pre>
 <pre><code>rdmutil get_modified_ids 2023-01-01 2023-01-31</code></pre>
 <p>Get a list of all Invenio-RDM record ids.</p>
 <pre><code>rdmutil get_all_ids</code></pre>
-<p>Get a specific Invenio-RDM record.</p>
+<p>Get a specific Invenio-RDM record. Record is validated against
+irdmtool model.</p>
 <pre><code>rdmutil get_record bq3se-47g50</code></pre>
+<p>Get a specific Invenio-RDM record as it is returned by the RDM
+API.</p>
+<pre><code>rdmutil get_raw_record bq3se-47g50</code></pre>
 </section>
 
 <footer>

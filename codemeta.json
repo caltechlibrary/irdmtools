@@ -28,7 +28,10 @@
     ],
     "softwareRequirements": [
         "Go >= 1.20.1",
-        "SQLite 3, MySQL 8 or PostgreSQL 14"
+		"PostgreSQL >= 15",
+		"PostgREST >= 11",
+		"MySQL >= 8",
+		"SQLite >= 3"
     ],
     "relatedLink": [
         "https://inveniosoftware.org/products/rdm/",

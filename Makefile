@@ -7,6 +7,8 @@ PROGRAMS = rdmutil eprint2rdm doi2rdm # $(shell ls -1 cmd)
 
 MAN_PAGES = $(shell ls -1 *.1.md | sed -E 's/\.1.md/.1/g')
 
+HTML_PAGES = $(shell find . -type f | grep -E '\.html')
+
 PACKAGE = $(shell ls -1 *.go)
 
 PANDOC = $(shell which pandoc)
@@ -111,7 +113,7 @@ clean:
 	@if [ -d testout ]; then rm -fR testout; fi
 
 clean-website:
-	@for FNAME in index.html install.html license.html; do if [ -f $$FNAME ]; then rm $$FNAME; fi; done
+	@for FNAME in $(HTML_PAGES); do if [ -f "$${FNAME}" ]; then rm "$${FNAME}"; fi; done
 
 install: build
 	@echo "Installing programs in $(PREFIX)/bin"
