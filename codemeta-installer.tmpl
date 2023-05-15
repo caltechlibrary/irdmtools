@@ -28,7 +28,11 @@ ZIPFILE="$$PACKAGE-$$VERSION-$$OS_NAME-$$MACHINE.zip"
 # Check to see if this zip file has been downloaded.
 #
 DOWNLOAD_URL="https://github.com/caltechlibrary/$$PACKAGE/releases/download/v$$VERSION/$$ZIPFILE"
+<<<<<<< HEAD
 if [ ! -f "$$HOME/Downloads/$$ZIPFILE" ] && ! curl -L -o "$$HOME/Downloads/$$ZIPFILE" "$$DOWNLOAD_URL"; then
+=======
+if ! curl -L -o "$$HOME/Downloads/$$ZIPFILE" "$$DOWNLOAD_URL"; then
+>>>>>>> f4b66fb9b06c5af47fc6b328db8f11dcc5dcfa87
 	echo "Curl failed to get $$DOWNLOAD_URL"
 fi
 cat<<EOT
