@@ -4,13 +4,13 @@
 # Set the package name and version to install
 #
 PACKAGE="irdmtools"
-VERSION="v0.0.5"
+VERSION="0.0.5"
 RELEASE="https://github.com/caltechlibrary/$PACKAGE/releases/tag/$VERSION"
 
 #
 # Get the name of this script.
 #
-INSTALLER=$(basename $0)
+INSTALLER="$(basename "$0")"
 
 #
 # Figure out what the zip file is named

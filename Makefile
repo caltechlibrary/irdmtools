@@ -31,7 +31,7 @@ ifeq ($(OS), Windows)
 	EXT = .exe
 endif
 
-build: version.go $(PROGRAMS) man CITATION.cff about.md
+build: version.go $(PROGRAMS) man CITATION.cff about.md installer.sh
 
 version.go: .FORCE
 	@echo "package $(PROJECT)" >version.go
@@ -67,6 +67,10 @@ about.md: codemeta.json $(PROGRAMS)
 	@if [ -f $(PANDOC) ]; then echo "" | pandoc --metadata-file=_codemeta.json --template codemeta-md.tmpl >about.md 2>/dev/null; fi
 	@if [ -f _codemeta.json ]; then rm _codemeta.json; fi
 
+installer.sh: .FORCE
+	echo '' | pandoc --metadata title='$(PACKAGE)' --metadata-file codemeta.json --template codemeta-installer.tmpl >installer.sh
+	chmod 775 installer.sh
+	git add -f installer.sh
 
 test: $(PACKAGE)
 	#go test -timeout 120h
@@ -173,6 +177,7 @@ distribute_docs:
 	@cp -v README.md dist/
 	@cp -v LICENSE dist/
 	@cp -v INSTALL.md dist/
+	@cp -v installer.sh dist/
 	@cp -vR man dist/
 	@for DNAME in $(DOCS); do cp -vR $$DNAME dist/; done
 
