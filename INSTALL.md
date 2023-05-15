@@ -1,7 +1,24 @@
 INSTALL
 =======
 
-irdmtools is an experimental Go package. It is only distributed in source code. If you wish to compile irdmtools and test it you need the required development environment and follow the steps listed below in "Compiling from Source".
+irdmtools is an experimental Go package. It is distributed in source code and in binary form for macOS (Intel and M1), Linux (Intel and ARM 64), Raspberry Pi OS. 
+
+Quick install using curl
+------------------------
+
+The following experimental installer should work for macOS and Linux
+(e.g. Debian, Ubuntu, Raspberry Pi OS)
+
+Copy and run the following command in your shell (e.g. Terminal)
+
+~~~
+curl https://caltechlibrary.github.io/datatools/installer.sh | sh
+~~~
+
+Installing from source
+----------------------
+
+If you wish to compile irdmtools and test it you need the required development environment and follow the steps listed below in "Compiling from Source".
 
 Requirements
 ------------
