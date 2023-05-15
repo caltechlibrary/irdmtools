@@ -11,8 +11,6 @@ HTML_PAGES = $(shell find . -type f | grep -E '\.html')
 
 PACKAGE = $(shell ls -1 *.go)
 
-PANDOC = $(shell which pandoc)
-
 VERSION = $(shell grep '"version":' codemeta.json | cut -d\"  -f 4)
 
 BRANCH = $(shell git branch | grep '* ' | cut -d\  -f 2)
@@ -31,7 +29,7 @@ ifeq ($(OS), Windows)
 	EXT = .exe
 endif
 
-build: version.go $(PROGRAMS) man CITATION.cff about.md
+build: version.go $(PROGRAMS) man CITATION.cff about.md installer.sh
 
 version.go: .FORCE
 	@echo "package $(PROJECT)" >version.go
@@ -56,16 +54,21 @@ $(PROGRAMS): $(PACKAGE)
 
 $(MAN_PAGES): .FORCE
 	mkdir -p man/man1
-	$(PANDOC) $@.md --from markdown --to man -s >man/man1/$@
+	pandoc $@.md --from markdown --to man -s >man/man1/$@
 
 CITATION.cff: codemeta.json
 	@cat codemeta.json | sed -E   's/"@context"/"at__context"/g;s/"@type"/"at__type"/g;s/"@id"/"at__id"/g' >_codemeta.json
-	@if [ -f $(PANDOC) ]; then echo "" | $(PANDOC) --metadata title="Cite $(PROJECT)" --metadata-file=_codemeta.json --template=codemeta-cff.tmpl >CITATION.cff; fi
+	@echo '' | pandoc --metadata title="Cite $(PROJECT)" --metadata-file=_codemeta.json --template=codemeta-cff.tmpl >CITATION.cff
 
 about.md: codemeta.json $(PROGRAMS)
 	@cat codemeta.json | sed -E 's/"@context"/"at__context"/g;s/"@type"/"at__type"/g;s/"@id"/"at__id"/g' >_codemeta.json
-	@if [ -f $(PANDOC) ]; then echo "" | pandoc --metadata-file=_codemeta.json --template codemeta-md.tmpl >about.md 2>/dev/null; fi
+	@echo "" | pandoc --metadata-file=_codemeta.json --template codemeta-md.tmpl >about.md 2>/dev/null;
 	@if [ -f _codemeta.json ]; then rm _codemeta.json; fi
+
+installer.sh: .FORCE
+	@echo '' | pandoc --metadata title="$(PROJECT)" --metadata-file codemeta.json --template codemeta-installer.tmpl >installer.sh
+	@chmod 775 installer.sh
+	@git add -f installer.sh
 
 
 test: $(PACKAGE)
@@ -173,6 +176,7 @@ distribute_docs:
 	@cp -v README.md dist/
 	@cp -v LICENSE dist/
 	@cp -v INSTALL.md dist/
+	@cp -v installer.sh dist/
 	@cp -vR man dist/
 	@for DNAME in $(DOCS); do cp -vR $$DNAME dist/; done
 
