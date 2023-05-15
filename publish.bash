@@ -18,9 +18,11 @@ else
 		echo "Merging changes from origin gh-pages"
 		git pull origin gh-pages
 		git commit -am "merging origin gh-pages"
-		echo "Pulling changes from $WORKING_BRANCH info gh-pages"
+		echo "Pulling changes from $WORKING_BRANCH into gh-pages"
 		git pull origin "$WORKING_BRANCH"
 		echo "Merging changes from $WORKING_BRANCH"
+		echo "Building website in gh-pages branch"
+		make -f website.mak
 		git commit -am "merging $WORKING_BRANCH with gh-pages"
 		echo "Pushing changes up and publishing"
 		git push origin gh-pages
