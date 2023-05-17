@@ -56,6 +56,8 @@ func main() {
 		output string
 
 		showHelp bool
+		showVersion bool
+		showLicense bool
 	)
 	appName := path.Base(os.Args[0])
 	version := irdmtools.Version
@@ -64,12 +66,22 @@ func main() {
 	eout := os.Stderr
 
 	flag.BoolVar(&showHelp, "help", false, "display help text")
+	flag.BoolVar(&showVersion, "version", false, "display version")
+	flag.BoolVar(&showLicense, "license", false, "display license")
 	flag.StringVar(&input, "i", "", "input filename")
 	flag.StringVar(&output, "o", "", "output filename")
 	flag.Parse()
 	args := flag.Args()
 	if showHelp {
 		fmt.Fprintf(out, "%s\n", fmtTxt(helpText, appName, version))
+		os.Exit(0)
+	}
+	if showLicense {
+		fmt.Fprintf(out, "%s\n", irdmtools.LicenseText)
+		os.Exit(0)
+	}
+	if showVersion {
+		fmt.Fprintf(out, "%s %s\n", appName, version)
 		os.Exit(0)
 	}
 	if (len(args) > 0) && (input == "") {
