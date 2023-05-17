@@ -22,6 +22,10 @@ case "$OS_NAME" in
    OS_NAME="macos"
    ;;
 esac
+case "$MACHINE" in
+	x86_64)
+	MACHINE="amd64"
+case
 ZIPFILE="$PACKAGE-$VERSION-$OS_NAME-$MACHINE.zip"
 
 #
