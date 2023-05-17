@@ -4,7 +4,7 @@
 # Set the package name and version to install
 #
 PACKAGE="irdmtools"
-VERSION="0.0.5"
+VERSION="0.0.6"
 RELEASE="https://github.com/caltechlibrary/$PACKAGE/releases/tag/v$VERSION"
 
 #
