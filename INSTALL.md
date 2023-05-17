@@ -9,8 +9,7 @@ To test the latest version you need the required development environment and fol
 Quick install using curl
 ------------------------
 
-The following experimental installer should work for macOS and Linux
-(e.g. Debian, Ubuntu, Raspberry Pi OS). 
+The following experimental installer should get the latest stable release for macOS and Linux (e.g. Debian, Ubuntu, Raspberry Pi OS). 
 
 Copy and run the following command in your shell (e.g. Terminal)
 
