@@ -22,6 +22,7 @@ else
 		git pull origin "$WORKING_BRANCH"
 		echo "Merging changes from $WORKING_BRANCH"
 		echo "Building website in gh-pages branch"
+		make installer.sh
 		make -f website.mak
 		git commit -am "merging $WORKING_BRANCH with gh-pages"
 		echo "Pushing changes up and publishing"
