@@ -21,7 +21,7 @@ case "$OS_NAME" in
    Darwin)
    OS_NAME="macos"
    ;;
-   GNU/Linux)
+   "GNU/Linux")
    OS_NAME="linux"
    ;;
 esac
@@ -29,7 +29,7 @@ case "$MACHINE" in
    x86_64)
    MACHINE="amd64"
    ;;
-case
+esac
 ZIPFILE="$PACKAGE-$VERSION-$OS_NAME-$MACHINE.zip"
 
 #
