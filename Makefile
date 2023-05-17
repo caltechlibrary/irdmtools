@@ -165,7 +165,6 @@ distribute_docs:
 	@cp -v README.md dist/
 	@cp -v LICENSE dist/
 	@cp -v INSTALL.md dist/
-	@cp -v installer.sh dist/
 	@cp -vR man dist/
 	@for DNAME in $(DOCS); do cp -vR $$DNAME dist/; done
 
