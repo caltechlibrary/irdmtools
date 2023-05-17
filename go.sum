@@ -16,10 +16,8 @@ github.com/caltechlibrary/pairtree v1.0.2 h1:zcsFibPW7tBvjOvbxHzkE1CIPm0BxUCfQrL
 github.com/caltechlibrary/pairtree v1.0.2/go.mod h1:VZdWqmXgJ+tMxM37n/W+CjS8CQVPus+0ReFdRL10AS4=
 github.com/caltechlibrary/semver v0.0.0-20220817184719-a504da2d5c6a h1:3q6ct6FfFDF2dEiW06Ran7iEOZ4d9HBiMbkqJUOO2oU=
 github.com/caltechlibrary/semver v0.0.0-20220817184719-a504da2d5c6a/go.mod h1:LxzDpCilL3QqjL8qdirgmlo8riDkSFNsTALfIYYyQtE=
-github.com/caltechlibrary/simplified v0.0.11-0.20230419152937-504ebdf2f004 h1:g0G1nfT5CWZGPHFTivsGm5fM5QmD+qbMZPjmMecVK0w=
-github.com/caltechlibrary/simplified v0.0.11-0.20230419152937-504ebdf2f004/go.mod h1:RvSI2HUe5EEf4xLjza0+pv5BviOqmwUpAFV7af37fJI=
-github.com/caltechlibrary/simplified v0.0.11 h1:NA9R9p+Sx1VXqFpNfGNjbhN+AZmdopkDEnYSBl5hmDk=
-github.com/caltechlibrary/simplified v0.0.11/go.mod h1:RvSI2HUe5EEf4xLjza0+pv5BviOqmwUpAFV7af37fJI=
+github.com/caltechlibrary/simplified v0.0.12 h1:q8rkqN7lsD96n+QN/rahltd7IfMSgx/vbjVehSZtpFo=
+github.com/caltechlibrary/simplified v0.0.12/go.mod h1:T36AVk2yLIhH/0zlM3wTeVEFgcsSn2zqdqFVanntSPc=
 github.com/dustin/go-humanize v1.0.0/go.mod h1:HtrtbFcZ19U5GC7JDqmcUSB87Iq5E25KnS6fMYU6eOk=
 github.com/glebarez/go-sqlite v1.18.1 h1:w0xtxKWktqYsUsXg//SQK+l1IcpKb3rGOQHmMptvL2U=
 github.com/glebarez/go-sqlite v1.18.1/go.mod h1:ydXIGq2M4OzF4YyNhH129SPp7jWoVvgkEgb6pldmS0s=
@@ -70,6 +68,10 @@ golang.org/x/xerrors v0.0.0-20190717185122-a985d3407aa7/go.mod h1:I/5z698sn9Ka8T
 golang.org/x/xerrors v0.0.0-20191011141410-1b5146add898/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
 golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
 golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
+gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405 h1:yhCVgyC4o1eVCa2tZl7eS0r+SDo693bJlVdllGtEeKM=
+gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
+gopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=
+gopkg.in/yaml.v3 v3.0.1/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
 lukechampine.com/uint128 v1.1.1/go.mod h1:c4eWIwlEGaxC/+H1VguhU4PHXNWDCDMUlWdIWl2j1gk=
 modernc.org/cc/v3 v3.36.0/go.mod h1:NFUHyPn4ekoC/JHeZFfZurN6ixxawE1BnVonP/oahEI=
 modernc.org/ccgo/v3 v3.0.0-20220428102840-41399a37e894/go.mod h1:eI31LL8EwEBKPpNpA4bU1/i+sKOwOrQy8D87zWUcRZc=
