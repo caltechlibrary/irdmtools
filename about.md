@@ -14,7 +14,7 @@ authors:
     orcid: "https://orcid.org/0000-0001-9266-5146"
 
 repository-code: "https://github.com/caltechlibrary/irdmtools"
-version: 0.0.6
+version: 0.0.7
 license-url: "https://caltechlibrary.github.io/irdmtools/LICENSE"
 keywords: [ "institutional repository", "data
 management", "Invenio", "Invenio-RDM" ]
@@ -24,7 +24,7 @@ management", "Invenio", "Invenio-RDM" ]
 About this software
 ===================
 
-## irdmtools 0.0.6
+## irdmtools 0.0.7
 
 ### Authors
 
