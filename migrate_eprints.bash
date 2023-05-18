@@ -99,28 +99,63 @@ ${APP_NAME} full
 EOT
 }
 
+
+function setup_dataset_collection() {
+	if [ ! -d "$C_NAME" ]; then
+		echo "Need to create $C_NAME using MySQL JSON store"
+		if [ "$DB_USER" = "" ]; then
+			read -r -p 'MySQL DB username: ' DB_USER
+		fi
+		if [ "$DB_PASSWORD" = "" ]; then
+			echo -n 'MySQL DB user password: '
+			read -r -s DB_PASSWORD
+		fi
+		DB_NAME="$(basename "${C_NAME}" .ds)_ds"
+		CONN="mysql://${DB_USER}:${DB_PASSWORD}@/${DB_NAME}"
+		echo "Creating MySQL database $DB_NAME"
+		echo "with $CONN"
+		mysql -e "CREATE DATABASE IF NOT EXIST ${DB_NAME};"
+		echo "Initializing $_CNAME using MySQL JSON Store"
+    	if ! dataset init "${C_NAME}" "${CONN}"; then
+			cat <<EOT
+Failed:
+
+	dataset init "${C_NAME}" "${CONN}"
+
+EOT
+			exit 1
+		fi
+		if [ ! -d "$C_NAME" ]; then
+			echo "Something went wrong creating $_CNAME, aborting"
+			exit 1
+		fi
+		if ! dataset keys "$C_NAME"; then
+			echo "Something went wrong access $C_NAME, aborting"
+			exit 1
+		fi
+	fi
+	echo "Using $C_NAME"
+}
+
 function do_eprints_export() {
 	FULL="$1"
 	KEY_LIST="$2"
-	echo "Creating $C_NAME as a Postgres based dataset collection"
-	if [ ! -d "$C_NAME" ]; then
-		read -r -p 'Enter the MySQL DB username: ' DB_USER
-		echo -n 'Enter the MySQL DB user password: '
-		read -r -s DB_PASSWORD
-		DB_NAME="$(basename "${C_NAME}" .ds)_ds"
-		mysql -E "CREATE DATABASE IF NOT EXIST ${DB_NAME};"
-    	dataset init "${C_NAME}" "mysql://${DB_USER}:${DB_PASSWORD}@localhost/${DB_NAME}"
-	fi
-	echo "eprint2rdm respecting resources, people and groups"
 	if [ "$FULL" = "true" ]; then
-		KEY_LIST="${C_NAME}"_all_ids.txt
-    	eprint2rdm -all-ids "$EPRINT_HOST" >"${C_NAME}_all_ids.txt"
+		echo "eprint2rdm -all-ids $EPRINT_HOST >${REPO_ID}_all_ids.txt"
+		KEY_LIST="${REPO_ID}_all_ids.txt"
+    	if ! eprint2rdm -all-ids "$EPRINT_HOST" >"${REPO_ID}_all_ids.txt"; then
+			exit 1
+		fi
 
 	fi
-    eprint2rdm -id-list "${KEY_LIST}" -harvest "${C_NAME}" \
+	echo "eprint2rdm respecting resources, people and groups"
+    if eprint2rdm -id-list "${KEY_LIST}" -harvest "${C_NAME}" \
 	     -resource-map resource_types.csv \
          -contributor-map contributor_types.csv \
-	     "$EPRINT_HOST"
+	     "$EPRINT_HOST"; then
+		exit 1
+	fi
+
 }
 
 function do_irdm_import() {
@@ -134,8 +169,12 @@ EOT
 }
 
 function retrieve_csv_files() {
-	curl -L -O https://feeds.library.caltech.edu/people/people.csv
-	curl -L -O https://feeds.library.caltech.edu/groups/groups.csv
+	if [ ! -f people.csv ]; then
+	curl -L -o people.csv https://feeds.library.caltech.edu/people/people.csv
+	fi
+	if [ ! -f groups.csv ]; then
+	curl -L -o groups.csv  https://feeds.library.caltech.edu/groups/groups.csv
+	fi
 }
 
 #
@@ -145,7 +184,6 @@ FULL="false"
 SETUP="false"
 EXPORT_EPRINTS="false"
 IMPORT_IRDM="false"
-REPO_ID=""
 KEY_LIST=""
 for ARG in "$@"; do
 	case "${ARG}" in
@@ -166,16 +204,12 @@ for ARG in "$@"; do
 			IMPORT_IRDM="true"
 			;;
 		*)
-			if [[ "$REPO_ID" = "" ]]; then
-				REPO_ID="${ARG}"
-			else
-				KEY_LIST="${ARG}"
-			fi
+			KEY_LIST="${ARG}"
 			;;
 	esac
 done
 
-if [ "$C_NAME" = "" ] || [ "$EPRINT_HOST" = "" ]; then
+if [ "$REPO_ID" = "" ] || [ "$C_NAME" = "" ] || [ "$EPRINT_HOST" = "" ]; then
 	SETUP="true"
 fi
 
@@ -183,7 +217,7 @@ if [ "${SETUP}" = "true" ]; then
 	read -r -p 'What is the repo id (e.g. caltechauthors)? ' REPO_ID
 	read -r -p 'What is the EPrints hostname?  ' EPRINT_HOST
 	read -r -p 'What is the EPrints username? ' EPRINT_USER
-	echo -r -n 'What is the EPrints password? '
+	echo -n 'What is the EPrints password? '
 	read -r -s EPRINT_PASSWORD
 	read -r -p 'What is the dataset collection name? ' C_NAME
 	cat <<EOT >"${REPO_ID}.env"
@@ -219,15 +253,23 @@ fi
 if [ "$REPO_ID" = "" ]; then
 	read -r -p 'What is the repository id to migrate? ' REPO_ID
 	export REPO_ID
+	if [ ! -f "${REPO_ID}.env" ]; then
+		echo "Can't find ${REPO_ID}.env, aborting"
+		exit 1
+	fi
+	# shellcheck disable=SC1090
 	source "${REPO_ID}.env"
 else
 	echo "Using config ${REPO_ID}.env"
+	# shellcheck disable=SC1090
 	source "${REPO_ID}.env"
 fi
 
+retrieve_csv_files
+setup_dataset_collection
+
 echo "Starting $(date)"
 if [ "${EXPORT_EPRINTS}" = "true" ]; then
-	retrieve_csv_files
 	do_eprints_export "${FULL}" "${KEY_LIST}"
 fi
 if [ "${IMPORT_IRDM}" = "true" ]; then
