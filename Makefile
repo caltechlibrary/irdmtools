@@ -178,7 +178,7 @@ distribute_docs:
 	@cp -vR man dist/
 	@for DNAME in $(DOCS); do cp -vR $$DNAME dist/; done
 
-release: build installer.sh distribute_docs dist/Linux-x86_64 dist/Linux-arm64 dist/macOS-x86_64 dist/macOS-arm64 dist/Windows-x86_64 dist/Windows-arm64 dist/Raspberry_Pi_OS-arm7
+release: build installer.sh save distribute_docs dist/Linux-x86_64 dist/Linux-arm64 dist/macOS-x86_64 dist/macOS-arm64 dist/Windows-x86_64 dist/Windows-arm64 dist/Raspberry_Pi_OS-arm7
 
 
 .FORCE:
