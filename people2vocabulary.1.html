@@ -26,13 +26,44 @@
 <h1 id="name">NAME</h1>
 <p>people2vocabulary</p>
 <h1 id="sysnopsis">SYSNOPSIS</h1>
-<p>people2vocabulary &lt; INPUT_JSON_FILE &gt; OUTPUT_VOC_YAML_FILE</p>
+<p>people2vocabulary <a href="#options">OPTIONS</a> &lt; INPUT_JSON_FILE
+&gt; OUTPUT_VOC_YAML_FILE</p>
 <h1 id="description">DESCRIPTION</h1>
 <p>people2vocabulary converts a JSON array of people objects to a YAML
 file suitable for import into Invenio-RDM.</p>
+<h1 id="options">OPTIONS</h1>
+<dl>
+<dt>-help</dt>
+<dd>
+display help
+</dd>
+<dt>-license</dt>
+<dd>
+display license
+</dd>
+<dt>-version</dt>
+<dd>
+display version
+</dd>
+<dt>-i</dt>
+<dd>
+Read input from file
+</dd>
+<dt>-o</dt>
+<dd>
+Write output to file
+</dd>
+<dt>-csv</dt>
+<dd>
+Input is in csv format
+</dd>
+</dl>
 <h1 id="examples">EXAMPLES</h1>
 <pre class="shell"><code>    people2vocabulary &lt; htdocs/people/people.json \
-         &gt;htdocs/people/people-vocabulary.yaml</code></pre>
+         &gt;people-vocabulary.yaml
+
+    people2vocabulary -csv &lt; htdocs/people/people.csv \
+         &gt;people-vocabulary.yaml</code></pre>
 </section>
 
 <footer>

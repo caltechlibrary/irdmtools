@@ -21,17 +21,39 @@
 people2vocabulary
 .SH SYSNOPSIS
 .PP
-people2vocabulary < INPUT_JSON_FILE > OUTPUT_VOC_YAML_FILE
+people2vocabulary OPTIONS < INPUT_JSON_FILE > OUTPUT_VOC_YAML_FILE
 .SH DESCRIPTION
 .PP
 people2vocabulary converts a JSON array of people objects to a YAML file
 suitable for import into Invenio-RDM.
+.SH OPTIONS
+.TP
+-help
+display help
+.TP
+-license
+display license
+.TP
+-version
+display version
+.TP
+-i
+Read input from file
+.TP
+-o
+Write output to file
+.TP
+-csv
+Input is in csv format
 .SH EXAMPLES
 .IP
 .nf
 \f[C]
     people2vocabulary < htdocs/people/people.json \[rs]
-         >htdocs/people/people-vocabulary.yaml
+         >people-vocabulary.yaml
+
+    people2vocabulary -csv < htdocs/people/people.csv \[rs]
+         >people-vocabulary.yaml
 \f[R]
 .fi
 .SH AUTHORS
