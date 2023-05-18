@@ -1,10 +1,14 @@
 package main
 
 import (
+	"bytes"
+	"encoding/csv"
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"io/ioutil"
+	"log"
 	"os"
 	"path"
 	"strings"
@@ -28,18 +32,42 @@ const (
 
 # SYSNOPSIS
 
-{app_name} < INPUT_JSON_FILE > OUTPUT_VOC_YAML_FILE
+{app_name} [OPTIONS] < INPUT_JSON_FILE > OUTPUT_VOC_YAML_FILE
 
 # DESCRIPTION
 
 {app_name} converts a JSON array of people objects to a YAML
 file suitable for import into Invenio-RDM.
 
+# OPTIONS
+
+-help
+: display help
+
+-license
+: display license
+
+-version
+: display version
+
+-i
+: Read input from file
+
+-o
+: Write output to file
+
+-csv
+: Input is in csv format
+
+
 # EXAMPLES
 
 ~~~shell
     {app_name} < htdocs/people/people.json \
-	     >htdocs/people/people-vocabulary.yaml
+	     >people-vocabulary.yaml
+
+	{app_name} -csv < htdocs/people/people.csv \
+	     >people-vocabulary.yaml
 ~~~
 
 `
@@ -49,15 +77,82 @@ func fmtTxt(txt string, appName string, version string) string {
 	return strings.ReplaceAll(strings.ReplaceAll(txt, "{app_name}", appName), "{version}", version)
 }
 
+func mapField(person *simplified.Person, key string, val string) error {
+	switch key {
+	case "family_name":
+		person.Family = val
+	case "given_name":
+		person.Given = val
+	case "clpid":
+		identifier := new(simplified.Identifier)
+		identifier.Scheme = "clpid"
+		identifier.Identifier = val
+		person.Identifiers = append(person.Identifiers, identifier)
+	case "cl_people_id":
+		identifier := new(simplified.Identifier)
+		identifier.Scheme = "clpid"
+		identifier.Identifier = val
+		person.Identifiers = append(person.Identifiers, identifier)
+	case "thesis_id":
+	case "advisor_id":
+	case "authors_id":
+	case "archivesspace_id":
+	case "directory_id":
+	case "viaf_id":
+	case "lcnaf":
+	case "isni":
+		identifier := new(simplified.Identifier)
+		identifier.Scheme = key
+		identifier.Identifier = val
+		person.Identifiers = append(person.Identifiers, identifier)
+	case "wikidata":
+	case "snac":
+	case "orcid":
+		identifier := new(simplified.Identifier)
+		identifier.Scheme = key
+		identifier.Identifier = val
+		person.Identifiers = append(person.Identifiers, identifier)
+	case "image":
+	case "educated_at":
+	case "caltech":
+		affiliation := new(simplified.Affiliation)
+		affiliation.ID = "05dxps055"
+		affiliation.Name = "Caltech"
+		person.Affiliations = append(person.Affiliations, affiliation)
+	case "jpl":
+	case "faculty":
+	case "alumn":
+	case "status":
+	case "directory_person_type":
+	case "title":
+	case "bio":
+	case "division":
+	case "authors_count":
+	case "thesis_count":
+	case "data_count":
+	case "advisor_count":
+	case "editor_count":
+	case "updated":
+	default:
+		return fmt.Errorf("not know how to map %q <- %q", key, val)
+	}
+	if person.Name == "" && person.Given != "" && person.Family != "" {
+		person.Name = fmt.Sprintf("%s, %s", person.Family, person.Given)
+	}
+	return nil
+}
+
 func main() {
 	var (
 		err    error
 		input  string
 		output string
 
-		showHelp bool
+		showHelp    bool
 		showVersion bool
 		showLicense bool
+
+		inputIsCSV bool
 	)
 	appName := path.Base(os.Args[0])
 	version := irdmtools.Version
@@ -70,6 +165,7 @@ func main() {
 	flag.BoolVar(&showLicense, "license", false, "display license")
 	flag.StringVar(&input, "i", "", "input filename")
 	flag.StringVar(&output, "o", "", "output filename")
+	flag.BoolVar(&inputIsCSV, "csv", false, "input is CSV format")
 	flag.Parse()
 	args := flag.Args()
 	if showHelp {
@@ -112,9 +208,50 @@ func main() {
 		os.Exit(1)
 	}
 	peopleList := []*simplified.Person{}
-	if err := json.Unmarshal(src, &peopleList); err != nil {
-		fmt.Fprintf(eout, "%s\n", err)
-		os.Exit(1)
+	if inputIsCSV {
+		//FIXME: read in spreadsheet and write out vocabulary file
+		r := csv.NewReader(bytes.NewBuffer(src))
+		fields := []string{}
+		rowNo := 0
+		e := 0
+		for {
+			cells, err := r.Read()
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				log.Printf("row %d error, %s", rowNo, err)
+				e += 1
+				break
+			}
+			if rowNo == 0 {
+				fields = cells[:]
+			} else {
+				person := new(simplified.Person)
+				if len(cells) > len(fields) {
+					log.Printf("row %d error, too many columns", rowNo)
+					e += 1
+					break
+				}
+				for colNo, val := range cells {
+					key := fields[colNo]
+					if err := mapField(person, key, val); err != nil {
+						log.Printf("row %d error, %s", rowNo, err)
+						e += 1
+					}
+				}
+				peopleList = append(peopleList, person)
+			}
+			rowNo++
+		}
+		if e > 0 {
+			os.Exit(1)
+		}
+	} else {
+		if err := json.Unmarshal(src, &peopleList); err != nil {
+			fmt.Fprintf(eout, "%s\n", err)
+			os.Exit(1)
+		}
 	}
 
 	// NOTE: Invenio-RDM can only import people if they have an ORCID into the people
