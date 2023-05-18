@@ -77,25 +77,28 @@ func fmtTxt(txt string, appName string, version string) string {
 	return strings.ReplaceAll(strings.ReplaceAll(txt, "{app_name}", appName), "{version}", version)
 }
 
+func fmtYAML(o interface{}) string {
+	src, _ := yaml.Marshal(o)
+	return fmt.Sprintf("%s", src)
+}
+
 func mapField(person *simplified.Person, key string, val string) error {
 	if val == "" {
 		// NOTE: An empty value isn't an error, we just don't map it.
 		return nil
 	}
-	//fmt.Printf("DEBUG key: %q val: %T %q\n", key, val, val)
 	switch key {
 	case "family_name":
 		person.Family = val
 	case "given_name":
 		person.Given = val
 	case "clpid":
-		if val != "" {
-			identifier := new(simplified.Identifier)
-			identifier.Scheme = "clpid"
-			identifier.Identifier = val
-			person.Identifiers = append(person.Identifiers, identifier)
-		}
+		identifier := new(simplified.Identifier)
+		identifier.Scheme = "clpid"
+		identifier.Identifier = val
+		person.Identifiers = append(person.Identifiers, identifier)
 	case "cl_people_id":
+		//fmt.Fprintf(os.Stderr, "DEBUG key: %q val: %T %q\n", key, val, val)
 		identifier := new(simplified.Identifier)
 		identifier.Scheme = "clpid"
 		identifier.Identifier = val
@@ -220,7 +223,8 @@ func main() {
 	}
 	peopleList := []*simplified.Person{}
 	if inputIsCSV {
-		//FIXME: read in spreadsheet and write out vocabulary file
+		//NOTE: spreadsheet conversion process will filter out none
+		// RDM identifiers when producing the YAML.
 		r := csv.NewReader(bytes.NewBuffer(src))
 		fields := []string{}
 		rowNo := 0
@@ -251,6 +255,8 @@ func main() {
 						e += 1
 					}
 				}
+				//fmt.Fprintf(os.Stderr, "DEBUG person.Identifiers (%d) -> %s\n", len(peopleList), fmtYAML(person.Identifiers))
+
 				peopleList = append(peopleList, person)
 			}
 			rowNo++
@@ -258,11 +264,19 @@ func main() {
 		if e > 0 {
 			os.Exit(1)
 		}
-	} else {
-		if err := json.Unmarshal(src, &peopleList); err != nil {
+		src, err = yaml.Marshal(peopleList)
+		if err != nil {
 			fmt.Fprintf(eout, "%s\n", err)
 			os.Exit(1)
 		}
+		fmt.Fprintf(out, "%s\n", src)
+		os.Exit(0)
+	}
+
+	// Import is JSON array of Person
+	if err := json.Unmarshal(src, &peopleList); err != nil {
+		fmt.Fprintf(eout, "%s\n", err)
+		os.Exit(1)
 	}
 
 	// NOTE: Invenio-RDM can only import people if they have an ORCID into the people
@@ -273,12 +287,16 @@ func main() {
 	for _, obj := range peopleList {
 		// Prune unwanted fields (e.g. .sort_name)
 		obj.Sort = ""
-		// filter for ORCID in the identifier list
+		// filter for ORCID and clpid in the identifier list
 		for j, identifier := range obj.Identifiers {
 			switch obj.Identifiers[j].Scheme {
+			case "clpid":
+				
+				obj.Identifiers = append(obj.Identifiers, identifier)
+				orcidPeople = append(orcidPeople, obj)
 			case "orcid":
 				// Reset the identifier list so we can save it in our orcidPeople list
-				obj.Identifiers = append([]*simplified.Identifier{}, identifier)
+				obj.Identifiers = append(obj.Identifiers, identifier)
 				orcidPeople = append(orcidPeople, obj)
 				break
 			}

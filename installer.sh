@@ -5,7 +5,7 @@
 #
 PACKAGE="irdmtools"
 # NOTE: GitHub prefixes versions with 'v' in paths, we'll do that too.
-VERSION="v0.0.9"
+VERSION="v0.0.10"
 RELEASE="https://github.com/caltechlibrary/$PACKAGE/releases/tag/$VERSION"
 
 #
