@@ -40,7 +40,10 @@ file suitable for import into Invenio-RDM.
 
 ~~~shell
     people2vocabulary < htdocs/people/people.json \
-	     >htdocs/people/people-vocabulary.yaml
+	     >people-vocabulary.yaml
+
+	people2vocabulary -csv < htdocs/people/people.csv \
+	     >people-vocabulary.yaml
 ~~~
 
 
