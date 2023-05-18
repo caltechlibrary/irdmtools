@@ -4,8 +4,9 @@
 # Set the package name and version to install
 #
 PACKAGE="$name$"
-VERSION="$version$"
-RELEASE="https://github.com/caltechlibrary/$$PACKAGE/releases/tag/v$$VERSION"
+# NOTE: GitHub prefixes versions with 'v' in paths, we'll do that too.
+VERSION="v$version$"
+RELEASE="https://github.com/caltechlibrary/$$PACKAGE/releases/tag/$$VERSION"
 
 #
 # Get the name of this script.
@@ -19,15 +20,15 @@ OS_NAME="$$(uname -o)"
 MACHINE="$$(uname -m)"
 case "$$OS_NAME" in
    Darwin)
-   OS_NAME="macos"
+   OS_NAME="macOS"
    ;;
    "GNU/Linux")
-   OS_NAME="linux"
+   OS_NAME="Linux"
    ;;
 esac
 case "$$MACHINE" in
-   x86_64)
-   MACHINE="amd64"
+   aarch64)
+   MACHINE="arm64"
    ;;
 esac
 ZIPFILE="$$PACKAGE-$$VERSION-$$OS_NAME-$$MACHINE.zip"
@@ -35,7 +36,7 @@ ZIPFILE="$$PACKAGE-$$VERSION-$$OS_NAME-$$MACHINE.zip"
 #
 # Check to see if this zip file has been downloaded.
 #
-DOWNLOAD_URL="https://github.com/caltechlibrary/$$PACKAGE/releases/download/v$$VERSION/$$ZIPFILE"
+DOWNLOAD_URL="https://github.com/caltechlibrary/$$PACKAGE/releases/download/$$VERSION/$$ZIPFILE"
 if ! curl -L -o "$$HOME/Downloads/$$ZIPFILE" "$$DOWNLOAD_URL"; then
 	echo "Curl failed to get $$DOWNLOAD_URL"
 fi
@@ -77,7 +78,8 @@ EXPLAIN_OS_POLICY="yes"
 find bin -type f | while read -r APP; do
 	V=$$("./$$APP" --version)
 	if [ "$$V" = ""  ]; then 
-		EXPLAIN_OS_POLICY="yes"
+		# shellcheck disable=SC2030
+		export EXPLAIN_OS_POLICY="yes"
 	fi
 	mv "$$APP" "$$HOME/bin/"
 done

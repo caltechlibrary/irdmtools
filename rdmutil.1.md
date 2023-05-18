@@ -1,4 +1,4 @@
-% rdmutil(1) rdmutil user manual | Version 0.0.8
+% rdmutil(1) rdmutil user manual | Version 0.0.9
 % R. S. Doiel and Tom Morrell
 % 2023-04-13
 
