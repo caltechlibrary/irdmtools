@@ -78,16 +78,23 @@ func fmtTxt(txt string, appName string, version string) string {
 }
 
 func mapField(person *simplified.Person, key string, val string) error {
+	if val == "" {
+		// NOTE: An empty value isn't an error, we just don't map it.
+		return nil
+	}
+	//fmt.Printf("DEBUG key: %q val: %T %q\n", key, val, val)
 	switch key {
 	case "family_name":
 		person.Family = val
 	case "given_name":
 		person.Given = val
 	case "clpid":
-		identifier := new(simplified.Identifier)
-		identifier.Scheme = "clpid"
-		identifier.Identifier = val
-		person.Identifiers = append(person.Identifiers, identifier)
+		if val != "" {
+			identifier := new(simplified.Identifier)
+			identifier.Scheme = "clpid"
+			identifier.Identifier = val
+			person.Identifiers = append(person.Identifiers, identifier)
+		}
 	case "cl_people_id":
 		identifier := new(simplified.Identifier)
 		identifier.Scheme = "clpid"
@@ -120,6 +127,10 @@ func mapField(person *simplified.Person, key string, val string) error {
 		affiliation.Name = "Caltech"
 		person.Affiliations = append(person.Affiliations, affiliation)
 	case "jpl":
+		affiliation := new(simplified.Affiliation)
+		affiliation.ID = "027k65916"
+		affiliation.Name = "JPL"
+		person.Affiliations = append(person.Affiliations, affiliation)
 	case "faculty":
 	case "alumn":
 	case "status":

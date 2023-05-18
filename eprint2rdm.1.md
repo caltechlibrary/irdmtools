@@ -1,4 +1,4 @@
-% eprint2rdm(1) eprint2rdm user manual | Version 0.0.8
+% eprint2rdm(1) eprint2rdm user manual | Version 0.0.9
 % R. S. Doiel and Tom Morrell
 % 2023-04-04
 
