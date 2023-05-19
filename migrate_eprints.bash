@@ -159,13 +159,17 @@ function do_eprints_export() {
 }
 
 function do_irdm_import() {
-    	
-	cat <<EOT
-
-do_rdm_import not scripted yet.
-
-EOT
-
+	# NOTE: need to get path to dataset collection from settings.json
+	if [ ! -f keys.txt ]; then
+		echo "Getting all keys in ${C_NAME}, saving in keys.txt"
+		dataset keys "$C_NAME" >keys.txt
+	fi
+	echo "$(wc -l keys.txt) keys found"
+	if [ -f keys.txt ]; then
+		python3 migrate_records.py -exit_on_error -eprintids keys.txt "$C_NAME"
+	else
+		echo "keys.txt appears to be empty for $C_NAME"
+	fi
 }
 
 function retrieve_csv_files() {
@@ -209,17 +213,35 @@ for ARG in "$@"; do
 	esac
 done
 
+if [ "$REPO_ID" = "" ]; then
+	read -r -p 'What is the repository id to migrate? ' REPO_ID
+	export REPO_ID
+fi
+
 if [ "$REPO_ID" = "" ] || [ "$C_NAME" = "" ] || [ "$EPRINT_HOST" = "" ]; then
 	SETUP="true"
 fi
 
-if [ "${SETUP}" = "true" ]; then
+
+
+if [ "${SETUP}" = "true" ] && [ ! -f "${REPO_ID}.env" ]; then
+    echo 'Setup EPrints REST API access'
+	echo '----------------------------------'
 	read -r -p 'What is the repo id (e.g. caltechauthors)? ' REPO_ID
 	read -r -p 'What is the EPrints hostname?  ' EPRINT_HOST
 	read -r -p 'What is the EPrints username? ' EPRINT_USER
-	echo -n 'What is the EPrints password? '
+	echo -n 'What is the EPrints password? (will not be shown)'
 	read -r -s EPRINT_PASSWORD
+	ehco ''
+    echo 'Setup dataset collection to hold exported records'
+	echo '--------------------------------------------------'
 	read -r -p 'What is the dataset collection name? ' C_NAME
+    read -r -p 'What is the DB_USER for SQL Store? ' DB_USER
+	echo -n 'What is the DB_PASSWORD for SQL Store? (will not be shown)'
+	read -r -s DB_PASSWORD
+	echo 'Setup RDM access'
+	read -r -p 'What is the RDM_URL? ' RDM_URL
+	echo -r -s 'What is the RDM Access Token? (will not be shown)'
 	cat <<EOT >"${REPO_ID}.env"
 #!/bin/sh
 #
@@ -227,16 +249,30 @@ if [ "${SETUP}" = "true" ]; then
 # This will be sourced from the environment by $APP_NAME
 #
 REPO_ID="${REPO_ID}"
+
+# EPrints REST API Access
 EPRINT_HOST="${EPRINT_HOST}"
 EPRINT_USER="${EPRINT_USER}"
 EPRINT_PASSWORD="${EPRINT_PASSWORD}"
+
+# Dataset collection setup
 C_NAME="${C_NAME}"
+DB_USER="${DB_NAME}"
+DB_PASSWORD="${DB_PASSWORD}"
+
+# RDM API Access
+RDM_URL="${RDM_URL}"
+RDMTOK="${RDMTOK}"
 
 export REPO_ID
 export EPRINT_HOST
 export EPRINT_USER
 export EPRINT_PASSWORD
 export C_NAME
+export DB_USER
+export DB_PASSWORD
+export RDM_URL
+export RDMTOK
 
 EOT
 	chmod 600 "${REPO_ID}.env"
@@ -250,20 +286,12 @@ EOT
 
 fi
 
-if [ "$REPO_ID" = "" ]; then
-	read -r -p 'What is the repository id to migrate? ' REPO_ID
-	export REPO_ID
-	if [ ! -f "${REPO_ID}.env" ]; then
-		echo "Can't find ${REPO_ID}.env, aborting"
-		exit 1
-	fi
-	# shellcheck disable=SC1090
-	source "${REPO_ID}.env"
-else
-	echo "Using config ${REPO_ID}.env"
-	# shellcheck disable=SC1090
-	source "${REPO_ID}.env"
+if [ ! -f "${REPO_ID}.env" ]; then
+	echo "Can't find ${REPO_ID}.env, aborting"
+	exit 1
 fi
+# shellcheck disable=SC1090
+source "${REPO_ID}.env"
 
 retrieve_csv_files
 setup_dataset_collection

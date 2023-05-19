@@ -302,7 +302,7 @@ func simplifyCreators(eprint *eprinttools.EPrint, rec *simplified.Record) error 
 			if item := eprint.Creators.IndexOf(i); item != nil {
 				if person := itemToPersonOrOrg(item); person != nil {
 					creators = append(creators, &simplified.Creator{
-						PersonOrOrg: person,
+						//PersonOrOrg: person,
 						//Role:        &simplified.Role{},
 					})
 				}
