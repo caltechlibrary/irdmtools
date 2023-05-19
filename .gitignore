@@ -97,3 +97,5 @@ bin/*
 dist/*
 _codemeta.json
 reference/*
+people.csv
+groups.csv
