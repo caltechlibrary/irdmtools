@@ -288,7 +288,7 @@ func itemToPersonOrOrg(item *eprinttools.Item) *simplified.PersonOrOrg {
 			clPeopleID = item.Name.ID
 			orcid = item.Name.ORCID
 		} else {
-			person.Type = "organizaton"
+			person.Type = "organizational"
 			person.Name = item.Name.Value
 		}
 	}
@@ -308,8 +308,8 @@ func itemToPersonOrOrg(item *eprinttools.Item) *simplified.PersonOrOrg {
 // simplifyCreators make sure the identifiers are mapped to Invenio-RDM
 // identifiers.
 func simplifyCreators(eprint *eprinttools.EPrint, rec *simplified.Record) error {
-	// First map the creators (person) to RDM .metadata.creators
-	// FIXME: Then map the corpCreators (org) to RDM .metadata.creators
+	// First map the creators (personal) to RDM .metadata.creators
+	// FIXME: Then map the corpCreators (organizational) to RDM .metadata.creators
 	creators := []*simplified.Creator{}
 	if eprint.Creators != nil && eprint.Creators.Length() > 0 {
 		for i := 0; i < eprint.Creators.Length(); i++ {
@@ -317,7 +317,7 @@ func simplifyCreators(eprint *eprinttools.EPrint, rec *simplified.Record) error 
 				if person := itemToPersonOrOrg(item); person != nil {
 					creators = append(creators, &simplified.Creator{
 						PersonOrOrg: person,
-						Role:        &simplified.Role{},
+						//Role:        &simplified.Role{},
 					})
 				}
 			}
@@ -338,6 +338,18 @@ func simplifyCreators(eprint *eprinttools.EPrint, rec *simplified.Record) error 
 	// FIXME: If there are no creators AND their are editors then I need
 	// to create the editor as a creator and add them here instead of
 	// in contributors.
+	if len(creators) == 0 && eprint.Editors.Length() > 0 {
+		for i := 0; i < eprint.Editors.Length(); i++ {
+			if item := eprint.Editors.IndexOf(i); item != nil {
+				if person := itemToPersonOrOrg(item); person != nil {
+					creators = append(creators, &simplified.Creator{
+						PersonOrOrg: person,
+						//Role:        &simplified.Role{},
+					})
+				}
+			}
+		}
+	}
 	if len(creators) > 0 {
 		rec.Metadata.Creators = creators
 	}
