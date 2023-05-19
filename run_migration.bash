@@ -21,7 +21,7 @@ ${APP_NAME}
 
 # SYNOPSIS
 
-${APP_NAME} [OPTIONS] [setup|export|import] [keys|key_list|full] 
+${APP_NAME} [OPTIONS] [setup|export|import] [keys|key_list|full]
 
 # DESCRIPTION
 
@@ -129,7 +129,7 @@ EOT
 			echo "Something went wrong creating $_CNAME, aborting"
 			exit 1
 		fi
-		if ! dataset keys "$C_NAME"; then
+		if ! dataset count "$C_NAME"; then
 			echo "Something went wrong access $C_NAME, aborting"
 			exit 1
 		fi
@@ -143,32 +143,57 @@ function do_eprints_export() {
 	if [ "$FULL" = "true" ]; then
 		echo "eprint2rdm -all-ids $EPRINT_HOST >${REPO_ID}_all_ids.txt"
 		KEY_LIST="${REPO_ID}_all_ids.txt"
-    	if ! eprint2rdm -all-ids "$EPRINT_HOST" >"${REPO_ID}_all_ids.txt"; then
+    	if eprint2rdm -all-ids "$EPRINT_HOST" >"${REPO_ID}_all_ids.txt"; then
+			# NOTE need a trailing new line for while loops
+			echo '' >>"${REPO_ID}_all_ids.txt"
+		else
 			exit 1
 		fi
 
+	fi
+	if [ "${KEY_LIST}" = "" ] || [ ! -f "${KEY_LIST}" ]; then
+		echo 'Missing key list for export'
+		exit 1
 	fi
 	echo "eprint2rdm respecting resources, people and groups"
     if eprint2rdm -id-list "${KEY_LIST}" -harvest "${C_NAME}" \
 	     -resource-map resource_types.csv \
          -contributor-map contributor_types.csv \
-	     "$EPRINT_HOST"; then
+	     "${EPRINT_HOST}"; then
 		exit 1
 	fi
 
 }
 
-function do_irdm_import() {
-	# NOTE: need to get path to dataset collection from settings.json
-	if [ ! -f keys.txt ]; then
-		echo "Getting all keys in ${C_NAME}, saving in keys.txt"
-		dataset keys "$C_NAME" >keys.txt
+function do_rdm_import() {
+	FULL="$1"
+	KEY_LIST="$2"
+	if [ "${FULL}" = "true" ]; then
+		echo 'Setting up to import all ids'
+		KEY_LIST="${REPO_ID}_all_ids.txt"
+		if [ -f "${KEY_LIST}" ]; then
+			echo "WARNING: using existing ids in ${KEY_LIST}"
+		fi
 	fi
-	echo "$(wc -l keys.txt) keys found"
-	if [ -f keys.txt ]; then
-		python3 migrate_records.py -exit_on_error -eprintids keys.txt "$C_NAME"
+	if [ "$KEY_LIST" = "" ]; then
+		echo 'Missing key list name'
+		exit 1
+	fi
+	# NOTE: need to get path to dataset collection from settings.json
+	if [ ! -f "${KEY_LIST}" ]; then
+		echo "Getting all keys in ${C_NAME}, saving in ${KEY_LIST}.txt"
+		dataset keys "$C_NAME" >"${KEY_LIST}"
+	fi
+	echo "$(wc -l "${KEY_LIST}") keys found in ${KEY_LIST}"
+	echo ""
+	if [ -f "${KEY_LIST}" ]; then
+		echo "running migrate_records.py -exit_on_error -eprintids ${KEY_LIST} ${C_NAME}"
+		if ! python3 migrate_records.py -exit_on_error -eprintids "${KEY_LIST}" "$C_NAME"; then
+			echo "Failed to process ${KEY_LIST} using ${C_NAME}"
+			exit 1
+		fi
 	else
-		echo "keys.txt appears to be empty for $C_NAME"
+		echo "${KEY_LIST} appears to be empty for $C_NAME"
 	fi
 }
 
@@ -296,11 +321,16 @@ source "${REPO_ID}.env"
 retrieve_csv_files
 setup_dataset_collection
 
-echo "Starting $(date)"
+if [ "${EXPORT_EPRINTS}" != "true" ] && [ "${IMPORT_IRDM}" != "true" ]; then
+    echo "Nothing left to do."
+    exit 0
+fi
+
+echo "Starting eprint export=${EXPORT_EPRITNS}, rdm import=${IMPORT_IRDM} $(date)"
 if [ "${EXPORT_EPRINTS}" = "true" ]; then
 	do_eprints_export "${FULL}" "${KEY_LIST}"
 fi
 if [ "${IMPORT_IRDM}" = "true" ]; then
-	do_irdm_import "${FULL}" "${KEY_LIST}"
+	do_rdm_import "${FULL}" "${KEY_LIST}"
 fi
-echo "Completed $(date)"
+echo "Completed eprint export=${EXPORT_EPRITNS}, rdm import=${IMPORT_IRDM} $(date)"

@@ -28,14 +28,14 @@ author: "R. S. Doiel"
 
 # DESCRIPTION
 
-{app_name} relies on two environment variables 
+{app_name} relies on two environment variables
 
 - RDMTOK
 - RDM_URL
 
 to access a remote Invenio-RDM instance and migrate an
 EPrint records saved in simple record format in a dataset
-collection to the Invenio-RDM instance indicated by the 
+collection to the Invenio-RDM instance indicated by the
 environment.
 
 C_NAME
@@ -59,7 +59,7 @@ KEY
 : display version
 
 -api_url API_URL
-: point to a specific Invenio-RDM api url, 
+: point to a specific Invenio-RDM api url,
 e.g.  'https://authors.caltechlibrary.dev'
 
 -token TOKEN
@@ -90,7 +90,7 @@ Iterating over the whole collection.
 
 def app_setup(app_name):
     api_url = ''
-    token = '' 
+    token = ''
     community = ''
     c_name = None
     dsn = None
@@ -106,7 +106,7 @@ def app_setup(app_name):
         community = os.environ['RDM_COMMUNITY']
     parser = argparse.ArgumentParser(
         prog = app_name,
-        description="""This program retreives records from an EPrints repository, 
+        description="""This program retreives records from an EPrints repository,
 converts them into a dataset collection then sends them trys to import them into
 Invenio-RDM repository. It is specific to Caltech Library and its' repositories.
 """
@@ -249,7 +249,7 @@ if keys != None:
     tot = len(keys)
     bar = progressbar.ProgressBar(
         maxvalue = tot,
-        widgets = [ 
+        widgets = [
         f' {app_name} {c_name} (pid: {pid})',
         ' ', progressbar.Counter(), f'/{tot}',
         ' ', progressbar.Percentage(),
@@ -259,20 +259,25 @@ if keys != None:
     for key in bar(keys):
         if tot < 120:
             print(f'fetching {key} ', end = '')
-        metadata, err = dataset.read(c_name, key.strip())
+        data, err = dataset.read(c_name, key.strip())
         if err != '':
             print(f'error reading {key}, {err}')
             continue
-        try:
-            response = client.create(
-                metadata
-            )
-            if tot < 120:
-                print(response)
-        except Exception as err:
-            print(json.dumps(metadata, indent= 4))
-            print(f'c_name: {c_name}, key: {key}')
-            print(f'Exception: {err}')
-            if stop_on_exception(exit_on_error, err):
-                sys.exit(1)
-
+        if data == None:
+            print(f'no data for {key} in {c_name}')
+            continue
+        if 'tombstone' in data:
+            print(f'    ⟹ skipping eprintid {key.strip()}, it is a tombstone record')
+        else:
+            try:
+                response = client.create(
+                    data
+                )
+                if tot < 120:
+                    print(response)
+            except Exception as err:
+                print(json.dumps(data, indent= 4))
+                print(f'c_name: {c_name}, key: {key}')
+                print(f'Exception: {err}')
+                if stop_on_exception(exit_on_error, err):
+                    sys.exit(1)

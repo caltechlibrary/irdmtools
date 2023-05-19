@@ -132,6 +132,7 @@ class IRDM_Client:
         pids = {}
         identifiers = []
         doi = None
+        # NOTE: If we have a tombstone record then "metadata" can be None
         if "metadata" in metadata:
             # we have rdm schema
             if "identifiers" in metadata["metadata"]:
