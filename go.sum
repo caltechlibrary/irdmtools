@@ -22,6 +22,8 @@ github.com/caltechlibrary/simplified v0.0.13-0.20230519152009-ac1c1e967b99 h1:19
 github.com/caltechlibrary/simplified v0.0.13-0.20230519152009-ac1c1e967b99/go.mod h1:T36AVk2yLIhH/0zlM3wTeVEFgcsSn2zqdqFVanntSPc=
 github.com/caltechlibrary/simplified v0.0.13-0.20230519152634-66887ac9a6fe h1:Evl1JxnX23nGdlrrKxGnoClVKOZUEtcgzTC5TfGhFPw=
 github.com/caltechlibrary/simplified v0.0.13-0.20230519152634-66887ac9a6fe/go.mod h1:T36AVk2yLIhH/0zlM3wTeVEFgcsSn2zqdqFVanntSPc=
+github.com/caltechlibrary/simplified v0.0.13-0.20230522182334-ad52ec703af2 h1:cdSgM9SXj0A5mswB2yQnOdRq0dbJNE0PK/rcHqjzXGY=
+github.com/caltechlibrary/simplified v0.0.13-0.20230522182334-ad52ec703af2/go.mod h1:T36AVk2yLIhH/0zlM3wTeVEFgcsSn2zqdqFVanntSPc=
 github.com/dustin/go-humanize v1.0.0/go.mod h1:HtrtbFcZ19U5GC7JDqmcUSB87Iq5E25KnS6fMYU6eOk=
 github.com/glebarez/go-sqlite v1.18.1 h1:w0xtxKWktqYsUsXg//SQK+l1IcpKb3rGOQHmMptvL2U=
 github.com/glebarez/go-sqlite v1.18.1/go.mod h1:ydXIGq2M4OzF4YyNhH129SPp7jWoVvgkEgb6pldmS0s=

@@ -38,7 +38,6 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"strings"
 
 	// Caltech Library packages
 	"github.com/caltechlibrary/irdmtools"
@@ -162,12 +161,14 @@ eprints.ds before migrating them into Invenio RDM.
 `
 )
 
-func fmtTxt(txt string, appName string) string {
-	return strings.ReplaceAll(strings.ReplaceAll(txt, "{app_name}", appName), "{version}", irdmtools.Version)
-}
-
 func main() {
 	appName := path.Base(os.Args[0])
+	// NOTE: The following are set when version.go is generated
+	version := irdmtools.Version
+	releaseDate := irdmtools.ReleaseDate
+	releaseHash := irdmtools.ReleaseHash
+	fmtHelp := irdmtools.FmtHelp
+
 	showHelp, showVersion, showLicense := false, false, false
 	allIds, debug := false, false
 	idList, cName := "", ""
@@ -188,15 +189,14 @@ func main() {
 	eprintPassword := os.Getenv("EPRINT_PASSWORD")
 
 	if showHelp {
-		fmt.Fprintf(os.Stdout, "%s\n", fmtTxt(helpText, appName))
+		fmt.Fprintf(os.Stdout, "%s\n", fmtHelp(helpText, appName, version, releaseDate, releaseHash))
 		os.Exit(0)
 	}
 	if showVersion {
-		fmt.Fprintf(os.Stdout, "%s %s\n", appName, irdmtools.Version)
+		fmt.Fprintf(os.Stdout, "%s %s %s\n", appName, version, releaseHash)
 		os.Exit(0)
 	}
 	if showLicense {
-		fmt.Fprintf(os.Stdout, "%s %s\n", appName, irdmtools.Version)
 		fmt.Fprintf(os.Stdout, "%s\n", irdmtools.LicenseText)
 		os.Exit(0)
 	}

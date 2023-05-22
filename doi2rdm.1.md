@@ -1,6 +1,6 @@
-% doi2rdm(1) doi2rdm user manual | Version 0.0.10
+% doi2rdm(1) user manual | Version 0.0.11 
 % R. S. Doiel and Tom Morrell
-% 2023-04-07
+% 
 
 # NAME
 

@@ -33,8 +33,10 @@ file suitable for import into Invenio-RDM.
 : Write output to file
 
 -csv
-: Input is in csv format
+: (default: true) Input is in csv format
 
+-clrules
+: (default: true) use Caltech Library rules
 
 # EXAMPLES
 

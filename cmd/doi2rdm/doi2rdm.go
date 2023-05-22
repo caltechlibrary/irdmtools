@@ -38,16 +38,15 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"strings"
 
 	// Caltech Library packages
 	"github.com/caltechlibrary/irdmtools"
 )
 
 var (
-	helpText = `% {app_name}(1) {app_name} user manual | Version {version}
+	helpText = `% {app_name}(1) user manual | Version {version} {release_hash}
 % R. S. Doiel and Tom Morrell
-% 2023-04-07
+% {release_date}
 
 # NAME
 
@@ -114,12 +113,15 @@ the current metadata retrieved from CrossRef.
 `
 )
 
-func fmtTxt(txt string, appName string) string {
-	return strings.ReplaceAll(strings.ReplaceAll(txt, "{app_name}", appName), "{version}", irdmtools.Version)
-}
 
 func main() {
 	appName := path.Base(os.Args[0])
+	// NOTE: the following are set when version.go is generated
+	version := irdmtools.Version
+	releaseDate := irdmtools.ReleaseDate
+	releaseHash := irdmtools.ReleaseHash
+	fmtHelp := irdmtools.FmtHelp
+
 	showHelp, showVersion, showLicense := false, false, false
 	debug, downloadDocument := false, false
 	dotInitials := false
@@ -139,15 +141,15 @@ func main() {
 	args := flag.Args()
 
 	if showHelp {
-		fmt.Fprintf(os.Stdout, "%s\n", fmtTxt(helpText, appName))
+		fmt.Fprintf(os.Stdout, "%s\n", fmtHelp(helpText, appName, version, releaseDate, releaseHash))
 		os.Exit(0)
 	}
 	if showVersion {
-		fmt.Fprintf(os.Stdout, "%s %s\n", appName, irdmtools.Version)
+		fmt.Fprintf(os.Stdout, "%s %s %s\n", appName, version, releaseHash)
 		os.Exit(0)
 	}
 	if showLicense {
-		fmt.Fprintf(os.Stdout, "%s %s\n", appName, irdmtools.Version)
+		fmt.Fprintf(os.Stdout, "%s %s\n", appName, version)
 		fmt.Fprintf(os.Stdout, "%s\n", irdmtools.LicenseText)
 		os.Exit(0)
 	}
