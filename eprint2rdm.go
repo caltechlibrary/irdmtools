@@ -802,8 +802,13 @@ func metadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record, cont
 			for _, pmcid := range pmcids {
 				rec.Metadata.Identifiers = append(rec.Metadata.Identifiers, mkSimpleIdentifier("pmcid", strings.TrimSpace(pmcid)))
 			}
+		} else if strings.Contains(eprint.PMCID, ";") {
+			pmcids := strings.Split(eprint.PMCID, ";")
+			for _, pmcid := range pmcids {
+				rec.Metadata.Identifiers = append(rec.Metadata.Identifiers, mkSimpleIdentifier("pmcid", strings.TrimSpace(pmcid)))
+			}
 		} else {
-			rec.Metadata.Identifiers = append(rec.Metadata.Identifiers, mkSimpleIdentifier("pmcid", eprint.PMCID))
+			rec.Metadata.Identifiers = append(rec.Metadata.Identifiers, mkSimpleIdentifier("pmcid", strings.TrimSpace(eprint.PMCID)))
 		}
 	}
 	if (eprint.Funders != nil) && (eprint.Funders.Items != nil) {

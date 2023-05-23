@@ -326,11 +326,12 @@ if [ "${EXPORT_EPRINTS}" != "true" ] && [ "${IMPORT_IRDM}" != "true" ]; then
     exit 0
 fi
 
-echo "Starting eprint export=${EXPORT_EPRITNS}, rdm import=${IMPORT_IRDM} $(date)"
+echo "Starting eprint export=${EXPORT_EPRINTS}, rdm import=${IMPORT_IRDM} $(date)"
 if [ "${EXPORT_EPRINTS}" = "true" ]; then
 	do_eprints_export "${FULL}" "${KEY_LIST}"
 fi
+
 if [ "${IMPORT_IRDM}" = "true" ]; then
 	do_rdm_import "${FULL}" "${KEY_LIST}"
 fi
-echo "Completed eprint export=${EXPORT_EPRITNS}, rdm import=${IMPORT_IRDM} $(date)"
+echo "Completed eprint export=${EXPORT_EPRINTS}, rdm import=${IMPORT_IRDM} $(date)"

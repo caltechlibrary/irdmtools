@@ -26,11 +26,6 @@ case "$OS_NAME" in
    OS_NAME="Linux"
    ;;
 esac
-case "$MACHINE" in
-   aarch64)
-   MACHINE="arm64"
-   ;;
-esac
 ZIPFILE="$PACKAGE-$VERSION-$OS_NAME-$MACHINE.zip"
 echo "Downloading $ZIPFILE"
 
