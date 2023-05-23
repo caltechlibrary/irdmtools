@@ -21,9 +21,9 @@ import (
 )
 
 const (
-	helpText = `%{app_name}(1) {app_name} user manual
+	helpText = `%{app_name}(1) irdmtools user manual | version {version} {release_hash}
 % R. S. Doiel
-% May 17, 2023
+% {release_date}
 
 # NAME
 

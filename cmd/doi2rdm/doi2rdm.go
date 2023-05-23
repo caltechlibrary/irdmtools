@@ -44,7 +44,7 @@ import (
 )
 
 var (
-	helpText = `% {app_name}(1) user manual | Version {version} {release_hash}
+	helpText = `%{app_name}(1) irdmtools user manual | version {version} {release_hash}
 % R. S. Doiel and Tom Morrell
 % {release_date}
 

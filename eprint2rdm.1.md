@@ -1,6 +1,6 @@
-% eprint2rdm(1) eprint2rdm user manual | Version 0.0.11
+%eprint2rdm(1) irdmtools user manual | version 0.0.11 6b22076
 % R. S. Doiel and Tom Morrell
-% 2023-04-04
+% 2023-05-23
 
 # NAME
 

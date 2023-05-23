@@ -1,6 +1,6 @@
 
-User manual
-===========
+irdmtools user manual
+=====================
 
 Tools
 -----

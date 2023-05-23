@@ -11,6 +11,10 @@ HTML_PAGES = $(shell find . -type f | grep -E '\.html')
 
 PACKAGE = $(shell ls -1 *.go)
 
+RELEASE_DATE = $(shell date +%Y-%m-%d)
+
+RELEASE_HASH=$(shell git log --pretty=format:'%h' -n 1)
+
 VERSION = $(shell grep '"version":' codemeta.json | cut -d\"  -f 4)
 
 BRANCH = $(shell git branch | grep '* ' | cut -d\  -f 2)
@@ -40,6 +44,9 @@ version.go: .FORCE
                 --metadata release_hash=$(RELEASE_HASH) \
                 --template codemeta-version-go.tmpl \
                 LICENSE >version.go
+
+hash: .FORCE
+        git log --pretty=format:'%h' -n 1
 
 man: $(MAN_PAGES)
 
