@@ -1,4 +1,4 @@
-%people2vocabulary(1) irdmtools user manual | version 0.0.12 4c4e8fd
+%people2vocabulary(1) irdmtools user manual | version 0.0.12 8f174b1
 % R. S. Doiel
 % 2023-05-23
 

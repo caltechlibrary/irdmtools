@@ -62,10 +62,10 @@ var (
 __{app_name}__ provides a quick wrapper around Invenio-RDM's OAI-PMH
 and REST API. By default {app_name} looks for three environment variables.
 
-RDM_INVENIO_API
+RDM_URL
 : the URL of the Invenio RDM API and OAI-PMH services
 
-RDM_INVENIO_TOKEN
+RDM_TOK
 : the token needed to access the Invenio RDM API and OAI-PMH services
 
 

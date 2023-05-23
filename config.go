@@ -103,10 +103,10 @@ func (cfg *Config) LoadEnv(prefix string) error {
 		cfg = NewConfig()
 	}
 	// Read in the configuration from the environment
-	if api := os.Getenv(prefixVar("INVENIO_API", prefix)); api != "" && cfg.InvenioAPI == "" {
+	if api := os.Getenv(prefixVar("RDM_URL", prefix)); api != "" && cfg.InvenioAPI == "" {
 		cfg.InvenioAPI = api
 	}
-	if token := os.Getenv(prefixVar("INVENIO_TOKEN", prefix)); token != "" && cfg.InvenioToken == "" {
+	if token := os.Getenv(prefixVar("RDM_TOK", prefix)); token != "" && cfg.InvenioToken == "" {
 		cfg.InvenioToken = token
 	}
 	if cName := os.Getenv(prefixVar("C_NAME", prefix)); cName != "" && cfg.CName == "" {
@@ -190,11 +190,11 @@ func SampleConfig(configFName string) ([]byte, error) {
 			return src, err
 		}
 	}
-	invenioAPI := os.Getenv("RDM_INVENIO_API")
+	invenioAPI := os.Getenv("RDM_URL")
 	if invenioAPI == "" {
 		invenioAPI = "http://localhost:5000"
 	}
-	//invenioToken := os.Getenv("INVENIO_TOKEN")
+	//invenioToken := os.Getenv("RDM_TOK")
 	cName := os.Getenv("RDM_C_NAME")
 	if cName == "" {
 		cName = "__DATASET_COLLECTION_NAME_GOES_HERE__"
