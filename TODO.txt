@@ -5,7 +5,7 @@ Action Items
 Bugs
 ----
 
-- [x] I'm getting a response timeout after 100 to 500 records, retrying ther request yields a successful fetch, need to implement some sort of retry
+- [ ] Error reported for eprintid 2071, Exception: {"status": 400, "message": "A validation error occurred.", "errors": [{"field": "metadata.identifiers.2.identifier", "messages": ["Invalid PMCID identifier."]}]}
 - [ ] eprint2rdm missing metadata attributes
 	- [ ] journal related fields (e.g. journal:journal) in custom fields
 	- [ ] thesis related fields
@@ -20,6 +20,10 @@ Bugs
 	- [x] .metadata.publisher has wrong value
 	- [x] .metadata.creators is not completing crosswalk in doi2rdm 
 		- cut and paste error, putting creators in contributor field
+- [x] I'm getting a response timeout after 100 to 500 records, retrying ther request yields a successful fetch, need to implement some sort of retry
+- [x] On import (migrate_records.py) I get a publication_date error if there is no explicit publication date set.  In crosswalk of eprint2rdm I need to make sure the publication date field is set
+- [x] On import (migrate_records.py) I get an error about 'type' in person_or_organization with value of 'person', exporting RDM records completed by hand there is now type field for people who are creators
+	- regression, RDM expects type to be "personal" not "person"
 
 
 Next

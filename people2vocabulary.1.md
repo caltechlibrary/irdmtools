@@ -1,6 +1,6 @@
-%people2vocabulary(1) people2vocabulary user manual
+%people2vocabulary(1) irdmtools user manual | version 0.0.12 8100275
 % R. S. Doiel
-% May 17, 2023
+% 2023-05-23
 
 # NAME
 
@@ -33,8 +33,10 @@ file suitable for import into Invenio-RDM.
 : Write output to file
 
 -csv
-: Input is in csv format
+: (default: true) Input is in csv format
 
+-clrules
+: (default: true) use Caltech Library rules
 
 # EXAMPLES
 

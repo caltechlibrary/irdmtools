@@ -85,6 +85,8 @@ __pycache__
 
 # Project-specific things to ignore:
 # .............................................................................
+.env
+*.env
 *~
 *.bak
 *.swp
@@ -95,3 +97,5 @@ bin/*
 dist/*
 _codemeta.json
 reference/*
+people.csv
+groups.csv

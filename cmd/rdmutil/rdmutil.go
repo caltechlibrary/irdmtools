@@ -45,9 +45,9 @@ import (
 )
 
 var (
-	helpText = `% {app_name}(1) {app_name} user manual | Version {version}
+	helpText = `%{app_name}(1) irdmtools user manual | version {version} {release_hash}
 % R. S. Doiel and Tom Morrell
-% 2023-04-13
+% {release_date}
 
 # NAME
 
@@ -171,6 +171,12 @@ func fmtTxt(txt string, appName string) string {
 
 func main() {
 	appName := path.Base(os.Args[0])
+	// NOTE: The following will be set when version.go is generated
+	version := irdmtools.Version
+	releaseDate := irdmtools.ReleaseDate
+	releaseHash := irdmtools.ReleaseHash
+	fmtHelp := irdmtools.FmtHelp
+
 	showHelp, showVersion, showLicense := false, false, false
 	configFName, debug := "", false
 	flag.BoolVar(&showHelp, "help", false, "display help")
@@ -182,20 +188,18 @@ func main() {
 	args := flag.Args()
 
 	if showHelp {
-		fmt.Fprintf(os.Stdout, "%s\n", fmtTxt(helpText, appName))
+		fmt.Fprintf(os.Stdout, "%s\n", fmtHelp(helpText, appName, version, releaseDate, releaseHash))
 		os.Exit(0)
 	}
 	if showVersion {
-		fmt.Fprintf(os.Stdout, "%s %s\n", appName, irdmtools.Version)
+		fmt.Fprintf(os.Stdout, "%s %s %s\n", appName, version, releaseHash)
 		os.Exit(0)
 	}
 	if showLicense {
-		fmt.Fprintf(os.Stdout, "%s %s\n", appName, irdmtools.Version)
 		fmt.Fprintf(os.Stdout, "%s\n", irdmtools.LicenseText)
 		os.Exit(0)
 	}
 	if len(args) == 0 {
-		fmt.Fprintf(os.Stderr, "%s\n", fmtTxt(helpText, appName))
 		fmt.Fprintf(os.Stderr, "%s %s\n", appName, irdmtools.Version)
 		os.Exit(1)
 	}

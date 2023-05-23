@@ -11,7 +11,6 @@ import (
 	"log"
 	"os"
 	"path"
-	"strings"
 
 	// Caltech Library
 	"github.com/caltechlibrary/irdmtools"
@@ -22,9 +21,9 @@ import (
 )
 
 const (
-	helpText = `%{app_name}(1) {app_name} user manual
+	helpText = `%{app_name}(1) irdmtools user manual | version {version} {release_hash}
 % R. S. Doiel
-% May 17, 2023
+% {release_date}
 
 # NAME
 
@@ -57,8 +56,10 @@ file suitable for import into Invenio-RDM.
 : Write output to file
 
 -csv
-: Input is in csv format
+: (default: true) Input is in csv format
 
+-clrules
+: (default: true) use Caltech Library rules
 
 # EXAMPLES
 
@@ -72,10 +73,6 @@ file suitable for import into Invenio-RDM.
 
 `
 )
-
-func fmtTxt(txt string, appName string, version string) string {
-	return strings.ReplaceAll(strings.ReplaceAll(txt, "{app_name}", appName), "{version}", version)
-}
 
 func fmtYAML(o interface{}) string {
 	src, _ := yaml.Marshal(o)
@@ -159,17 +156,22 @@ func mapField(person *simplified.Person, key string, val string) error {
 func main() {
 	var (
 		err    error
-		input  string
-		output string
+		inputFName  string
+		outputFName string
 
 		showHelp    bool
 		showVersion bool
 		showLicense bool
 
+		clRules bool
 		inputIsCSV bool
 	)
 	appName := path.Base(os.Args[0])
 	version := irdmtools.Version
+	releaseDate := irdmtools.ReleaseDate
+	releaseHash := irdmtools.ReleaseHash
+	fmtHelp := irdmtools.FmtHelp
+
 	in := os.Stdin
 	out := os.Stdout
 	eout := os.Stderr
@@ -177,13 +179,14 @@ func main() {
 	flag.BoolVar(&showHelp, "help", false, "display help text")
 	flag.BoolVar(&showVersion, "version", false, "display version")
 	flag.BoolVar(&showLicense, "license", false, "display license")
-	flag.StringVar(&input, "i", "", "input filename")
-	flag.StringVar(&output, "o", "", "output filename")
-	flag.BoolVar(&inputIsCSV, "csv", false, "input is CSV format")
+	flag.StringVar(&inputFName, "i", "", "input filename")
+	flag.StringVar(&outputFName, "o", "", "output filename")
+	flag.BoolVar(&inputIsCSV, "csv", true, "input is CSV format")
+	flag.BoolVar(&clRules, "clrules", true, "use Caltech Library specific rules")
 	flag.Parse()
 	args := flag.Args()
 	if showHelp {
-		fmt.Fprintf(out, "%s\n", fmtTxt(helpText, appName, version))
+		fmt.Fprintf(out, "%s\n", fmtHelp(helpText, appName, version, releaseDate, releaseHash))
 		os.Exit(0)
 	}
 	if showLicense {
@@ -191,25 +194,25 @@ func main() {
 		os.Exit(0)
 	}
 	if showVersion {
-		fmt.Fprintf(out, "%s %s\n", appName, version)
+		fmt.Fprintf(out, "%s %s %s\n", appName, version, releaseHash)
 		os.Exit(0)
 	}
-	if (len(args) > 0) && (input == "") {
-		input = args[0]
+	if (len(args) > 0) && (inputFName == "") {
+		inputFName = args[0]
 	}
-	if (len(args) > 1) && (output == "") {
-		output = args[1]
+	if (len(args) > 1) && (outputFName == "") {
+		outputFName = args[1]
 	}
-	if (input != "") && (input != "-") {
-		in, err = os.Open(input)
+	if (inputFName != "") && (inputFName != "-") {
+		in, err = os.Open(inputFName)
 		if err != nil {
 			fmt.Fprintf(eout, "%s\n", err)
 			os.Exit(1)
 		}
 		defer in.Close()
 	}
-	if (output != "") && (output != "-") {
-		out, err = os.Create(output)
+	if (outputFName != "") && (outputFName != "-") {
+		out, err = os.Create(outputFName)
 		if err != nil {
 			fmt.Fprintf(eout, "%s\n", err)
 			os.Exit(1)
@@ -229,6 +232,11 @@ func main() {
 		fields := []string{}
 		rowNo := 0
 		e := 0
+		// NOTE:This is the Caltech affiliation, needed by clsRules
+		// where this list of of Caltech people (from feeds).
+		caltech := new(simplified.Affiliation)
+		caltech.ID = "05dxps055"
+		caltech.Name = "Caltech"
 		for {
 			cells, err := r.Read()
 			if err == io.EOF {
@@ -256,6 +264,12 @@ func main() {
 					}
 				}
 				//fmt.Fprintf(os.Stderr, "DEBUG person.Identifiers (%d) -> %s\n", len(peopleList), fmtYAML(person.Identifiers))
+				if clRules {
+					// Check if Caltech affiliation is asserted
+					if ! simplified.HasAffiliation(person, caltech) {
+						person.Affiliations = append(person.Affiliations, caltech)
+					}
+				}
 
 				peopleList = append(peopleList, person)
 			}

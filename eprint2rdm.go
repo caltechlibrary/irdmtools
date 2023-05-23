@@ -199,6 +199,20 @@ var (
  *
  */
 
+// Convert eprint.PubDate() from ends with -00 or -00-00 to
+// -01-01 or -01 respectively so they validate in RDM.
+func normalizeEPrintDate(s string) string {
+	// Normalize eprint.Date to something sensible
+	if strings.HasSuffix(s, "-00") {
+		if strings.HasSuffix(s, "-00-00") {
+			s = strings.Replace(s, "-00-00", "-01-01", 1)
+		} else {
+			s = strings.Replace(s, "-00", "-01", 1)
+		}
+	}
+	return s
+}
+
 // CrosswalkEPrintToRecord implements a crosswalk between
 // an EPrint 3.x EPrint XML record as struct to a Invenio RDM
 // record as struct.
@@ -262,7 +276,7 @@ func itemToPersonOrOrg(item *eprinttools.Item) *simplified.PersonOrOrg {
 		ror        string
 	)
 	person := new(simplified.PersonOrOrg)
-	person.Type = "person"
+	person.Type = "personal"
 	if item.Name != nil {
 		person.FamilyName = item.Name.Family
 		person.GivenName = item.Name.Given
@@ -274,7 +288,7 @@ func itemToPersonOrOrg(item *eprinttools.Item) *simplified.PersonOrOrg {
 			clPeopleID = item.Name.ID
 			orcid = item.Name.ORCID
 		} else {
-			person.Type = "organizaton"
+			person.Type = "organizational"
 			person.Name = item.Name.Value
 		}
 	}
@@ -294,8 +308,8 @@ func itemToPersonOrOrg(item *eprinttools.Item) *simplified.PersonOrOrg {
 // simplifyCreators make sure the identifiers are mapped to Invenio-RDM
 // identifiers.
 func simplifyCreators(eprint *eprinttools.EPrint, rec *simplified.Record) error {
-	// First map the creators (person) to RDM .metadata.creators
-	// FIXME: Then map the corpCreators (org) to RDM .metadata.creators
+	// First map the creators (personal) to RDM .metadata.creators
+	// FIXME: Then map the corpCreators (organizational) to RDM .metadata.creators
 	creators := []*simplified.Creator{}
 	if eprint.Creators != nil && eprint.Creators.Length() > 0 {
 		for i := 0; i < eprint.Creators.Length(); i++ {
@@ -321,6 +335,21 @@ func simplifyCreators(eprint *eprinttools.EPrint, rec *simplified.Record) error 
 			}
 		}
 	}
+	// FIXME: If there are no creators AND their are editors then I need
+	// to create the editor as a creator and add them here instead of
+	// in contributors.
+	if len(creators) == 0 && eprint.Editors.Length() > 0 {
+		for i := 0; i < eprint.Editors.Length(); i++ {
+			if item := eprint.Editors.IndexOf(i); item != nil {
+				if person := itemToPersonOrOrg(item); person != nil {
+					creators = append(creators, &simplified.Creator{
+						PersonOrOrg: person,
+						//Role:        &simplified.Role{},
+					})
+				}
+			}
+		}
+	}
 	if len(creators) > 0 {
 		rec.Metadata.Creators = creators
 	}
@@ -339,7 +368,7 @@ func simplifyContributors(eprint *eprinttools.EPrint, rec *simplified.Record, co
 					contributors = append(contributors, &simplified.Creator{
 						PersonOrOrg: person,
 						Role: &simplified.Role{
-							Title: map[string]string {
+							Title: map[string]string{
 								"en": uriToContributorType(item.Role, contributorTypes),
 							},
 						},
@@ -355,7 +384,7 @@ func simplifyContributors(eprint *eprinttools.EPrint, rec *simplified.Record, co
 					contributors = append(contributors, &simplified.Creator{
 						PersonOrOrg: org,
 						Role: &simplified.Role{
-							Title: map[string]string {
+							Title: map[string]string{
 								"en": "contributor",
 							},
 						},
@@ -404,7 +433,7 @@ func simplifyContributors(eprint *eprinttools.EPrint, rec *simplified.Record, co
 					contributors = append(contributors, &simplified.Creator{
 						PersonOrOrg: person,
 						Role: &simplified.Role{
-							Title: map[string]string {
+							Title: map[string]string{
 								"en": "thesis_committee",
 							},
 						},
@@ -674,7 +703,6 @@ func metadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record, cont
 	if eprint.Abstract != "" {
 		rec.Metadata.Description = eprint.Abstract
 	}
-	rec.Metadata.PublicationDate = eprint.PubDate()
 
 	// Rights are scattered in several EPrints fields, they need to
 	// be evaluated to create a "Rights" object used in DataCite/Invenio
@@ -717,9 +745,17 @@ func metadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record, cont
 	// FIXME: Work with Tom to figure out correct mapping of rights from EPrints XML
 	// FIXME: Language appears to be at the "document" level, not record level
 
-	// Dates are scattered through the primary eprint table.
-	if (eprint.DateType != "published") && (eprint.Date != "") {
-		rec.Metadata.Dates = append(rec.Metadata.Dates, dateTypeFromTimestamp("pub_date", eprint.Date, "Publication Date"))
+	// NOTE: RDM Requires a publication date
+	// Default to the eprint.Datestamp and correct if DateType is "published"
+	rec.Metadata.PublicationDate = eprint.Datestamp
+
+	if (eprint.DateType == "published") && (eprint.Date != "") {
+		rec.Metadata.Dates = append(rec.Metadata.Dates, dateTypeFromTimestamp("pub_date", eprint.Date, "EPrint's Publication Date"))
+		rec.Metadata.PublicationDate = normalizeEPrintDate(eprint.Date)
+	}
+	// Handle case of overloaded date time from EPrints
+	if (eprint.DateType != "") && (eprint.Date != "") {
+		rec.Metadata.Dates = append(rec.Metadata.Dates, dateTypeFromTimestamp(eprint.DateType, eprint.Date, "Created from EPrint's date_type and date field"))
 	}
 	if eprint.Datestamp != "" {
 		rec.Metadata.Dates = append(rec.Metadata.Dates, dateTypeFromTimestamp("created", eprint.Datestamp, "Created from EPrint's datestamp field"))
@@ -761,7 +797,19 @@ func metadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record, cont
 		rec.Metadata.Identifiers = append(rec.Metadata.Identifiers, mkSimpleIdentifier("issn", eprint.ISSN))
 	}
 	if eprint.PMCID != "" {
-		rec.Metadata.Identifiers = append(rec.Metadata.Identifiers, mkSimpleIdentifier("pmcid", eprint.PMCID))
+		if strings.Contains(eprint.PMCID, ",") {
+			pmcids := strings.Split(eprint.PMCID, ",")
+			for _, pmcid := range pmcids {
+				rec.Metadata.Identifiers = append(rec.Metadata.Identifiers, mkSimpleIdentifier("pmcid", strings.TrimSpace(pmcid)))
+			}
+		} else if strings.Contains(eprint.PMCID, ";") {
+			pmcids := strings.Split(eprint.PMCID, ";")
+			for _, pmcid := range pmcids {
+				rec.Metadata.Identifiers = append(rec.Metadata.Identifiers, mkSimpleIdentifier("pmcid", strings.TrimSpace(pmcid)))
+			}
+		} else {
+			rec.Metadata.Identifiers = append(rec.Metadata.Identifiers, mkSimpleIdentifier("pmcid", strings.TrimSpace(eprint.PMCID)))
+		}
 	}
 	if (eprint.Funders != nil) && (eprint.Funders.Items != nil) {
 		for _, item := range eprint.Funders.Items {
