@@ -71,13 +71,16 @@ unzip "$$HOME/Downloads/$$ZIPFILE" "bin/*" "man/*"
 #
 mkdir -p "$$HOME/bin"
 EXPLAIN_OS_POLICY="yes"
-find bin -type f | while read -r APP; do
+# NOTE: writing to prog_names.tmp to meet avoid pipeline.
+find bin -type f >prog_names.tmp
+while read -r APP; do
 	V=$$("./$$APP" --version)
 	if [ "$$V" = ""  ]; then 
 		EXPLAIN_OS_POLICY="yes"
 	fi
 	mv "$$APP" "$$HOME/bin/"
-done
+done <prog_names.tmp
+rm prog_names.tmp
 
 #
 # Make sure $$HOME/bin is in the path
