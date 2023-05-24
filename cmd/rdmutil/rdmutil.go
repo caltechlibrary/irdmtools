@@ -65,7 +65,7 @@ and REST API. By default {app_name} looks for three environment variables.
 RDM_URL
 : the URL of the Invenio RDM API and OAI-PMH services
 
-RDM_TOK
+RDMTOK
 : the token needed to access the Invenio RDM API and OAI-PMH services
 
 
@@ -217,7 +217,7 @@ func main() {
 			params = append(params, configFName)
 		}
 	} else {
-		if err := app.Configure(configFName, "RDM_", debug); err != nil {
+		if err := app.Configure(configFName, "", debug); err != nil {
 			fmt.Fprintf(os.Stderr, "%s\n", err)
 			os.Exit(1)
 		}

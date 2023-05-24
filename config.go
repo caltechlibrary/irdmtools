@@ -52,13 +52,13 @@ type Config struct {
 	// Repository Name, e.g. CaltechAUTHORS, CaltechTHESIS, CaltechDATA
 	RepoName string `json:"repo_name,omitempty"`
 	// InvenioAPI holds the URL to the InvenioAPI
-	InvenioAPI string `json:"invenio_api,omitempty"`
+	InvenioAPI string `json:"rdm_url,omitempty"`
 	// InvenioToken is holds the token string to access the API
-	InvenioToken string `json:"invenio_token,omitempty"`
+	InvenioToken string `json:"rdmtok,omitempty"`
 	// Invenio DSN holds the data source name for the Postgres database storing the invenio records
-	InvenioDSN string `json:"invenio_dsn,omitempty"`
+	InvenioDSN string `json:"rdm_dsn,omitempty"`
 	// InvenioStorage holds the URI to the default storage of Invenio RDM objects, e.g. local file system or S3 bucket
-	InvenioStorage string `json:"invenio_storage,omitempty"`
+	InvenioStorage string `json:"rdm_storage,omitempty"`
 	// CName holds the dataset collection name used when harvesting content
 	CName string `json:"c_name,omitempty"`
 	// MailTo holds an email address to use when an email (e.g. CrossRef API access) is needed
@@ -106,7 +106,7 @@ func (cfg *Config) LoadEnv(prefix string) error {
 	if api := os.Getenv(prefixVar("RDM_URL", prefix)); api != "" && cfg.InvenioAPI == "" {
 		cfg.InvenioAPI = api
 	}
-	if token := os.Getenv(prefixVar("RDM_TOK", prefix)); token != "" && cfg.InvenioToken == "" {
+	if token := os.Getenv(prefixVar("RDMTOK", prefix)); token != "" && cfg.InvenioToken == "" {
 		cfg.InvenioToken = token
 	}
 	if cName := os.Getenv(prefixVar("C_NAME", prefix)); cName != "" && cfg.CName == "" {
@@ -185,7 +185,7 @@ func SampleConfig(configFName string) ([]byte, error) {
 			if err != nil {
 				return nil, err
 			}
-			config.InvenioToken = `__INVENIO_TOKEN_GOES_HERE__`
+			config.InvenioToken = `__RDM_TOKEN_GOES_HERE__`
 			src, err = json.MarshalIndent(config, "", "    ")
 			return src, err
 		}
@@ -194,8 +194,8 @@ func SampleConfig(configFName string) ([]byte, error) {
 	if invenioAPI == "" {
 		invenioAPI = "http://localhost:5000"
 	}
-	//invenioToken := os.Getenv("RDM_TOK")
-	cName := os.Getenv("RDM_C_NAME")
+	//invenioToken := os.Getenv("RDMTOK")
+	cName := os.Getenv("C_NAME")
 	if cName == "" {
 		cName = "__DATASET_COLLECTION_NAME_GOES_HERE__"
 	}
@@ -208,7 +208,7 @@ func SampleConfig(configFName string) ([]byte, error) {
 	// By default we look for Invenio-RDM as installed with
 	// docker on localhost:5000
 	config.InvenioAPI = invenioAPI
-	config.InvenioToken = `__INVENIO_TOKEN_GOES_HERE__`
+	config.InvenioToken = `__RDM_TOKEN_GOES_HERE__`
 	config.CName = cName
 	config.MailTo = mailTo
 	src, err := json.MarshalIndent(config, "", "    ")

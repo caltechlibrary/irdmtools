@@ -216,18 +216,18 @@ Invenio-RDM repository. It is specific to Caltech Library and its' repositories.
         exit_on_error = False
     return api_url, token, community, c_name, dsn, keys, exit_on_error
 
-def stop_on_exception(stop, err):
+def stop_on_exception(stop, key, err):
+    s = f'{err}'
+    key = f'{key}'.strip()
+    if s.startswith('{'):
+        err_obj = json.loads(s)
+        msg = get_dict_path(err_obj, ["errors", 0, "messages", 0])
+        if msg != None and msg.endswith(' already exists.'):
+            print(f'     ➾ skipping eprintid {key}, already exists')
+            return False
     if stop:
-       s = f'{err}'
-       if s.startswith('{'):
-           err_obj = json.loads(s)
-           msg = get_dict_path(err_obj, ["errors", 0, "messages", 0])
-           if msg != None and msg.endswith(' already exists.'):
-               return False
-           return True
        return True
-    else:
-        return False
+    return False
 
 #
 # Main processing
@@ -276,8 +276,8 @@ if keys != None:
                 if tot < 120:
                     print(response)
             except Exception as err:
-                print(json.dumps(data, indent= 4))
-                print(f'c_name: {c_name}, key: {key}')
-                print(f'Exception: {err}')
-                if stop_on_exception(exit_on_error, err):
+                if stop_on_exception(exit_on_error, key, err):
+                    print(json.dumps(data, indent= 4))
+                    print(f'c_name: {c_name}, key: {key}')
+                    print(f'Exception: {err}')
                     sys.exit(1)
