@@ -203,6 +203,9 @@ var (
 // -01-01 or -01 respectively so they validate in RDM.
 func normalizeEPrintDate(s string) string {
 	// Normalize eprint.Date to something sensible
+	if len(s) > 10 {
+		s = s[0:10]
+	}
 	if strings.HasSuffix(s, "-00") {
 		if strings.HasSuffix(s, "-00-00") {
 			s = strings.Replace(s, "-00-00", "-01-01", 1)
@@ -725,6 +728,7 @@ func funderFromItem(item *eprinttools.Item) *simplified.Funder {
 	return funder
 }
 
+
 // metadataFromEPrint extracts metadata from the EPrint record
 func metadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record, contributorTypes map[string]string) error {
 	// NOTE: Creators get listed in the citation, Contributors do not.
@@ -794,7 +798,7 @@ func metadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record, cont
 
 	// NOTE: RDM Requires a publication date
 	// Default to the eprint.Datestamp and correct if DateType is "published"
-	rec.Metadata.PublicationDate = eprint.Datestamp
+	rec.Metadata.PublicationDate = normalizeEPrintDate(eprint.Datestamp)
 
 	if (eprint.DateType == "published") && (eprint.Date != "") {
 		rec.Metadata.Dates = append(rec.Metadata.Dates, dateTypeFromTimestamp("pub_date", eprint.Date, "EPrint's Publication Date"))
