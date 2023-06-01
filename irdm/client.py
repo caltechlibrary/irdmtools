@@ -99,7 +99,7 @@ class IRDM_Client:
         return obj 
         
 
-    def create(self, metadata, files = [], file_links = []):
+    def create(self, metadata, files = [], file_links = [], doi = None):
         """
         File links are links to files existing in external systems that
         will be added directly in a CaltechDATA record, instead of
@@ -130,41 +130,16 @@ class IRDM_Client:
             metadata = add_file_links(metadata, file_links)
 
         pids = {}
-        identifiers = []
-        doi = None
-        # NOTE: If we have a tombstone record then "metadata" can be None
-        if "metadata" in metadata:
-            # we have rdm schema
-            if "identifiers" in metadata["metadata"]:
-                identifiers = metadata["metadata"]["identifiers"]
-        elif "identifiers" in metadata:
-            identifiers = metadata["identifiers"]
-        for identifier in identifiers:
-            if "identifierType" in identifier:
-                if identifier["identifierType"] == "DOI":
-                    doi = identifier["identifier"]
-                    prefix = doi.split("/")[0]
-                elif identifier["identifierType"] == "oai":
-                    pids["oai"] = {
-                        "identifier": identifier["identifier"],
-                        "provider": "oai",
-                    }
-            elif "scheme" in identifier:
-                # We have RDM internal metadata
-                if identifier["scheme"] == "doi":
-                    doi = identifier["identifier"]
-                    prefix = doi.split("/")[0]
-            else:
-                doi = None
-            if doi != None:
-                if prefix == repo_prefix:
-                    pids["doi"] = {
+        if doi != None:
+            prefix = doi.split("/")[0]
+            if prefix == repo_prefix:
+                pids["doi"] = {
                         "identifier": doi,
                         "provider": "datacite",
                         "client": "datacite",
                     }
-                else:
-                    pids["doi"] = {
+            else:
+                pids["doi"] = {
                         "identifier": doi,
                         "provider": "external",
                     }
