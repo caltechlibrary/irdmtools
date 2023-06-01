@@ -269,17 +269,9 @@ if keys != None:
         if 'tombstone' in data:
             print(f'    ⟹ skipping eprintid {key.strip()}, it is a tombstone record')
         else:
-            #Get the DOI for the record
-            if "identifiers" in data["metadata"]:
-                identifiers = data["metadata"]["identifiers"]
-            for identifier in identifiers:
-                if identifier["scheme"] == "doi":
-                    doi = identifier["identifier"]
-            #Need to add a check here against DOIs already submitted
-            #If DOI has already been submitted set doi = None
             try:
                 response = client.create(
-                    data, doi=doi
+                    data
                 )
                 if tot < 120:
                     print(response)
