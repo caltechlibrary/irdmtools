@@ -83,7 +83,7 @@ def fixup_record(record, files):
         if "funding" in record["metadata"]:
             for i, funder in enumerate(record["metadata"]["funding"]):
                 if "award" in funder and not "title" in funder["award"]:
-                    funder["award"]["title"] = { "en": ":unav" }
+                    funder["award"]["title"] = { "en": " " }
                     record["metadata"]["funding"][i] = funder
         # Fixup name in creators and contributors
         if "creators" in record["metadata"]:
