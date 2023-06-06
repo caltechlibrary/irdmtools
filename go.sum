@@ -1,5 +1,7 @@
 github.com/caltechlibrary/crossrefapi v1.0.2 h1:U6tfzFt+QC7T1SKyhaaZPp7YJk4XjYPJNWRV3T4hgiw=
 github.com/caltechlibrary/crossrefapi v1.0.2/go.mod h1:TAUa0UzInUtw0Z155kWjSIU+ljvNVL6dCAInjC0C8Jc=
+github.com/caltechlibrary/crossrefapi v1.0.4 h1:B4yxZNltt+xL507fZJytf/b0NKxSwQKXK5HNfEZec94=
+github.com/caltechlibrary/crossrefapi v1.0.4/go.mod h1:TAUa0UzInUtw0Z155kWjSIU+ljvNVL6dCAInjC0C8Jc=
 github.com/caltechlibrary/dataciteapi v1.0.1 h1:qFkqdbEOT4trKcpqeLg08NUgDObMOgjAJhegP0sop8Q=
 github.com/caltechlibrary/dataciteapi v1.0.1/go.mod h1:T6oYVCoQyHRi/0qPI+K5PM//F7M5YkrHqzVMfrPlsn8=
 github.com/caltechlibrary/dataset/v2 v2.1.1 h1:sjBX22tPKYxhb6++K5EHzQK+OLqJWcfOFnVVL4YWij4=
