@@ -3,6 +3,12 @@
 #
 PROJECT = irdmtools
 
+GIT_GROUP = caltechlibrary
+
+RELEASE_DATE = $(shell date +%Y-%m-%d)
+
+RELEASE_HASH=$(shell git log --pretty=format:'%h' -n 1)
+
 PROGRAMS = rdmutil eprint2rdm doi2rdm people2vocabulary # $(shell ls -1 cmd)
 
 MAN_PAGES = $(shell ls -1 *.1.md | sed -E 's/\.1.md/.1/g')
@@ -10,10 +16,6 @@ MAN_PAGES = $(shell ls -1 *.1.md | sed -E 's/\.1.md/.1/g')
 HTML_PAGES = $(shell find . -type f | grep -E '\.html')
 
 PACKAGE = $(shell ls -1 *.go)
-
-RELEASE_DATE = $(shell date +%Y-%m-%d)
-
-RELEASE_HASH=$(shell git log --pretty=format:'%h' -n 1)
 
 VERSION = $(shell grep '"version":' codemeta.json | cut -d\"  -f 4)
 
@@ -69,7 +71,7 @@ about.md: codemeta.json $(PROGRAMS)
 	@if [ -f _codemeta.json ]; then rm _codemeta.json; fi
 
 installer.sh: .FORCE
-	@echo '' | pandoc --metadata title="$(PROJECT)" --metadata-file codemeta.json --template codemeta-installer.tmpl >installer.sh
+	@echo '' | pandoc --metadata title="Installer" --metadata git_org_or_person="$(GIT_GROUP)" --metadata-file codemeta.json --template codemeta-installer.tmpl >installer.sh
 	@chmod 775 installer.sh
 	@git add -f installer.sh
 

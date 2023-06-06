@@ -82,7 +82,7 @@ func (app *RdmUtil) Configure(configFName string, envPrefix string, debug bool) 
 	}
 	// Make sure we have a minimal useful configuration
 	if app.Cfg.InvenioAPI == "" || app.Cfg.InvenioToken == "" {
-		return fmt.Errorf("invenio API URL or token not available")
+		return fmt.Errorf("RDM_URL or RDMTOK not available")
 	}
 	return nil
 }

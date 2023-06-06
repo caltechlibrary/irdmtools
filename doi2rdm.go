@@ -121,7 +121,7 @@ func (app *Doi2Rdm) Configure(configFName string, envPrefix string, debug bool) 
 	}
 	// Make sure we have a minimal useful configuration
 	if app.Cfg.InvenioAPI == "" || app.Cfg.InvenioToken == "" {
-		return fmt.Errorf("invenio API URL or token not available")
+		return fmt.Errorf("RDM_URL or RDM_TOK available")
 	}
 	return nil
 }

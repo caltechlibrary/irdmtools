@@ -1,6 +1,6 @@
-%rdmutil(1) irdmtools user manual | version 0.0.12 4c4e8fd
+%rdmutil(1) irdmtools user manual | version 0.0.12 bd12614
 % R. S. Doiel and Tom Morrell
-% 2023-05-23
+% 2023-06-06
 
 # NAME
 
@@ -15,10 +15,10 @@ rdmutil [OPTIONS] ACTION [ACTION_PARAMETERS ...]
 __rdmutil__ provides a quick wrapper around Invenio-RDM's OAI-PMH
 and REST API. By default rdmutil looks for three environment variables.
 
-RDM_INVENIO_API
+RDM_URL
 : the URL of the Invenio RDM API and OAI-PMH services
 
-RDM_INVENIO_TOKEN
+RDMTOK
 : the token needed to access the Invenio RDM API and OAI-PMH services
 
 

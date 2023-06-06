@@ -203,6 +203,9 @@ var (
 // -01-01 or -01 respectively so they validate in RDM.
 func normalizeEPrintDate(s string) string {
 	// Normalize eprint.Date to something sensible
+	if len(s) > 10 {
+		s = s[0:10]
+	}
 	if strings.HasSuffix(s, "-00") {
 		if strings.HasSuffix(s, "-00-00") {
 			s = strings.Replace(s, "-00-00", "-01-01", 1)
@@ -211,6 +214,49 @@ func normalizeEPrintDate(s string) string {
 		}
 	}
 	return s
+}
+
+func customFieldsMetadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record) error {
+/*NOTE: Custom fields for Journal data
+	"custom_fields": {
+		"journal:journal": {
+			"issue": "7",
+			"pages": "15-23",
+			"title": "Nature",
+			"volume": "645"
+		}
+	},
+*/
+	if rec.Metadata == nil {
+		rec.Metadata = new(simplified.Metadata)
+	}
+	if rec.CustomFields == nil {
+		rec.CustomFields = map[string]interface{}{}
+	}
+	if eprint.Type == "article" && eprint.Publication != "" {
+		m := map[string]string{}
+		m["title"] = eprint.Publication
+		if eprint.Number != "" {
+			m["issue"] = eprint.Number
+		}
+		if eprint.PageRange != "" {
+			m["pages"] = eprint.PageRange
+		}
+		if eprint.Volume != "" {
+			m["volume"] = eprint.Volume
+		}
+		if eprint.Publisher != "" {
+			rec.Metadata.Publisher = eprint.Publisher
+		}
+		rec.CustomFields["journal:journal"] = m
+	}
+	if eprint.Series != "" {
+		rec.CustomFields["series"] = eprint.Series
+	}
+	if eprint.PlaceOfPub != "" {
+		rec.CustomFields["place_of_publication"] = eprint.Series
+	}
+	return nil
 }
 
 // CrosswalkEPrintToRecord implements a crosswalk between
@@ -239,6 +285,10 @@ func CrosswalkEPrintToRecord(eprint *eprinttools.EPrint, rec *simplified.Record,
 	}
 
 	if err := metadataFromEPrint(eprint, rec, contributorTypes); err != nil {
+		return err
+	}
+	// NOTE: journal:journal is in CustomFields map as a submap
+	if err := customFieldsMetadataFromEPrint(eprint, rec); err != nil {
 		return err
 	}
 	if err := filesFromEPrint(eprint, rec); err != nil {
@@ -678,6 +728,7 @@ func funderFromItem(item *eprinttools.Item) *simplified.Funder {
 	return funder
 }
 
+
 // metadataFromEPrint extracts metadata from the EPrint record
 func metadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record, contributorTypes map[string]string) error {
 	// NOTE: Creators get listed in the citation, Contributors do not.
@@ -747,7 +798,7 @@ func metadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record, cont
 
 	// NOTE: RDM Requires a publication date
 	// Default to the eprint.Datestamp and correct if DateType is "published"
-	rec.Metadata.PublicationDate = eprint.Datestamp
+	rec.Metadata.PublicationDate = normalizeEPrintDate(eprint.Datestamp)
 
 	if (eprint.DateType == "published") && (eprint.Date != "") {
 		rec.Metadata.Dates = append(rec.Metadata.Dates, dateTypeFromTimestamp("pub_date", eprint.Date, "EPrint's Publication Date"))
