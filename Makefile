@@ -167,6 +167,13 @@ dist/Windows-arm64: $(PROGRAMS)
 	@cd dist && zip -r $(PROJECT)-v$(VERSION)-Windows-arm64.zip LICENSE codemeta.json CITATION.cff *.md bin/* man/* $(DOCS)
 	@rm -fR dist/bin
 
+# Raspberry Pi OS (32 bit) based on report from Raspberry Pi Model 3B+
+dist/Linux-armv7l: $(PROGRAMS)
+	@mkdir -p dist/bin
+	@for FNAME in $(PROGRAMS); do env GOOS=linux GOARCH=arm GOARM=7 go build -o "dist/bin/$${FNAME}" cmd/$${FNAME}/*.go; done
+	@cd dist && zip -r $(PROJECT)-v$(VERSION)-Linux-armv7l.zip LICENSE codemeta.json CITATION.cff *.md bin/* man/* $(DOCS)
+	@rm -fR dist/bin
+
 dist/RaspberryPiOS-arm7: $(PROGRAMS)
 	@mkdir -p dist/bin
 	@for FNAME in $(PROGRAMS); do env GOOS=linux GOARCH=arm GOARM=7 go build -o "dist/bin/$${FNAME}" cmd/$${FNAME}/*.go; done
@@ -183,7 +190,7 @@ distribute_docs:
 	@cp -vR man dist/
 	@for DNAME in $(DOCS); do cp -vR $$DNAME dist/; done
 
-release: build installer.sh save distribute_docs dist/Linux-x86_64 dist/Linux-aarch64 dist/macOS-x86_64 dist/macOS-arm64 dist/Windows-x86_64 dist/Windows-arm64 dist/RaspberryPiOS-arm7
+release: build installer.sh save distribute_docs dist/Linux-x86_64 dist/Linux-aarch64 dist/macOS-x86_64 dist/macOS-arm64 dist/Windows-x86_64 dist/Windows-arm64 dist/RaspberryPiOS-arm7 dist/Linux-armv7l
 
 
 .FORCE:
