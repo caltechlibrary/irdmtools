@@ -289,10 +289,14 @@ func crossrefLicenseToRight(license *crossrefapi.License) *simplified.Right {
 	}
 	right := new(simplified.Right)
 	right.Link = license.URL
-	right.Description = &simplified.Description {
-		Description: "url to license",
-		Type : &simplified.Type{ Name: "url" },
+	d := map[string]string{
+		"en": "url to license",
 	}
+	right.Description = d
+	t := map[string]string{
+		"en": "url",
+	}
+	right.Title = t
 	return right
 }
 
