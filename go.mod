@@ -3,11 +3,11 @@ module github.com/caltechlibrary/irdmtools
 go 1.20
 
 require (
-	github.com/caltechlibrary/crossrefapi v1.0.4
+	github.com/caltechlibrary/crossrefapi v1.0.5
 	github.com/caltechlibrary/dataciteapi v1.0.1
 	github.com/caltechlibrary/dataset/v2 v2.1.1
 	github.com/caltechlibrary/eprinttools v1.2.5
-	github.com/caltechlibrary/simplified v0.0.13-0.20230522182334-ad52ec703af2
+	github.com/caltechlibrary/simplified v0.0.13-0.20230607183433-3d8b130b7cb5
 	gopkg.in/yaml.v3 v3.0.1
 )
 

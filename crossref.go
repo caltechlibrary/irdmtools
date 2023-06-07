@@ -237,20 +237,43 @@ func mkSimpleTitleDetail(title string) *simplified.TitleDetail {
 	}
 }
 
-func crosswalkAuthorAffiliationToCreatorAffiliation(affilication *crossrefapi.Organization) *simplified.Affiliation {
-	affiliation := new(simplified.Affiliation)
+func crosswalkAuthorAffiliationToCreatorAffiliation(crAffiliation *crossrefapi.Organization) *simplified.Affiliation {
+	data, _ := json.MarshalIndent(crAffiliation, "", "   "); // DEBUG
+	fmt.Fprintf(os.Stderr, "DEBUG crAffiliation %s\n", data)
 	// FIXME: If the organization is Caltech or JPL we should be able to add an ID or other metadata fields.
 	// FIXME: Is RDM going to have ROR in the affiliation?
-	affiliation.Name = affilication.Name
-	return affiliation
+	if crAffiliation.IDs != nil {
+		for _, id := range crAffiliation.IDs {
+			if id.IdType == "ROR" && id.AssertedBy == "publisher" {
+				affiliation := new(simplified.Affiliation)
+				ror := strings.TrimPrefix(id.Id, "https://ror.org/")
+				affiliation.ID = ror
+				return affiliation
+			}
+		}
+	}
+	return nil
 }
 
 func crossrefPersonToCreator(author *crossrefapi.Person, role string) *simplified.Creator {
 	po := new(simplified.PersonOrOrg)
 	po.FamilyName = author.Family
 	po.GivenName = author.Given
-	for _, affiliation := range author.Affiliation {
-		po.Affiliations = append(po.Affiliations, crosswalkAuthorAffiliationToCreatorAffiliation(affiliation))
+	if author.Family != "" && author.Given != "" {
+		po.Type = "personal"
+	} else {
+		po.Type = "organization"
+	}
+	if author.ORCID != "" {
+		po.Identifiers = append(po.Identifiers, &simplified.Identifier{
+			Scheme: "orcid",
+			Identifier: strings.TrimPrefix(author.ORCID, "http://orcid.org/"),
+		})
+	}
+	if len(author.Affiliation) > 0 {
+		for _, affiliation := range author.Affiliation {
+			po.Affiliations = append(po.Affiliations, crosswalkAuthorAffiliationToCreatorAffiliation(affiliation))
+		}
 	}
 	creator := new(simplified.Creator)
 	creator.PersonOrOrg = po
