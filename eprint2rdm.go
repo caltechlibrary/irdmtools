@@ -761,25 +761,28 @@ func metadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record, cont
 	rights := new(simplified.Right)
 	if eprint.Rights != "" {
 		addRights = true
-		rights.Description = &simplified.Description{
-			Description: eprint.Rights,
+		m := map[string]string{
+			"en": eprint.Rights,
 		}
+		rights.Description = m
 	}
 	// Figure out if our copyright information is in the Note field.
 	if (eprint.Note != "") && (strings.Contains(eprint.Note, "©") || strings.Contains(eprint.Note, "copyright") || strings.Contains(eprint.Note, "(c)")) {
 		addRights = true
-		rights.Description = &simplified.Description{
-			Description: fmt.Sprintf("%s", eprint.Note),
+		m := map[string]string{
+			"en": fmt.Sprintf("%s", eprint.Note),
 		}
+		rights.Description = m
 	}
 	if addRights {
 		rec.Metadata.Rights = append(rec.Metadata.Rights, rights)
 	}
 	if eprint.CopyrightStatement != "" {
 		rights := new(simplified.Right)
-		rights.Description = &simplified.Description{
-			Description: eprint.CopyrightStatement,
+		m := map[string]string {
+			"en": eprint.CopyrightStatement,
 		}
+		rights.Description = m
 		rec.Metadata.Rights = append(rec.Metadata.Rights, rights)
 	}
 	// FIXME: work with Tom to sort out how "Rights" and document level

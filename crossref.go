@@ -85,9 +85,9 @@ func getPublisher(work *crossrefapi.Works) string {
 
 // getPublication
 func getPublication(work *crossrefapi.Works) string {
-	// FIXME: Need to know if publisher holds the publisher and container type holds publication based on work.Message.Type
-	if work.Message != nil && work.Message.Type == "publication-article" &&
-		work.Message.ContainerTitle != nil && len(work.Message.ContainerTitle) > 0 {
+	//fmt.Fprintf(os.Stderr, "DEBUG container_title -> %+v\n", work.Message.ContainerTitle)
+	//fmt.Fprintf(os.Stderr, "DEBUG type -> %+v\n", work.Message.Type)
+	if work.Message != nil && len(work.Message.ContainerTitle) > 0 {
 		return work.Message.ContainerTitle[0]
 	}
 	return ""
@@ -96,8 +96,7 @@ func getPublication(work *crossrefapi.Works) string {
 // getSeries
 func getSeries(work *crossrefapi.Works) string {
 	// FIXME: Need to know if publisher holds the publisher and container type holds publication based on work.Message.Type
-	if work.Message != nil && work.Message.Type == "publication-article" &&
-		work.Message.ShortContainerTitle != nil && len(work.Message.ShortContainerTitle) > 0 {
+	if work.Message != nil && work.Message.ShortContainerTitle != nil && len(work.Message.ShortContainerTitle) > 0 {
 		return work.Message.ShortContainerTitle[0]
 	}
 	return ""
@@ -105,12 +104,20 @@ func getSeries(work *crossrefapi.Works) string {
 
 // getVolume
 func getVolume(work *crossrefapi.Works) string {
-	if work.Message != nil && work.Message.Type == "publication-article" &&
-		work.Message.JournalIssue != nil && work.Message.JournalIssue.Issue != "" {
-		return work.Message.JournalIssue.Issue
+	if work.Message != nil && work.Message.Volume != "" {
+		return work.Message.Volume
 	}
 	return ""
 }
+
+// getIssue
+func getIssue(work *crossrefapi.Works) string {
+	if work.Message != nil && work.Message.Issue != "" {
+		return work.Message.Issue
+	}
+	return ""
+}
+
 
 // getPublisherLocation
 func getPublisherLocation(work *crossrefapi.Works) string {
@@ -152,7 +159,7 @@ func getISBNs(work *crossrefapi.Works) []*simplified.Identifier {
 	isbns := []*simplified.Identifier{}
 	if work.Message != nil && work.Message.ISBN != nil {
 		for _, value := range work.Message.ISBN {
-			isbns = append(isbns, mkSimpleIdentifier("ISBN", value))
+			isbns = append(isbns, mkSimpleIdentifier("isbn", value))
 		}
 	}
 	return isbns
@@ -163,7 +170,7 @@ func getISSNs(work *crossrefapi.Works) []*simplified.Identifier {
 	issns := []*simplified.Identifier{}
 	if work.Message != nil && work.Message.ISSN != nil {
 		for _, value := range work.Message.ISSN {
-			issns = append(issns, &simplified.Identifier{Scheme: "ISSN", Identifier: value})
+			issns = append(issns, &simplified.Identifier{Scheme: "issn", Identifier: value})
 		}
 	}
 	return issns
@@ -182,7 +189,7 @@ func getFunding(work *crossrefapi.Works) []*simplified.Funder {
 					Award: &simplified.AwardIdentifier{
 						Number: award,
 						Title: &simplified.TitleDetail{
-							Encoding: "unav",
+							Encoding: " ",
 						},
 					},
 				})
@@ -206,7 +213,7 @@ func getLinks(work *crossrefapi.Works) []*simplified.Identifier {
 	if work.Message != nil && work.Message.Link != nil && len(work.Message.Link) > 0 {
 		for _, link := range work.Message.Link {
 			identifiers = append(identifiers, &simplified.Identifier{
-				Scheme:     "URL",
+				Scheme:     "url",
 				Identifier: link.URL,
 				Name:       link.ContentType,
 			})
@@ -237,20 +244,43 @@ func mkSimpleTitleDetail(title string) *simplified.TitleDetail {
 	}
 }
 
-func crosswalkAuthorAffiliationToCreatorAffiliation(affilication *crossrefapi.Organization) *simplified.Affiliation {
-	affiliation := new(simplified.Affiliation)
+func crosswalkAuthorAffiliationToCreatorAffiliation(crAffiliation *crossrefapi.Organization) *simplified.Affiliation {
+	//data, _ := json.MarshalIndent(crAffiliation, "", "   "); // DEBUG
+	//fmt.Fprintf(os.Stderr, "DEBUG crAffiliation %s\n", data)
 	// FIXME: If the organization is Caltech or JPL we should be able to add an ID or other metadata fields.
 	// FIXME: Is RDM going to have ROR in the affiliation?
-	affiliation.Name = affilication.Name
-	return affiliation
+	if crAffiliation.IDs != nil {
+		for _, id := range crAffiliation.IDs {
+			if id.IdType == "ROR" && id.AssertedBy == "publisher" {
+				affiliation := new(simplified.Affiliation)
+				ror := strings.TrimPrefix(id.Id, "https://ror.org/")
+				affiliation.ID = ror
+				return affiliation
+			}
+		}
+	}
+	return nil
 }
 
 func crossrefPersonToCreator(author *crossrefapi.Person, role string) *simplified.Creator {
 	po := new(simplified.PersonOrOrg)
 	po.FamilyName = author.Family
 	po.GivenName = author.Given
-	for _, affiliation := range author.Affiliation {
-		po.Affiliations = append(po.Affiliations, crosswalkAuthorAffiliationToCreatorAffiliation(affiliation))
+	if author.Family != "" && author.Given != "" {
+		po.Type = "personal"
+	} else {
+		po.Type = "organization"
+	}
+	if author.ORCID != "" {
+		po.Identifiers = append(po.Identifiers, &simplified.Identifier{
+			Scheme: "orcid",
+			Identifier: strings.TrimPrefix(author.ORCID, "http://orcid.org/"),
+		})
+	}
+	if len(author.Affiliation) > 0 {
+		for _, affiliation := range author.Affiliation {
+			po.Affiliations = append(po.Affiliations, crosswalkAuthorAffiliationToCreatorAffiliation(affiliation))
+		}
 	}
 	creator := new(simplified.Creator)
 	creator.PersonOrOrg = po
@@ -266,10 +296,14 @@ func crossrefLicenseToRight(license *crossrefapi.License) *simplified.Right {
 	}
 	right := new(simplified.Right)
 	right.Link = license.URL
-	right.Description = &simplified.Description {
-		Description: "url to license",
-		Type : &simplified.Type{ Name: "url" },
+	d := map[string]string{
+		"en": "url to license",
 	}
+	right.Description = d
+	t := map[string]string{
+		"en": "url",
+	}
+	right.Title = t
 	return right
 }
 
@@ -457,13 +491,20 @@ func CrosswalkCrossRefWork(cfg *Config, work *crossrefapi.Works, resourceTypeMap
 			return nil, err
 		}
 	}
+	/*
 	if value := getSeries(work); value != "" {
 		if err := SetSeries(rec, value); err != nil {
 			return nil, err
 		}
 	}
+	*/
 	if value := getVolume(work); value != "" {
 		if err := SetVolume(rec, value); err != nil {
+			return nil, err
+		}
+	}
+	if value := getIssue(work); value != "" {
+		if err := SetIssue(rec, value); err != nil {
 			return nil, err
 		}
 	}
@@ -497,11 +538,13 @@ func CrosswalkCrossRefWork(cfg *Config, work *crossrefapi.Works, resourceTypeMap
 			return nil, err
 		}
 	}
+	/* Removed per issue #10
 	if values := getLinks(work); values != nil && len(values) > 0 {
 		if err := AddRelatedIdentifiers(rec, values); err != nil {
 			return nil, err
 		}
 	}
+	*/
 	if values := getLicenses(work); values != nil {
 		if err := AddRights(rec, values); err != nil {
 			return nil, err
