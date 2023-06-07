@@ -238,8 +238,8 @@ func mkSimpleTitleDetail(title string) *simplified.TitleDetail {
 }
 
 func crosswalkAuthorAffiliationToCreatorAffiliation(crAffiliation *crossrefapi.Organization) *simplified.Affiliation {
-	data, _ := json.MarshalIndent(crAffiliation, "", "   "); // DEBUG
-	fmt.Fprintf(os.Stderr, "DEBUG crAffiliation %s\n", data)
+	//data, _ := json.MarshalIndent(crAffiliation, "", "   "); // DEBUG
+	//fmt.Fprintf(os.Stderr, "DEBUG crAffiliation %s\n", data)
 	// FIXME: If the organization is Caltech or JPL we should be able to add an ID or other metadata fields.
 	// FIXME: Is RDM going to have ROR in the affiliation?
 	if crAffiliation.IDs != nil {
