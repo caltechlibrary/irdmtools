@@ -524,11 +524,13 @@ func CrosswalkCrossRefWork(cfg *Config, work *crossrefapi.Works, resourceTypeMap
 			return nil, err
 		}
 	}
+	/* Removed per issue #10
 	if values := getLinks(work); values != nil && len(values) > 0 {
 		if err := AddRelatedIdentifiers(rec, values); err != nil {
 			return nil, err
 		}
 	}
+	*/
 	if values := getLicenses(work); values != nil {
 		if err := AddRights(rec, values); err != nil {
 			return nil, err

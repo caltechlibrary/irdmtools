@@ -220,6 +220,10 @@ func AddDate(rec *simplified.Record, dt *simplified.DateType) error {
 		if rec.Metadata.Dates == nil {
 			rec.Metadata.Dates = []*simplified.DateType{}
 		}
+		if dt.Type == nil {
+			dt.Type = new(simplified.Type)
+			dt.Type.ID = "accepted"
+		}
 		rec.Metadata.Dates = append(rec.Metadata.Dates, dt)
 	}
 	return nil
