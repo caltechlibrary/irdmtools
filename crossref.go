@@ -85,9 +85,9 @@ func getPublisher(work *crossrefapi.Works) string {
 
 // getPublication
 func getPublication(work *crossrefapi.Works) string {
-	// FIXME: Need to know if publisher holds the publisher and container type holds publication based on work.Message.Type
-	if work.Message != nil && work.Message.Type == "publication-article" &&
-		work.Message.ContainerTitle != nil && len(work.Message.ContainerTitle) > 0 {
+	//fmt.Fprintf(os.Stderr, "DEBUG container_title -> %+v\n", work.Message.ContainerTitle)
+	//fmt.Fprintf(os.Stderr, "DEBUG type -> %+v\n", work.Message.Type)
+	if work.Message != nil && len(work.Message.ContainerTitle) > 0 {
 		return work.Message.ContainerTitle[0]
 	}
 	return ""
@@ -96,8 +96,7 @@ func getPublication(work *crossrefapi.Works) string {
 // getSeries
 func getSeries(work *crossrefapi.Works) string {
 	// FIXME: Need to know if publisher holds the publisher and container type holds publication based on work.Message.Type
-	if work.Message != nil && work.Message.Type == "publication-article" &&
-		work.Message.ShortContainerTitle != nil && len(work.Message.ShortContainerTitle) > 0 {
+	if work.Message != nil && work.Message.ShortContainerTitle != nil && len(work.Message.ShortContainerTitle) > 0 {
 		return work.Message.ShortContainerTitle[0]
 	}
 	return ""
@@ -105,12 +104,20 @@ func getSeries(work *crossrefapi.Works) string {
 
 // getVolume
 func getVolume(work *crossrefapi.Works) string {
-	if work.Message != nil && work.Message.Type == "publication-article" &&
-		work.Message.JournalIssue != nil && work.Message.JournalIssue.Issue != "" {
-		return work.Message.JournalIssue.Issue
+	if work.Message != nil && work.Message.Volume != "" {
+		return work.Message.Volume
 	}
 	return ""
 }
+
+// getIssue
+func getIssue(work *crossrefapi.Works) string {
+	if work.Message != nil && work.Message.Issue != "" {
+		return work.Message.Issue
+	}
+	return ""
+}
+
 
 // getPublisherLocation
 func getPublisherLocation(work *crossrefapi.Works) string {
@@ -152,7 +159,7 @@ func getISBNs(work *crossrefapi.Works) []*simplified.Identifier {
 	isbns := []*simplified.Identifier{}
 	if work.Message != nil && work.Message.ISBN != nil {
 		for _, value := range work.Message.ISBN {
-			isbns = append(isbns, mkSimpleIdentifier("ISBN", value))
+			isbns = append(isbns, mkSimpleIdentifier("isbn", value))
 		}
 	}
 	return isbns
@@ -163,7 +170,7 @@ func getISSNs(work *crossrefapi.Works) []*simplified.Identifier {
 	issns := []*simplified.Identifier{}
 	if work.Message != nil && work.Message.ISSN != nil {
 		for _, value := range work.Message.ISSN {
-			issns = append(issns, &simplified.Identifier{Scheme: "ISSN", Identifier: value})
+			issns = append(issns, &simplified.Identifier{Scheme: "issn", Identifier: value})
 		}
 	}
 	return issns
@@ -182,7 +189,7 @@ func getFunding(work *crossrefapi.Works) []*simplified.Funder {
 					Award: &simplified.AwardIdentifier{
 						Number: award,
 						Title: &simplified.TitleDetail{
-							Encoding: "unav",
+							Encoding: " ",
 						},
 					},
 				})
@@ -206,7 +213,7 @@ func getLinks(work *crossrefapi.Works) []*simplified.Identifier {
 	if work.Message != nil && work.Message.Link != nil && len(work.Message.Link) > 0 {
 		for _, link := range work.Message.Link {
 			identifiers = append(identifiers, &simplified.Identifier{
-				Scheme:     "URL",
+				Scheme:     "url",
 				Identifier: link.URL,
 				Name:       link.ContentType,
 			})
@@ -484,13 +491,20 @@ func CrosswalkCrossRefWork(cfg *Config, work *crossrefapi.Works, resourceTypeMap
 			return nil, err
 		}
 	}
+	/*
 	if value := getSeries(work); value != "" {
 		if err := SetSeries(rec, value); err != nil {
 			return nil, err
 		}
 	}
+	*/
 	if value := getVolume(work); value != "" {
 		if err := SetVolume(rec, value); err != nil {
+			return nil, err
+		}
+	}
+	if value := getIssue(work); value != "" {
+		if err := SetIssue(rec, value); err != nil {
 			return nil, err
 		}
 	}

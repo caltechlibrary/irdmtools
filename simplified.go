@@ -12,8 +12,8 @@ import (
 func SetDOI(rec *simplified.Record, doi string) error {
 	pid := new(simplified.PersistentIdentifier)
 	pid.Identifier = doi
-	// NOTE: This makes this mapping Caltech Specific, should really check who the provider is.
-	pid.Provider = "datacite"
+	// NOTE: Per issue 24, the provider should always be external.
+	pid.Provider = "external"
 	pid.Client = ""
 	if rec.ExternalPIDs == nil {
 		rec.ExternalPIDs = make(map[string]*simplified.PersistentIdentifier)
@@ -90,7 +90,6 @@ func SetPublication(rec *simplified.Record, publication string) error {
 	m := rec.CustomFields["journal:journal"].(map[string]interface{})
 	m["title"] = publication
 	rec.CustomFields["journal:journal"] = m
-	//fmt.Fprintf(os.Stderr, "DEBUG SetPublication() publication %+v\n", rec.CustomFields)
 	return nil
 }
 
@@ -122,13 +121,13 @@ func SetSeries(rec *simplified.Record, series string) error {
 	if rec.CustomFields == nil {
 		rec.CustomFields = make(map[string]interface{})
 	}
-	_, ok := rec.CustomFields["journal:journal"]
+	_, ok := rec.CustomFields["caltech:series"]
 	if ! ok {
-		rec.CustomFields["journal:journal"] = make(map[string]interface{})
+		rec.CustomFields["caltech:series"] = make(map[string]interface{})
 	}
-	m := rec.CustomFields["journal:journal"].(map[string]interface{})
+	m := rec.CustomFields["caltech:series"].(map[string]interface{})
 	m["series"] = series
-	rec.CustomFields["journal:journal"] = m
+	rec.CustomFields["caltech:series"] = m
 	//fmt.Fprintf(os.Stderr, "DEBUG SetSeries() publication %+v\n", rec.CustomFields)
 	return nil
 }
@@ -151,6 +150,26 @@ func SetVolume(rec *simplified.Record, volume string) error {
 	//fmt.Fprintf(os.Stderr, "DEBUG SetVolume() publication %+v\n", rec.CustomFields)
 	return nil
 }
+
+func SetIssue(rec *simplified.Record, issue string) error {
+	if rec.Metadata == nil {
+		rec.Metadata = new(simplified.Metadata)
+	}
+	// NOTE: Journal content goes in journal:journal custom fields.
+	if rec.CustomFields == nil {
+		rec.CustomFields = make(map[string]interface{})
+	}
+	_, ok := rec.CustomFields["journal:journal"]
+	if ! ok {
+		rec.CustomFields["journal:journal"] = make(map[string]interface{})
+	}
+	m := rec.CustomFields["journal:journal"].(map[string]interface{})
+	m["issue"] = issue
+	rec.CustomFields["journal:journal"] = m
+	//fmt.Fprintf(os.Stderr, "DEBUG SetVolume() publication %+v\n", rec.CustomFields)
+	return nil
+}
+
 
 func SetPageRange(rec *simplified.Record, pageRange string) error {
 	if rec.Metadata == nil {
