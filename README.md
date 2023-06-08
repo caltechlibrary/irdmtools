@@ -29,7 +29,11 @@ This tool is for interacting with an Invenio RDM repository.
 
 ### `eprint2rdm`
 
-This tool is migrating content from an EPrints repository via the EPrint REST API.  It will retrieve an EPrint XML representation of the EPrint record  and transform it into a JSON encded simplified record nearly compatible with Invenio RDM.
+This tool is migrating content from an EPrints repository via the EPrint REST API.  It will retrieve an EPrint XML representation of the EPrint record  and transform it into a JSON encded simplified record nearly compatible with Invenio RDM. See the [man page](eprint2rdm.1.md)
+
+### `doi2rdm`
+
+This tool will query the CrossRef API and convert a works record into a JSON structure compatible with an RDM record (e.g. to be inserted via an RDM API call). See the [man page](doi2rdm.1.md)
 
 
 ## Requirements
@@ -37,13 +41,21 @@ This tool is migrating content from an EPrints repository via the EPrint REST AP
 - An Invenio RDM deployment
 - To building the software and documentation
     - git
-    - Go >= 1.20.1
+    - Go >= 1.20.4
     - Make (e.g. GNU Make)
     - Pandoc >= 3
 - For harvesting content
     - [dataset](https://github.com/caltechlibrary/dataset/) >= 2
 
-## Installation
+## Quick install
+
+If you're running on Linux, macOS or Raspberry Pi OS you may be able to installed irdmtools with the following curl command
+
+~~~
+curl https://caltechlibrary.github.io/irdmtools/installer.sh | sh
+~~~
+
+## Installation from source
 
 This codebase is speculative. It is likely to change and 
 as issues are identified. To install you need to download

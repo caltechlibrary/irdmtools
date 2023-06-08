@@ -57,14 +57,19 @@ href="rdmutil.1.html">man page</a> for details.</p>
 <p>This tool is migrating content from an EPrints repository via the
 EPrint REST API. It will retrieve an EPrint XML representation of the
 EPrint record and transform it into a JSON encded simplified record
-nearly compatible with Invenio RDM.</p>
+nearly compatible with Invenio RDM. See the <a
+href="eprint2rdm.1.html">man page</a></p>
+<h3 id="doi2rdm"><code>doi2rdm</code></h3>
+<p>This tool will query the CrossRef API and convert a works record into
+a JSON structure compatible with an RDM record (e.g. to be inserted via
+an RDM API call). See the <a href="doi2rdm.1.html">man page</a></p>
 <h2 id="requirements">Requirements</h2>
 <ul>
 <li>An Invenio RDM deployment</li>
 <li>To building the software and documentation
 <ul>
 <li>git</li>
-<li>Go &gt;= 1.20.1</li>
+<li>Go &gt;= 1.20.4</li>
 <li>Make (e.g. GNU Make)</li>
 <li>Pandoc &gt;= 3</li>
 </ul></li>
@@ -74,7 +79,11 @@ nearly compatible with Invenio RDM.</p>
 &gt;= 2</li>
 </ul></li>
 </ul>
-<h2 id="installation">Installation</h2>
+<h2 id="quick-install">Quick install</h2>
+<p>If you’re running on Linux, macOS or Raspberry Pi OS you may be able
+to installed irdmtools with the following curl command</p>
+<pre><code>curl https://caltechlibrary.github.io/irdmtools/installer.sh | sh</code></pre>
+<h2 id="installation-from-source">Installation from source</h2>
 <p>This codebase is speculative. It is likely to change and as issues
 are identified. To install you need to download the source code and
 compile it. Here’s the steps I take to install irdmtools.</p>
