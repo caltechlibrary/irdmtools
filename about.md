@@ -48,16 +48,17 @@ systems. Current implementation targets Invenio-RDM.
 ### Programming languages
 
 - Go
+- Python
 
 ### Operating Systems
 
 - Linux
-- Windows
 - macOS
+- Windows
 
 ### Software Requiremets
 
-- Go &gt;= 1.20.1
+- Go &gt;= 1.20.4
 - PostgreSQL &gt;= 15
 - PostgREST &gt;= 11
 - MySQL &gt;= 8
