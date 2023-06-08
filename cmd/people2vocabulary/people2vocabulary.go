@@ -95,7 +95,6 @@ func mapField(person *simplified.Person, key string, val string) error {
 		identifier.Identifier = val
 		person.Identifiers = append(person.Identifiers, identifier)
 	case "cl_people_id":
-		//fmt.Fprintf(os.Stderr, "DEBUG key: %q val: %T %q\n", key, val, val)
 		identifier := new(simplified.Identifier)
 		identifier.Scheme = "clpid"
 		identifier.Identifier = val
@@ -263,7 +262,6 @@ func main() {
 						e += 1
 					}
 				}
-				//fmt.Fprintf(os.Stderr, "DEBUG person.Identifiers (%d) -> %s\n", len(peopleList), fmtYAML(person.Identifiers))
 				if clRules {
 					// Check if Caltech affiliation is asserted
 					if ! person.HasAffiliation(caltech) {

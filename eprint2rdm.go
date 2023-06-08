@@ -271,7 +271,6 @@ func customFieldsMetadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.
 		m := map[string]string{}
 		for i := 0; i < eprint.LocalGroup.Length(); i++ {
 			localGroup := eprint.LocalGroup.IndexOf(i)
-			fmt.Fprintf(os.Stderr, "DEBUG localGroup %+v\n", localGroup)
 			m["id"] = localGroup.Value
 			if ! listMapHasID(groups, localGroup.Value) {
 				groups = append(groups, m)
