@@ -276,11 +276,11 @@ func crossrefPersonToCreator(author *crossrefapi.Person, role string) *simplifie
 	if role != "" {
 		creator.Role = mkSimpleRole(role)
 	}
-	
+
 	if len(author.Affiliation) > 0 {
 		for _, crAffiliation := range author.Affiliation {
 			affiliation := crosswalkAuthorAffiliationToCreatorAffiliation(crAffiliation)
-			if ! creator.HasAffiliation(affiliation) {
+			if !creator.HasAffiliation(affiliation) {
 				creator.Affiliations = append(creator.Affiliations, affiliation)
 			}
 		}
@@ -391,8 +391,8 @@ func getPublishedPrint(work *crossrefapi.Works) *simplified.DateType {
 }
 
 func getPublishedOnline(work *crossrefapi.Works) *simplified.DateType {
-	if work.Message != nil && work.Message.PublishedPrint != nil {
-		return crosswalkDateObjectToDateType(work.Message.PublishedPrint, "published online")
+	if work.Message != nil && work.Message.PublishedOnline != nil {
+		return crosswalkDateObjectToDateType(work.Message.PublishedOnline, "published online")
 	}
 	return nil
 }
@@ -400,13 +400,13 @@ func getPublishedOnline(work *crossrefapi.Works) *simplified.DateType {
 func getPublicationDate(work *crossrefapi.Works) string {
 	printDate := getPublishedPrint(work)
 	onlineDate := getPublishedOnline(work)
-	if printDate == nil && onlineDate == nil {
+	if (printDate == nil || printDate.Date == "") && (onlineDate == nil || onlineDate.Date == "") {
 		return ""
 	}
-	if printDate == nil {
+	if printDate == nil || printDate.Date == "" {
 		return onlineDate.Date
 	}
-	if onlineDate == nil {
+	if onlineDate == nil || onlineDate.Date == "" {
 		return printDate.Date
 	}
 	// NOTE: If we get this far we need to compare dates' date strings.
