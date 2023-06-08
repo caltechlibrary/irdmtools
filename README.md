@@ -29,11 +29,7 @@ This tool is for interacting with an Invenio RDM repository.
 
 ### `eprint2rdm`
 
-<<<<<<< HEAD
-This tool is migrating content from an EPrints repository via the EPrint REST API.  It will retrieve an EPrint XML representation of the EPrint record  and transform it into a JSON encded simplified record nearly compatible with Invenio RDM. See the [man page](eprint2rdm.1.md)
-=======
 This tool is migrating content from an EPrints repository via the EPrint REST API.  It will retrieve an EPrint XML representation of the EPrint record  and transform it into a JSON encded simplified record nearly compatible with Invenio RDM.  See the [man page](eprint2rdm.1.md) for details.
->>>>>>> f8ec8ec06d0de4827c7cd76e30c5d613beceef43
 
 ### `doi2rdm`
 
