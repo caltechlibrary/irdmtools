@@ -25,25 +25,40 @@ This tool is for interacting with an Invenio RDM repository.
 - query can retrieve a selection of records from the RDM REST API, it is limited to 10K total returned records by RDM/Elasticsearch's configuration
 - harvest reads a JSON array of record ids from a file and harvests the RDM records into a dataset v2 collection
 
-`rdmutil` configuration is read either from the envinronment or a JSON formated configuration file. See the [man page](rdmutil.1.md) for details.
+`rdmutil` configuration is read either from the envinronment or a JSON formated configuration file.  See the [man page](rdmutil.1.md) for details.
 
 ### `eprint2rdm`
 
+<<<<<<< HEAD
 This tool is migrating content from an EPrints repository via the EPrint REST API.  It will retrieve an EPrint XML representation of the EPrint record  and transform it into a JSON encded simplified record nearly compatible with Invenio RDM. See the [man page](eprint2rdm.1.md)
+=======
+This tool is migrating content from an EPrints repository via the EPrint REST API.  It will retrieve an EPrint XML representation of the EPrint record  and transform it into a JSON encded simplified record nearly compatible with Invenio RDM.  See the [man page](eprint2rdm.1.md) for details.
+>>>>>>> f8ec8ec06d0de4827c7cd76e30c5d613beceef43
 
+### `doi2rdm`
+
+This tool will query the CrossRef API and convert a works record into a JSON structure compatible with an RDM record (e.g. to be inserted via an RDM API call).  See the [man page](eprint2rdm.1.md) for details.
 
 ## Requirements
 
 - An Invenio RDM deployment
 - To building the software and documentation
     - git
-    - Go >= 1.20.1
+    - Go >= 1.20.4
     - Make (e.g. GNU Make)
     - Pandoc >= 3
 - For harvesting content
     - [dataset](https://github.com/caltechlibrary/dataset/) >= 2
 
-## Installation
+## Quick install
+
+If you're running on Linux, macOS or Raspberry Pi OS you may be able to installed irdmtools with the following curl command
+
+~~~
+curl https://caltechlibrary.github.io/irdmtools/installer.sh | sh
+~~~
+
+## Installation from source
 
 This codebase is speculative. It is likely to change and 
 as issues are identified. To install you need to download
