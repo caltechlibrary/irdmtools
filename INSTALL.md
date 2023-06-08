@@ -24,9 +24,9 @@ Requirements
 This may change in the future.
 
 - Git to clone the repository from GitHub
-- [Golang](https://golang.org) 1.20 or better
+- [Golang](https://golang.org) 1.20.4 or better
 - GNU Make
-- Pandoc 2.19 or better (to build documentation)
+- Pandoc 3 or better (to build documentation)
 - Bash 
 - grep
 
