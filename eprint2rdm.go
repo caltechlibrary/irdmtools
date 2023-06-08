@@ -256,6 +256,7 @@ func customFieldsMetadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.
 	if eprint.PlaceOfPub != "" {
 		rec.CustomFields["place_of_publication"] = eprint.Series
 	}
+	//FIXME: Need to handle "event" case, issue #13
 	return nil
 }
 
@@ -367,7 +368,11 @@ func simplifyCreators(eprint *eprinttools.EPrint, rec *simplified.Record) error 
 				if person := itemToPersonOrOrg(item); person != nil {
 					creators = append(creators, &simplified.Creator{
 						PersonOrOrg: person,
-						//Role:        &simplified.Role{},
+						Role:        &simplified.Role{
+							Title: map[string]string{
+								"en": "author",
+							},
+						},
 					})
 				}
 			}
@@ -379,22 +384,30 @@ func simplifyCreators(eprint *eprinttools.EPrint, rec *simplified.Record) error 
 				if org := itemToPersonOrOrg(item); org != nil {
 					creators = append(creators, &simplified.Creator{
 						PersonOrOrg: org,
-						//Role:        &simplified.Role{},
+						Role:        &simplified.Role{
+							Title: map[string]string{
+								"en": "author",
+							},
+						},
 					})
 				}
 			}
 		}
 	}
-	// FIXME: If there are no creators AND their are editors then I need
+	// NOTE: If there are no creators AND their are editors then I need
 	// to create the editor as a creator and add them here instead of
-	// in contributors.
+	// in contributors. This is related to issue #9.
 	if len(creators) == 0 && eprint.Editors.Length() > 0 {
 		for i := 0; i < eprint.Editors.Length(); i++ {
 			if item := eprint.Editors.IndexOf(i); item != nil {
 				if person := itemToPersonOrOrg(item); person != nil {
 					creators = append(creators, &simplified.Creator{
 						PersonOrOrg: person,
-						//Role:        &simplified.Role{},
+						Role:        &simplified.Role{
+							 	Title: map[string]string{
+	                                 "en": "editor",
+								},
+						},
 					})
 				}
 			}

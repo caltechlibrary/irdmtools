@@ -268,6 +268,7 @@ func crossrefPersonToCreator(author *crossrefapi.Person, role string) *simplifie
 	po.GivenName = author.Given
 	if author.Family != "" && author.Given != "" {
 		po.Type = "personal"
+		po.Name = fmt.Sprintf("%s, %s", po.FamilyName, po.GivenName)
 	} else {
 		po.Type = "organization"
 	}
@@ -491,7 +492,10 @@ func CrosswalkCrossRefWork(cfg *Config, work *crossrefapi.Works, resourceTypeMap
 			return nil, err
 		}
 	}
-	/*
+	/* FIXME: Need to know where this it's assignted in simplified model.
+	Also the data I fetch from CrossRef now looks like an alternate short
+	title so works.message["short-container-title"] may not be the right
+	place to fetch this data.
 	if value := getSeries(work); value != "" {
 		if err := SetSeries(rec, value); err != nil {
 			return nil, err
