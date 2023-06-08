@@ -216,8 +216,17 @@ func normalizeEPrintDate(s string) string {
 	return s
 }
 
+func listMapHasID(l []map[string]string, target string) bool {
+	for _, item := range l {
+		if id, ok := item["id"]; ok && id == target {
+			return true
+		}
+	}
+	return false
+}
+
 func customFieldsMetadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record) error {
-/*NOTE: Custom fields for Journal data
+	/*NOTE: Custom fields for Journal data
 	"custom_fields": {
 		"journal:journal": {
 			"issue": "7",
@@ -226,7 +235,7 @@ func customFieldsMetadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.
 			"volume": "645"
 		}
 	},
-*/
+	*/
 	if rec.Metadata == nil {
 		rec.Metadata = new(simplified.Metadata)
 	}
@@ -251,12 +260,44 @@ func customFieldsMetadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.
 		rec.CustomFields["journal:journal"] = m
 	}
 	if eprint.Series != "" {
-		rec.CustomFields["series"] = eprint.Series
+		rec.CustomFields["caltech:series"] = eprint.Series
 	}
 	if eprint.PlaceOfPub != "" {
-		rec.CustomFields["place_of_publication"] = eprint.Series
+		rec.CustomFields["caltech:place_of_publication"] = eprint.PlaceOfPub
 	}
-	//FIXME: Need to handle "event" case, issue #13
+	// NOTE: handle "local_group" mapped from eprint_local_group table.
+	if eprint.LocalGroup != nil && eprint.LocalGroup.Length() > 0 {
+		groups := []map[string]string{}
+		m := map[string]string{}
+		for i := 0; i < eprint.LocalGroup.Length(); i++ {
+			localGroup := eprint.LocalGroup.IndexOf(i)
+			fmt.Fprintf(os.Stderr, "DEBUG localGroup %+v\n", localGroup)
+			m["id"] = localGroup.Value
+			if ! listMapHasID(groups, localGroup.Value) {
+				groups = append(groups, m)
+			}
+		}
+		rec.CustomFields["caltech:groups"] = groups
+	}
+
+	// NOTE: handle "event" case, issue #13
+	if eprint.EventType != "" || eprint.EventTitle != "" ||
+		eprint.EventLocation != "" || eprint.EventDates != "" {
+		m := map[string]string{}
+		if eprint.EventType != "" {
+			m["type"] = eprint.EventType
+		}
+		if eprint.EventTitle != "" {
+			m["title"] = eprint.EventTitle
+		}
+		if eprint.EventLocation != "" {
+			m["place"] = eprint.EventLocation
+		}
+		if eprint.EventDates != "" {
+			m["dates"] = eprint.EventDates
+		}
+		rec.CustomFields["meeting:meeting"] = m
+	}
 	return nil
 }
 
@@ -368,10 +409,8 @@ func simplifyCreators(eprint *eprinttools.EPrint, rec *simplified.Record) error 
 				if person := itemToPersonOrOrg(item); person != nil {
 					creators = append(creators, &simplified.Creator{
 						PersonOrOrg: person,
-						Role:        &simplified.Role{
-							Title: map[string]string{
-								"en": "author",
-							},
+						Role: &simplified.Role{
+							ID: "author",
 						},
 					})
 				}
@@ -384,10 +423,8 @@ func simplifyCreators(eprint *eprinttools.EPrint, rec *simplified.Record) error 
 				if org := itemToPersonOrOrg(item); org != nil {
 					creators = append(creators, &simplified.Creator{
 						PersonOrOrg: org,
-						Role:        &simplified.Role{
-							Title: map[string]string{
-								"en": "author",
-							},
+						Role: &simplified.Role{
+							ID: "author",
 						},
 					})
 				}
@@ -403,10 +440,8 @@ func simplifyCreators(eprint *eprinttools.EPrint, rec *simplified.Record) error 
 				if person := itemToPersonOrOrg(item); person != nil {
 					creators = append(creators, &simplified.Creator{
 						PersonOrOrg: person,
-						Role:        &simplified.Role{
-							 	Title: map[string]string{
-	                                 "en": "editor",
-								},
+						Role: &simplified.Role{
+							ID: "editor",
 						},
 					})
 				}
@@ -741,7 +776,6 @@ func funderFromItem(item *eprinttools.Item) *simplified.Funder {
 	return funder
 }
 
-
 // metadataFromEPrint extracts metadata from the EPrint record
 func metadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record, contributorTypes map[string]string) error {
 	// NOTE: Creators get listed in the citation, Contributors do not.
@@ -792,7 +826,7 @@ func metadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record, cont
 	}
 	if eprint.CopyrightStatement != "" {
 		rights := new(simplified.Right)
-		m := map[string]string {
+		m := map[string]string{
 			"en": eprint.CopyrightStatement,
 		}
 		rights.Description = m
