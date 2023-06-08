@@ -61,5 +61,6 @@ systems. Current implementation targets Invenio-RDM.
 - Go &gt;= 1.20.4
 - PostgreSQL &gt;= 15
 - PostgREST &gt;= 11
+- Pandoc &gt;= 3
 - MySQL &gt;= 8
 - SQLite &gt;= 3
