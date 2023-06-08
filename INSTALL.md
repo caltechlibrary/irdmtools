@@ -26,13 +26,8 @@ This may change in the future.
 - Git to clone the repository from GitHub
 - [Golang](https://golang.org) 1.20.4 or better
 - GNU Make
-<<<<<<< HEAD
-- Pandoc 2.19 or better (to build documentation)
-- Bash
-=======
 - Pandoc 3 or better (to build documentation)
 - Bash 
->>>>>>> 424e22fac1feaffe0f6bd5105941a5b263d1117a
 - grep
 
 Compiling from Source
