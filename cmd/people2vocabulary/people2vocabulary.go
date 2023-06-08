@@ -266,7 +266,7 @@ func main() {
 				//fmt.Fprintf(os.Stderr, "DEBUG person.Identifiers (%d) -> %s\n", len(peopleList), fmtYAML(person.Identifiers))
 				if clRules {
 					// Check if Caltech affiliation is asserted
-					if ! simplified.HasAffiliation(person, caltech) {
+					if ! person.HasAffiliation(caltech) {
 						person.Affiliations = append(person.Affiliations, caltech)
 					}
 				}

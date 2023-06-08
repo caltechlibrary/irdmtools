@@ -118,7 +118,6 @@ func getIssue(work *crossrefapi.Works) string {
 	return ""
 }
 
-
 // getPublisherLocation
 func getPublisherLocation(work *crossrefapi.Works) string {
 	if work.Message != nil && work.Message.PublisherLocation != "" {
@@ -232,9 +231,7 @@ func makeIdentifiers(scheme string, identifierList []string) []*simplified.Ident
 
 func mkSimpleRole(role string) *simplified.Role {
 	return &simplified.Role{
-		Title: map[string]string {
-			"en": role,
-		},
+		ID: role,
 	}
 }
 
@@ -268,24 +265,26 @@ func crossrefPersonToCreator(author *crossrefapi.Person, role string) *simplifie
 	po.GivenName = author.Given
 	if author.Family != "" && author.Given != "" {
 		po.Type = "personal"
+		po.Name = fmt.Sprintf("%s, %s", po.FamilyName, po.GivenName)
 	} else {
 		po.Type = "organization"
 	}
 	if author.ORCID != "" {
 		po.Identifiers = append(po.Identifiers, &simplified.Identifier{
-			Scheme: "orcid",
+			Scheme:     "orcid",
 			Identifier: strings.TrimPrefix(author.ORCID, "http://orcid.org/"),
 		})
-	}
-	if len(author.Affiliation) > 0 {
-		for _, affiliation := range author.Affiliation {
-			po.Affiliations = append(po.Affiliations, crosswalkAuthorAffiliationToCreatorAffiliation(affiliation))
-		}
 	}
 	creator := new(simplified.Creator)
 	creator.PersonOrOrg = po
 	if role != "" {
 		creator.Role = mkSimpleRole(role)
+	}
+	
+	if len(author.Affiliation) > 0 {
+		for _, affiliation := range author.Affiliation {
+			creator.Affiliations = append(creator.Affiliations, crosswalkAuthorAffiliationToCreatorAffiliation(affiliation))
+		}
 	}
 	return creator
 }
@@ -375,7 +374,7 @@ func getSubjects(work *crossrefapi.Works) []*simplified.Subject {
 		subjects := []*simplified.Subject{}
 		for _, s := range work.Message.Subject {
 			if s != "" {
-				subjects = append(subjects, &simplified.Subject {
+				subjects = append(subjects, &simplified.Subject{
 					Subject: s,
 				})
 			}
@@ -435,7 +434,6 @@ func getApproved(work *crossrefapi.Works) *simplified.DateType {
 	return nil
 }
 
-
 // CrosswalkCrossRefWork takes a Works object from the CrossRef API
 // and maps the fields into an simplified Record struct return a
 // new struct or error.
@@ -491,7 +489,10 @@ func CrosswalkCrossRefWork(cfg *Config, work *crossrefapi.Works, resourceTypeMap
 			return nil, err
 		}
 	}
-	/*
+	/* FIXME: Need to know where this it's assignted in simplified model.
+	Also the data I fetch from CrossRef now looks like an alternate short
+	title so works.message["short-container-title"] may not be the right
+	place to fetch this data.
 	if value := getSeries(work); value != "" {
 		if err := SetSeries(rec, value); err != nil {
 			return nil, err
@@ -566,12 +567,12 @@ func CrosswalkCrossRefWork(cfg *Config, work *crossrefapi.Works, resourceTypeMap
 			return nil, err
 		}
 	}
-	if value := getAccepted(work) ; value != nil {
+	if value := getAccepted(work); value != nil {
 		if err := AddDate(rec, value); err != nil {
 			return nil, err
 		}
 	}
-	if value := getApproved(work) ; value != nil {
+	if value := getApproved(work); value != nil {
 		if err := AddDate(rec, value); err != nil {
 			return nil, err
 		}
