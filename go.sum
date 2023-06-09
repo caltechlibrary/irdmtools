@@ -54,6 +54,14 @@ github.com/caltechlibrary/simplified v0.0.16 h1:K4zRAyuIQQrgnq3g3tlPxY3IklUpKy61
 github.com/caltechlibrary/simplified v0.0.16/go.mod h1:T36AVk2yLIhH/0zlM3wTeVEFgcsSn2zqdqFVanntSPc=
 github.com/caltechlibrary/simplified v0.0.17-0.20230608210946-31feb8b6399d h1:rZ+bPhzd8ROiRXxqRQnoWbd8n9j5Ierqu2Ir3hNWJAg=
 github.com/caltechlibrary/simplified v0.0.17-0.20230608210946-31feb8b6399d/go.mod h1:T36AVk2yLIhH/0zlM3wTeVEFgcsSn2zqdqFVanntSPc=
+github.com/caltechlibrary/simplified v0.0.17-0.20230609161207-e1d8fe37f3f8 h1:mszYZIEFQkv0Q5S6tsSEIjvqR+BaC087hH+MAxmTS+w=
+github.com/caltechlibrary/simplified v0.0.17-0.20230609161207-e1d8fe37f3f8/go.mod h1:T36AVk2yLIhH/0zlM3wTeVEFgcsSn2zqdqFVanntSPc=
+github.com/caltechlibrary/simplified v0.0.17-0.20230609161453-2cff248fa48c h1:2pYSiV5ZGMTC1inTRJglAlmqaXiAZZClsRku7xknE8g=
+github.com/caltechlibrary/simplified v0.0.17-0.20230609161453-2cff248fa48c/go.mod h1:T36AVk2yLIhH/0zlM3wTeVEFgcsSn2zqdqFVanntSPc=
+github.com/caltechlibrary/simplified v0.0.17-0.20230609161752-77db5d969d49 h1:1uHERxu8sOjANMH7GUwZiYCGn0VP3gV6Z4emdtovpb4=
+github.com/caltechlibrary/simplified v0.0.17-0.20230609161752-77db5d969d49/go.mod h1:T36AVk2yLIhH/0zlM3wTeVEFgcsSn2zqdqFVanntSPc=
+github.com/caltechlibrary/simplified v0.0.17-0.20230609162239-3a7618200261 h1:K/8AlbT4FunmaEgXIutRoVQ1Dtiov4qg0N8k/9kz6Ws=
+github.com/caltechlibrary/simplified v0.0.17-0.20230609162239-3a7618200261/go.mod h1:T36AVk2yLIhH/0zlM3wTeVEFgcsSn2zqdqFVanntSPc=
 github.com/dustin/go-humanize v1.0.0/go.mod h1:HtrtbFcZ19U5GC7JDqmcUSB87Iq5E25KnS6fMYU6eOk=
 github.com/glebarez/go-sqlite v1.18.1 h1:w0xtxKWktqYsUsXg//SQK+l1IcpKb3rGOQHmMptvL2U=
 github.com/glebarez/go-sqlite v1.18.1/go.mod h1:ydXIGq2M4OzF4YyNhH129SPp7jWoVvgkEgb6pldmS0s=
