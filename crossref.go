@@ -277,10 +277,14 @@ func crossrefPersonToCreator(author *crossrefapi.Person, role string) *simplifie
 		creator.Role = mkSimpleRole(role)
 	}
 
-	if len(author.Affiliation) > 0 {
+	if author.Affiliation != nil && len(author.Affiliation) > 0 {
+		fmt.Fprintf(os.Stderr, "DEBUG creator -> %+v\n", creator)
 		for _, crAffiliation := range author.Affiliation {
+			fmt.Fprintf(os.Stderr, "DEBUG crAffiliation -> %+v\n", crAffiliation)
+
 			affiliation := crosswalkAuthorAffiliationToCreatorAffiliation(crAffiliation)
-			if !creator.HasAffiliation(affiliation) {
+			fmt.Fprintf(os.Stderr, "DEBUG affiliation -> %+v\n", affiliation)
+			if affiliation != nil && creator.HasAffiliation(affiliation) == false {
 				creator.Affiliations = append(creator.Affiliations, affiliation)
 			}
 		}

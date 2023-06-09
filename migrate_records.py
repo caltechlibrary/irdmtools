@@ -98,6 +98,8 @@ def app_setup(app_name):
     exit_on_error = False
 
     # Get access token as environment variable
+    if "C_NAME" in os.environ:
+        c_name = os.environ["C_NAME"]
     if "RDM_URL" in os.environ:
         api_url = os.environ["RDM_URL"]
     if "RDMTOK" in os.environ:
