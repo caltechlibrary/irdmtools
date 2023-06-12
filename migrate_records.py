@@ -272,6 +272,7 @@ if keys != None:
             print(f'    ⟹ skipping eprintid {key.strip()}, it is a tombstone record')
         else:
             #Get the DOI for the record
+            doi = None
             if "identifiers" in data["metadata"]:
                 identifiers = data["metadata"]["identifiers"]
             for identifier in identifiers:

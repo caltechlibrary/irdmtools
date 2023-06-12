@@ -271,7 +271,7 @@ func customFieldsMetadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.
 		m := map[string]string{}
 		for i := 0; i < eprint.LocalGroup.Length(); i++ {
 			localGroup := eprint.LocalGroup.IndexOf(i)
-			m["id"] = localGroup.Value
+			m["id"] = strings.ReplaceAll(localGroup.Value, " ", "-")
 			if ! listMapHasID(groups, localGroup.Value) {
 				groups = append(groups, m)
 			}
@@ -408,9 +408,6 @@ func simplifyCreators(eprint *eprinttools.EPrint, rec *simplified.Record) error 
 				if person := itemToPersonOrOrg(item); person != nil {
 					creators = append(creators, &simplified.Creator{
 						PersonOrOrg: person,
-						Role: &simplified.Role{
-							ID: "author",
-						},
 					})
 				}
 			}
@@ -422,9 +419,6 @@ func simplifyCreators(eprint *eprinttools.EPrint, rec *simplified.Record) error 
 				if org := itemToPersonOrOrg(item); org != nil {
 					creators = append(creators, &simplified.Creator{
 						PersonOrOrg: org,
-						Role: &simplified.Role{
-							ID: "author",
-						},
 					})
 				}
 			}
@@ -806,11 +800,16 @@ func metadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record, cont
 	addRights := false
 	rights := new(simplified.Right)
 	if eprint.Rights != "" {
+
 		addRights = true
 		m := map[string]string{
 			"en": eprint.Rights,
 		}
 		rights.Description = m
+		t := map[string]string {
+			"en": "Other",
+		}
+		rights.Title = t
 	}
 	// Figure out if our copyright information is in the Note field.
 	if (eprint.Note != "") && (strings.Contains(eprint.Note, "©") || strings.Contains(eprint.Note, "copyright") || strings.Contains(eprint.Note, "(c)")) {
