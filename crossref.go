@@ -85,8 +85,6 @@ func getPublisher(work *crossrefapi.Works) string {
 
 // getPublication
 func getPublication(work *crossrefapi.Works) string {
-	//fmt.Fprintf(os.Stderr, "DEBUG container_title -> %+v\n", work.Message.ContainerTitle)
-	//fmt.Fprintf(os.Stderr, "DEBUG type -> %+v\n", work.Message.Type)
 	if work.Message != nil && len(work.Message.ContainerTitle) > 0 {
 		return work.Message.ContainerTitle[0]
 	}
@@ -278,12 +276,9 @@ func crossrefPersonToCreator(author *crossrefapi.Person, role string) *simplifie
 	}
 
 	if author.Affiliation != nil && len(author.Affiliation) > 0 {
-		fmt.Fprintf(os.Stderr, "DEBUG creator -> %+v\n", creator)
 		for _, crAffiliation := range author.Affiliation {
-			fmt.Fprintf(os.Stderr, "DEBUG crAffiliation -> %+v\n", crAffiliation)
 
 			affiliation := crosswalkAuthorAffiliationToCreatorAffiliation(crAffiliation)
-			fmt.Fprintf(os.Stderr, "DEBUG affiliation -> %+v\n", affiliation)
 			if affiliation != nil && creator.HasAffiliation(affiliation) == false {
 				creator.Affiliations = append(creator.Affiliations, affiliation)
 			}
@@ -298,10 +293,17 @@ func crossrefLicenseToRight(license *crossrefapi.License) *simplified.Right {
 	}
 	right := new(simplified.Right)
 	right.Link = license.URL
-	d := map[string]string{
-		"en": "url to license",
+	if license.ContentVersion != "" {
+		cv := map[string]string {
+			"en": license.ContentVersion,
+		}
+		right.Description = cv
+	} else {
+		d := map[string]string{
+			"en": "url to license",
+		}
+		right.Description = d
 	}
-	right.Description = d
 	t := map[string]string{
 		"en": "url",
 	}
