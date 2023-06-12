@@ -128,7 +128,6 @@ func SetSeries(rec *simplified.Record, series string) error {
 	m := rec.CustomFields["caltech:series"].(map[string]interface{})
 	m["series"] = series
 	rec.CustomFields["caltech:series"] = m
-	//fmt.Fprintf(os.Stderr, "DEBUG SetSeries() publication %+v\n", rec.CustomFields)
 	return nil
 }
 
@@ -147,7 +146,6 @@ func SetVolume(rec *simplified.Record, volume string) error {
 	m := rec.CustomFields["journal:journal"].(map[string]interface{})
 	m["volume"] = volume
 	rec.CustomFields["journal:journal"] = m
-	//fmt.Fprintf(os.Stderr, "DEBUG SetVolume() publication %+v\n", rec.CustomFields)
 	return nil
 }
 
@@ -166,7 +164,6 @@ func SetIssue(rec *simplified.Record, issue string) error {
 	m := rec.CustomFields["journal:journal"].(map[string]interface{})
 	m["issue"] = issue
 	rec.CustomFields["journal:journal"] = m
-	//fmt.Fprintf(os.Stderr, "DEBUG SetVolume() publication %+v\n", rec.CustomFields)
 	return nil
 }
 
@@ -186,7 +183,6 @@ func SetPageRange(rec *simplified.Record, pageRange string) error {
 	m := rec.CustomFields["journal:journal"].(map[string]interface{})
 	m["pages"] = pageRange
 	rec.CustomFields["journal:journal"] = m
-	//fmt.Fprintf(os.Stderr, "DEBUG SetPageRange() publication %+v\n", rec.CustomFields)
 	return nil
 }
 
@@ -205,7 +201,6 @@ func SetArticleNumber(rec *simplified.Record, articleNo string) error {
 	m := rec.CustomFields["journal:journal"].(map[string]interface{})
 	m["article_number"] = articleNo
 	rec.CustomFields["journal:journal"] = m
-	//fmt.Fprintf(os.Stderr, "DEBUG SetArticleNumber() publication %+v\n", rec.CustomFields)
 	return nil
 }
 
