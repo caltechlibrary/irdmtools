@@ -35,13 +35,9 @@ with open("journal-names.tsv", "r") as f:
                             )
                 else:
                     if existing:
-                        multiple[issn] = [
-                            existing,
-                            row["Journal Name"],
-                            row["Publisher"],
-                        ]
+                        multiple[issn].append([row["Journal Name"], row["Publisher"]])
                     else:
-                        multiple[issn] = [row["Journal Name"], row["Publisher"]]
+                        multiple[issn] = [[row["Journal Name"], row["Publisher"]]]
             else:
                 vocab.append({"id": issn, "title": {"en": row["Journal Name"]}})
 
@@ -51,5 +47,6 @@ with open("journals.jsonl", "w") as f:
 
 with open("multiple.tsv", "w") as f:
     writer = csv.writer(f, delimiter="\t")
-    for key, value in multiple.items():
-        writer.writerow([key, value])
+    for key, listings in multiple.items():
+        for val in listings:
+            writer.writerow([key, val[0], val[1]])
