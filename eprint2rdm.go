@@ -243,27 +243,32 @@ func customFieldsMetadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.
 		rec.CustomFields = map[string]interface{}{}
 	}
 	if eprint.Type == "article" && eprint.Publication != "" {
-		m := map[string]string{}
-		m["title"] = eprint.Publication
-		if eprint.Number != "" {
-			m["issue"] = eprint.Number
+		if err := SetJournalField(rec, "title", eprint.Publication); err != nil {
+			return err
 		}
-		if eprint.PageRange != "" {
-			m["pages"] = eprint.PageRange
+		if err := SetJournalField(rec, "issue", eprint.Number); err != nil {
+			return err
 		}
-		if eprint.Volume != "" {
-			m["volume"] = eprint.Volume
+		if err := SetJournalField(rec, "pages", eprint.PageRange); err != nil {
+			return err
+		}
+		if err := SetJournalField(rec, "volume", eprint.Volume); err != nil {
+			return err
 		}
 		if eprint.Publisher != "" {
 			rec.Metadata.Publisher = eprint.Publisher
 		}
-		rec.CustomFields["journal:journal"] = m
+		if eprint.ISSN != "" {
+			if err := SetJournalField(rec, "issn", eprint.ISSN); err != nil  {
+				return err
+			}
+		}
 	}
 	if eprint.Series != "" {
-		rec.CustomFields["caltech:series"] = eprint.Series
+		SetCustomField(rec, "caltech:series", "series", eprint.Series)
 	}
 	if eprint.PlaceOfPub != "" {
-		rec.CustomFields["caltech:place_of_publication"] = eprint.PlaceOfPub
+		SetCustomField(rec, "caltech:place_of_publication", "", eprint.PlaceOfPub)
 	}
 	// NOTE: handle "local_group" mapped from eprint_local_group table.
 	if eprint.LocalGroup != nil && eprint.LocalGroup.Length() > 0 {
@@ -276,7 +281,7 @@ func customFieldsMetadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.
 				groups = append(groups, m)
 			}
 		}
-		rec.CustomFields["caltech:groups"] = groups
+		SetCustomField(rec, "caltech:groups", "", groups)
 	}
 
 	// NOTE: handle "event" case, issue #13
@@ -295,7 +300,7 @@ func customFieldsMetadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.
 		if eprint.EventDates != "" {
 			m["dates"] = eprint.EventDates
 		}
-		rec.CustomFields["meeting:meeting"] = m
+		SetCustomField(rec, "meeting:meeting", "", m)
 	}
 	return nil
 }
@@ -892,9 +897,11 @@ func metadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record, cont
 	if eprint.ISBN != "" {
 		rec.Metadata.Identifiers = append(rec.Metadata.Identifiers, mkSimpleIdentifier("isbn", eprint.ISBN))
 	}
+	/* REMOVED: issue #38, remove from alternative identifiers
 	if eprint.ISSN != "" {
 		rec.Metadata.Identifiers = append(rec.Metadata.Identifiers, mkSimpleIdentifier("issn", eprint.ISSN))
 	}
+	*/
 	if eprint.PMCID != "" {
 		if strings.Contains(eprint.PMCID, ",") {
 			pmcids := strings.Split(eprint.PMCID, ",")

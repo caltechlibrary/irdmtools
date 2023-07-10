@@ -4,7 +4,7 @@
 # Run some command line tests to confirm working cli
 #
 
-RC_FILE="test_eprint2rdm.rc"
+RC_FILE="test_eprint2rdm.env"
 
 if ! test -d "testout"; then
 	mkdir -p testout
@@ -18,7 +18,7 @@ fi
 #
 # Basic get keys and harvest
 #
-. test_eprint2rdm.rc
+. test_eprint2rdm.env
 if [[ "$C_NAME" = "" ]]; then
     echo "C_NAME not set, aborting"
     exit 1
@@ -50,7 +50,7 @@ else
 	fi
 fi
 if ! time ./bin/eprint2rdm -id-list testout/eprintids.txt -harvest "$C_NAME" "$EPRINT_HOST"; then
-    ceho "Failed to complete eprint2rdm -id-list testout/eprintids.txt -harvest $C_NAME $EPRINT_HOST"
+    echo "Failed to complete eprint2rdm -id-list testout/eprintids.txt -harvest $C_NAME $EPRINT_HOST"
     exit 1
 fi
 echo "OK, Tests completed."
