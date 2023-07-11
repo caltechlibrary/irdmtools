@@ -656,14 +656,6 @@ func externalPIDFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record) e
 		pid.Client = ""
 		rec.ExternalPIDs["doi"] = pid
 	}
-	// Pickup ISSN
-	if eprint.ISBN != "" {
-		pid := new(simplified.PersistentIdentifier)
-		pid.Identifier = eprint.ISSN
-		pid.Provider = ""
-		pid.Client = ""
-		rec.ExternalPIDs["issn"] = pid
-	}
 	// Pickup ISBN
 	if eprint.ISBN != "" {
 		pid := new(simplified.PersistentIdentifier)
@@ -897,11 +889,6 @@ func metadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record, cont
 	if eprint.ISBN != "" {
 		rec.Metadata.Identifiers = append(rec.Metadata.Identifiers, mkSimpleIdentifier("isbn", eprint.ISBN))
 	}
-	/* REMOVED: issue #38, remove from alternative identifiers
-	if eprint.ISSN != "" {
-		rec.Metadata.Identifiers = append(rec.Metadata.Identifiers, mkSimpleIdentifier("issn", eprint.ISSN))
-	}
-	*/
 	if eprint.PMCID != "" {
 		if strings.Contains(eprint.PMCID, ",") {
 			pmcids := strings.Split(eprint.PMCID, ",")
