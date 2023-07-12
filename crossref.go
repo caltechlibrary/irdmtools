@@ -152,23 +152,21 @@ func getArticleNumber(work *crossrefapi.Works) string {
 }
 
 // getISBNs
-func getISBNs(work *crossrefapi.Works) []*simplified.Identifier {
-	isbns := []*simplified.Identifier{}
+func getISBNs(work *crossrefapi.Works) []string {
+	isbns := []string{}
 	if work.Message != nil && work.Message.ISBN != nil {
 		for _, value := range work.Message.ISBN {
-			isbns = append(isbns, mkSimpleIdentifier("isbn", value))
+			isbns = append(isbns, value)
 		}
 	}
 	return isbns
 }
 
 // getISSNs
-func getISSNs(work *crossrefapi.Works) []string { //*simplified.Identifier {
-	//issns := []*simplified.Identifier{}
+func getISSNs(work *crossrefapi.Works) []string { 
 	issns := []string{}
 	if work.Message != nil && work.Message.ISSN != nil {
 		for _, value := range work.Message.ISSN {
-			//issns = append(issns, &simplified.Identifier{Scheme: "issn", Identifier: value})
 			issns = append(issns, value)
 		}
 	}
@@ -532,19 +530,18 @@ func CrosswalkCrossRefWork(cfg *Config, work *crossrefapi.Works, resourceTypeMap
 		}
 	}
 	if values := getISBNs(work); values != nil && len(values) > 0 {
-		if err := AddRelatedIdentifiers(rec, values); err != nil {
+		if err := SetImprintField(rec, "isbn", values); err != nil {
 			return nil, err
 		}
 	}
-	if values := getISSNs(work); values != nil && len(values) > 0 {
-		/* REPLACE: issue #38, issn should go in the Journal CustomField.
-		if err := AddRelatedIdentifiers(rec, values); err != nil {
+	if values := getISSNs(work); len(values) > 0 {
+		if err := SetJournalField(rec, "issn", values[0]); err != nil {
 			return nil, err
 		}
-		*/
-		//FIXME: How to we handle issn for electronic versus issn for print?
-		if err := SetJournalField(rec, "issn", values); err != nil {
-			return nil, err
+		if len(values) > 1 {
+			for i := 1; i < len(values); i++ {
+				AddRelatedIdentifier(rec, "issn", values[i])
+			}
 		}
 	}
 	if values := getFunding(work); values != nil && len(values) > 0 {
@@ -552,13 +549,6 @@ func CrosswalkCrossRefWork(cfg *Config, work *crossrefapi.Works, resourceTypeMap
 			return nil, err
 		}
 	}
-	/* Removed per issue #10
-	if values := getLinks(work); values != nil && len(values) > 0 {
-		if err := AddRelatedIdentifiers(rec, values); err != nil {
-			return nil, err
-		}
-	}
-	*/
 	if values := getLicenses(work); values != nil {
 		if err := AddRights(rec, values); err != nil {
 			return nil, err

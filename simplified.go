@@ -3,6 +3,7 @@ package irdmtools
 import (
 	"fmt"
 	//"os"
+	"strings"
 
 	// Caltech Library Package
 	"github.com/caltechlibrary/simplified"
@@ -63,8 +64,12 @@ func SetCreators(rec *simplified.Record, creators []*simplified.Creator) error {
 	return nil
 }
 
-func SetContributors(rec *simplified.Record, creators []*simplified.Creator) error {
-	return fmt.Errorf("SetContributors() not implemented")
+func SetContributors(rec *simplified.Record, contributors []*simplified.Creator) error {
+	if rec.Metadata == nil {
+		rec.Metadata = new(simplified.Metadata)
+	}
+	rec.Metadata.Contributors = contributors
+	return nil
 }
 
 func AddRelatedIdentifiers(rec *simplified.Record, identifiers []*simplified.Identifier) error {
@@ -73,6 +78,23 @@ func AddRelatedIdentifiers(rec *simplified.Record, identifiers []*simplified.Ide
 	}
 	return nil
 }
+
+func AddRelatedIdentifier(rec *simplified.Record, scheme string, identifier string) error {
+	if rec.Metadata == nil {
+		rec.Metadata = new(simplified.Metadata)
+	}
+	if rec.Metadata.Identifiers == nil {
+		rec.Metadata.Identifiers = []*simplified.Identifier{}
+	}
+	obj := new(simplified.Identifier)
+	obj.Scheme = scheme
+	obj.Identifier = identifier
+	rec.Metadata.Identifiers = append(rec.Metadata.Identifiers, obj)
+	return nil
+}
+
+
+
 
 func SetCustomField(rec *simplified.Record, customField string, key string, value interface{}) error {
 	if rec.CustomFields == nil {
@@ -92,6 +114,16 @@ func SetCustomField(rec *simplified.Record, customField string, key string, valu
 	return nil
 }
 
+func SetImprintField(rec *simplified.Record, key string, value interface{}) error {
+	// NOTE: Journal fields are going under the "custom_fields" off the root
+	// metadata object in RDM v12.
+	return SetCustomField(rec, "imprint:imprint", key, value)
+}
+
+func SetEdition(rec *simplified.Record, edition string) error {
+	return SetImprintField(rec, "edition", edition)
+}
+
 func SetJournalField(rec *simplified.Record, key string, value interface{}) error {
 	// NOTE: Journal fields are going under the "custom_fields" off the root
 	// metadata object in RDM v12.
@@ -103,6 +135,32 @@ func SetPublication(rec *simplified.Record, publication string) error {
 		rec.Metadata = new(simplified.Metadata)
 	}
 	return SetJournalField(rec, "title", publication)
+}
+
+func SetPublisherLocation (rec *simplified.Record, place string) error {
+	if rec.Metadata == nil {
+		rec.Metadata = new(simplified.Metadata)
+	}
+	return SetJournalField(rec, "place", place)
+}
+
+func SetPublicationDateByType(rec *simplified.Record, dt string, publicationType string) error {
+	if rec.Metadata == nil {
+		rec.Metadata = new(simplified.Metadata)
+	}
+	// FIXME: Shouldn't publication_date being the dates array with a type?
+	rec.Metadata.PublicationDate = dt
+	switch publicationType {
+	case "article":
+		return SetJournalField(rec, "publication_date", dt)
+	case "book":
+		return SetImprintField(rec, "publication_date", dt)
+	case "book_section":
+		return SetImprintField(rec, "publication_date", dt)
+	case "monograph":
+		return SetImprintField(rec, "publication_date", dt)
+	}
+	return nil
 }
 
 func SetPublisher(rec *simplified.Record, publisher string) error {
@@ -119,10 +177,6 @@ func SetPublicationDate(rec *simplified.Record, pubDate string) error {
 	}
 	rec.Metadata.PublicationDate = pubDate
 	return nil
-}
-
-func SetPublisherLocation(rec *simplified.Record, publisherLocation string) error {
-	return fmt.Errorf("SetPublisherLocation() not implemented")
 }
 
 func SetSeries(rec *simplified.Record, series string) error {
@@ -190,6 +244,30 @@ func AddSubjects(rec *simplified.Record, subjects []*simplified.Subject) error {
 	return nil
 }
 
+func AddSubject(rec *simplified.Record, subject string) error {
+	if rec.Metadata == nil {
+		rec.Metadata = new(simplified.Metadata)
+	}
+	if rec.Metadata.Subjects == nil {
+		rec.Metadata.Subjects = []*simplified.Subject{}
+	}
+	obj := new(simplified.Subject)
+	obj.Subject = strings.TrimSpace(subject)
+	rec.Metadata.Subjects = append(rec.Metadata.Subjects, obj)
+	return nil
+}
+
+func AddKeyword(rec *simplified.Record, keyword string) error {
+	if rec.Metadata == nil {
+		rec.Metadata = new(simplified.Metadata)
+	}
+	obj := new(simplified.Subject)
+	obj.Subject = strings.TrimSpace(keyword)
+	rec.Metadata.Subjects = append(rec.Metadata.Subjects, obj)
+	return nil
+}
+
+
 func AddDate(rec *simplified.Record, dt *simplified.DateType) error {
 	if dt != nil {
 		if rec.Metadata == nil {
@@ -208,10 +286,6 @@ func AddDate(rec *simplified.Record, dt *simplified.DateType) error {
 }
 
 
-func AddBookTitle(rec *simplified.Record, bookTitle string) error {
-	return fmt.Errorf("AddBookTitle() not implemented.")
-}
-
 func AddFunder(rec *simplified.Record, funder *simplified.Funder) error {
 	if rec.Metadata == nil {
 		rec.Metadata = new(simplified.Metadata)
@@ -223,21 +297,16 @@ func AddFunder(rec *simplified.Record, funder *simplified.Funder) error {
 	return nil
 }
 
-func AddPublicationDate(rec *simplified.Record, dt string, publicationType string) error {
-	return fmt.Errorf("AddPublicationDate() not implemented.")
+func SetFunding(rec *simplified.Record, funding []*simplified.Funder) error {
+	for _, funder := range funding {
+		if err := AddFunder(rec, funder); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
-func SetEdition(rec *simplified.Record, edition string) error {
-	return fmt.Errorf("SetEdition() not implemented.")
-}
-
-func AddSubject(rec *simplified.Record, subject string) error {
-	return fmt.Errorf("AddSubject() not implemented.")
-}
-
-func AddKeyword(rec *simplified.Record, keyword string) error {
-	return fmt.Errorf("AddKeyword() not implemented")
-}
+// FIXME: Need to implement the following functions
 
 func SetFullTextStatus(rec *simplified.Record, status bool) error {
 	return fmt.Errorf("SetFullTextStatus() not implemented")
@@ -259,11 +328,3 @@ func SetPresentationType(rec *simplified.Record, presentationType string) error 
 	return fmt.Errorf("SetPresentationType() not implemented")
 }
 
-func SetFunding(rec *simplified.Record, funding []*simplified.Funder) error {
-	for _, funder := range funding {
-		if err := AddFunder(rec, funder); err != nil {
-			return err
-		}
-	}
-	return nil
-}
