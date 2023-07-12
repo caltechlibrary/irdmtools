@@ -233,6 +233,12 @@ func customFieldsMetadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.
 			"pages": "15-23",
 			"title": "Nature",
 			"volume": "645"
+		},
+		"imprint:imprint": {
+			"isbn": "978-3-16-148410-0",
+            "pages": "12-15",
+            "title": "Book title",
+            "place": "Location, place"
 		}
 	},
 	*/
@@ -258,16 +264,21 @@ func customFieldsMetadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.
 		if eprint.Publisher != "" {
 			rec.Metadata.Publisher = eprint.Publisher
 		}
+		if eprint.Series != "" {
+			if err := SetJournalField(rec, "series", eprint.Series); err != nil  {
+				return err
+			}
+		}
 		if eprint.ISSN != "" {
 			if err := SetJournalField(rec, "issn", eprint.ISSN); err != nil  {
 				return err
 			}
 		}
 	}
-	if eprint.Series != "" {
+	if eprint.Series != "" && eprint.ISBN == "" {
 		SetCustomField(rec, "caltech:series", "series", eprint.Series)
 	}
-	if eprint.PlaceOfPub != "" {
+	if eprint.PlaceOfPub != "" && eprint.ISBN == "" {
 		SetCustomField(rec, "caltech:place_of_publication", "", eprint.PlaceOfPub)
 	}
 	// NOTE: handle "local_group" mapped from eprint_local_group table.
@@ -302,6 +313,13 @@ func customFieldsMetadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.
 		}
 		SetCustomField(rec, "meeting:meeting", "", m)
 	}
+
+	// FIXME: Handle subjects
+	if eprint.Subjects != nil && eprint.Subjects.Length() > 0 {
+	}
+
+	// FIXME: Handle non-subject keyswords
+
 	return nil
 }
 
@@ -656,16 +674,6 @@ func externalPIDFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record) e
 		pid.Client = ""
 		rec.ExternalPIDs["doi"] = pid
 	}
-	// Pickup ISBN
-	if eprint.ISBN != "" {
-		pid := new(simplified.PersistentIdentifier)
-		pid.Identifier = eprint.ISBN
-		pid.Provider = ""
-		pid.Client = ""
-		rec.ExternalPIDs["isbn"] = pid
-	}
-	//FIXME: figure out if we have other persistent identifiers
-	//scattered in the EPrints XML and map them.
 	return nil
 }
 
@@ -797,7 +805,6 @@ func metadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record, cont
 	addRights := false
 	rights := new(simplified.Right)
 	if eprint.Rights != "" {
-
 		addRights = true
 		m := map[string]string{
 			"en": eprint.Rights,
@@ -819,6 +826,8 @@ func metadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record, cont
 	if addRights {
 		rec.Metadata.Rights = append(rec.Metadata.Rights, rights)
 	}
+	// FIXME: work with Tom to sort out how "Rights" and document level
+	// copyright info should work.
 	if eprint.CopyrightStatement != "" {
 		rights := new(simplified.Right)
 		m := map[string]string{
@@ -827,14 +836,18 @@ func metadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record, cont
 		rights.Description = m
 		rec.Metadata.Rights = append(rec.Metadata.Rights, rights)
 	}
-	// FIXME: work with Tom to sort out how "Rights" and document level
-	// copyright info should work.
 
+	// Handle Subjects and Keywords
 	if (eprint.Subjects != nil) && (eprint.Subjects.Items != nil) {
 		for _, item := range eprint.Subjects.Items {
-			subject := new(simplified.Subject)
-			subject.Subject = item.Value
-			rec.Metadata.Subjects = append(rec.Metadata.Subjects, subject)
+			AddSubject(rec, item.Value)
+		}
+	}
+	if eprint.Keywords != "" {
+		if strings.Contains(eprint.Keywords, ";") {
+			for _, keyword := range strings.Split(eprint.Keywords, ";") {
+				AddKeyword(rec, keyword)
+			}
 		}
 	}
 
@@ -887,7 +900,19 @@ func metadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record, cont
 		rec.Metadata.Identifiers = append(rec.Metadata.Identifiers, mkSimpleIdentifier("doi", eprint.DOI))
 	}
 	if eprint.ISBN != "" {
-		rec.Metadata.Identifiers = append(rec.Metadata.Identifiers, mkSimpleIdentifier("isbn", eprint.ISBN))
+		SetImprintField(rec, "isbn", eprint.ISBN)
+		if eprint.BookTitle != "" {
+			SetImprintField(rec, "title", eprint.BookTitle)
+		}
+		if eprint.PageRange != "" {
+			SetImprintField(rec, "pages", eprint.PageRange)
+		}
+		if eprint.PlaceOfPub != "" {
+			SetImprintField(rec, "place", eprint.PlaceOfPub)
+		}
+		if eprint.Series != "" {
+			SetImprintField(rec, "series", eprint.Series)
+		}
 	}
 	if eprint.PMCID != "" {
 		if strings.Contains(eprint.PMCID, ",") {
