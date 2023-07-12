@@ -74,23 +74,35 @@ func AddRelatedIdentifiers(rec *simplified.Record, identifiers []*simplified.Ide
 	return nil
 }
 
+func SetCustomField(rec *simplified.Record, customField string, key string, value interface{}) error {
+	if rec.CustomFields == nil {
+		rec.CustomFields = make(map[string]interface{})
+	}
+	if key == "" {
+		rec.CustomFields[customField] = value
+	} else {
+		_, ok := rec.CustomFields[customField]
+		if ! ok {
+			rec.CustomFields[customField] = make(map[string]interface{})
+		}
+		m := rec.CustomFields[customField].(map[string]interface{})
+		m[key] = value
+		rec.CustomFields[customField] = m
+	}
+	return nil
+}
+
+func SetJournalField(rec *simplified.Record, key string, value interface{}) error {
+	// NOTE: Journal fields are going under the "custom_fields" off the root
+	// metadata object in RDM v12.
+	return SetCustomField(rec, "journal:journal", key, value)
+}
+
 func SetPublication(rec *simplified.Record, publication string) error {
 	if rec.Metadata == nil {
 		rec.Metadata = new(simplified.Metadata)
 	}
-	// NOTE: Journal fields are going under the "custom_fields" off the root
-	// metadata object in RDM 12.
-	if rec.CustomFields == nil {
-		rec.CustomFields = make(map[string]interface{})
-	}
-	_, ok := rec.CustomFields["journal:journal"]
-	if ! ok {
-		rec.CustomFields["journal:journal"] = make(map[string]interface{})
-	}
-	m := rec.CustomFields["journal:journal"].(map[string]interface{})
-	m["title"] = publication
-	rec.CustomFields["journal:journal"] = m
-	return nil
+	return SetJournalField(rec, "title", publication)
 }
 
 func SetPublisher(rec *simplified.Record, publisher string) error {
@@ -117,18 +129,9 @@ func SetSeries(rec *simplified.Record, series string) error {
 	if rec.Metadata == nil {
 		rec.Metadata = new(simplified.Metadata)
 	}
-	// NOTE: Journal content goes in journal:journal custom fields.
-	if rec.CustomFields == nil {
-		rec.CustomFields = make(map[string]interface{})
-	}
-	_, ok := rec.CustomFields["caltech:series"]
-	if ! ok {
-		rec.CustomFields["caltech:series"] = make(map[string]interface{})
-	}
-	m := rec.CustomFields["caltech:series"].(map[string]interface{})
-	m["series"] = series
-	rec.CustomFields["caltech:series"] = m
-	return nil
+	// NOTE: Journal content goes in journal:journal custom fields except
+	// for series, which goes in caltech:series.series
+	return SetCustomField(rec, "caltech:series", "series", series)
 }
 
 func SetVolume(rec *simplified.Record, volume string) error {
@@ -136,17 +139,7 @@ func SetVolume(rec *simplified.Record, volume string) error {
 		rec.Metadata = new(simplified.Metadata)
 	}
 	// NOTE: Journal content goes in journal:journal custom fields.
-	if rec.CustomFields == nil {
-		rec.CustomFields = make(map[string]interface{})
-	}
-	_, ok := rec.CustomFields["journal:journal"]
-	if ! ok {
-		rec.CustomFields["journal:journal"] = make(map[string]interface{})
-	}
-	m := rec.CustomFields["journal:journal"].(map[string]interface{})
-	m["volume"] = volume
-	rec.CustomFields["journal:journal"] = m
-	return nil
+	return SetJournalField(rec, "volume", volume)
 }
 
 func SetIssue(rec *simplified.Record, issue string) error {
@@ -154,17 +147,7 @@ func SetIssue(rec *simplified.Record, issue string) error {
 		rec.Metadata = new(simplified.Metadata)
 	}
 	// NOTE: Journal content goes in journal:journal custom fields.
-	if rec.CustomFields == nil {
-		rec.CustomFields = make(map[string]interface{})
-	}
-	_, ok := rec.CustomFields["journal:journal"]
-	if ! ok {
-		rec.CustomFields["journal:journal"] = make(map[string]interface{})
-	}
-	m := rec.CustomFields["journal:journal"].(map[string]interface{})
-	m["issue"] = issue
-	rec.CustomFields["journal:journal"] = m
-	return nil
+	return SetJournalField(rec, "issue", issue)
 }
 
 
@@ -173,35 +156,16 @@ func SetPageRange(rec *simplified.Record, pageRange string) error {
 		rec.Metadata = new(simplified.Metadata)
 	}
 	// NOTE: Journal content goes in journal:journal custom fields.
-	if rec.CustomFields == nil {
-		rec.CustomFields = make(map[string]interface{})
-	}
-	_, ok := rec.CustomFields["journal:journal"]
-	if ! ok {
-		rec.CustomFields["journal:journal"] = make(map[string]interface{})
-	}
-	m := rec.CustomFields["journal:journal"].(map[string]interface{})
-	m["pages"] = pageRange
-	rec.CustomFields["journal:journal"] = m
-	return nil
+	return SetJournalField(rec, "pages", pageRange)
 }
 
 func SetArticleNumber(rec *simplified.Record, articleNo string) error {
 	if rec.Metadata == nil {
 		rec.Metadata = new(simplified.Metadata)
 	}
-	// NOTE: Journal content goes in journal:journal custom fields.
-	if rec.CustomFields == nil {
-		rec.CustomFields = make(map[string]interface{})
-	}
-	_, ok := rec.CustomFields["journal:journal"]
-	if ! ok {
-		rec.CustomFields["journal:journal"] = map[string]interface{}{}
-	}
-	m := rec.CustomFields["journal:journal"].(map[string]interface{})
-	m["article_number"] = articleNo
-	rec.CustomFields["journal:journal"] = m
-	return nil
+	// NOTE: Per issue #37, Article Number should go in pages.
+	//return SetJournalField(rec, "article_number", articleNo)
+	return SetJournalField(rec, "pages", articleNo)
 }
 
 func AddRights(rec *simplified.Record, rights []*simplified.Right) error {

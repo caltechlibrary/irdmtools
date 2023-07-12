@@ -163,11 +163,13 @@ func getISBNs(work *crossrefapi.Works) []*simplified.Identifier {
 }
 
 // getISSNs
-func getISSNs(work *crossrefapi.Works) []*simplified.Identifier {
-	issns := []*simplified.Identifier{}
+func getISSNs(work *crossrefapi.Works) []string { //*simplified.Identifier {
+	//issns := []*simplified.Identifier{}
+	issns := []string{}
 	if work.Message != nil && work.Message.ISSN != nil {
 		for _, value := range work.Message.ISSN {
-			issns = append(issns, &simplified.Identifier{Scheme: "issn", Identifier: value})
+			//issns = append(issns, &simplified.Identifier{Scheme: "issn", Identifier: value})
+			issns = append(issns, value)
 		}
 	}
 	return issns
@@ -535,7 +537,13 @@ func CrosswalkCrossRefWork(cfg *Config, work *crossrefapi.Works, resourceTypeMap
 		}
 	}
 	if values := getISSNs(work); values != nil && len(values) > 0 {
+		/* REPLACE: issue #38, issn should go in the Journal CustomField.
 		if err := AddRelatedIdentifiers(rec, values); err != nil {
+			return nil, err
+		}
+		*/
+		//FIXME: How to we handle issn for electronic versus issn for print?
+		if err := SetJournalField(rec, "issn", values); err != nil {
 			return nil, err
 		}
 	}
