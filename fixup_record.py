@@ -60,6 +60,15 @@ object as an Invenio-RDM structure.
 
 ''')
 
+def read_eprintids(f_name):
+    keys = []
+    with open(f_name) as f:
+        for line in f:
+            keys.append(line.strip())
+    if len(keys) == 0:
+        return [], f'No keys found in {f_name}'
+    return keys, '' 
+    
 def app_setup(app_name):
     c_name = None
     keys = None
@@ -81,6 +90,11 @@ def app_setup(app_name):
         "-version",
         action = 'store_true',
         help = "display version",
+    )
+    parser.add_argument(
+        "-eprintids",
+        action = 'store',
+        help = 'read eprint ids from file'
     )
     parser.add_argument(
         "c_name",
@@ -115,7 +129,11 @@ def app_setup(app_name):
             keys = args.keys[:]
         else:
             keys = [args.keys]
-    
+    if args.eprintids:
+        keys, err = read_eprintids(args.eprintids)
+        if err != '':
+            print(err, file = os.stderr)
+            sys.exit(1)
     return c_name, keys
 
 #
@@ -151,7 +169,7 @@ if isinstance(keys, list) and len(keys) > 0:
             if dataset.has_key(c_name, key) == True:
                 rec, err = dataset.read(c_name, key)
                 if err != '':
-                    print(f'{err}')
+                    print(f'error ({i}) {err}', file = os.stderr)
                     sys.exit(1)
                 rec = fixup_record(rec, files = None)
                 print(json.dumps(rec, indent = 4))

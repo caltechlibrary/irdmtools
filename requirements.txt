@@ -1,3 +1,4 @@
+idutils
 progressbar2
 s3fs
 caltechdata_api
