@@ -1,6 +1,8 @@
-
+import os
 import sys
 import json
+import idutils
+from urllib.parse import urlparse
 
 # Roles defined for person_or_org scheme
 defined_roles = [
@@ -38,8 +40,52 @@ def get_dict_path(obj, args = []):
             return get_dict_path(obj[arg], args[1:])
     return None
 
+def normalize_doi(doi = None):
+    '''vet and normalize DOI'''
+    if doi != None and idutils.is_doi(doi):
+        return idutils.normalize_doi(doi)
+    return None
+
+def normalize_pmcid(pmcid = None):
+    '''normalize PCM ids to just the id, trim from URL if needed.'''
+    if pmcid != None:
+        if idutils.is_url(pmcid):
+            u = urlparse(pmcid)
+            pmcid = os.path.basename(u.path.rstrip('/')).lower()
+        else:
+            pmcid = pmcid.lower()
+    return pmcid
+
+def normalize_arxiv(arxiv = None):
+    '''vet and normalize an arxiv'''
+    if idutils.is_arxiv(arxiv) and not idutils.is_doi(arxiv):
+        return idutils.normalize_arxiv(arxiv)
+    return None
+
+def normalize_ads(ads = None):
+    '''vet and normalize an ads id'''
+    if idutils.is_ads(ads):
+        return idutils.normalize_ads(ads)
+    return None
+
+def normalize_pub(pub_url = None, doi = None):
+    '''vet and normalize a publication url, uses whitelist matching'''
+    if idutils.is_url(pub_url):
+        u = urlparse(pub_url)
+        if 'host' in u:
+            if u.host in [ 'rdcu.be', 'geoscienceworld' ]:
+                return pub_url
+            elif doi != None and doi.startswith('10.1364/') and u.host == 'ieeexplore.ieee.org' :
+                return pub_url
+        elif 'netloc' in u:
+            if u.netloc in [ 'rdcu.be', 'geoscienceworld' ]:
+                return pub_url
+            elif doi != None and doi.startswith('10.1364/') and u.netloc == 'ieeexplore.ieee.org' :
+                return pub_url
+    return None
+
 # fixup_record takes the simple record and files dict making final 
-# to the record changes suitable for importing into Invenio-RDM.
+# record changes suitable before importing into Invenio-RDM.
 #
 # This include things like crosswalking vocabularies to map from an
 # existing Caltech Library EPrints repository to 
@@ -54,7 +100,7 @@ def fixup_record(record, files):
     normlzied record dict that is a for migration into Invenio-RDM.
     """
     record_id = get_dict_path(record, ["pid", "id"])
-    #FIXME: sort out who these fields should be structured then
+    #FIXME: sort out how these fields should be structured then
     # update the eprinttools simple.go and crosswalk.go to reflect
     # correction and remove this code.
     if "access" in record:
@@ -103,9 +149,6 @@ def fixup_record(record, files):
                 role_id = get_dict_path(contributor, [ "role", "id"])
                 if not role_id in defined_roles:
                     record["metadata"]["contributors"][i]["role"]["id"] = "other"
-
-
-            
         # Fixup alternative title types
         if "additional_titles" in record["metadata"]:
             for i, title in enumerate(record["metadata"]["additional_titles"]):
@@ -117,7 +160,6 @@ def fixup_record(record, files):
                         }
                     }
                     record["metadata"]["additional_titles"][i] = title
-
         if "contributors" in record["metadata"]:
             for i, contributor in enumerate(record["metadata"]["contributors"]):
                 if "person_or_org" in contributor and not 'name' in contributor['person_or_org']:
@@ -129,8 +171,6 @@ def fixup_record(record, files):
                         print(json.dumps(record, indent = 4))
                         print(f'ERROR: (id: {record_id}) contributor missing family name')
                         sys.exit(1)
-
-
     # Map the eprintid to the identifier list
     if "pid" in record and "id" in record["pid"] and "eprint" in record["pid"] and record["pid"]["eprint"] == "eprintid":
         eprintid = record["pid"]["id"]
@@ -138,8 +178,72 @@ def fixup_record(record, files):
             record["metadata"]["identifier"].append({ "scheme": "eprintid", "identifier": f"eprintid" })
     if not files:
         record["files"] = { "enabled": False, "order": [] }
-    
+    # Normalize DOI, issue #39
+    doi = normalize_doi(get_dict_path(record, ['pids', 'doi', 'identifier']))
+    if doi != None:
+        record['pids']['doi']['identifier'] = doi
 
-    # Normalize funder structures
+    # Run through related URLs, if DOI then normalize DOI, if DOI match pids.doi.identifier then discard related url value, issue #39
+    identifiers = get_dict_path(record, [ 'metadata', 'identifiers'])
+    if identifiers != None:
+        # Find a PMCID in the indenitifiers ro compare with pmc id ...
+        pmcid = None
+        for identifier in identifiers:
+            scheme = get_dict_path(identifier, ['scheme'])
+            if scheme == 'pmcid':
+                pmcid = normalize_pmcid(get_dict_path(identifier, ['identifier']))
+        keep_identifiers = []
+        for identifier in identifiers:
+            scheme = get_dict_path(identifier, ['scheme'])
+            if scheme != None:
+                if scheme == 'doi':
+                    related_doi = normalize_doi(get_dict_path(identifier, ['identifier']))
+                    if related_doi != None:
+                        identifier['identifier'] = related_doi
+                        if related_doi != doi:
+                            keep_identifiers.append(identifier)
+                elif scheme == 'pmcid':
+                    related_pmcid = normalize_pmcid(get_dict_path(identifier, [ 'identifier']))
+                    if related_pmcid != None:
+                        identifier['identifier'] = related_pmcid
+                        keep_identifiers.append(identifier)
+                elif scheme == 'pmc':
+                    related_pmcid = normalize_pmcid(get_dict_path(identifier, ['identifier']))
+                    if related_pmcid != None:
+                        identifier['scheme'] = 'pcmid'
+                        identifier['identifier'] = related_pmcid
+                        if related_pmcid != pmcid:
+                            keep_identifiers.append(identifier)
+                elif scheme == 'arxiv':
+                    related_arxiv = normalize_arxiv(get_dict_path(identifier, ['identifier']))
+                    if related_arxiv != None:
+                        identifier['identifier'] = related_arxiv
+                        keep_identifiers.append(identifier)
+                elif scheme == 'ads':
+                    related_ads = normalize_ads(get_dict_path(identifier, ['identifier']))
+                    if related_ads != None:
+                        identifier['identifier'] = related_ads
+                        keep_identifiers.append(identifier)
+                elif scheme == 'pub':
+                    related_pub = normalize_pub(get_dict_path(identifier, ['identifier']), doi)
+                    if related_pub != None:
+                        identifier['identifier'] = related_pub
+                        keep_identifiers.append(identifier)
+                elif scheme == 'eprintid':
+                    keep_identifiers.append(identifier)
+                else:
+                    if 'identifier' in identifier and identifier['identifier'].strip() != "":
+                        if idutils.is_url(identifier['identifier']):
+                            identifier['scheme'] = 'url'
+                            identifier['identifier'] = identifier['identifier']
+                            keep_identifiers.append(identifier)
+            else:
+                keep_identifiers.append(identifier)
+        if len(keep_identifiers) > 0:
+            record['metadata']['identifiers'] = keep_identifiers
+        else:
+            del record['metadata']['identifiers']
+
+    # FIXME: Normalize funder structures
     return record
 

@@ -8,7 +8,7 @@ import random
 import argparse
 
 import progressbar
-from irdm import IRDM_Client, license_text, version_text, get_dict_path
+from irdm import IRDM_Client, license_text, version_text, get_dict_path, fixup_record
 from py_dataset import dataset
 
 def usage(app_name):
@@ -231,6 +231,13 @@ def stop_on_exception(stop, key, err):
        return True
     return False
 
+def exclude_resource_types(data, data_types = []):
+    if 'metadata' in data:
+        if 'resource_type' in data['metadata']:
+            if 'id' in data['metadata']['resource_type']:
+                if data['metadata']['resource_type']['id'] in data_types:
+                    return True
+    return False
 #
 # Main processing
 #
@@ -270,16 +277,22 @@ if keys != None:
             continue
         if 'tombstone' in data:
             print(f'    ⟹ skipping eprintid {key.strip()}, it is a tombstone record')
+        elif exclude_resource_types(data, ['website']):
+            print(f'    ⟹ skipping eprintid {key.strip()}, it is an excluded record type "{data["metadata"]["resource_type"]["id"]}"')
         else:
+            # NOTE: We have a simple record we want to add do final fixups
+            # before proceeding.
+            data = fixup_record(data, files = None)
+
             #Get the DOI for the record
-            doi = None
-            if "identifiers" in data["metadata"]:
-                identifiers = data["metadata"]["identifiers"]
-            for identifier in identifiers:
-                if identifier["scheme"] == "doi":
-                    doi = identifier["identifier"]
+            doi = get_dict_path(data, [ 'pids', 'doi', 'identifier'])
+
             #Need to add a check here against DOIs already submitted
             #If DOI has already been submitted set doi = None
+            # FIXME: Implement issue #15 here. Need to emmit successfully 
+            # submitted to a list DOI that is read in at start up.
+            # If DOI has already been submitted then we need to move the DOI
+            # into the alt identifier list.
             try:
                 response = client.create(
                     data, doi=doi

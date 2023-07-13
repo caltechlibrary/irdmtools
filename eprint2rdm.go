@@ -227,20 +227,20 @@ func listMapHasID(l []map[string]string, target string) bool {
 
 func customFieldsMetadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record) error {
 	/*NOTE: Custom fields for Journal data
-	"custom_fields": {
-		"journal:journal": {
-			"issue": "7",
-			"pages": "15-23",
-			"title": "Nature",
-			"volume": "645"
+		"custom_fields": {
+			"journal:journal": {
+				"issue": "7",
+				"pages": "15-23",
+				"title": "Nature",
+				"volume": "645"
+			},
+			"imprint:imprint": {
+				"isbn": "978-3-16-148410-0",
+	            "pages": "12-15",
+	            "title": "Book title",
+	            "place": "Location, place"
+			}
 		},
-		"imprint:imprint": {
-			"isbn": "978-3-16-148410-0",
-            "pages": "12-15",
-            "title": "Book title",
-            "place": "Location, place"
-		}
-	},
 	*/
 	if rec.Metadata == nil {
 		rec.Metadata = new(simplified.Metadata)
@@ -265,12 +265,12 @@ func customFieldsMetadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.
 			rec.Metadata.Publisher = eprint.Publisher
 		}
 		if eprint.Series != "" {
-			if err := SetJournalField(rec, "series", eprint.Series); err != nil  {
+			if err := SetJournalField(rec, "series", eprint.Series); err != nil {
 				return err
 			}
 		}
 		if eprint.ISSN != "" {
-			if err := SetJournalField(rec, "issn", eprint.ISSN); err != nil  {
+			if err := SetJournalField(rec, "issn", eprint.ISSN); err != nil {
 				return err
 			}
 		}
@@ -288,7 +288,7 @@ func customFieldsMetadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.
 		for i := 0; i < eprint.LocalGroup.Length(); i++ {
 			localGroup := eprint.LocalGroup.IndexOf(i)
 			m["id"] = strings.ReplaceAll(localGroup.Value, " ", "-")
-			if ! listMapHasID(groups, localGroup.Value) {
+			if !listMapHasID(groups, localGroup.Value) {
 				groups = append(groups, m)
 			}
 		}
@@ -362,11 +362,6 @@ func CrosswalkEPrintToRecord(eprint *eprinttools.EPrint, rec *simplified.Record,
 	if err := createdUpdatedFromEPrint(eprint, rec); err != nil {
 		return err
 	}
-	/*
-		if err := pidFromEPrint(eprint, rec); err != nil {
-			return err
-		}
-	*/
 	// Now finish simple record normalization ...
 	if err := mapResourceType(eprint, rec, resourceTypes); err != nil {
 		return err
@@ -810,7 +805,7 @@ func metadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record, cont
 			"en": eprint.Rights,
 		}
 		rights.Description = m
-		t := map[string]string {
+		t := map[string]string{
 			"en": "Other",
 		}
 		rights.Title = t
@@ -934,6 +929,16 @@ func metadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record, cont
 			if item.Agency != "" {
 				rec.Metadata.Funding = append(rec.Metadata.Funding, funderFromItem(item))
 			}
+		}
+	}
+	// NOTE: Handle related URLs and place them into identifiers.
+	if eprint.RelatedURL != nil && eprint.RelatedURL.Length() > 0 {
+		for _, item := range eprint.RelatedURL.Items {
+			urlType, urlValue := strings.TrimSpace(item.Type), strings.TrimSpace(item.Value)
+			if urlValue == "" {
+				urlValue = strings.TrimSpace(item.URL)
+			}
+			AddRelatedIdentifier(rec, urlType, urlValue)
 		}
 	}
 	return nil
