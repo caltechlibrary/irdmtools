@@ -587,6 +587,11 @@ func CrosswalkCrossRefWork(cfg *Config, work *crossrefapi.Works, resourceTypeMap
 		}
 	}
 
+	// Default language to US English
+	if err := SetLanguages(rec, "id", "eng"); err != nil {
+		return nil, err
+	}
+
 	// NOTE: We need to set the creation and updated time.
 	now := time.Now()
 	rec.Created = now

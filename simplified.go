@@ -328,3 +328,15 @@ func SetPresentationType(rec *simplified.Record, presentationType string) error 
 	return fmt.Errorf("SetPresentationType() not implemented")
 }
 
+func SetLanguages(rec *simplified.Record, key string, value interface{}) error {
+	if rec.Metadata == nil {
+		rec.Metadata = new(simplified.Metadata)
+	}
+	if rec.Metadata.Languages == nil {
+		rec.Metadata.Languages = []map[string]interface{}{}
+	}
+	m := map[string]interface{}{}
+	m[key] = value
+	rec.Metadata.Languages = append(rec.Metadata.Languages, m)
+	return nil
+}
