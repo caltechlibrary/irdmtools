@@ -87,27 +87,19 @@ def normalize_ads(ads = None):
 
 def normalize_pub(pub_url = None, doi = None):
     '''vet and normalize a publication url, uses whitelist matching'''
-    print(f'DEBUG unvetted pub url {pub_url} <- doi {doi}', file =sys.stderr)
     if idutils.is_url(pub_url):
         u = urlparse(pub_url)
         if 'hostname' in u:
             if u.hostname in [ 'rdcu.be', 'geoscienceworld', 'ieeexplore.ieee.org' ]:
-                print(f'DEBUG unveetted pub url {pub_url} <- doi {doi}', file =sys.stderr)
                 if u.hostname == 'ieeexplore.ieee.org' and (doi != None and doi.startswith('10.1364/')):
-                    print(f'DEBUG ieee.org pub url {pub_url} <- doi {doi}', file =sys.stderr)
                     return pub_url
                 else:
-                    print(f'DEBUG pub url {pub_url} <- doi {doi}', file =sys.stderr)
                     return pub_url
         elif u.netloc in [ 'rdcu.be', 'geoscienceworld', 'ieeexplore.ieee.org' ]:
-            print(f'DEBUG unveetted pub url {pub_url} <- doi {doi}', file =sys.stderr)
             if u.netloc == 'ieeexplore.ieee.org' and (doi != None and doi.startswith('10.1364/')):
-                print(f'DEBUG ieee.org pub url {pub_url} <- doi {doi}', file =sys.stderr)
                 return pub_url
             else:
-                print(f'DEBUG pub url {pub_url} <- doi {doi}', file =sys.stderr)
                 return pub_url
-        print(f'DEBUG hostname found was {u.hostname}, skipping', file = sys.stderr)
     return None
 
 # fixup_record takes the simple record and files dict making final 
