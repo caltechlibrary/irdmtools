@@ -56,32 +56,58 @@ def normalize_pmcid(pmcid = None):
             pmcid = pmcid.lower()
     return pmcid
 
+def trim_prefixes(text, prefixes):
+    for prefix in prefixes:
+        if text.startswith(prefix):
+            return text[len(prefix):]
+    return text
+
+def trim_suffixes(text, suffixes):
+    for suffix in suffixes:
+        if text.endswith(suffix):
+            return text[0:(len(suffix)*-1)]
+    return text
+
 def normalize_arxiv(arxiv = None):
     '''vet and normalize an arxiv'''
-    if idutils.is_arxiv(arxiv) and not idutils.is_doi(arxiv):
+    arxiv = trim_prefixes(arxiv, ['http://arxiv.org/abs/', 'https://arxiv.org/abs/'])
+    if idutils.is_doi(arxiv):
+        return None
+    if idutils.is_arxiv(arxiv):
         return idutils.normalize_arxiv(arxiv)
     return None
 
 def normalize_ads(ads = None):
     '''vet and normalize an ads id'''
+    ads = trim_prefixes(ads, ['https://ui.adsabs.harvard.edu/abs/'])
+    ads = trim_suffixes(ads, ['/abstract'])
     if idutils.is_ads(ads):
         return idutils.normalize_ads(ads)
     return None
 
 def normalize_pub(pub_url = None, doi = None):
     '''vet and normalize a publication url, uses whitelist matching'''
+    print(f'DEBUG unvetted pub url {pub_url} <- doi {doi}', file =sys.stderr)
     if idutils.is_url(pub_url):
         u = urlparse(pub_url)
-        if 'host' in u:
-            if u.host in [ 'rdcu.be', 'geoscienceworld' ]:
+        if 'hostname' in u:
+            if u.hostname in [ 'rdcu.be', 'geoscienceworld', 'ieeexplore.ieee.org' ]:
+                print(f'DEBUG unveetted pub url {pub_url} <- doi {doi}', file =sys.stderr)
+                if u.hostname == 'ieeexplore.ieee.org' and (doi != None and doi.startswith('10.1364/')):
+                    print(f'DEBUG ieee.org pub url {pub_url} <- doi {doi}', file =sys.stderr)
+                    return pub_url
+                else:
+                    print(f'DEBUG pub url {pub_url} <- doi {doi}', file =sys.stderr)
+                    return pub_url
+        elif u.netloc in [ 'rdcu.be', 'geoscienceworld', 'ieeexplore.ieee.org' ]:
+            print(f'DEBUG unveetted pub url {pub_url} <- doi {doi}', file =sys.stderr)
+            if u.netloc == 'ieeexplore.ieee.org' and (doi != None and doi.startswith('10.1364/')):
+                print(f'DEBUG ieee.org pub url {pub_url} <- doi {doi}', file =sys.stderr)
                 return pub_url
-            elif doi != None and doi.startswith('10.1364/') and u.host == 'ieeexplore.ieee.org' :
+            else:
+                print(f'DEBUG pub url {pub_url} <- doi {doi}', file =sys.stderr)
                 return pub_url
-        elif 'netloc' in u:
-            if u.netloc in [ 'rdcu.be', 'geoscienceworld' ]:
-                return pub_url
-            elif doi != None and doi.startswith('10.1364/') and u.netloc == 'ieeexplore.ieee.org' :
-                return pub_url
+        print(f'DEBUG hostname found was {u.hostname}, skipping', file = sys.stderr)
     return None
 
 # fixup_record takes the simple record and files dict making final 
@@ -225,6 +251,7 @@ def fixup_record(record, files):
                         identifier['identifier'] = related_ads
                         keep_identifiers.append(identifier)
                 elif scheme == 'pub':
+                    identifier['scheme'] = 'url'
                     related_pub = normalize_pub(get_dict_path(identifier, ['identifier']), doi)
                     if related_pub != None:
                         identifier['identifier'] = related_pub
