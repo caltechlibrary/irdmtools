@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Institutional Repository Data Management</title>
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="https://caltechlibrary.github.io/css/site.css">
+</head>
+<body>
+<header>
+<a href="http://library.caltech.edu" title="link to Caltech Library Homepage"><img src="https://caltechlibrary.github.io/assets/liblogo.gif" alt="Caltech Library logo"></a>
+</header>
+<nav>
+<ul>
+    <li><a href="/">Home</a></li>
+    <li><a href="index.html">README</a></li>
+    <li><a href="LICENSE">LICENSE</a></li>
+    <li><a href="INSTALL.html">INSTALL</a></li>
+    <li><a href="user-manual.html">User Manual</a></li>
+<!--    <li><a href="search.html">Search Docs</a></li> -->
+    <li><a href="about.html">About</a></li>
+    <li><a href="https://github.com/caltechlibrary/irdmtools">GitHub</a></li>
+</ul>
+</nav>
+
+<section>
+<h1 id="name">NAME</h1>
+<p>migrate_records.py</p>
+<h1 id="synopsis">SYNOPSIS</h1>
+<p>migrate_records.py <a href="#options">OPTIONS</a> C_NAME [KEY]</p>
+<h1 id="description">DESCRIPTION</h1>
+<p>migrate_records.py relies on two environment variables</p>
+<ul>
+<li>RDMTOK</li>
+<li>RDM_URL</li>
+</ul>
+<p>to access a remote Invenio-RDM instance and migrate an EPrint records
+saved in simple record format in a dataset collection to the Invenio-RDM
+instance indicated by the environment.</p>
+<dl>
+<dt>C_NAME</dt>
+<dd>
+The name of the dataset collection to read records from
+</dd>
+<dt>KEY</dt>
+<dd>
+The eprintid as string to retrieve the exported record
+</dd>
+</dl>
+<h1 id="options">OPTIONS</h1>
+<dl>
+<dt>-h, –help</dt>
+<dd>
+show this help message and exit
+</dd>
+<dt>-help</dt>
+<dd>
+display help details
+</dd>
+<dt>-license</dt>
+<dd>
+display license details
+</dd>
+<dt>-version</dt>
+<dd>
+display version
+</dd>
+<dt>-api_url API_URL</dt>
+<dd>
+point to a specific Invenio-RDM api url,
+e.g. ‘https://authors.caltechlibrary.dev’
+</dd>
+<dt>-token TOKEN</dt>
+<dd>
+Set the access token for the API URL provided
+</dd>
+<dt>-community COMMUNITY</dt>
+<dd>
+Set the community key for the repository
+</dd>
+<dt>-dsn DSN</dt>
+<dd>
+if initializing a dataset colleciton use this dsn
+</dd>
+</dl>
+<h1 id="examples">EXAMPLES</h1>
+<p>The following example assumes that RDMTOK and RDM_URL have been set
+in the shell’s environment. It retrieves record 12211.</p>
+<pre><code>    migrate_records.py CaltechAUTHORS.ds 12211</code></pre>
+<p>Iterating over the whole collection.</p>
+<pre><code>    migrate_records.py CaltechAUTHORS.ds</code></pre>
+</section>
+
+<footer>
+<span>&copy; 2023 <a href="https://www.library.caltech.edu/copyright">Caltech Library</a></span>
+<address>1200 E California Blvd, Mail Code 1-32, Pasadena, CA 91125-3200</address>
+<span><a href="mailto:library@caltech.edu">Email Us</a></span>
+<span>Phone: <a href="tel:+1-626-395-3405">(626)395-3405</a></span>
+</footer>
+</body>
+</html>

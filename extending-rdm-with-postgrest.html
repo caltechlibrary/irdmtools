@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Institutional Repository Data Management</title>
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="https://caltechlibrary.github.io/css/site.css">
+</head>
+<body>
+<header>
+<a href="http://library.caltech.edu" title="link to Caltech Library Homepage"><img src="https://caltechlibrary.github.io/assets/liblogo.gif" alt="Caltech Library logo"></a>
+</header>
+<nav>
+<ul>
+    <li><a href="/">Home</a></li>
+    <li><a href="index.html">README</a></li>
+    <li><a href="LICENSE">LICENSE</a></li>
+    <li><a href="INSTALL.html">INSTALL</a></li>
+    <li><a href="user-manual.html">User Manual</a></li>
+<!--    <li><a href="search.html">Search Docs</a></li> -->
+    <li><a href="about.html">About</a></li>
+    <li><a href="https://github.com/caltechlibrary/irdmtools">GitHub</a></li>
+</ul>
+</nav>
+
+<section>
+<h1 id="extending-rdm-with-postgrest">Extending RDM with PostgREST</h1>
+<p>Invenio RDM comes with a JSON API but it has some limitations. An
+alternative JSON API can easily be created using PostgREST with a little
+bit of configuration and SQL knowledge.</p>
+<p>PostgREST is a microservice that can provide a JSON API for Postgres
+via a small comfigurtion file and setup in Postgres by using schema,
+roles and grants. PostgREST understands the internals of Postgres
+through the “USAGE” permission. When it connects it automatically
+creates a JSON API from existing tables, views, functions and procedures
+configured associated with the schema.</p>
+<h2 id="our-alternate-json-api">Our alternate JSON API</h2>
+<p>RDM does not provide an easy mechanism to return all record ids. I
+will describe the steps needed to create a “/updated_record_ids” end
+point that accesses a RDM repository database called “caltechauthors”. I
+am going to implement the “/updated_record_ids” endpoint by creating an
+“irdm.updated_record_ids” view in SQL. I will grant access to that view
+using to the “irdm_anonymous” role. The view will return a list of
+objects that have the record id and updated timestamp from the
+pidstore_pid table in RDM. The rows are sorted in descending updated
+order.</p>
+<p>While this is a fair amount of work to create a single end point in
+practice we can easily define more endpoints by creating additional
+views, functions and procedures and then restarting PostgREST to pickup
+the updated API. Long hall this is an easy way to build a robust JSON
+API that meets our needs without modifying RDM itself.</p>
+<h2 id="setting-up-access-for-postgrest">Setting up access for
+PostgREST</h2>
+<p>When RDM creates the repository database defines tables in the
+“public” schema (public is the default schema for a database). When
+using PostgREST you want to restrict PostgREST access to only what we
+need in our extended API. The Postgres way to do this is to create a new
+“schema” within our repository database. In this way we can be assured
+that PostgREST will only allow interactions with the specifics
+permissions we grant without tripping over RDM’s own roles and
+permissiosn. I am calling the schema for our extended JSON API “irdm”. I
+will create Postgres roles for “irdm” (privileged account) and
+“irdm_anonymous” (the user of our API). None of RDM’s tables are defined
+within our “irdm” schema but I can create views of the tables I want the
+extended API to have access to (e.g. SELECT). The SQL view also becomes
+a path end point for PostgREST so if we take care of what we name things
+we can create a rich API to meet our needs without modifying RDM’s
+source code.</p>
+<p>NOTE: In our production deployment RDM is contianerized, I’ve
+configured Postgres’s port to be reachable outside the container on the
+standard Postgres port “5432”.</p>
+<p>In this example our repository database is called “caltechauthors”
+but you should change this value to reflect you’re RDM deployment.</p>
+<p>First we use the “psql” client to connect to our database.</p>
+<pre><code>psql
+--
+-- Connect to caltechauthors database.
+--
+\c caltechauthors</code></pre>
+<p>RDM has already create our database but we need to add our restricted
+schema for use by PostgREST. The scheme name I’ve chosen is “irdm”.</p>
+<pre><code>DROP SCHEMA IF EXISTS irdm CASCADE;
+CREATE SCHEMA irdm;</code></pre>
+<p>Now I will define an anonymous and privileged roles for use by
+PostgREST. I am going to name our roles “irdm_anonymous” and “irdm”.
+Also replace “PASSWORD_GOES_HERE” with a suitable password.</p>
+<pre><code>--
+-- Create role &quot;irdm_anonymous&quot;
+--
+DROP ROLE IF EXISTS irdm_anonymous;
+CREATE ROLE irdm_anonymous NOLOGIN;
+
+--
+-- Create our privileged role. 
+-- NOTE: replace &#39;PASSWORD_GOES_HERE&#39; with an appropriate password.
+--
+DROP ROLE IF EXISTS irdm;
+CREATE ROLE irdm NOINHERIT LOGIN PASSWORD &#39;PASSWORD_GOES_HERE&#39;;
+
+--
+-- Grant minimal access for connecting to PostgREST.
+--
+GRANT irdm_anonymous TO irdm;
+GRANT USAGE ON SCHEMA irdm TO irdm_anonymous;
+GRANT USAGE ON SCHEMA public TO irdm;</code></pre>
+<p>Notice that our “irdm” role gets “USAGE” on “public” but our
+“irdm_anonymous” does not. The “irdm_anonymous” role only gets “USAGE”
+privileges on “irdm” schema. This is one way to restrict what is exposed
+in our PostgREST JSON API.</p>
+<p>The initial purpose of our extended JSON API is to effeciently
+provide a list of ALL record_ids and their updated timestamp. I am going
+to do that using an SQL view called “irdm.updated_record_ids”. This will
+become the “/updated_record_ids” end point visible via PostgREST.</p>
+<pre><code>--
+-- This view becomes the &quot;/updated_record_ids&quot; end point provided by PostgREST.
+--
+CREATE OR REPLACE VIEW irdm.updated_record_ids AS
+  SELECT pid_value AS record_id, pidstore_pid.updated AS updated 
+  FROM rdm_records_metadata JOIN pidstore_pid ON
+    (rdm_records_metadata.id = pidstore_pid.object_uuid AND
+     pidstore_pid.pid_type = &#39;recid&#39;)
+  ORDER BY pidstore_pid.updated DESC;</code></pre>
+<p>Now allow our anonymous user to use this view.</p>
+<pre><code>--
+-- Now that we have created some view(s) it is time to set the permissions.
+--
+GRANT SELECT ON irdm.updated_record_ids TO irdm_anonymous;</code></pre>
+<p>At this point we should be ready to create our PostgREST
+configuration file and start of PostgREST. For the purposes of this
+excersize I’ve called the postgrest configuration file
+“postgrest.conf”.</p>
+<pre><code>db-uri = &quot;postgres://irdm:PASSWORD_GOES_HERE@localhost:5432/caltechauthors&quot;
+db-schemas = &quot;irdm&quot;
+db-anon-role = &quot;irdm_anonymous&quot;</code></pre>
+<p>NOTE: In that you should replace “PASSWORD_GOES_HERE” with the
+password you assigned to the “irdm” role.</p>
+<p>We can started up our PostgREST service using the configuration file
+we created, “postgrest.conf”.</p>
+<pre><code>postgrest postgrest.conf</code></pre>
+<p>Now try pointing your web browser at <a
+href="http://localhost:3000/updated_record_ids"
+class="uri">http://localhost:3000/updated_record_ids</a>. Assuming you
+already have a populated RDM repository you should see a JSON array of
+objects. Each object contains a “record_id” and “updated”
+attributes.</p>
+<h2 id="conclusion">Conclusion</h2>
+<p>As you find you need more end points not provided by RDM consider
+creating them via SQL views and functions and then accessing them via
+PostgREST.</p>
+</section>
+
+<footer>
+<span>&copy; 2023 <a href="https://www.library.caltech.edu/copyright">Caltech Library</a></span>
+<address>1200 E California Blvd, Mail Code 1-32, Pasadena, CA 91125-3200</address>
+<span><a href="mailto:library@caltech.edu">Email Us</a></span>
+<span>Phone: <a href="tel:+1-626-395-3405">(626)395-3405</a></span>
+</footer>
+</body>
+</html>
