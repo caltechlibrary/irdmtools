@@ -99,3 +99,9 @@ _codemeta.json
 reference/*
 people.csv
 groups.csv
+*.conf
+scratch/
+*.json
+*.jsonl
+test-*.txt
+*.yaml
