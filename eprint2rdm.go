@@ -748,7 +748,7 @@ func dateTypeFromTimestamp(dtType string, timestamp string, description string) 
 
 func mkSimpleIdentifier(scheme, value string) *simplified.Identifier {
 	identifier := new(simplified.Identifier)
-	identifier.Scheme = strings.ToLower(scheme)
+	identifier.Scheme = scheme
 	identifier.Identifier = value
 	return identifier
 }
@@ -913,15 +913,17 @@ func metadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record, cont
 		if strings.Contains(eprint.PMCID, ",") {
 			pmcids := strings.Split(eprint.PMCID, ",")
 			for _, pmcid := range pmcids {
+				pmcid = strings.ToUpper(pmcid)
 				rec.Metadata.Identifiers = append(rec.Metadata.Identifiers, mkSimpleIdentifier("pmcid", strings.TrimSpace(pmcid)))
 			}
 		} else if strings.Contains(eprint.PMCID, ";") {
 			pmcids := strings.Split(eprint.PMCID, ";")
 			for _, pmcid := range pmcids {
+				pmcid = strings.ToUpper(pmcid)
 				rec.Metadata.Identifiers = append(rec.Metadata.Identifiers, mkSimpleIdentifier("pmcid", strings.TrimSpace(pmcid)))
 			}
 		} else {
-			rec.Metadata.Identifiers = append(rec.Metadata.Identifiers, mkSimpleIdentifier("pmcid", strings.TrimSpace(eprint.PMCID)))
+			rec.Metadata.Identifiers = append(rec.Metadata.Identifiers, mkSimpleIdentifier("pmcid", strings.TrimSpace(strings.ToUpper(eprint.PMCID))))
 		}
 	}
 	if (eprint.Funders != nil) && (eprint.Funders.Items != nil) {
