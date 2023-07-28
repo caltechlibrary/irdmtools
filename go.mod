@@ -7,7 +7,6 @@ require (
 	github.com/caltechlibrary/dataciteapi v1.0.1
 	github.com/caltechlibrary/dataset/v2 v2.1.1
 	github.com/caltechlibrary/eprinttools v1.2.5
-	github.com/caltechlibrary/simplified v0.0.17-0.20230609162239-3a7618200261
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -17,6 +16,7 @@ require (
 	github.com/caltechlibrary/dsv1 v0.0.0-20220817192039-7c2741c5699d // indirect
 	github.com/caltechlibrary/pairtree v1.0.2 // indirect
 	github.com/caltechlibrary/semver v0.0.0-20220817184719-a504da2d5c6a // indirect
+	github.com/caltechlibrary/simplified v0.0.17 // indirect
 	github.com/glebarez/go-sqlite v1.18.1 // indirect
 	github.com/go-sql-driver/mysql v1.7.0 // indirect
 	github.com/google/uuid v1.3.0 // indirect

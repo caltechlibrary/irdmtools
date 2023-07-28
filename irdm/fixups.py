@@ -53,7 +53,7 @@ def normalize_pmcid(pmcid = None):
             u = urlparse(pmcid)
             pmcid = os.path.basename(u.path.rstrip('/')).lower()
         else:
-            pmcid = pmcid.lower()
+            pmcid = pmcid.upper()
     return pmcid
 
 def trim_prefixes(text, prefixes):

@@ -748,7 +748,7 @@ func dateTypeFromTimestamp(dtType string, timestamp string, description string) 
 
 func mkSimpleIdentifier(scheme, value string) *simplified.Identifier {
 	identifier := new(simplified.Identifier)
-	identifier.Scheme = strings.ToLower(scheme)
+	identifier.Scheme = scheme
 	identifier.Identifier = value
 	return identifier
 }
@@ -913,15 +913,17 @@ func metadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record, cont
 		if strings.Contains(eprint.PMCID, ",") {
 			pmcids := strings.Split(eprint.PMCID, ",")
 			for _, pmcid := range pmcids {
+				pmcid = strings.ToUpper(pmcid)
 				rec.Metadata.Identifiers = append(rec.Metadata.Identifiers, mkSimpleIdentifier("pmcid", strings.TrimSpace(pmcid)))
 			}
 		} else if strings.Contains(eprint.PMCID, ";") {
 			pmcids := strings.Split(eprint.PMCID, ";")
 			for _, pmcid := range pmcids {
+				pmcid = strings.ToUpper(pmcid)
 				rec.Metadata.Identifiers = append(rec.Metadata.Identifiers, mkSimpleIdentifier("pmcid", strings.TrimSpace(pmcid)))
 			}
 		} else {
-			rec.Metadata.Identifiers = append(rec.Metadata.Identifiers, mkSimpleIdentifier("pmcid", strings.TrimSpace(eprint.PMCID)))
+			rec.Metadata.Identifiers = append(rec.Metadata.Identifiers, mkSimpleIdentifier("pmcid", strings.TrimSpace(strings.ToUpper(eprint.PMCID))))
 		}
 	}
 	if (eprint.Funders != nil) && (eprint.Funders.Items != nil) {
@@ -953,7 +955,8 @@ func filesFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record) error {
 		files := new(simplified.Files)
 		files.Order = []string{}
 		files.Enabled = true
-		files.Entries = map[string]*simplified.Entry{}
+		//files.Entries = map[string]*simplified.Entry{}
+		files.Entries = []*simplified.Entry{}
 		for i := 0; i < eprint.Documents.Length(); i++ {
 			doc := eprint.Documents.IndexOf(i)
 			if len(doc.Files) > 0 {
@@ -966,7 +969,8 @@ func filesFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record) error {
 					if docFile.Hash != "" {
 						entry.CheckSum = fmt.Sprintf("%s:%s", strings.ToLower(docFile.HashType), docFile.Hash)
 					}
-					files.Entries[docFile.Filename] = entry
+					//files.Entries[docFile.Filename] = entry
+					files.Entries = append(files.Entries, entry)
 					if strings.HasPrefix(docFile.Filename, "preview") {
 						files.DefaultPreview = docFile.Filename
 					}
