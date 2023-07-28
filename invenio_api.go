@@ -187,6 +187,80 @@ func getRawFile(token string, uri string, contentType string) ([]byte, http.Head
 	return data, resp.Header, err
 }
 
+// postJSON takes a token, uri and JSON source as byte slice 
+// and sends it to the RDM instance for processing.
+func postJSON(token string, uri string, src []byte) ([]byte, http.Header, error) {
+	client := &http.Client{}
+	req, err := http.NewRequest("POST", uri, bytes.NewBuffer(src))
+	if err != nil {
+		return nil, nil, err
+	}
+	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
+	req.Header.Add("Content-Type", "application/json")
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, resp.Header, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode < 200 || resp.StatusCode > 201 {
+		return nil, resp.Header, fmt.Errorf("%s %s", resp.Status, uri)
+	}
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, resp.Header, err
+	}
+	return data, resp.Header, err
+}
+
+// putJSON takes a token, uri and JSON source as byte slice
+// and sends it to RDM instance for processing.
+func putJSON(token string, uri string, src []byte) ([]byte, http.Header, error) {
+	client := &http.Client{}
+	req, err := http.NewRequest("PUT", uri, bytes.NewBuffer(src))
+	if err != nil {
+		return nil, nil, err
+	}
+	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
+	req.Header.Add("Content-Type", "application/json")
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, resp.Header, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode < 200 || resp.StatusCode > 201 {
+		return nil, resp.Header, fmt.Errorf("%s %s", resp.Status, uri)
+	}
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, resp.Header, err
+	}
+	return data, resp.Header, err
+}
+
+// delJSON takes a token, uri and sends it to RDM instance 
+// for processing.
+func delJSON(token string, uri string) ([]byte, http.Header, error) {
+	client := &http.Client{}
+	req, err := http.NewRequest("DELETE", uri, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, resp.Header, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
+		return nil, resp.Header, fmt.Errorf("%s %s", resp.Status, uri)
+	}
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, resp.Header, err
+	}
+	return data, resp.Header, err
+}
+
 
 // Query takes a query string and returns the paged object
 // results as a slice of `map[string]interface{}`
@@ -413,13 +487,10 @@ func GetModifiedRecordIds(cfg *Config, start string, end string) ([]string, erro
 // ```
 // cfg, _ := LoadConfig("config.json")
 // id := "qez01-2309a"
-// rl := new(RateLimit)
-// mapRecord, err := GetRawRecord(cfg, rl, id)
-//
-//	if err != nil {
-//		 // ... handle error ...
-//	}
-//
+// mapRecord, err := GetRawRecord(cfg, id)
+// if err != nil {
+//     // ... handle error ...
+// }
 // ```
 func GetRawRecord(cfg *Config, id string) (map[string]interface{}, error) {
 	// Make sure we have a valid URL
@@ -430,7 +501,6 @@ func GetRawRecord(cfg *Config, id string) (map[string]interface{}, error) {
 	// Setup API request for a record
 	uri := fmt.Sprintf("%s/api/records/%s", u.String(), id)
 
-	// NOTE: rl is necessary to handle repeat requests to Invenio
 	src, headers, err := getJSON(cfg.InvenioToken, uri)
 	if err != nil {
 		return nil, err
@@ -453,12 +523,10 @@ func GetRawRecord(cfg *Config, id string) (map[string]interface{}, error) {
 // ```
 // cfg, _ := LoadConfig("config.json")
 // id := "qez01-2309a"
-// record, rateLimit, err := GetRecord(cfg, id)
-//
+// record, err := GetRecord(cfg, id)
 // if err != nil {
 //    // ... handle error ...
 // }
-//
 // ```
 func GetRecord(cfg *Config, id string) (*simplified.Record, error) {
 	// Make sure we have a valid URL
@@ -469,7 +537,6 @@ func GetRecord(cfg *Config, id string) (*simplified.Record, error) {
 	// Setup API request for a record
 	uri := fmt.Sprintf("%s/api/records/%s", u.String(), id)
 
-	// NOTE: rl is necessary to handle repeat requests to Invenio
 	src, headers, err := getJSON(cfg.InvenioToken, uri)
 	if err != nil {
 		return nil, err
@@ -507,7 +574,6 @@ func GetFiles(cfg *Config, id string) (*simplified.Files, error) {
 	// Setup API request for a record
 	uri := fmt.Sprintf("%s/api/records/%s/files", u.String(), id)
 
-	// NOTE: rl is necessary to handle repeat requests to Invenio
 	src, headers, err := getJSON(cfg.InvenioToken, uri)
 	if err != nil {
 		return nil, err
@@ -547,7 +613,6 @@ func GetFile(cfg *Config, id string, fName string) (*simplified.Entry, error) {
 	// Setup API request for a record
 	uri := fmt.Sprintf("%s/api/records/%s/files/%s", u.String(), id, fName)
 
-	// NOTE: rl is necessary to handle repeat requests to Invenio
 	src, headers, err := getJSON(cfg.InvenioToken, uri)
 	if err != nil {
 		return nil, err
@@ -592,7 +657,6 @@ func RetrieveFile(cfg *Config, id string, fName string) ([]byte, error) {
 	//uri := fmt.Sprintf("%s/api/records/%s/files/%s/content", u.String(), id, fName)
 	uri := fmt.Sprintf("%s/records/%s/files/%s?download=1", u.String(), id, fName)
 
-	// NOTE: rl is necessary to handle repeat requests to Invenio
 	data, headers, err := getRawFile(cfg.InvenioToken, uri, obj.MimeType)
 	if err != nil {
 		return nil, err
@@ -600,3 +664,227 @@ func RetrieveFile(cfg *Config, id string, fName string) ([]byte, error) {
 	cfg.rl.FromHeader(headers)
 	return data, nil
 }
+
+// GetVersions takes a configuration object and record id,
+// contacts an RDM instance and returns the versons metadata
+// and an error value.
+//
+// The configuration object must have the InvenioAPI and
+// InvenioToken attributes set.
+//
+// ```
+// cfg, _ := LoadConfig("config.json")
+// id := "qez01-2309a"
+// versions, err := GetVersions(cfg, id)
+// if err != nil {
+//    // ... handle error ...
+// }
+//
+// ```
+func GetVersions(cfg *Config, id string) (map[string]interface{}, error) {
+	// Make sure we have a valid URL
+	u, err := url.Parse(cfg.InvenioAPI)
+	if err != nil {
+		return nil, err
+	}
+	// Setup API request for a record
+	uri := fmt.Sprintf("%s/api/records/%s/versions", u.String(), id)
+
+	src, headers, err := getJSON(cfg.InvenioToken, uri)
+	if err != nil {
+		return nil, err
+	}
+	cfg.rl.FromHeader(headers)
+	obj := map[string]interface{}{}
+	if err := json.Unmarshal(src, &obj); err != nil {
+		return nil, err
+	}
+	return obj, nil
+}
+
+// GetVersionLatest takes a configuration object and record id,
+// contacts an RDM instance and returns the versons metadata
+// and an error value.
+//
+// The configuration object must have the InvenioAPI and
+// InvenioToken attributes set.
+//
+// ```
+// cfg, _ := LoadConfig("config.json")
+// id := "qez01-2309a"
+// versions, err := GetVersionLatest(cfg, id)
+// if err != nil {
+//    // ... handle error ...
+// }
+//
+// ```
+func GetVersionLatest(cfg *Config, id string) (map[string]interface{}, error) {
+	// Make sure we have a valid URL
+	u, err := url.Parse(cfg.InvenioAPI)
+	if err != nil {
+		return nil, err
+	}
+	// Setup API request for a record
+	uri := fmt.Sprintf("%s/api/records/%s/versions/latest", u.String(), id)
+
+	src, headers, err := getJSON(cfg.InvenioToken, uri)
+	if err != nil {
+		return nil, err
+	}
+	cfg.rl.FromHeader(headers)
+	obj := map[string]interface{}{}
+	if err := json.Unmarshal(src, &obj); err != nil {
+		return nil, err
+	}
+	return obj, nil
+}
+
+// CreateDraft takes a configuration object and record id,
+// contacts an RDM instance and create a draft of a record 
+// and an error value.
+//
+// The configuration object must have the InvenioAPI and
+// InvenioToken attributes set.
+//
+// ```
+// cfg, _ := LoadConfig("config.json")
+// fName := "drft.json" // A draft record in JSON
+// src, _ := os.ReadFile(fName)
+// draft, err := CreateDraft(cfg, src)
+// if err != nil {
+//    // ... handle error ...
+// }
+// fmt.Printf("%+v\n", draft)
+// ```
+func CreateDraft(cfg *Config, src []byte) (map[string]interface{}, error) {
+	// Make sure we have a valid URL
+	u, err := url.Parse(cfg.InvenioAPI)
+	if err != nil {
+		return nil, err
+	}
+	// Setup API request for a record
+	uri := fmt.Sprintf("%s/api/records", u.String())
+	src, headers, err := postJSON(cfg.InvenioToken, uri, src)
+	if err != nil {
+		return nil, err
+	}
+	cfg.rl.FromHeader(headers)
+	obj := map[string]interface{}{}
+	if err := json.Unmarshal(src, &obj); err != nil {
+		return nil, err
+	}
+	return obj, nil
+}
+
+// GetDraft takes a configuration object and record id,
+// contacts an RDM instance retrieves an existing draft
+// of a record and an error value.
+//
+// The configuration object must have the InvenioAPI and
+// InvenioToken attributes set.
+//
+// ```
+// cfg, _ := LoadConfig("config.json")
+// id := "qez01-2309a"
+// draft, err := GetDraft(cfg, id)
+//
+// if err != nil {
+//    // ... handle error ...
+// }
+// fmt.Printf("%+v\n", draft)
+// ```
+func GetDraft(cfg *Config, id string) (map[string]interface{}, error) {
+	// Make sure we have a valid URL
+	u, err := url.Parse(cfg.InvenioAPI)
+	if err != nil {
+		return nil, err
+	}
+	// Setup API request for a record
+	uri := fmt.Sprintf("%s/api/records/%s/draft", u.String(), id)
+
+	src, headers, err := getJSON(cfg.InvenioToken, uri)
+	if err != nil {
+		return nil, err
+	}
+	cfg.rl.FromHeader(headers)
+	obj := map[string]interface{}{}
+	if err := json.Unmarshal(src, &obj); err != nil {
+		return nil, err
+	}
+	return obj, nil
+}
+
+// UpdateDraft takes a configuration object and record id,
+// contacts an RDM instance and create a draft of a record 
+// and an error value.
+//
+// The configuration object must have the InvenioAPI and
+// InvenioToken attributes set.
+//
+// ```
+// cfg, _ := LoadConfig("config.json")
+// id := "qez01-2309a"
+// fName := "draft.json" // An updated draft record in JSON
+// src, _ := os.ReadFile(fName)
+// draft, err := UpdateDraft(cfg, id, src)
+// if err != nil {
+//    // ... handle error ...
+// }
+// fmt.Printf("%+v\n", draft)
+// ```
+func UpdateDraft(cfg *Config, recordId string, src []byte) (map[string]interface{}, error) {
+	// Make sure we have a valid URL
+	u, err := url.Parse(cfg.InvenioAPI)
+	if err != nil {
+		return nil, err
+	}
+	// Setup API request for a record
+	uri := fmt.Sprintf("%s/api/records/%s/draft", u.String(), recordId)
+	src, headers, err := putJSON(cfg.InvenioToken, uri, src)
+	if err != nil {
+		return nil, err
+	}
+	cfg.rl.FromHeader(headers)
+	obj := map[string]interface{}{}
+	if err := json.Unmarshal(src, &obj); err != nil {
+		return nil, err
+	}
+	return obj, nil
+}
+
+// DeleteDraft takes a configuration object and record id,
+// contacts an RDM instance and deletes a draft of a record 
+// and an error value.
+//
+// The configuration object must have the InvenioAPI and
+// InvenioToken attributes set.
+//
+// ```
+// cfg, _ := LoadConfig("config.json")
+// id := "qez01-2309a"
+// _, err := DeleteDraft(cfg, id)
+// if err != nil {
+//    // ... handle error ...
+// }
+// ```
+func DeleteDraft(cfg *Config, recordId string) (map[string]interface{}, error) {
+	// Make sure we have a valid URL
+	u, err := url.Parse(cfg.InvenioAPI)
+	if err != nil {
+		return nil, err
+	}
+	// Setup API request for a record
+	uri := fmt.Sprintf("%s/api/records/%s/draft", u.String(), recordId)
+	src, headers, err := delJSON(cfg.InvenioToken, uri)
+	if err != nil {
+		return nil, err
+	}
+	cfg.rl.FromHeader(headers)
+	obj := map[string]interface{}{}
+	if err := json.Unmarshal(src, &obj); err != nil {
+		return nil, err
+	}
+	return obj, nil
+}
+
+

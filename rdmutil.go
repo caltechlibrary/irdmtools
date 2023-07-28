@@ -313,6 +313,162 @@ func (app *RdmUtil) RetrieveFile(id string, fName string) ([]byte, error) {
 	return data, nil
 }
 
+// GetVersions returns the versioning metadata for a record.
+//
+// ```
+//
+// app := new(irdmtools.RdmUtil)
+// if err := app.LoadConfig("irdmtools.json"); err != nil {
+//   // ... handle error ...
+// }
+// recordId := "woie-x0121"
+// src, err := app.GetVersions(recordId)
+// if err != nil {
+//   // ... handle error ...
+// }
+// fmt.Printf("%s\n", src)
+//
+// ```
+func (app *RdmUtil) GetVersions(id string) ([]byte, error) {
+	obj, err := GetVersions(app.Cfg, id)
+	if err != nil {
+		return nil, err
+	}
+	src, err := json.MarshalIndent(obj, "", "    ")
+	if err != nil {
+		return nil, err
+	}
+	return src, nil
+}
+
+// GetVersionLatest returns the latest version metadata for a record.
+//
+// ```
+//
+// app := new(irdmtools.RdmUtil)
+// if err := app.LoadConfig("irdmtools.json"); err != nil {
+//   // ... handle error ...
+// }
+// recordId := "woie-x0121"
+// src, err := app.GetVersionLatest(recordId)
+// if err != nil {
+//   // ... handle error ...
+// }
+// fmt.Printf("%s\n", src)
+//
+// ```
+func (app *RdmUtil) GetVersionLatest(id string) ([]byte, error) {
+	obj, err := GetVersionLatest(app.Cfg, id)
+	if err != nil {
+		return nil, err
+	}
+	src, err := json.MarshalIndent(obj, "", "    ")
+	if err != nil {
+		return nil, err
+	}
+	return src, nil
+}
+
+// CreateDraft returns the a new draft of a record.
+//
+// ```
+//
+// app := new(irdmtools.RdmUtil)
+// if err := app.LoadConfig("irdmtools.json"); err != nil {
+//   // ... handle error ...
+// }
+// jsonSrc, _ := os.ReadFile("draft.json")
+// src, err := app.CreateDraft(jsonSrc)
+// if err != nil {
+//   // ... handle error ...
+// }
+// fmt.Printf("%s\n", src)
+//
+// ```
+func (app *RdmUtil) CreateDraft(src []byte) ([]byte, error) {
+	data, err := CreateDraft(app.Cfg, src)
+	if err != nil {
+		return nil, err
+	}
+	return json.MarshalIndent(data, "", "    ")
+}
+
+// GetDraft returns an existing draft of a record.
+//
+// ```
+//
+// app := new(irdmtools.RdmUtil)
+// if err := app.LoadConfig("irdmtools.json"); err != nil {
+//   // ... handle error ...
+// }
+// recordId := "woie-x0121"
+// src, err := app.GetDraft(recordId)
+// if err != nil {
+//   // ... handle error ...
+// }
+// fmt.Printf("%s\n", src)
+//
+// ```
+func (app *RdmUtil) GetDraft(id string) ([]byte, error) {
+	obj, err := GetDraft(app.Cfg, id)
+	if err != nil {
+		return nil, err
+	}
+	src, err := json.MarshalIndent(obj, "", "    ")
+	if err != nil {
+		return nil, err
+	}
+	return src, nil
+}
+
+// UpdateDraft returns takes a record id and returns a draft record.
+//
+// ```
+//
+// app := new(irdmtools.RdmUtil)
+// if err := app.LoadConfig("irdmtools.json"); err != nil {
+//   // ... handle error ...
+// }
+// id := "woie-x0121"
+// jsonSrc, _ := os.ReadFile("draft.json")
+// src, err := app.UpdateDraft(id, jsonSrc)
+// if err != nil {
+//   // ... handle error ...
+// }
+// fmt.Printf("%s\n", src)
+//
+// ```
+func (app *RdmUtil) UpdateDraft(recordId string, src []byte) ([]byte, error) {
+	data, err := UpdateDraft(app.Cfg, recordId, src)
+	if err != nil {
+		return nil, err
+	}
+	return json.MarshalIndent(data, "", "    ")
+}
+
+// DeleteDraft takes a record id and delete the draft.
+//
+// ```
+//
+// app := new(irdmtools.RdmUtil)
+// if err := app.LoadConfig("irdmtools.json"); err != nil {
+//   // ... handle error ...
+// }
+// id := "woie-x0121"
+// src, err := app.DeleteDraft(id)
+// if err != nil {
+//   // ... handle error ...
+// }
+// fmt.Printf("%s\n", src)
+//
+// ```
+func (app *RdmUtil) DeleteDraft(recordId string) ([]byte, error) {
+	data, err := DeleteDraft(app.Cfg, recordId)
+	if err != nil {
+		return nil, err
+	}
+	return json.MarshalIndent(data, "", "    ")
+}
 
 
 // Harvest takes a JSON file contianing a list of record ids and
@@ -322,6 +478,36 @@ func (app *RdmUtil) RetrieveFile(id string, fName string) ([]byte, error) {
 func (app *RdmUtil) Harvest(fName string) error {
 	return Harvest(app.Cfg, fName, app.Cfg.Debug)
 }
+
+func getRecordParams(params []string, requireRecordId bool, requireInName bool, requireOutName bool) (string, string, string, error) {
+	var (
+		recordId string
+		inName string
+		outName string
+	)
+	i := 0
+	if len(params) > i {
+		recordId = params[i]
+		i++
+	} else if requireRecordId {
+		return "", "", "", fmt.Errorf("Missing record id")
+	}
+	if len(params) > i {
+		inName = params[i]
+		i++
+	} else if requireInName {
+		return recordId, "", "", fmt.Errorf("Missing input filename")
+	}
+	if len(params) > i {
+		outName = params[i]
+		i++
+	} else if requireOutName {
+		return recordId, inName, "", fmt.Errorf("Missing output filename")
+
+	}
+	return recordId, inName, outName, nil
+}
+
 
 // Run implements the irdmapp cli behaviors. With the exception of the
 // "setup" action you should call `app.LoadConfig()` before execute
@@ -390,67 +576,53 @@ func (app *RdmUtil) Run(in io.Reader, out io.Writer, eout io.Writer, action stri
 		fmt.Fprintf(out, "%s\n", bytes.TrimSpace(src))
 		return nil
 	case "get_raw_record":
-		if len(params) == 0 {
-			return fmt.Errorf("missing record id")
-		} else if len(params) > 1 {
-			return fmt.Errorf("unexpected parameters, only expected on one record id")
+		recordId, _, _, err := getRecordParams(params, true, false, false)
+		if err != nil {
+			return err
 		}
-		src, err := app.GetRawRecord(params[0])
+		src, err := app.GetRawRecord(recordId)
 		if err != nil {
 			return err
 		}
 		fmt.Fprintf(out, "%s\n", bytes.TrimSpace(src))
 		return nil
 	case "get_record":
-		if len(params) == 0 {
-			return fmt.Errorf("missing record id")
-		} else if len(params) > 1 {
-			return fmt.Errorf("unexpected parameters, only expected on one record id")
+		recordId, _, _, err := getRecordParams(params, true, false, false)
+		if err != nil {
+			return err
 		}
-		src, err := app.GetRecord(params[0])
+		src, err := app.GetRecord(recordId)
 		if err != nil {
 			return err
 		}
 		fmt.Fprintf(out, "%s\n", bytes.TrimSpace(src))
 		return nil
 	case "get_files":
-		if len(params) == 0 {
-			return fmt.Errorf("missing record id")
-		} else if len(params) > 1 {
-			return fmt.Errorf("unexpected parameters, only expected on one record id")
+		recordId, _, _, err := getRecordParams(params, true, false, false)
+		if err != nil {
+			return err
 		}
-		src, err := app.GetFiles(params[0])
+		src, err := app.GetFiles(recordId)
 		if err != nil {
 			return err
 		}
 		fmt.Fprintf(out, "%s\n", bytes.TrimSpace(src))
 		return nil
 	case "get_file":
-		if len(params) == 0 {
-			return fmt.Errorf("missing record id and filename")
-		} else if len(params) == 1 {
-			return fmt.Errorf("missing filename")
-		} else if len(params) > 2 {
-			return fmt.Errorf("unexpected parameters, only expected on one record id")
+		recordId, inName, _, err := getRecordParams(params, true, true, false)
+		if err != nil {
+			return err
 		}
-		src, err := app.GetFile(params[0], params[1])
+		src, err := app.GetFile(recordId, inName)
 		if err != nil {
 			return err
 		}
 		fmt.Fprintf(out, "%s\n", bytes.TrimSpace(src))
 		return nil
 	case "retrieve_file":
-	    recordId, inName, outName := "", "", ""
-		if len(params) == 0 {
-			return fmt.Errorf("missing record id and filename")
-		} else if len(params) == 1 {
-			return fmt.Errorf("missing filename")
-		} else if len(params) == 2 {
-			recordId, inName, outName = params[0], params[1], params[1]	
-		} else if len(params) == 3 {
-			recordId, inName, outName = params[0], params[1], params[2]	
-		} else if len(params) > 3 {
-			return fmt.Errorf("unexpected parameters, only expected on one record id")
+		recordId, inName, outName, err := getRecordParams(params, true, true, true)
+		if err != nil {
+			return err
 		}
 		data, err := app.RetrieveFile(recordId, inName)
 		if err != nil {
@@ -461,6 +633,92 @@ func (app *RdmUtil) Run(in io.Reader, out io.Writer, eout io.Writer, action stri
 		}
 		fmt.Fprintf(out, "Wrote %s %d bytes\n", outName, len(data))
 		return nil
+	case "get_versions":
+		recordId, _, _, err := getRecordParams(params, true, false, false)
+		if err != nil {
+			return err
+		}
+		src, err := app.GetVersions(recordId)
+		if err != nil {
+			return err
+		}
+		fmt.Fprintf(out, "%s\n", bytes.TrimSpace(src))
+		return nil
+	case "get_version_latest":
+		recordId, _, _, err := getRecordParams(params, true, false, false)
+		if err != nil {
+			return err
+		}
+		src, err := app.GetVersionLatest(recordId)
+		if err != nil {
+			return err
+		}
+		fmt.Fprintf(out, "%s\n", bytes.TrimSpace(src))
+		return nil
+/*
+	case "create_draft":
+		_, inName, _, err := getRecordParams(params, false, true, false)
+		if err != nil {
+			return err
+		}
+		src := []byte{}
+		if inName != "" && inName != "-" {
+			src, err = os.ReadFile(inName)
+		} else {
+			src, err = io.ReadAll(in)
+		}
+		if err != nil {
+			return err
+		}
+		src, err = app.CreateDraft(src)
+		if err != nil {
+			return err
+		}
+		fmt.Fprintf(out, "%s\n", bytes.TrimSpace(src))
+		return nil
+	case "get_draft":
+		recordId, _, _, err := getRecordParams(params, true, false, false)
+		if err !=nil {
+			return err
+		}
+		src, err := app.GetDraft(recordId)
+		if err != nil {
+			return err
+		}
+		fmt.Fprintf(out, "%s\n", bytes.TrimSpace(src))
+		return nil
+	case "update_draft":
+		recordId, inName, _, err := getRecordParams(params, true, false, false)
+		if err != nil {
+			return err
+		}
+		src := []byte{}
+		if inName != "" && inName != "-" {
+			src, err = os.ReadFile(inName)
+		} else {
+			src, err = io.ReadAll(in)
+		}
+		if err != nil {
+			return err
+		}
+		src, err = app.UpdateDraft(recordId, src)
+		if err != nil {
+			return err
+		}
+		fmt.Fprintf(out, "%s\n", bytes.TrimSpace(src))
+		return nil
+	case "delete_draft":
+		recordId, _, _, err := getRecordParams(params, true, false, false)
+		if err != nil {
+			return err
+		}
+		src, err := app.DeleteDraft(recordId)
+		if err != nil {
+			return err
+		}
+		fmt.Fprintf(out, "%s\n", bytes.TrimSpace(src))
+		return nil
+*/
 	case "harvest":
 		if len(params) != 1 {
 			return fmt.Errorf("JSON Identifier file required")

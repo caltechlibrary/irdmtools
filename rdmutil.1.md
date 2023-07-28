@@ -1,4 +1,4 @@
-%rdmutil(1) irdmtools user manual | version 0.0.28 db2aaab
+%rdmutil(1) irdmtools user manual | version 0.0.28 92d69c8
 % R. S. Doiel and Tom Morrell
 % 2023-07-28
 
@@ -78,6 +78,13 @@ get_file RECORD_ID FILENAME
 
 retrieve_file RECORD_ID FILENAME [OUTPUT_FILENAME]
 : Retrieves the file indicated by RECORD_ID and FILENAME, e.g. bq3se-47g50 is a record id and article.pdf is a filename. RECORD_ID and FILENAME are required parameters. OUTPUT_FILENAME is optional, if present then the file will be save to this name on the file system.
+
+get_versions
+: Retrieve metadata about versions for RECORD_ID. RECORD_ID is required.
+
+get_version_latest
+: Retreive the latest version metadata for a RECORD_ID. RECORD_ID is requireed.
+
 
 harvest KEY_JSON
 : harvest takes a JSON file containing a list of keys and harvests each record into the dataset collection.
