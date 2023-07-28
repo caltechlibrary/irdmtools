@@ -201,6 +201,34 @@ func (app *RdmUtil) GetRecord(id string) ([]byte, error) {
 	return src, nil
 }
 
+// GetFiles returns the metadata for working with files
+//
+// ```
+//
+// app := new(irdmtools.RdmUtil)
+// if err := app.LoadConfig("irdmtools.json"); err != nil {
+//   // ... handle error ...
+// }
+// recordId := "woie-x0121"
+// src, err := app.GetFiles(recordId)
+// if err != nil {
+//   // ... handle error ...
+// }
+// fmt.Printf("%s\n", src)
+//
+// ```
+func (app *RdmUtil) GetFiles(id string) ([]byte, error) {
+	obj, err := GetFiles(app.Cfg, id)
+	if err != nil {
+		return nil, err
+	}
+	src, err := json.MarshalIndent(obj, "", "    ")
+	if err != nil {
+		return nil, err
+	}
+	return src, nil
+}
+
 // GetRawRecord returns a byte slice for a JSON encoded record
 // as a `map[string]interface{}` retrieved from the RDM API.
 //
@@ -323,6 +351,18 @@ func (app *RdmUtil) Run(in io.Reader, out io.Writer, eout io.Writer, action stri
 			return fmt.Errorf("unexpected parameters, only expected on one record id")
 		}
 		src, err := app.GetRecord(params[0])
+		if err != nil {
+			return err
+		}
+		fmt.Fprintf(out, "%s\n", bytes.TrimSpace(src))
+		return nil
+	case "get_files":
+		if len(params) == 0 {
+			return fmt.Errorf("missing record id")
+		} else if len(params) > 1 {
+			return fmt.Errorf("unexpected parameters, only expected on one record id")
+		}
+		src, err := app.GetFiles(params[0])
 		if err != nil {
 			return err
 		}

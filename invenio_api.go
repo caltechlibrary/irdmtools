@@ -417,7 +417,7 @@ func GetRawRecord(cfg *Config, id string) (map[string]interface{}, error) {
 }
 
 // GetRecord takes a configuration object and record id,
-// contacts an RDM instance and returns a simplified record, a rate limit struct
+// contacts an RDM instance and returns a simplified record
 // and an error value.
 //
 // The configuration object must have the InvenioAPI and
@@ -426,12 +426,11 @@ func GetRawRecord(cfg *Config, id string) (map[string]interface{}, error) {
 // ```
 // cfg, _ := LoadConfig("config.json")
 // id := "qez01-2309a"
-// var rl *RateLimit
-// record, rateLimit, err := GetRecord(cfg, rl, id)
+// record, rateLimit, err := GetRecord(cfg, id)
 //
-//	if err != nil {
-//		 // ... handle error ...
-//	}
+// if err != nil {
+//    // ... handle error ...
+// }
 //
 // ```
 func GetRecord(cfg *Config, id string) (*simplified.Record, error) {
@@ -454,4 +453,45 @@ func GetRecord(cfg *Config, id string) (*simplified.Record, error) {
 		return nil, err
 	}
 	return rec, nil
+}
+
+// GetFiles takes a configuration object and record id,
+// contacts an RDM instance and returns the file metadata
+// record and an error value.
+//
+// The configuration object must have the InvenioAPI and
+// InvenioToken attributes set.
+//
+// ```
+// cfg, _ := LoadConfig("config.json")
+// id := "qez01-2309a"
+// record, rateLimit, err := GetRecord(cfg, id)
+//
+// if err != nil {
+//    // ... handle error ...
+// }
+//
+// ```
+func GetFiles(cfg *Config, id string) (*simplified.Files, error) {
+	// Make sure we have a valid URL
+	u, err := url.Parse(cfg.InvenioAPI)
+	if err != nil {
+		return nil, err
+	}
+	// Setup API request for a record
+	uri := fmt.Sprintf("%s/api/records/%s/files", u.String(), id)
+	fmt.Fprintf(os.Stderr, "DEBUG get files -> %q\n", uri)
+
+	// NOTE: rl is necessary to handle repeat requests to Invenio
+	src, headers, err := getJSON(cfg.InvenioToken, uri)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Fprintf(os.Stderr, "DEBUG src ->\n%s\n", src)
+	cfg.rl.FromHeader(headers)
+	obj := new(simplified.Files)
+	if err := json.Unmarshal(src, &obj); err != nil {
+		return nil, err
+	}
+	return obj, nil
 }
