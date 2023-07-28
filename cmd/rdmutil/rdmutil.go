@@ -120,6 +120,12 @@ get_raw_record RECORD_ID
 get_files RECORD_ID
 : Returns a list of file entries for a indicated by RECORD_ID, e.g. bq3se-47g50. The REORCID_ID is a required parameter.
 
+get_file RECORD_ID FILENAME
+: Returns the metadata for a file indicated by RECORD_ID and FILENAME, e.g. bq3se-47g50 is a record id and article.pdf is a filename. RECORD_ID and FILENAME are required parameters.
+
+retrieve_file RECORD_ID FILENAME [OUTPUT_FILENAME]
+: Retrieves the file indicated by RECORD_ID and FILENAME, e.g. bq3se-47g50 is a record id and article.pdf is a filename. RECORD_ID and FILENAME are required parameters. OUTPUT_FILENAME is optional, if present then the file will be save to this name on the file system.
+
 harvest KEY_JSON
 : harvest takes a JSON file containing a list of keys and harvests each record into the dataset collection.
 

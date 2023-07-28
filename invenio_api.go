@@ -161,6 +161,33 @@ func getXML(token string, uri string) ([]byte, http.Header, error) {
 	return src, resp.Header, nil
 }
 
+// getRawFile sends a request to the Invenio API using a token, url
+// and values as parameters. It retrieves the file contents and returns
+// it as a byte array along with response header and error.
+func getRawFile(token string, uri string, contentType string) ([]byte, http.Header, error) {
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", uri, nil)
+	if err != nil {
+		return nil, nil, err
+	}
+	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
+	req.Header.Add("Content-Type", contentType)
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, resp.Header, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != 200 {
+		return nil, resp.Header, fmt.Errorf("%s %s", resp.Status, uri)
+	}
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, resp.Header, err
+	}
+	return data, resp.Header, err
+}
+
+
 // Query takes a query string and returns the paged object
 // results as a slice of `map[string]interface{}`
 //
@@ -456,8 +483,8 @@ func GetRecord(cfg *Config, id string) (*simplified.Record, error) {
 }
 
 // GetFiles takes a configuration object and record id,
-// contacts an RDM instance and returns the file metadata
-// record and an error value.
+// contacts an RDM instance and returns the files metadata
+// and an error value.
 //
 // The configuration object must have the InvenioAPI and
 // InvenioToken attributes set.
@@ -465,8 +492,7 @@ func GetRecord(cfg *Config, id string) (*simplified.Record, error) {
 // ```
 // cfg, _ := LoadConfig("config.json")
 // id := "qez01-2309a"
-// record, rateLimit, err := GetRecord(cfg, id)
-//
+// entries, err := GetFiles(cfg, id)
 // if err != nil {
 //    // ... handle error ...
 // }
@@ -480,18 +506,97 @@ func GetFiles(cfg *Config, id string) (*simplified.Files, error) {
 	}
 	// Setup API request for a record
 	uri := fmt.Sprintf("%s/api/records/%s/files", u.String(), id)
-	fmt.Fprintf(os.Stderr, "DEBUG get files -> %q\n", uri)
 
 	// NOTE: rl is necessary to handle repeat requests to Invenio
 	src, headers, err := getJSON(cfg.InvenioToken, uri)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Fprintf(os.Stderr, "DEBUG src ->\n%s\n", src)
 	cfg.rl.FromHeader(headers)
 	obj := new(simplified.Files)
 	if err := json.Unmarshal(src, &obj); err != nil {
 		return nil, err
 	}
 	return obj, nil
+}
+
+// GetFile takes a configuration object, record id and filename,
+// contacts an RDM instance and returns the specific file metadata
+// and an error value.
+//
+// The configuration object must have the InvenioAPI and
+// InvenioToken attributes set.
+//
+// ```
+// cfg, _ := LoadConfig("config.json")
+// id := "qez01-2309a"
+// fName := "article.pdf"
+// entry, err := GetFile(cfg, id, fName)
+//
+// if err != nil {
+//    // ... handle error ...
+// }
+//
+// ```
+func GetFile(cfg *Config, id string, fName string) (*simplified.Entry, error) {
+	// Make sure we have a valid URL
+	u, err := url.Parse(cfg.InvenioAPI)
+	if err != nil {
+		return nil, err
+	}
+	// Setup API request for a record
+	uri := fmt.Sprintf("%s/api/records/%s/files/%s", u.String(), id, fName)
+
+	// NOTE: rl is necessary to handle repeat requests to Invenio
+	src, headers, err := getJSON(cfg.InvenioToken, uri)
+	if err != nil {
+		return nil, err
+	}
+	cfg.rl.FromHeader(headers)
+	obj := new(simplified.Entry)
+	if err := json.Unmarshal(src, &obj); err != nil {
+		return nil, err
+	}
+	return obj, nil
+}
+
+// RetrieveFile takes a configuration object, record id and filename,
+// contacts an RDM instance and returns the specific file 
+// and an error value.
+//
+// The configuration object must have the InvenioAPI and
+// InvenioToken attributes set.
+//
+// ```
+// cfg, _ := LoadConfig("config.json")
+// id := "qez01-2309a"
+// fName := "article.pdf"
+// data, err := RetrieveFile(cfg, id, fName)
+// if err != nil {
+//    // ... handle error ...
+// }
+// os.WriteFile(fName, data, 0664)
+// ```
+func RetrieveFile(cfg *Config, id string, fName string) ([]byte, error) {
+	// Make sure we have a valid URL
+	u, err := url.Parse(cfg.InvenioAPI)
+	if err != nil {
+		return nil, err
+	}
+	// NOTE: We need to get the metadata to know the mime-type to request.
+	obj, err := GetFile(cfg, id, fName)
+	if err != nil {
+		return nil, err
+	}
+	// Setup API request for a record
+	//uri := fmt.Sprintf("%s/api/records/%s/files/%s/content", u.String(), id, fName)
+	uri := fmt.Sprintf("%s/records/%s/files/%s?download=1", u.String(), id, fName)
+
+	// NOTE: rl is necessary to handle repeat requests to Invenio
+	data, headers, err := getRawFile(cfg.InvenioToken, uri, obj.MimeType)
+	if err != nil {
+		return nil, err
+	}
+	cfg.rl.FromHeader(headers)
+	return data, nil
 }

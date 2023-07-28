@@ -39,6 +39,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"os"
 )
 
 // RdmUtil holds the configuration for rdmutil cli.
@@ -201,34 +202,6 @@ func (app *RdmUtil) GetRecord(id string) ([]byte, error) {
 	return src, nil
 }
 
-// GetFiles returns the metadata for working with files
-//
-// ```
-//
-// app := new(irdmtools.RdmUtil)
-// if err := app.LoadConfig("irdmtools.json"); err != nil {
-//   // ... handle error ...
-// }
-// recordId := "woie-x0121"
-// src, err := app.GetFiles(recordId)
-// if err != nil {
-//   // ... handle error ...
-// }
-// fmt.Printf("%s\n", src)
-//
-// ```
-func (app *RdmUtil) GetFiles(id string) ([]byte, error) {
-	obj, err := GetFiles(app.Cfg, id)
-	if err != nil {
-		return nil, err
-	}
-	src, err := json.MarshalIndent(obj, "", "    ")
-	if err != nil {
-		return nil, err
-	}
-	return src, nil
-}
-
 // GetRawRecord returns a byte slice for a JSON encoded record
 // as a `map[string]interface{}` retrieved from the RDM API.
 //
@@ -257,6 +230,90 @@ func (app *RdmUtil) GetRawRecord(id string) ([]byte, error) {
 	}
 	return src, nil
 }
+
+// GetFiles returns the metadata for working with files
+//
+// ```
+//
+// app := new(irdmtools.RdmUtil)
+// if err := app.LoadConfig("irdmtools.json"); err != nil {
+//   // ... handle error ...
+// }
+// recordId := "woie-x0121"
+// src, err := app.GetFiles(recordId)
+// if err != nil {
+//   // ... handle error ...
+// }
+// fmt.Printf("%s\n", src)
+//
+// ```
+func (app *RdmUtil) GetFiles(id string) ([]byte, error) {
+	obj, err := GetFiles(app.Cfg, id)
+	if err != nil {
+		return nil, err
+	}
+	src, err := json.MarshalIndent(obj, "", "    ")
+	if err != nil {
+		return nil, err
+	}
+	return src, nil
+}
+
+// GetFile returns the metadata for a file
+//
+// ```
+//
+// app := new(irdmtools.RdmUtil)
+// if err := app.LoadConfig("irdmtools.json"); err != nil {
+//   // ... handle error ...
+// }
+// recordId := "woie-x0121"
+// fName := "article.pdf"
+// src, err := app.GetFile(recordId, fName) 
+// if err != nil {
+//   // ... handle error ...
+// }
+// fmt.Printf("%s\n", src)
+//
+// ```
+func (app *RdmUtil) GetFile(id string, fName string) ([]byte, error) {
+	obj, err := GetFile(app.Cfg, id, fName)
+	if err != nil {
+		return nil, err
+	}
+	src, err := json.MarshalIndent(obj, "", "    ")
+	if err != nil {
+		return nil, err
+	}
+	return src, nil
+}
+
+// RetrieveFile retrieves the file from an RDM instance.
+//
+// ```
+//
+// app := new(irdmtools.RdmUtil)
+// if err := app.LoadConfig("irdmtools.json"); err != nil {
+//   // ... handle error ...
+// }
+// recordId := "woie-x0121"
+// fName := "article.pdf"
+// data, err := app.RetrieveFile(recordId, fName) 
+// if err != nil {
+//   // ... handle error ...
+// }
+// os.WriteFile("article.pdf", data, 0664)
+//
+// ```
+func (app *RdmUtil) RetrieveFile(id string, fName string) ([]byte, error) {
+	data, err := RetrieveFile(app.Cfg, id, fName)
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
+}
+
+
 
 // Harvest takes a JSON file contianing a list of record ids and
 // harvests them into a dataset v2 collection. The dataset collection
@@ -367,6 +424,42 @@ func (app *RdmUtil) Run(in io.Reader, out io.Writer, eout io.Writer, action stri
 			return err
 		}
 		fmt.Fprintf(out, "%s\n", bytes.TrimSpace(src))
+		return nil
+	case "get_file":
+		if len(params) == 0 {
+			return fmt.Errorf("missing record id and filename")
+		} else if len(params) == 1 {
+			return fmt.Errorf("missing filename")
+		} else if len(params) > 2 {
+			return fmt.Errorf("unexpected parameters, only expected on one record id")
+		}
+		src, err := app.GetFile(params[0], params[1])
+		if err != nil {
+			return err
+		}
+		fmt.Fprintf(out, "%s\n", bytes.TrimSpace(src))
+		return nil
+	case "retrieve_file":
+	    recordId, inName, outName := "", "", ""
+		if len(params) == 0 {
+			return fmt.Errorf("missing record id and filename")
+		} else if len(params) == 1 {
+			return fmt.Errorf("missing filename")
+		} else if len(params) == 2 {
+			recordId, inName, outName = params[0], params[1], params[1]	
+		} else if len(params) == 3 {
+			recordId, inName, outName = params[0], params[1], params[2]	
+		} else if len(params) > 3 {
+			return fmt.Errorf("unexpected parameters, only expected on one record id")
+		}
+		data, err := app.RetrieveFile(recordId, inName)
+		if err != nil {
+			return err
+		}
+		if err := os.WriteFile(outName, data, 0664); err != nil {
+			return err
+		}
+		fmt.Fprintf(out, "Wrote %s %d bytes\n", outName, len(data))
 		return nil
 	case "harvest":
 		if len(params) != 1 {
