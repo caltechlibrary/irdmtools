@@ -117,6 +117,9 @@ get_record RECORD_ID
 get_raw_record RECORD_ID
 : Returns a specific map/dictionary record indicated by RECORD_ID, e.g. bq3se-47g50. The REORCID_ID is a required parameter.
 
+get_files RECORD_ID
+: Returns a list of file entries for a indicated by RECORD_ID, e.g. bq3se-47g50. The REORCID_ID is a required parameter.
+
 harvest KEY_JSON
 : harvest takes a JSON file containing a list of keys and harvests each record into the dataset collection.
 
