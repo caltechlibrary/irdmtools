@@ -655,7 +655,6 @@ func (app *RdmUtil) Run(in io.Reader, out io.Writer, eout io.Writer, action stri
 		}
 		fmt.Fprintf(out, "%s\n", bytes.TrimSpace(src))
 		return nil
-/*
 	case "create_draft":
 		_, inName, _, err := getRecordParams(params, false, true, false)
 		if err != nil {
@@ -718,7 +717,6 @@ func (app *RdmUtil) Run(in io.Reader, out io.Writer, eout io.Writer, action stri
 		}
 		fmt.Fprintf(out, "%s\n", bytes.TrimSpace(src))
 		return nil
-*/
 	case "harvest":
 		if len(params) != 1 {
 			return fmt.Errorf("JSON Identifier file required")

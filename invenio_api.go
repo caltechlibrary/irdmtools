@@ -756,14 +756,14 @@ func GetVersionLatest(cfg *Config, id string) (map[string]interface{}, error) {
 // }
 // fmt.Printf("%+v\n", draft)
 // ```
-func CreateDraft(cfg *Config, src []byte) (map[string]interface{}, error) {
+func CreateDraft(cfg *Config, recordId string, src []byte) (map[string]interface{}, error) {
 	// Make sure we have a valid URL
 	u, err := url.Parse(cfg.InvenioAPI)
 	if err != nil {
 		return nil, err
 	}
 	// Setup API request for a record
-	uri := fmt.Sprintf("%s/api/records", u.String())
+	uri := fmt.Sprintf("%s/api/%s/versions", u.String(), recordId)
 	src, headers, err := postJSON(cfg.InvenioToken, uri, src)
 	if err != nil {
 		return nil, err

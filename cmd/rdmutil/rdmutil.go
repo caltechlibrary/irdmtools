@@ -132,9 +132,6 @@ get_versions
 get_version_latest
 : Retreive the latest version metadata for a RECORD_ID. RECORD_ID is requireed.
 
-` +
-/*
-`
 create_draft [FILENAME]
 : Create a draft record from JSON source. If FILENAME is set then json source is read from FILENAME otherwise it reads from standard input.
 
@@ -147,9 +144,6 @@ update_draft RECORD_ID [FILENAME]
 delete_draft
 : Delete a draft from RDM. RECORD_ID is required.
 
-` +
-*/
-`
 harvest KEY_JSON
 : harvest takes a JSON file containing a list of keys and harvests each record into the dataset collection.
 
