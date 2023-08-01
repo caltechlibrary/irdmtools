@@ -17,13 +17,8 @@ migration, aggregation and metadata analysis.
 
 ### `rdmutil`
 
-This tool is for interacting with an Invenio RDM repository.
-
-- get_all_ids uses the OAI-PMH service to harvest all the current record ids in an Invenio RDM instance (very slow due to rate limits)
-- get_modified_ids uses the OAI-PMH service with the "from" and "until" attributes to get a list of modified record ids (very slow due to rate limits)
-- get_record retrieves a specific RDM record based on the id (quick, uses the RDM REST API)
-- query can retrieve a selection of records from the RDM REST API, it is limited to 10K total returned records by RDM/Elasticsearch's configuration
-- harvest reads a JSON array of record ids from a file and harvests the RDM records into a dataset v2 collection
+This tool is for interacting with an Invenio RDM repository via RDM's
+REST and OAI-PMH API. It covers most the JSON API documented at <https://inveniordm.docs.cern.ch/>. This includes listing, submitting and managing records and draft records.
 
 `rdmutil` configuration is read either from the envinronment or a JSON formated configuration file.  See the [man page](rdmutil.1.md) for details.
 

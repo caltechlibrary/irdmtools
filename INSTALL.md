@@ -17,6 +17,8 @@ Copy and run the following command in your shell (e.g. Terminal)
 curl https://caltechlibrary.github.io/irdmtools/installer.sh | sh
 ~~~
 
+NOTE: Windows 11 support is via Window's Sub-System for Linux (aka WSL). If you have that available then you can use the installer example above.
+
 
 Requirements
 ------------
