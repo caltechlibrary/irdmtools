@@ -147,10 +147,81 @@ Retrieve metadata about versions for RECORD_ID. RECORD_ID is required.
 Retreive the latest version metadata for a RECORD_ID. RECORD_ID is
 requireed.
 </dd>
+<dt>new_record [FILENAME]</dt>
+<dd>
+Create a new record from JSON source. If FILENAME is set then json
+source is read from FILENAME otherwise it reads from standard input.
+</dd>
+<dt>new_draft RECORD_ID [FILENAME]</dt>
+<dd>
+Create a new draft for record from JSON source. RECORD_ID is required.
+If FILENAME is set then json source is read from FILENAME otherwise it
+reads from standard input.
+</dd>
+<dt>get_draft RECORD_ID</dt>
+<dd>
+Retrieve an existing draft record for RECORD_ID. RECORD_ID is required.
+IfRECORD_ID does not exist it you will see a 404 error.
+</dd>
+<dt>update_draft RECORD_ID [FILENAME]</dt>
+<dd>
+Update a draft record. RECORD_ID is required. FILENAME is optional, if
+one is provided the JSON document is used to update RDM, otherwise
+standard input is used to get the JSON required to do the update.
+</dd>
+<dt>upload_files RECORD_ID FILENAME [FILENAME …]</dt>
+<dd>
+Upload files to a draft record. RECORD_ID is required as are one or more
+filenames.
+</dd>
+<dt>delete_files RECORD_ID FILENAME [FILENAME …]</dt>
+<dd>
+Delete files in a draft record. RECORD_ID is required as are one or more
+filenames.
+</dd>
+<dt>discard_draft</dt>
+<dd>
+Discard (delete) a draft record from RDM. RECORD_ID is required.
+</dd>
+<dt>submit_draft RECORD_ID</dt>
+<dd>
+Submit the draft record for review. RECORD_ID is required.
+</dd>
+<dt>review_comment RECORD_ID [FILENAME]</dt>
+<dd>
+Submit a comment to a review. RECORD_ID is required. If FILENAME is
+provided the comment is read from a file otherwise it is read from
+standard input.
+</dd>
+<dt>review_draft RECORD_ID accept|decline|“” [COMMENT]</dt>
+<dd>
+Review a submitted draft record. the values “accept”, “decline” or “”
+and an optional COMMENT.
+</dd>
+<dt>publish_draft RECORD_ID</dt>
+<dd>
+Publish a draft record in review. RECORD_ID is required.
+</dd>
+<dt>get_access RECORD_ID [ACCESS_TYPE]</dt>
+<dd>
+This will return the JSON for the access attribute in the record. If you
+include ACCESS_TYPE of “files” or “records” it will return just that
+attribute. RECORD_ID is always required.
+</dd>
+<dt>set_access RECORD_ID ACCESS_TYPE ACCESS_VALUE</dt>
+<dd>
+This will update a record with metadata access to the record. RECORD ID
+is required. ACCESS_TYPE is required and can be either “record” or
+“files”. ACCESS_VALUE is required and can be “restricted” or “public”.
+</dd>
 <dt>harvest KEY_JSON</dt>
 <dd>
 harvest takes a JSON file containing a list of keys and harvests each
 record into the dataset collection.
+</dd>
+<dt>get_endpoint PATH</dt>
+<dd>
+Perform a GET to the end point indicated by PATH. PATH is required.
 </dd>
 </dl>
 <h1 id="action_parameters">ACTION_PARAMETERS</h1>
