@@ -132,17 +132,35 @@ get_versions
 get_version_latest
 : Retreive the latest version metadata for a RECORD_ID. RECORD_ID is requireed.
 
-create_draft [FILENAME]
-: Create a draft record from JSON source. If FILENAME is set then json source is read from FILENAME otherwise it reads from standard input.
+new_record [FILENAME]
+: Create a new record from JSON source. If FILENAME is set then json source is read from FILENAME otherwise it reads from standard input.
+
+new_draft RECORD_ID [FILENAME]
+: Create a new draft for record from JSON source. RECORD_ID is required. If FILENAME is set then json source is read from FILENAME otherwise it reads from standard input.
 
 get_draft RECORD_ID
-: Retrieve an existing draft record for RECORD_ID. RECORD_ID is required.
+: Retrieve an existing draft record for RECORD_ID. RECORD_ID is required. IfRECORD_ID does not exist it you will see a 404 error.
 
 update_draft RECORD_ID [FILENAME]
 : Update a draft record. RECORD_ID is required. FILENAME is optional, if one is provided the JSON document is used to update RDM, otherwise standard input is used to get the JSON required to do the update.
 
-delete_draft
-: Delete a draft from RDM. RECORD_ID is required.
+upload_files RECORD_ID FILENAME [FILENAME ...]
+: Upload files to a draft record. RECORD_ID is required as are one or more filenames.
+
+delete_files RECORD_ID FILENAME [FILENAME ...]
+: Delete files in a draft record. RECORD_ID is required as are one or more filenames.
+
+discard_draft
+: Discard (delete) a draft record from RDM. RECORD_ID is required.
+
+publish_draft RECORD_ID
+: Publish the draft record. RECORD_ID is required.
+
+get_access RECORD_ID [ACCESS_TYPE]
+: This will return the JSON for the access attribute in the record. If you include ACCESS_TYPE of "files" or "records" it will return just that attribute.  RECORD_ID is always required.
+
+set_access RECORD_ID ACCESS_TYPE ACCESS_VALUE
+: This will update a record with metadata access to the record. RECORD ID is required. ACCESS_TYPE is required and can be either "record" or "files". ACCESS_VALUE is required and can be "restricted" or "public".
 
 harvest KEY_JSON
 : harvest takes a JSON file containing a list of keys and harvests each record into the dataset collection.

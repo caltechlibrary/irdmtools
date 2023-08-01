@@ -956,7 +956,7 @@ func filesFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record) error {
 		files.Order = []string{}
 		files.Enabled = true
 		//files.Entries = map[string]*simplified.Entry{}
-		files.Entries = []*simplified.Entry{}
+		files.Entries = map[string]*simplified.Entry{}
 		for i := 0; i < eprint.Documents.Length(); i++ {
 			doc := eprint.Documents.IndexOf(i)
 			if len(doc.Files) > 0 {
@@ -969,8 +969,8 @@ func filesFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record) error {
 					if docFile.Hash != "" {
 						entry.CheckSum = fmt.Sprintf("%s:%s", strings.ToLower(docFile.HashType), docFile.Hash)
 					}
-					//files.Entries[docFile.Filename] = entry
-					files.Entries = append(files.Entries, entry)
+					files.Entries[docFile.Filename] = entry
+					//files.Entries = append(files.Entries, entry)
 					if strings.HasPrefix(docFile.Filename, "preview") {
 						files.DefaultPreview = docFile.Filename
 					}
