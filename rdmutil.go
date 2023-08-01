@@ -549,7 +549,8 @@ func (app *RdmUtil) DiscardDraft(recordId string) ([]byte, error) {
 	return json.MarshalIndent(data, "", "    ")
 }
 
-// PublishDraft takes a record id, JSON data and publishes the draft.
+// PublishDraft takes a record id for a draft in review and publishes
+// the draft.
 //
 // ```
 // app := new(irdmtools.RdmUtil)
@@ -557,15 +558,36 @@ func (app *RdmUtil) DiscardDraft(recordId string) ([]byte, error) {
 //   // ... handle error ...
 // }
 // id := "woie-x0121"
-// data := os.ReadFile(id + ".json")
-// src, err := app.PublishDraft(id, data)
+// src, err := app.PublishDraft(id)
 // if err != nil {
 //   // ... handle error ...
 // }
 // fmt.Printf("%s\n", src)
 // ```
-func (app *RdmUtil) PublishDraft(recordId string, src []byte) ([]byte, error) {
-	data, err := PublishDraft(app.Cfg, recordId, src)
+func (app *RdmUtil) PublishDraft(recordId string) ([]byte, error) {
+	data, err := PublishDraft(app.Cfg, recordId)
+	if err != nil {
+		return nil, err
+	}
+	return json.MarshalIndent(data, "", "    ")
+}
+
+// SubmitDraft takes a record id, JSON data and submits it for review draft.
+//
+// ```
+// app := new(irdmtools.RdmUtil)
+// if err := app.LoadConfig("irdmtools.json"); err != nil {
+//   // ... handle error ...
+// }
+// id := "woie-x0121"
+// src, err := app.SubmitDraft(id)
+// if err != nil {
+//   // ... handle error ...
+// }
+// fmt.Printf("%s\n", src)
+// ```
+func (app *RdmUtil) SubmitDraft(recordId string) ([]byte, error) {
+	data, err := SubmitDraft(app.Cfg, recordId)
 	if err != nil {
 		return nil, err
 	}
@@ -573,6 +595,28 @@ func (app *RdmUtil) PublishDraft(recordId string, src []byte) ([]byte, error) {
 }
 
 
+// ReviewDraft takes a record id, a decision and a comment and
+// submits it to the review process.
+//
+// ```
+// app := new(irdmtools.RdmUtil)
+// if err := app.LoadConfig("irdmtools.json"); err != nil {
+//   // ... handle error ...
+// }
+// id := "woie-x0121"
+// src, err := app.ReviewPublishDraft(id, "accept", "")
+// if err != nil {
+//   // ... handle error ...
+// }
+// fmt.Printf("%s\n", src)
+// ```
+func (app *RdmUtil) ReviewDraft(recordId string, decision string, comment string) ([]byte, error) {
+	data, err := ReviewDraft(app.Cfg, recordId, decision, comment)
+	if err != nil {
+		return nil, err
+	}
+	return json.MarshalIndent(data, "", "    ")
+}
 
 // GetAccess returns the JSON for the access attribute in a record if
 // accessType parameter is an empty string or the specific access
@@ -580,19 +624,17 @@ func (app *RdmUtil) PublishDraft(recordId string, src []byte) ([]byte, error) {
 // returned.
 //
 // ```
-//
-//	app := new(irdmtools.RdmUtil)
-//	if err := app.LoadConfig("irdmtools.json"); err != nil {
-//	   // ... handle error ...
-//	}
-//	recordId := "woie-x0121"
-//  accessType := "" // accessType = "record" // accessType := "files"
-//	src, err := app.GetRecord(recordId, accessType)
-//	if err != nil {
-//	    // ... handle error ...
-//	}
-//	fmt.Printf("%s\n", src)
-//
+// app := new(irdmtools.RdmUtil)
+// if err := app.LoadConfig("irdmtools.json"); err != nil {
+//   // ... handle error ...
+// }
+// recordId := "woie-x0121"
+// accessType := "" // accessType = "record" // accessType := "files"
+// src, err := app.GetRecord(recordId, accessType)
+// if err != nil {
+//   // ... handle error ...
+// }
+// fmt.Printf("%s\n", src)
 // ```
 func (app *RdmUtil) GetAccess(id string, accessType string) ([]byte, error) {
 	var src []byte
@@ -642,6 +684,11 @@ func (app *RdmUtil) SetAccess(id string, accessType string, accessValue string) 
 		return nil, err
 	}
 	return src, nil
+}
+
+// GetEndpoint performs a GET on the endpoint indicated by PATH provided.
+func (app *RdmUtil) GetEndpoint(p string) ([]byte, error) {
+	return GetEndpoint(app.Cfg, p)
 }
 
 
@@ -725,6 +772,30 @@ func getAccessParams(params []string, requireRecordId bool, requireType, require
 	return recordId, accessType, accessVal, nil
 }
 
+
+func getReviewParams(params []string, requireRecordId bool, requireDecision bool, requireComment bool) (string, string, string, error) {
+	recordId, decision, comment := "", "", ""
+	i := 0
+	if len(params) > i {
+		recordId = params[i]
+		i++
+	} else if requireRecordId {
+		return "", "", "", fmt.Errorf("Missing record id")
+	}
+	if len(params) > i {
+		decision = params[i]
+		i++
+	} else if requireDecision {
+		return recordId, "", "", fmt.Errorf("Missing decision")
+	}
+	if len(params) > i {
+		comment = params[i]
+		i++
+	} else if requireComment {
+		return recordId, decision, "", fmt.Errorf("Missing comment")
+	}
+	return recordId, decision, comment, nil
+}
 
 
 // Run implements the irdmapp cli behaviors. With the exception of the
@@ -977,18 +1048,34 @@ func (app *RdmUtil) Run(in io.Reader, out io.Writer, eout io.Writer, action stri
 		}
 		fmt.Fprintf(out, "%s\n", bytes.TrimSpace(src))
 		return nil
-	case "publish_draft":
-		recordId, inName, _, err := getRecordParams(params, true, true, false)
+	case "submit_draft":
+		recordId, _, _, err := getRecordParams(params, true, false, false)
 		if err != nil {
 			return err
 		}
-		src := []byte{}
-		if inName != "" && inName != "-" {
-			src, err = os.ReadFile(inName)
-		} else {
-			src, err = io.ReadAll(in)
+		src, err := app.SubmitDraft(recordId)
+		if err != nil {
+			return err
 		}
-		src, err = app.PublishDraft(recordId, src)
+		fmt.Fprintf(out, "%s\n", bytes.TrimSpace(src))
+		return nil
+	case "review_draft":
+		recordId, decision, comment, err := getReviewParams(params, true, true, false)
+		if err != nil {
+			return err
+		}
+		src, err := app.ReviewDraft(recordId, decision, comment)
+		if err != nil {
+			return err
+		}
+		fmt.Fprintf(out, "%s\n", bytes.TrimSpace(src))
+		return nil
+	case "publish_draft":
+		recordId, _, _, err := getRecordParams(params, true, false, false)
+		if err != nil {
+			return err
+		}
+		src, err := app.PublishDraft(recordId)
 		if err != nil {
 			return err
 		}
@@ -1011,6 +1098,16 @@ func (app *RdmUtil) Run(in io.Reader, out io.Writer, eout io.Writer, action stri
 			return err
 		}
 		src, err := app.SetAccess(recordId, accessType, val)
+		if err != nil {
+			return err
+		}
+		fmt.Fprintf(out, "%s\n", bytes.TrimSpace(src))
+		return nil
+	case "get_endpoint":
+		if len(params) != 1 {
+			return fmt.Errorf("get_endpoint requires a PATH value")
+		}
+		src, err := app.GetEndpoint(params[0])
 		if err != nil {
 			return err
 		}

@@ -1,6 +1,6 @@
-%rdmutil(1) irdmtools user manual | version 0.0.28 df4270e
+%rdmutil(1) irdmtools user manual | version 0.0.28 d6ce63b
 % R. S. Doiel and Tom Morrell
-% 2023-07-31
+% 2023-08-01
 
 # NAME
 
@@ -106,8 +106,17 @@ delete_files RECORD_ID FILENAME [FILENAME ...]
 discard_draft
 : Discard (delete) a draft record from RDM. RECORD_ID is required.
 
+submit_draft RECORD_ID
+: Submit the draft record for review. RECORD_ID is required.
+
+review_comment RECORD_ID [FILENAME]
+: Submit a comment to a review. RECORD_ID is required. If FILENAME is provided the comment is read from a file otherwise it is read from standard input.
+
+review_draft RECORD_ID accept|decline|"" [COMMENT]
+: Review a submitted draft record. the values "accept", "decline" or "" and an optional COMMENT.
+
 publish_draft RECORD_ID
-: Publish the draft record. RECORD_ID is required.
+: Publish a draft record in review. RECORD_ID is required.
 
 get_access RECORD_ID [ACCESS_TYPE]
 : This will return the JSON for the access attribute in the record. If you include ACCESS_TYPE of "files" or "records" it will return just that attribute.  RECORD_ID is always required.
@@ -117,6 +126,9 @@ set_access RECORD_ID ACCESS_TYPE ACCESS_VALUE
 
 harvest KEY_JSON
 : harvest takes a JSON file containing a list of keys and harvests each record into the dataset collection.
+
+get_endpoint PATH
+: Perform a GET to the end point indicated by PATH. PATH is required.
 
 # ACTION_PARAMETERS
 
