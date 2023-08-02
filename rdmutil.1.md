@@ -1,6 +1,6 @@
-%rdmutil(1) irdmtools user manual | version 0.0.29 ec4325c
+%rdmutil(1) irdmtools user manual | version 0.0.29 8372991
 % R. S. Doiel and Tom Morrell
-% 2023-08-01
+% 2023-08-02
 
 # NAME
 
@@ -129,6 +129,15 @@ harvest KEY_JSON
 
 get_endpoint PATH
 : Perform a GET to the end point indicated by PATH. PATH is required.
+
+post_endpoint PATH [FILENAME]
+: Perform a POST to the end point indicated by PATH. PATH is required. If FILENAME is provided then JSON source is read file the file otherwise it is read from standard input.
+
+put_endpoint PATH [FILENAME]
+: Perform a PUT to the end point indicated by PATH. PATH is required. If FILENAME is provided then JSON source is read file the file otherwise it is read from standard input.
+
+patch_endpoint PATH [FILENAME]
+: Perform a PATCH to the end point indicated by PATH. PATH is required. If FILENAME is provided then JSON source is read file the file otherwise it is read from standard input.
 
 # ACTION_PARAMETERS
 

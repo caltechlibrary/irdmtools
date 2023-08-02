@@ -177,6 +177,15 @@ harvest KEY_JSON
 get_endpoint PATH
 : Perform a GET to the end point indicated by PATH. PATH is required.
 
+post_endpoint PATH [FILENAME]
+: Perform a POST to the end point indicated by PATH. PATH is required. If FILENAME is provided then JSON source is read file the file otherwise it is read from standard input.
+
+put_endpoint PATH [FILENAME]
+: Perform a PUT to the end point indicated by PATH. PATH is required. If FILENAME is provided then JSON source is read file the file otherwise it is read from standard input.
+
+patch_endpoint PATH [FILENAME]
+: Perform a PATCH to the end point indicated by PATH. PATH is required. If FILENAME is provided then JSON source is read file the file otherwise it is read from standard input.
+
 # ACTION_PARAMETERS
 
 Action parameters are the specific optional or required parameters need to complete an aciton.

@@ -14,7 +14,7 @@
 . ftr VB CB
 . ftr VBI CBI
 .\}
-.TH "rdmutil" "1" "2023-08-01" "irdmtools user manual" "version 0.0.29 ec4325c"
+.TH "rdmutil" "1" "2023-08-02" "irdmtools user manual" "version 0.0.29 8372991"
 .hy
 .SH NAME
 .PP
@@ -208,6 +208,24 @@ record into the dataset collection.
 get_endpoint PATH
 Perform a GET to the end point indicated by PATH.
 PATH is required.
+.TP
+post_endpoint PATH [FILENAME]
+Perform a POST to the end point indicated by PATH.
+PATH is required.
+If FILENAME is provided then JSON source is read file the file otherwise
+it is read from standard input.
+.TP
+put_endpoint PATH [FILENAME]
+Perform a PUT to the end point indicated by PATH.
+PATH is required.
+If FILENAME is provided then JSON source is read file the file otherwise
+it is read from standard input.
+.TP
+patch_endpoint PATH [FILENAME]
+Perform a PATCH to the end point indicated by PATH.
+PATH is required.
+If FILENAME is provided then JSON source is read file the file otherwise
+it is read from standard input.
 .SH ACTION_PARAMETERS
 .PP
 Action parameters are the specific optional or required parameters need

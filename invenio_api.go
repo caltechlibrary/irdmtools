@@ -1010,11 +1010,14 @@ func DiscardDraft(cfg *Config, recordId string) (map[string]interface{}, error) 
 		return nil, err
 	}
 	cfg.rl.FromHeader(headers)
-	obj := map[string]interface{}{}
-	if err := json.Unmarshal(src, &obj); err != nil {
-		return nil, err
+	if len(src) > 0 {
+		obj := map[string]interface{}{}
+		if err := json.Unmarshal(src, &obj); err != nil {
+			return nil, err
+		}
+		return obj, nil
 	}
-	return obj, nil
+	return nil, nil
 }
 
 
@@ -1506,6 +1509,100 @@ func GetEndpoint(cfg *Config, p string) ([]byte, error) {
 	}
 	uri := fmt.Sprintf("%s/%s", u.String(), p)
 	src, headers, err := getJSON(cfg.InvenioToken, uri)
+	if err != nil {
+		return nil, err
+	}
+	cfg.rl.FromHeader(headers)
+	return src, nil
+}
+
+// PostEndpoint takes an access token and endpoint path along with
+// JSON source as payload and returns JSON source and error value.
+//
+// The configuration object must have the InvenioAPI and
+// InvenioToken attributes set.
+//
+// ```
+// cfg, _ := LoadConfig("config.json")
+// p := "api/records/qez01-2309a/draft"
+// data := os.ReadFile("draft.json")
+// src, err := PostEndpoint(cfg.InvenioToken, p, data)
+// if err != nil {
+//    // ... handle error ...
+// }
+// fmt.Printf("%s\n", src)
+// ```
+func PostEndpoint(cfg *Config, p string, payload []byte) ([]byte, error) {
+	// Make sure we have a URL
+	u, err := url.Parse(cfg.InvenioAPI)
+	if err != nil {
+		return nil, err
+	}
+	uri := fmt.Sprintf("%s/%s", u.String(), p)
+	src, headers, err := postJSON(cfg.InvenioToken, uri, payload)
+	if err != nil {
+		return nil, err
+	}
+	cfg.rl.FromHeader(headers)
+	return src, nil
+}
+
+// PutEndpoint takes an access token and endpoint path along with
+// JSON source as payload and returns JSON source and error value.
+//
+// The configuration object must have the InvenioAPI and
+// InvenioToken attributes set.
+//
+// ```
+// cfg, _ := LoadConfig("config.json")
+// p := "api/records/qez01-2309a/draft"
+// data := os.ReadFile("draft.json")
+// src, err := PutEndpoint(cfg.InvenioToken, p, data)
+// if err != nil {
+//    // ... handle error ...
+// }
+// fmt.Printf("%s\n", src)
+// ```
+func PutEndpoint(cfg *Config, p string, payload []byte) ([]byte, error) {
+	// Make sure we have a URL
+	u, err := url.Parse(cfg.InvenioAPI)
+	if err != nil {
+		return nil, err
+	}
+	uri := fmt.Sprintf("%s/%s", u.String(), p)
+	src, headers, err := putJSON(cfg.InvenioToken, uri, payload)
+	if err != nil {
+		return nil, err
+	}
+	cfg.rl.FromHeader(headers)
+	return src, nil
+}
+
+
+// PatchEndpoint takes an access token and endpoint path along with
+// JSON source as payload and returns JSON source and error value.
+//
+// The configuration object must have the InvenioAPI and
+// InvenioToken attributes set.
+//
+// ```
+// cfg, _ := LoadConfig("config.json")
+// p := "api/records/qez01-2309a/draft"
+// data := os.ReadFile("draft.json")
+// src, err := PatchEndpoint(cfg.InvenioToken, p, data)
+// if err != nil {
+//    // ... handle error ...
+// }
+// fmt.Printf("%s\n", src)
+// ```
+func PatchEndpoint(cfg *Config, p string, payload []byte) ([]byte, error) {
+	// Make sure we have a URL
+	u, err := url.Parse(cfg.InvenioAPI)
+	if err != nil {
+		return nil, err
+	}
+	uri := fmt.Sprintf("%s/%s", u.String(), p)
+	src, headers, err := patchJSON(cfg.InvenioToken, uri, payload)
 	if err != nil {
 		return nil, err
 	}

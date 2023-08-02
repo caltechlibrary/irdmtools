@@ -691,6 +691,22 @@ func (app *RdmUtil) GetEndpoint(p string) ([]byte, error) {
 	return GetEndpoint(app.Cfg, p)
 }
 
+// PostEndpoint performs a POST on the endpoint indicated by PATH provided.
+func (app *RdmUtil) PostEndpoint(p string, data []byte) ([]byte, error) {
+	return PostEndpoint(app.Cfg, p, data)
+}
+
+// PutEndpoint performs a PUT on the endpoint indicated by PATH provided.
+func (app *RdmUtil) PutEndpoint(p string, data []byte) ([]byte, error) {
+	return PutEndpoint(app.Cfg, p, data)
+}
+
+// PatchEndpoint performs a PATCH on the endpoint indicated by 
+// PATH provided.
+func (app *RdmUtil) PatchEndpoint(p string, data []byte) ([]byte, error) {
+	return PatchEndpoint(app.Cfg, p, data)
+}
+
 
 // Harvest takes a JSON file contianing a list of record ids and
 // harvests them into a dataset v2 collection. The dataset collection
@@ -798,6 +814,24 @@ func getAccessParams(params []string, requireRecordId bool, requireType, require
 	return recordId, accessType, accessVal, nil
 }
 
+
+func getEndpointParams(params []string, requirePath bool, requireInName bool) (string, string, error) {
+	p, inName := "", ""
+	i := 0
+	if len(params) > i {
+		p = params[i]
+		i++
+	} else if requirePath {
+		return "", "", fmt.Errorf("Missing path for endpoint")
+	}
+	if len(params) > i {
+		inName = params[i]
+		i++
+	} else if requireInName {
+		return "", "", fmt.Errorf("Missing input filename for endpoint")
+	}
+	return p, inName, nil
+}
 
 func getReviewParams(params []string, requireRecordId bool, requireDecision bool, requireComment bool) (string, string, string, error) {
 	recordId, decision, comment := "", "", ""
@@ -1142,6 +1176,57 @@ func (app *RdmUtil) Run(in io.Reader, out io.Writer, eout io.Writer, action stri
 			return fmt.Errorf("get_endpoint requires a PATH value")
 		}
 		src, err := app.GetEndpoint(params[0])
+		if err != nil {
+			return err
+		}
+		fmt.Fprintf(out, "%s\n", bytes.TrimSpace(src))
+		return nil
+	case "post_endpoint":
+		p, inName, err := getEndpointParams(params, true, false)
+		if err != nil {
+			return err
+		}
+		data := []byte{}
+		if inName != "" && inName != "-" {
+			data, err = os.ReadFile(inName)
+		} else {
+			data, err = io.ReadAll(os.Stdin)
+		}
+		src, err := app.PostEndpoint(p, data)
+		if err != nil {
+			return err
+		}
+		fmt.Fprintf(out, "%s\n", bytes.TrimSpace(src))
+		return nil
+	case "put_endpoint":
+		p, inName, err := getEndpointParams(params, true, false)
+		if err != nil {
+			return err
+		}
+		data := []byte{}
+		if inName != "" && inName != "-" {
+			data, err = os.ReadFile(inName)
+		} else {
+			data, err = io.ReadAll(os.Stdin)
+		}
+		src, err := app.PutEndpoint(p, data)
+		if err != nil {
+			return err
+		}
+		fmt.Fprintf(out, "%s\n", bytes.TrimSpace(src))
+		return nil
+	case "patch_endpoint":
+		p, inName, err := getEndpointParams(params, true, false)
+		if err != nil {
+			return err
+		}
+		data := []byte{}
+		if inName != "" && inName != "-" {
+			data, err = os.ReadFile(inName)
+		} else {
+			data, err = io.ReadAll(os.Stdin)
+		}
+		src, err := app.PatchEndpoint(p, data)
 		if err != nil {
 			return err
 		}
