@@ -252,6 +252,32 @@ func putJSON(token string, uri string, src []byte) ([]byte, http.Header, error) 
 	return data, resp.Header, err
 }
 
+// patchJSON takes a token, a uri and JSON source as byte slice
+// and sends it to RDM instance for processing.
+func patchJSON(token string, uri string, src []byte) ([]byte, http.Header, error) {
+	client := &http.Client{}
+	req, err := http.NewRequest("PATCH", uri, bytes.NewBuffer(src))
+	if err != nil {
+		return nil, nil, err
+	}
+	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", token))
+	req.Header.Add("Content-Type", "application/json")
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, resp.Header, err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode < 200 || resp.StatusCode > 201 {
+		return nil, resp.Header, fmt.Errorf("%s %s", resp.Status, uri)
+	}
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, resp.Header, err
+	}
+	return data, resp.Header, err
+}
+
+
 // delJSON takes a token, uri and sends it to RDM instance 
 // for processing.
 func delJSON(token string, uri string) ([]byte, http.Header, error) {
@@ -587,12 +613,12 @@ func GetRawRecord(cfg *Config, id string) (map[string]interface{}, error) {
 // ```
 // cfg, _ := LoadConfig("config.json")
 // id := "qez01-2309a"
-// record, err := GetRecord(cfg, id)
+// record, err := GetRecord(cfg, id, false)
 // if err != nil {
 //    // ... handle error ...
 // }
 // ```
-func GetRecord(cfg *Config, id string) (*simplified.Record, error) {
+func GetRecord(cfg *Config, id string, draft bool) (*simplified.Record, error) {
 	// Make sure we have a valid URL
 	u, err := url.Parse(cfg.InvenioAPI)
 	if err != nil {
@@ -600,7 +626,9 @@ func GetRecord(cfg *Config, id string) (*simplified.Record, error) {
 	}
 	// Setup API request for a record
 	uri := fmt.Sprintf("%s/api/records/%s", u.String(), id)
-
+	if draft {
+		uri = fmt.Sprintf("%s/api/records/%s/draft", u.String(), id)
+	}
 	src, headers, err := getJSON(cfg.InvenioToken, uri)
 	if err != nil {
 		return nil, err
@@ -612,6 +640,7 @@ func GetRecord(cfg *Config, id string) (*simplified.Record, error) {
 	}
 	return rec, nil
 }
+
 
 // GetFiles takes a configuration object and record id,
 // contacts an RDM instance and returns the files metadata
@@ -1341,9 +1370,12 @@ func DeleteFiles(cfg *Config, recordId string, filenames []string) ([]byte, erro
 // ```
 func GetAccess(cfg *Config, recordId string, accessType string) ([]byte, error) {
 	var src []byte
-	rec, err := GetRecord(cfg, recordId)
+	rec, err := GetRecord(cfg, recordId, false)
 	if err != nil {
-		return nil, err
+		rec, err = GetRecord(cfg, recordId, true)
+		if err != nil {
+			return nil, err
+		}
 	}
 	switch accessType {
 	case "files":
@@ -1383,16 +1415,53 @@ func GetAccess(cfg *Config, recordId string, accessType string) ([]byte, error) 
 // fmt.Printf("%s\n", src)
 // ```
 func SetAccess(cfg *Config, recordId string, accessType string, accessValue string) ([]byte, error) {
-	var src []byte
+	var (
+		src []byte
+	)
+		
 	// Make sure we have a URL
 	u, err := url.Parse(cfg.InvenioAPI)
 	if err != nil {
 		return nil, err
 	}
-	rec, err := GetRecord(cfg, recordId)
+	// First check if we can get a record, then check if there is a draft record.
+	uri := fmt.Sprintf("%s/records/%s", u.String(), recordId)
+	rec, err := GetRecord(cfg, recordId, false)
 	if err != nil {
-		return nil, err
-	}
+		draft, err := GetDraft(cfg, recordId)
+		if err != nil {
+			return nil, err
+		}
+		if draft == nil {
+			return nil, fmt.Errorf("unable to find record or draft for %s\n", recordId)
+		}
+		access := map[string]interface{}{
+			"files": "public",
+			"record": "public",
+		}
+		if _, ok := draft["access"]; ok {
+			access = draft["access"].(map[string]interface{})
+		}
+		switch accessType {
+			case "files":
+				access["files"] = accessValue
+			case "record":
+				access["record"] = accessValue
+			default:
+				return nil, fmt.Errorf("%q is not a supported access type", accessType)
+		}
+		draft["access"] = access
+		src, err := json.MarshalIndent(draft, "", "    ")
+		if err != nil {
+			return nil, err
+		}
+		draft, err =  UpdateDraft(cfg, recordId, src)
+		if err != nil {
+			return nil, err
+		}
+		return json.MarshalIndent(draft, "", "    ")
+	} 
+
 	switch accessType {
 	case "files":
 		rec.RecordAccess.Files = accessValue
@@ -1401,12 +1470,11 @@ func SetAccess(cfg *Config, recordId string, accessType string, accessValue stri
 	default:
 		return nil, fmt.Errorf("%q is not a supported access type", accessType)
 	}
-	src, err = json.MarshalIndent(rec.RecordAccess, "", "    ")
+	src, err = json.MarshalIndent(rec, "", "    ")
 	if err != nil {
 		return nil, err
 	}
-	uri := fmt.Sprintf("%s/records/%s", u.String(), recordId)
-	src, headers, err := putJSON(cfg.InvenioToken, uri, src)
+	src, headers, err := postJSON(cfg.InvenioToken, uri, src)
 	if err != nil {
 		return nil, err
 	}

@@ -191,7 +191,7 @@ func (app *RdmUtil) GetRecordIds() ([]byte, error) {
 //
 // ```
 func (app *RdmUtil) GetRecord(id string) ([]byte, error) {
-	rec, err := GetRecord(app.Cfg, id)
+	rec, err := GetRecord(app.Cfg, id, false)
 	if err != nil {
 		return nil, err
 	}
@@ -630,7 +630,7 @@ func (app *RdmUtil) ReviewDraft(recordId string, decision string, comment string
 // }
 // recordId := "woie-x0121"
 // accessType := "" // accessType = "record" // accessType := "files"
-// src, err := app.GetRecord(recordId, accessType)
+// src, err := app.GetAccess(recordId, accessType)
 // if err != nil {
 //   // ... handle error ...
 // }
@@ -656,13 +656,13 @@ func (app *RdmUtil) GetAccess(id string, accessType string) ([]byte, error) {
 //	}
 //	recordId := "woie-x0121"
 //  accessType := "record" 
-//	src, err := app.GetRecord(recordId, accessType, "public")
+//	src, err := app.SetAccess(recordId, accessType, "public")
 //	if err != nil {
 //	    // ... handle error ...
 //	}
 //	fmt.Printf("%s\n", src)
 //  accessType = "files"
-//	src, err := app.GetRecord(recordId, accessType, "restricted")
+//	src, err := app.SetAccess(recordId, accessType, "restricted")
 //	if err != nil {
 //	    // ... handle error ...
 //	}
@@ -700,6 +700,8 @@ func (app *RdmUtil) Harvest(fName string) error {
 	return Harvest(app.Cfg, fName, app.Cfg.Debug)
 }
 
+// getRecordParams parse the command parameters for record id oriented
+// actions.
 func getRecordParams(params []string, requireRecordId bool, requireInName bool, requireOutName bool) (string, string, string, error) {
 	var (
 		recordId string
@@ -707,19 +709,19 @@ func getRecordParams(params []string, requireRecordId bool, requireInName bool, 
 		outName string
 	)
 	i := 0
-	if requireRecordId && len(params) > i {
+	if len(params) > i {
 		recordId = params[i]
 		i++
 	} else if requireRecordId {
 		return "", "", "", fmt.Errorf("(%d) Missing record id", i)
 	}
-	if requireInName && len(params) > i {
+	if len(params) > i {
 		inName = params[i]
 		i++
 	} else if requireInName {
 		return recordId, "", "", fmt.Errorf("(%d) Missing input filename", i)
 	}
-	if requireOutName && len(params) > i {
+	if len(params) > i {
 		outName = params[i]
 		i++
 	} else if requireOutName {
@@ -727,6 +729,30 @@ func getRecordParams(params []string, requireRecordId bool, requireInName bool, 
 	}
 	return recordId, inName, outName, nil
 }
+
+// getIOParams parse the command parameters where the only options
+// are setting input and output (i.e. no record id involved).
+func getIOParams(params []string, requireInName bool, requireOutName bool) (string, string, error) {
+	var (
+		inName string
+		outName string
+	)
+	i := 0
+	if len(params) > i {
+		inName = params[i]
+		i++
+	} else if requireInName {
+		return "", "", fmt.Errorf("(%d) Missing input filename", i)
+	}
+	if len(params) > i {
+		outName = params[i]
+		i++
+	} else if requireOutName {
+		return inName, "", fmt.Errorf("(%d) Missing output filename", i)
+	}
+	return inName, outName, nil
+}
+
 
 func getFileParams(params []string, requireRecordId bool, requireFilenames bool) (string, []string, error) {
 	recordId := ""
@@ -799,7 +825,6 @@ func getReviewParams(params []string, requireRecordId bool, requireDecision bool
 
 
 // Run implements the irdmapp cli behaviors. With the exception of the
-// "setup" action you should call `app.LoadConfig()` before execute
 // Run.
 //
 // ```
@@ -934,7 +959,7 @@ func (app *RdmUtil) Run(in io.Reader, out io.Writer, eout io.Writer, action stri
 		fmt.Fprintf(out, "%s\n", bytes.TrimSpace(src))
 		return nil
 	case "get_version_latest":
-		recordId, _, _, err := getRecordParams(params, true, false, false)
+		recordId, _, outName, err := getRecordParams(params, true, false, false)
 		if err != nil {
 			return err
 		}
@@ -942,14 +967,17 @@ func (app *RdmUtil) Run(in io.Reader, out io.Writer, eout io.Writer, action stri
 		if err != nil {
 			return err
 		}
+		if outName != "" && outName != "-" {
+			if err := os.WriteFile(outName, src, 0664); err != nil {
+				return err
+			}
+			return nil
+		}
 		fmt.Fprintf(out, "%s\n", bytes.TrimSpace(src))
 		return nil
 	case "new_record":
-		_, inName, _, err := getRecordParams(params, false, true, false)
-		if err != nil {
-			return err
-		}
-		src := []byte{}
+		var src []byte
+		inName, outName, err := getIOParams(params, false, false)
 		if inName != "" && inName != "-" {
 			src, err = os.ReadFile(inName)
 		} else {
@@ -961,6 +989,12 @@ func (app *RdmUtil) Run(in io.Reader, out io.Writer, eout io.Writer, action stri
 		src, err = app.CreateRecord(src)
 		if err != nil {
 			return err
+		}
+		if outName != "" && outName != "-" {
+			if err := os.WriteFile(outName, src, 0664); err != nil {
+				return err
+			}
+			return nil
 		}
 		fmt.Fprintf(out, "%s\n", bytes.TrimSpace(src))
 		return nil
