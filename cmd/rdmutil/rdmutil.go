@@ -129,20 +129,26 @@ retrieve_file RECORD_ID FILENAME [OUTPUT_FILENAME]
 get_versions
 : Retrieve metadata about versions for RECORD_ID. RECORD_ID is required.
 
-get_version_latest
+get_latest_version
 : Retreive the latest version metadata for a RECORD_ID. RECORD_ID is requireed.
 
 new_record [FILENAME]
 : Create a new record from JSON source. If FILENAME is set then json source is read from FILENAME otherwise it reads from standard input.
 
-new_draft RECORD_ID [FILENAME]
-: Create a new draft for record from JSON source. RECORD_ID is required. If FILENAME is set then json source is read from FILENAME otherwise it reads from standard input.
+new_version RECORD_ID
+: This will create a new version of the record. RECORD_ID is required.
+
+new_draft RECORD_ID
+: Create a new draft for an existing record. RECORD_ID is required. 
 
 get_draft RECORD_ID
-: Retrieve an existing draft record for RECORD_ID. RECORD_ID is required. IfRECORD_ID does not exist it you will see a 404 error.
+: Retrieve an existing draft record for RECORD_ID. RECORD_ID is required. If draft of RECORD_ID does not exist you will see a 404 error.
 
 update_draft RECORD_ID [FILENAME]
 : Update a draft record. RECORD_ID is required. FILENAME is optional, if one is provided the JSON document is used to update RDM, otherwise standard input is used to get the JSON required to do the update.
+
+set_files_enable RECORD_ID true|false
+: This will flip the files.enabled value to true and update the draft. RECORD_ID is required. The one of the values true or false are required.
 
 upload_files RECORD_ID FILENAME [FILENAME ...]
 : Upload files to a draft record. RECORD_ID is required as are one or more filenames.
@@ -275,6 +281,7 @@ func main() {
 		fmt.Fprintf(os.Stderr, "missing action, don't know what to do\n")
 		os.Exit(1)
 	}
+	app.Debug = debug
 	// To start we assume the first parameter is an action
 	action, params := args[0], args[1:]
 	// double check to see if -setup was used, and adjust
