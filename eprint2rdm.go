@@ -894,6 +894,9 @@ func metadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record, cont
 	if eprint.DOI != "" {
 		rec.Metadata.Identifiers = append(rec.Metadata.Identifiers, mkSimpleIdentifier("doi", eprint.DOI))
 	}
+	if eprint.IDNumber != "" {
+		rec.Metadata.Identifiers = append(rec.Metadata.Identifiers, mkSimpleIdentifier("resolverid", eprint.IDNumber))
+	}
 	if eprint.ISBN != "" {
 		SetImprintField(rec, "isbn", eprint.ISBN)
 		if eprint.BookTitle != "" {

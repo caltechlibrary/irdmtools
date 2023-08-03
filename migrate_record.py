@@ -1,31 +1,33 @@
 #!/usr/bin/env python3
+'''migrate_record.py is a cli for filter the output of eprint2rdm and making 
+it ready for Invenio RDM import with rdmutil.'''
 
 import os
 import sys
 import json
 import argparse
 
-from irdm import fixup_record
-from py_dataset import dataset
+from irdm import fixup_record, license_text, version_text
 
-def usage(app_name):
+def usage(a_name):
+    '''explain cli usage'''
     print(f'''---
-title: "{app_name} (1) user manual"
+title: "{a_name} (1) user manual"
 pubDate: 2023-03-03
 author: "R. S. Doiel"
 ---
 
 # NAME
 
-{app_name}
+{a_name}
 
 # SYNOPSIS
 
-{app_name} [OPTIONS]
+{a_name} [OPTIONS]
 
 # DESCRIPTION
 
-{app_name} is a filter program. It reads from standard input and
+{a_name} is a filter program. It reads from standard input and
 writes fixed up RDM records to standard output. It is intended to be
 used in a pipe line with eprint2rdm and rdmutil.
 
@@ -50,24 +52,26 @@ object as an Invenio-RDM structure.
 
 ~~~
     eprint2rdm authors.library.caltech.edu 85542 |\
-      {app_name} | rdmutil new_record
+      {a_name} | rdmutil new_record
 ~~~
 
 ''')
 
 def read_eprintids(f_name):
+    '''read an eprint id list from f_name'''
     keys = []
-    with open(f_name) as f:
-        for line in f:
+    with open(f_name, encoding='utf-8') as f_p:
+        for line in f_p:
             keys.append(line.strip())
     if len(keys) == 0:
         return [], f'No keys found in {f_name}'
-    return keys, '' 
-    
-def app_setup(app_name):
+    return keys, ''
+
+def app_setup(a_name):
+    '''initialize application and parameter processing'''
     parser = argparse.ArgumentParser(
-        prog = app_name,
-        description="This program retreives a simple record from a dataset collection and fixes it up returning a JSON structure suitable for Invenio-RDM."
+        prog = a_name,
+        description="Retreive a record from a collection and fixes it up for Invenio-RDM."
     )
     parser.add_argument(
         "-help",
@@ -89,10 +93,10 @@ def app_setup(app_name):
         usage(app_name)
         sys.exit(0)
     if args.license:
-        print(irdm.licenseText)
+        print(license_text)
         sys.exit(0)
     if args.version:
-        print(irdm.versionText)
+        print(version_text)
         sys.exit(0)
 
 #
@@ -103,7 +107,7 @@ app_name = os.path.basename(sys.argv[0])
 app_setup(app_name)
 # Read the JSON from standard input
 src = sys.stdin.read()
-try: 
+try:
     rec = json.loads(src)
 except Exception as err:
     print(err, file = sys.stderr)

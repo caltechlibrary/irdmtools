@@ -14,7 +14,7 @@
 . ftr VB CB
 . ftr VBI CBI
 .\}
-.TH "rdmutil" "1" "2023-08-02" "irdmtools user manual" "version 0.0.29 4ce710d"
+.TH "rdmutil" "1" "2023-08-03" "irdmtools user manual" "version 0.0.29 67272fe"
 .hy
 .SH NAME
 .PP
@@ -157,6 +157,10 @@ RECORD_ID is required.
 FILENAME is optional, if one is provided the JSON document is used to
 update RDM, otherwise standard input is used to get the JSON required to
 do the update.
+.TP
+send_to_community RECORD_ID COMMUNITY_ID
+Set the community for the draft record id.
+RECORD_ID and COMMUMITY_ID are required.
 .TP
 set_files_enable RECORD_ID true|false
 This will flip the files.enabled value to true and update the draft.

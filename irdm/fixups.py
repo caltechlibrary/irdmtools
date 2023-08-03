@@ -1,8 +1,12 @@
+'''fixup.py is a module for cleanup output from eprint2rdm and making 
+it ready for import to RDM with rdmutil'''
 import os
 import sys
 import json
-import idutils
 from urllib.parse import urlparse
+import idutils
+import requests
+
 
 # Roles defined for person_or_org scheme
 defined_roles = [
@@ -29,40 +33,67 @@ defined_roles = [
     "other"
 ]
 
-def get_dict_path(obj, args = []):
+# Decide if we're in production or not. Defaut to Not in production.
+rdm_url = os.getenv('RDM_URL', None)
+in_production = ((rdm_url is not None) and ('caltech.edu' in rdm_url))
+
+def check_for_doi(doi, production):
+    '''Check to see if DOI already exists in our RDM instance'''
+    # Returns whether or not a DOI has already been added to CaltechAUTHORS
+    if production is True:
+        url = "https://authors.caltech.edu/api/records"
+    else:
+        url = "https://authors.caltechlibrary.dev/api/records"
+
+    query = f'?q=pids.doi.identifier:"{doi}"'
+
+    response = requests.get(url + query)
+    if response.status_code != 200:
+        raise Exception(response.text)
+    metadata = response.json()
+    if metadata["hits"]["total"] > 0:
+        return True
+    return False
+
+
+def get_dict_path(obj, args = None):
+    '''look up path in dict recursively, return value if found'''
+    if args is None:
+        return None
     if len(args) == 0:
         return obj
     arg = args[0]
     if isinstance(arg, int) and isinstance(obj, list) and arg < len(obj):
         return get_dict_path(obj[arg], args[1:])
-    else:
-        if arg in obj:
-            return get_dict_path(obj[arg], args[1:])
+    if arg in obj:
+        return get_dict_path(obj[arg], args[1:])
     return None
 
 def normalize_doi(doi = None):
     '''vet and normalize DOI'''
-    if doi != None and idutils.is_doi(doi):
+    if doi is not None and idutils.is_doi(doi):
         return idutils.normalize_doi(doi)
     return None
 
 def normalize_pmcid(pmcid = None):
     '''normalize PCM ids to just the id, trim from URL if needed.'''
-    if pmcid != None:
+    if pmcid is not None:
         if idutils.is_url(pmcid):
-            u = urlparse(pmcid)
-            pmcid = os.path.basename(u.path.rstrip('/')).lower()
+            _u = urlparse(pmcid)
+            pmcid = os.path.basename(_u.path.rstrip('/')).lower()
         else:
             pmcid = pmcid.upper()
     return pmcid
 
 def trim_prefixes(text, prefixes):
+    '''trim prefixes from string'''
     for prefix in prefixes:
         if text.startswith(prefix):
             return text[len(prefix):]
     return text
 
 def trim_suffixes(text, suffixes):
+    '''trim suffixes from string'''
     for suffix in suffixes:
         if text.endswith(suffix):
             return text[0:(len(suffix)*-1)]
@@ -88,35 +119,31 @@ def normalize_ads(ads = None):
 def normalize_pub(pub_url = None, doi = None):
     '''vet and normalize a publication url, uses whitelist matching'''
     if idutils.is_url(pub_url):
-        u = urlparse(pub_url)
-        if 'hostname' in u:
-            if u.hostname in [ 'rdcu.be', 'geoscienceworld', 'ieeexplore.ieee.org' ]:
-                if u.hostname == 'ieeexplore.ieee.org' and (doi != None and doi.startswith('10.1364/')):
+        _u = urlparse(pub_url)
+        if 'hostname' in _u:
+            if _u.hostname in [ 'rdcu.be', 'geoscienceworld', 'ieeexplore.ieee.org' ]:
+                if _u.hostname == 'ieeexplore.ieee.org' and \
+                    (doi is not None and doi.startswith('10.1364/')):
                     return pub_url
-                else:
-                    return pub_url
-        elif u.netloc in [ 'rdcu.be', 'geoscienceworld', 'ieeexplore.ieee.org' ]:
-            if u.netloc == 'ieeexplore.ieee.org' and (doi != None and doi.startswith('10.1364/')):
-                return pub_url
-            else:
+        elif _u.netloc in [ 'rdcu.be', 'geoscienceworld', 'ieeexplore.ieee.org' ]:
+            if _u.netloc == 'ieeexplore.ieee.org' and \
+                (doi is not None and doi.startswith('10.1364/')):
                 return pub_url
     return None
 
-# fixup_record takes the simple record and files dict making final 
+# fixup_record takes the simple record and files dict making final
 # record changes suitable before importing into Invenio-RDM.
 #
 # This include things like crosswalking vocabularies to map from an
-# existing Caltech Library EPrints repository to 
+# existing Caltech Library EPrints repository to
 # Invenio-RDM.
 #
-# Where possible these adjustments should be ported back 
+# Where possible these adjustments should be ported back
 # into eprinttools' simple.go and crosswalk.go.
 #
 def fixup_record(record, files):
-    """
-    fixup_record accepts a dict of simple record and files returns a 
-    normlzied record dict that is a for migration into Invenio-RDM.
-    """
+    """fixup_record accepts a dict of simple record and files returns a 
+normlzied record dict that is a for migration into Invenio-RDM."""
     record_id = get_dict_path(record, ["pid", "id"])
     #FIXME: sort out how these fields should be structured then
     # update the eprinttools simple.go and crosswalk.go to reflect
@@ -126,7 +153,7 @@ def fixup_record(record, files):
     if "metadata" in record:
         # Fixup resource type mapping from EPrints to Invenio-RDM types
         resource_type = get_dict_path(record, [ "metadata", "resource_type", "id" ])
-        if resource_type != None:
+        if resource_type is not None:
             if resource_type == "book_section":
                 record["metadata"]["resource_type"]["id"] = "publication-section"
             if resource_type == "book":
@@ -141,7 +168,9 @@ def fixup_record(record, files):
         if "dates" in record["metadata"]:
             date_list = []
             for entry in record["metadata"]["dates"]:
-                if "type" in entry and "id" in entry["type"] and (entry["type"]["id"] == "created" or entry["type"]["id"] == "updated"):
+                if "type" in entry and "id" in entry["type"] and \
+                    (entry["type"]["id"] == "created" or \
+                    entry["type"]["id"] == "updated"):
                     date_list.append(entry)
             record["metadata"]["dates"] = date_list
         if "funding" in record["metadata"]:
@@ -153,13 +182,14 @@ def fixup_record(record, files):
         if "creators" in record["metadata"]:
             for i, creator in enumerate(record["metadata"]["creators"]):
                 if "person_or_org" in creator and not 'name' in creator["person_or_org"]:
-                        person = creator["person_or_org"]
-                        family_name = person.get('family_name', None)
-                        given_name = person.get('given_name', None)
-                        if family_name != None and given_name != None:
-                            person['name'] = f'{family_name}, {given_name}'
-                            record["metadata"]["creators"][i]["person_or_org"] = person
-        # Fix up contributor roles, FIXME: since we don't have a mapping, undefined roles get mapped to "other"
+                    person = creator["person_or_org"]
+                    family_name = person.get('family_name', None)
+                    given_name = person.get('given_name', None)
+                    if family_name is not None and given_name is not None:
+                        person['name'] = f'{family_name}, {given_name}'
+                        record["metadata"]["creators"][i]["person_or_org"] = person
+        # Fix up contributor roles, FIXME: since we don't have a mapping,
+        # undefined roles get mapped to "other"
         if "contributors" in record["metadata"]:
             for i, contributor in enumerate(record["metadata"]["contributors"]):
                 # FIXME: This is a temporary mapping of role until we get Caltech Library
@@ -171,7 +201,7 @@ def fixup_record(record, files):
         if "additional_titles" in record["metadata"]:
             for i, title in enumerate(record["metadata"]["additional_titles"]):
                 if not "type" in title:
-                    title["type"] = { 
+                    title["type"] = {
                         "id": "alternative-title",
                         "title": {
                             "en": "Alternative Title"
@@ -190,20 +220,27 @@ def fixup_record(record, files):
                         print(f'ERROR: (id: {record_id}) contributor missing family name')
                         sys.exit(1)
     # Map the eprintid to the identifier list
-    if "pid" in record and "id" in record["pid"] and "eprint" in record["pid"] and record["pid"]["eprint"] == "eprintid":
+    if "pid" in record and "id" in record["pid"] and \
+        "eprint" in record["pid"] and record["pid"]["eprint"] == "eprintid":
         eprintid = record["pid"]["id"]
         if "metadata" in record and "identifier" in record["metadata"]:
-            record["metadata"]["identifier"].append({ "scheme": "eprintid", "identifier": f"eprintid" })
+            record["metadata"]["identifier"].append({
+                "scheme": "eprintid", "identifier": f"{eprintid}"
+            })
     if not files:
         record["files"] = { "enabled": False, "order": [] }
     # Normalize DOI, issue #39
     doi = normalize_doi(get_dict_path(record, ['pids', 'doi', 'identifier']))
-    if doi != None:
-        record['pids']['doi']['identifier'] = doi
+    if doi is not None:
+        # See if DOI already exists in CaltechAUTHORS, if so move it to metadata identifiers.
+        if check_for_doi(doi, in_production):
+            del record['pids']['doi'] # ['identifier']['provider'] = 'external'
+            record["metadata"]["identifier"].append({ "scheme": "doi", "identifier": f"{doi}" })
 
-    # Run through related URLs, if DOI then normalize DOI, if DOI match pids.doi.identifier then discard related url value, issue #39
+    # Run through related URLs, if DOI then normalize DOI, if DOI match
+    # pids.doi.identifier then discard related url value, issue #39
     identifiers = get_dict_path(record, [ 'metadata', 'identifiers'])
-    if identifiers != None:
+    if identifiers is not None:
         # Find a PMCID in the indenitifiers ro compare with pmc id ...
         pmcid = None
         for identifier in identifiers:
@@ -213,39 +250,39 @@ def fixup_record(record, files):
         keep_identifiers = []
         for identifier in identifiers:
             scheme = get_dict_path(identifier, ['scheme'])
-            if scheme != None:
+            if scheme is not None:
                 if scheme == 'doi':
                     related_doi = normalize_doi(get_dict_path(identifier, ['identifier']))
-                    if related_doi != None:
+                    if related_doi is not None:
                         identifier['identifier'] = related_doi
                         if related_doi != doi:
                             keep_identifiers.append(identifier)
                 elif scheme == 'pmcid':
                     related_pmcid = normalize_pmcid(get_dict_path(identifier, [ 'identifier']))
-                    if related_pmcid != None:
+                    if related_pmcid is not None:
                         identifier['identifier'] = related_pmcid
                         keep_identifiers.append(identifier)
                 elif scheme == 'pmc':
                     related_pmcid = normalize_pmcid(get_dict_path(identifier, ['identifier']))
-                    if related_pmcid != None:
+                    if related_pmcid is not None:
                         identifier['scheme'] = 'pcmid'
                         identifier['identifier'] = related_pmcid
                         if related_pmcid != pmcid:
                             keep_identifiers.append(identifier)
                 elif scheme == 'arxiv':
                     related_arxiv = normalize_arxiv(get_dict_path(identifier, ['identifier']))
-                    if related_arxiv != None:
+                    if related_arxiv is not None:
                         identifier['identifier'] = related_arxiv
                         keep_identifiers.append(identifier)
                 elif scheme == 'ads':
                     related_ads = normalize_ads(get_dict_path(identifier, ['identifier']))
-                    if related_ads != None:
+                    if related_ads is not None:
                         identifier['identifier'] = related_ads
                         keep_identifiers.append(identifier)
                 elif scheme == 'pub':
                     identifier['scheme'] = 'url'
                     related_pub = normalize_pub(get_dict_path(identifier, ['identifier']), doi)
-                    if related_pub != None:
+                    if related_pub is not None:
                         identifier['identifier'] = related_pub
                         keep_identifiers.append(identifier)
                 elif scheme == 'eprintid':

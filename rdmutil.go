@@ -40,6 +40,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 )
 
 // RdmUtil holds the configuration for rdmutil cli.
@@ -488,7 +489,23 @@ func (app *RdmUtil) GetDraft(id string) ([]byte, error) {
 //
 // ```
 func (app *RdmUtil) UpdateDraft(recordId string, src []byte) ([]byte, error) {
-	data, err := UpdateDraft(app.Cfg, recordId, src)
+	if app.Debug {
+		fmt.Fprintf(os.Stderr, "DEBUG running UpdateDraft(%q, src) ... \n", recordId)
+	}
+	data, err := UpdateDraft(app.Cfg, recordId, src, app.Debug)
+	if err != nil {
+		return nil, err
+	}
+	return json.MarshalIndent(data, "", "    ")
+}
+
+// SendToCommunity takes a RDM record id and community UUID. It populates the
+// the parent element approriately for draft to be submitted to a specific community.
+func (app *RdmUtil) SendToCommunity(recordId string, communityId string) ([]byte, error) {
+	if app.Debug {
+		fmt.Fprintf(os.Stderr, "DEBUG running SendToCommunity(%q, %q) ...\n", recordId, communityId)
+	}
+	data, err := SendToCommunity(app.Cfg, recordId, communityId, app.Debug)
 	if err != nil {
 		return nil, err
 	}
@@ -499,7 +516,10 @@ func (app *RdmUtil) UpdateDraft(recordId string, src []byte) ([]byte, error) {
 // the files.enabled value in a draft record. Returns the draft record
 // and an error value.
 func (app *RdmUtil) SetFilesEnable(recordId string, enable bool) ([]byte, error) {
-	m, err := SetFilesEnable(app.Cfg, recordId, enable)
+	if app.Debug {
+		fmt.Fprintf(os.Stderr, "DEBUG running SetFilesEnable(%q, %t) ...\n", recordId, enable)
+	}
+	m, err := SetFilesEnable(app.Cfg, recordId, enable, app.Debug)
 	if err != nil {
 		return nil, err
 	}
@@ -524,6 +544,9 @@ func (app *RdmUtil) SetFilesEnable(recordId string, enable bool) ([]byte, error)
 //
 // ```
 func (app *RdmUtil) UploadFiles(recordId string, filenames []string) ([]byte, error) {
+	if app.Debug {
+		fmt.Fprintf(os.Stderr, "DEBUG running UploadFiles(%q, [\"%s\"]) ...\n", recordId, strings.Join(filenames, `", "`))
+	}
 	data, err := UploadFiles(app.Cfg, recordId, filenames, app.Debug)
 	if err != nil {
 		return nil, err
@@ -550,7 +573,10 @@ func (app *RdmUtil) UploadFiles(recordId string, filenames []string) ([]byte, er
 //
 // ```
 func (app *RdmUtil) DeleteFiles(recordId string, filenames []string) ([]byte, error) {
-	data, err := DeleteFiles(app.Cfg, recordId, filenames)
+	if app.Debug {
+		fmt.Fprintf(os.Stderr, "DEBUG running DeleteFiles(%q, [\"%s\"]) ...\n", recordId, strings.Join(filenames, `", "`))
+	}
+	data, err := DeleteFiles(app.Cfg, recordId, filenames, app.Debug)
 	if err != nil {
 		return nil, err
 	}
@@ -575,7 +601,10 @@ func (app *RdmUtil) DeleteFiles(recordId string, filenames []string) ([]byte, er
 //
 // ```
 func (app *RdmUtil) DiscardDraft(recordId string) ([]byte, error) {
-	data, err := DiscardDraft(app.Cfg, recordId)
+	if app.Debug {
+		fmt.Fprintf(os.Stderr, "DEBUG running DiscardDraft(%s) ...\n", recordId)
+	}
+	data, err := DiscardDraft(app.Cfg, recordId, app.Debug)
 	if err != nil {
 		return nil, err
 	}
@@ -598,6 +627,9 @@ func (app *RdmUtil) DiscardDraft(recordId string) ([]byte, error) {
 // fmt.Printf("%s\n", src)
 // ```
 func (app *RdmUtil) PublishDraft(recordId string) ([]byte, error) {
+	if app.Debug {
+		fmt.Fprintf(os.Stderr, "DEBUG runnning PublishDraft(%q) ...\n", recordId)
+	}
 	data, err := PublishDraft(app.Cfg, recordId, app.Debug)
 	if err != nil {
 		return nil, err
@@ -620,6 +652,9 @@ func (app *RdmUtil) PublishDraft(recordId string) ([]byte, error) {
 // fmt.Printf("%s\n", src)
 // ```
 func (app *RdmUtil) SubmitDraft(recordId string) ([]byte, error) {
+	if app.Debug {
+		fmt.Fprintf(os.Stderr, "DEBUG running SubmitDraft(%q) ...n\n", recordId)
+	}
 	data, err := SubmitDraft(app.Cfg, recordId, app.Debug)
 	if err != nil {
 		return nil, err
@@ -644,7 +679,9 @@ func (app *RdmUtil) SubmitDraft(recordId string) ([]byte, error) {
 // fmt.Printf("%s\n", src)
 // ```
 func (app *RdmUtil) ReviewDraft(recordId string, decision string, comment string) ([]byte, error) {
-	fmt.Fprintf(os.Stderr, "DEBUG running ReviewDraft(%q, %q, %q, %t) ...\n", recordId, decision, comment, app.Debug)
+	if app.Debug {
+		fmt.Fprintf(os.Stderr, "DEBUG running ReviewDraft(%q, %s, %q) ...\n", recordId, decision, comment)
+	}
 	data, err := ReviewDraft(app.Cfg, recordId, decision, comment, app.Debug)
 	if err != nil {
 		return nil, err
@@ -704,6 +741,9 @@ func (app *RdmUtil) GetAccess(id string, accessType string) ([]byte, error) {
 // ```
 func (app *RdmUtil) SetAccess(id string, accessType string, accessValue string) ([]byte, error) {
 	var src []byte
+	if app.Debug {
+		fmt.Fprintf(os.Stderr, "DEBUG running SetAccess(%q, %q, %q) ...\n", id, accessType, accessValue)
+	}
 	if accessType != "record" && accessType != "files" && accessType != "embargo" {
 		return nil, fmt.Errorf("%q is not a supported access type (e.g. files, record)", accessType)
 	}
@@ -713,7 +753,7 @@ func (app *RdmUtil) SetAccess(id string, accessType string, accessValue string) 
 	// FIXME: I don't need to support embargo for migration but should
 	// added later when we've migrated authors and before we migrate
 	// thesis.
-	src, err := SetAccess(app.Cfg, id, accessType, accessValue)
+	src, err := SetAccess(app.Cfg, id, accessType, accessValue, app.Debug)
 	if err != nil {
 		return nil, err
 	}
@@ -1053,6 +1093,12 @@ func (app *RdmUtil) Run(in io.Reader, out io.Writer, eout io.Writer, action stri
 			return err
 		}
 		src, err = app.UpdateDraft(recordId, src)
+	case "send_to_community":
+		if len(params) != 2 {
+			return fmt.Errorf("expected record id and comminity UUID")
+		}
+		recordId, communityId := params[0], params[1]
+		src, err = app.SendToCommunity(recordId, communityId)
 	case "set_files_enable":
 		if len(params) != 2 {
 			return fmt.Errorf("expected record id and either true or false")

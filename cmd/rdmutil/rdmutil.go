@@ -147,6 +147,9 @@ get_draft RECORD_ID
 update_draft RECORD_ID [FILENAME]
 : Update a draft record. RECORD_ID is required. FILENAME is optional, if one is provided the JSON document is used to update RDM, otherwise standard input is used to get the JSON required to do the update.
 
+send_to_community RECORD_ID COMMUNITY_ID
+: Set the community for the draft record id. RECORD_ID and COMMUMITY_ID are required.
+
 set_files_enable RECORD_ID true|false
 : This will flip the files.enabled value to true and update the draft. RECORD_ID is required. The one of the values true or false are required.
 
