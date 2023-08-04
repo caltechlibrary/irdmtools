@@ -875,9 +875,11 @@ func metadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record, cont
 			rec.Metadata.Dates = append(rec.Metadata.Dates, dateTypeFromTimestamp("status_changed", eprint.StatusChanged, "Created from EPrint's status_changed field"))
 		}
 	*/
+	/* Version number in EPrints is not needed. Skipping per Tom.
 	if eprint.RevNumber != 0 {
 		rec.Metadata.Version = fmt.Sprintf("v%d", eprint.RevNumber)
 	}
+	*/
 	if eprint.Publisher != "" {
 		rec.Metadata.Publisher = eprint.Publisher
 	} else if eprint.Publication != "" {
@@ -949,6 +951,15 @@ func metadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record, cont
 	return nil
 }
 
+func migrateFile(fName string) bool {
+	// Don't include indexcodes.txt, these are EPrints internal files
+	// not user submitted files.
+	if fName == "indexcodes.txt" {
+		return false
+	}
+	return true
+}
+
 // filesFromEPrint extracts all the file specific metadata from the
 // EPrint record
 func filesFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record) error {
@@ -964,18 +975,24 @@ func filesFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record) error {
 			doc := eprint.Documents.IndexOf(i)
 			if len(doc.Files) > 0 {
 				for _, docFile := range doc.Files {
-					addFiles = true
-					entry := new(simplified.Entry)
-					entry.FileID = docFile.URL
-					entry.Size = docFile.FileSize
-					entry.MimeType = docFile.MimeType
-					if docFile.Hash != "" {
-						entry.CheckSum = fmt.Sprintf("%s:%s", strings.ToLower(docFile.HashType), docFile.Hash)
-					}
-					files.Entries[docFile.Filename] = entry
-					//files.Entries = append(files.Entries, entry)
-					if strings.HasPrefix(docFile.Filename, "preview") {
-						files.DefaultPreview = docFile.Filename
+					// Check to make sure we want to retain file 
+					// information.
+					if migrateFile(docFile.Filename) {
+    					addFiles = true
+    					entry := new(simplified.Entry)
+    					entry.FileID = docFile.URL
+    					entry.Size = docFile.FileSize
+    					entry.MimeType = docFile.MimeType
+    					if doc.Content == "submitted" {
+    						entry.VersionID = "submitted"
+    					}
+    					if docFile.Hash != "" {
+    						entry.CheckSum = fmt.Sprintf("%s:%s", strings.ToLower(docFile.HashType), docFile.Hash)
+    					}
+    					files.Entries[docFile.Filename] = entry
+    					if strings.HasPrefix(docFile.Filename, "preview") {
+    						files.DefaultPreview = docFile.Filename
+    					}
 					}
 				}
 			}

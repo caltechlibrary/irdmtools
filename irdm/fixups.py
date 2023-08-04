@@ -235,7 +235,14 @@ normlzied record dict that is a for migration into Invenio-RDM."""
         # See if DOI already exists in CaltechAUTHORS, if so move it to metadata identifiers.
         if check_for_doi(doi, in_production):
             del record['pids']['doi'] # ['identifier']['provider'] = 'external'
-            record["metadata"]["identifier"].append({ "scheme": "doi", "identifier": f"{doi}" })
+            if "metadata" not in record:
+                record["metadata"] = {}
+            if "identifiers" not in record["metadata"]:
+                record["metadata"]["identifiers"] = []
+            record["metadata"]["identifiers"].append({ "scheme": "doi", "identifier": f"{doi}" })
+            doi = None
+        else:
+            record['pids']['doi']['identifier']['provider'] = 'external'
 
     # Run through related URLs, if DOI then normalize DOI, if DOI match
     # pids.doi.identifier then discard related url value, issue #39
@@ -257,6 +264,8 @@ normlzied record dict that is a for migration into Invenio-RDM."""
                         identifier['identifier'] = related_doi
                         if related_doi != doi:
                             keep_identifiers.append(identifier)
+                            if doi is None:
+                                doi = related_doi
                 elif scheme == 'pmcid':
                     related_pmcid = normalize_pmcid(get_dict_path(identifier, [ 'identifier']))
                     if related_pmcid is not None:
@@ -286,6 +295,8 @@ normlzied record dict that is a for migration into Invenio-RDM."""
                         identifier['identifier'] = related_pub
                         keep_identifiers.append(identifier)
                 elif scheme == 'eprintid':
+                    keep_identifiers.append(identifier)
+                elif scheme == 'resolverid':
                     keep_identifiers.append(identifier)
                 else:
                     if 'identifier' in identifier and identifier['identifier'].strip() != "":
