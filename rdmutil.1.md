@@ -1,6 +1,6 @@
-%rdmutil(1) irdmtools user manual | version 0.0.29 f9cb139
+%rdmutil(1) irdmtools user manual | version 0.0.30 cdb147f
 % R. S. Doiel and Tom Morrell
-% 2023-08-01
+% 2023-08-04
 
 # NAME
 
@@ -82,20 +82,29 @@ retrieve_file RECORD_ID FILENAME [OUTPUT_FILENAME]
 get_versions
 : Retrieve metadata about versions for RECORD_ID. RECORD_ID is required.
 
-get_version_latest
+get_latest_version
 : Retreive the latest version metadata for a RECORD_ID. RECORD_ID is requireed.
 
 new_record [FILENAME]
 : Create a new record from JSON source. If FILENAME is set then json source is read from FILENAME otherwise it reads from standard input.
 
-new_draft RECORD_ID [FILENAME]
-: Create a new draft for record from JSON source. RECORD_ID is required. If FILENAME is set then json source is read from FILENAME otherwise it reads from standard input.
+new_version RECORD_ID
+: This will create a new version of the record. RECORD_ID is required.
+
+new_draft RECORD_ID
+: Create a new draft for an existing record. RECORD_ID is required. 
 
 get_draft RECORD_ID
-: Retrieve an existing draft record for RECORD_ID. RECORD_ID is required. IfRECORD_ID does not exist it you will see a 404 error.
+: Retrieve an existing draft record for RECORD_ID. RECORD_ID is required. If draft of RECORD_ID does not exist you will see a 404 error.
 
 update_draft RECORD_ID [FILENAME]
 : Update a draft record. RECORD_ID is required. FILENAME is optional, if one is provided the JSON document is used to update RDM, otherwise standard input is used to get the JSON required to do the update.
+
+send_to_community RECORD_ID COMMUNITY_ID
+: Set the community for the draft record id. RECORD_ID and COMMUMITY_ID are required.
+
+set_files_enable RECORD_ID true|false
+: This will flip the files.enabled value to true and update the draft. RECORD_ID is required. The one of the values true or false are required.
 
 upload_files RECORD_ID FILENAME [FILENAME ...]
 : Upload files to a draft record. RECORD_ID is required as are one or more filenames.
@@ -129,6 +138,15 @@ harvest KEY_JSON
 
 get_endpoint PATH
 : Perform a GET to the end point indicated by PATH. PATH is required.
+
+post_endpoint PATH [FILENAME]
+: Perform a POST to the end point indicated by PATH. PATH is required. If FILENAME is provided then JSON source is read file the file otherwise it is read from standard input.
+
+put_endpoint PATH [FILENAME]
+: Perform a PUT to the end point indicated by PATH. PATH is required. If FILENAME is provided then JSON source is read file the file otherwise it is read from standard input.
+
+patch_endpoint PATH [FILENAME]
+: Perform a PATCH to the end point indicated by PATH. PATH is required. If FILENAME is provided then JSON source is read file the file otherwise it is read from standard input.
 
 # ACTION_PARAMETERS
 

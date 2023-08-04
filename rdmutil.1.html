@@ -142,7 +142,7 @@ file will be save to this name on the file system.
 <dd>
 Retrieve metadata about versions for RECORD_ID. RECORD_ID is required.
 </dd>
-<dt>get_version_latest</dt>
+<dt>get_latest_version</dt>
 <dd>
 Retreive the latest version metadata for a RECORD_ID. RECORD_ID is
 requireed.
@@ -152,22 +152,34 @@ requireed.
 Create a new record from JSON source. If FILENAME is set then json
 source is read from FILENAME otherwise it reads from standard input.
 </dd>
-<dt>new_draft RECORD_ID [FILENAME]</dt>
+<dt>new_version RECORD_ID</dt>
 <dd>
-Create a new draft for record from JSON source. RECORD_ID is required.
-If FILENAME is set then json source is read from FILENAME otherwise it
-reads from standard input.
+This will create a new version of the record. RECORD_ID is required.
+</dd>
+<dt>new_draft RECORD_ID</dt>
+<dd>
+Create a new draft for an existing record. RECORD_ID is required.
 </dd>
 <dt>get_draft RECORD_ID</dt>
 <dd>
 Retrieve an existing draft record for RECORD_ID. RECORD_ID is required.
-IfRECORD_ID does not exist it you will see a 404 error.
+If draft of RECORD_ID does not exist you will see a 404 error.
 </dd>
 <dt>update_draft RECORD_ID [FILENAME]</dt>
 <dd>
 Update a draft record. RECORD_ID is required. FILENAME is optional, if
 one is provided the JSON document is used to update RDM, otherwise
 standard input is used to get the JSON required to do the update.
+</dd>
+<dt>send_to_community RECORD_ID COMMUNITY_ID</dt>
+<dd>
+Set the community for the draft record id. RECORD_ID and COMMUMITY_ID
+are required.
+</dd>
+<dt>set_files_enable RECORD_ID true|false</dt>
+<dd>
+This will flip the files.enabled value to true and update the draft.
+RECORD_ID is required. The one of the values true or false are required.
 </dd>
 <dt>upload_files RECORD_ID FILENAME [FILENAME …]</dt>
 <dd>
@@ -222,6 +234,24 @@ record into the dataset collection.
 <dt>get_endpoint PATH</dt>
 <dd>
 Perform a GET to the end point indicated by PATH. PATH is required.
+</dd>
+<dt>post_endpoint PATH [FILENAME]</dt>
+<dd>
+Perform a POST to the end point indicated by PATH. PATH is required. If
+FILENAME is provided then JSON source is read file the file otherwise it
+is read from standard input.
+</dd>
+<dt>put_endpoint PATH [FILENAME]</dt>
+<dd>
+Perform a PUT to the end point indicated by PATH. PATH is required. If
+FILENAME is provided then JSON source is read file the file otherwise it
+is read from standard input.
+</dd>
+<dt>patch_endpoint PATH [FILENAME]</dt>
+<dd>
+Perform a PATCH to the end point indicated by PATH. PATH is required. If
+FILENAME is provided then JSON source is read file the file otherwise it
+is read from standard input.
 </dd>
 </dl>
 <h1 id="action_parameters">ACTION_PARAMETERS</h1>

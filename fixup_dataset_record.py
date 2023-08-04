@@ -27,7 +27,7 @@ author: "R. S. Doiel"
 
 {app_name} retrieves a simple formated JSON record from 
 a dataset collection (i.e value of C_NAME) and returns an 
-Invenio-RDM JSON datastructure.
+Invenio-RDM JSON data structure.
 
 C_NAME
 : The name of the dataset collection to read records from

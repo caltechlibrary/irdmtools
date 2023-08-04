@@ -3,3 +3,4 @@ progressbar2
 s3fs
 caltechdata_api
 py_dataset
+pylint 

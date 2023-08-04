@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Institutional Repository Data Management</title>
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="https://caltechlibrary.github.io/css/site.css">
+</head>
+<body>
+<header>
+<a href="http://library.caltech.edu" title="link to Caltech Library Homepage"><img src="https://caltechlibrary.github.io/assets/liblogo.gif" alt="Caltech Library logo"></a>
+</header>
+<nav>
+<ul>
+    <li><a href="/">Home</a></li>
+    <li><a href="index.html">README</a></li>
+    <li><a href="LICENSE">LICENSE</a></li>
+    <li><a href="INSTALL.html">INSTALL</a></li>
+    <li><a href="user-manual.html">User Manual</a></li>
+<!--    <li><a href="search.html">Search Docs</a></li> -->
+    <li><a href="about.html">About</a></li>
+    <li><a href="https://github.com/caltechlibrary/irdmtools">GitHub</a></li>
+</ul>
+</nav>
+
+<section>
+<h1 id="action-items">Action Items</h1>
+<h2 id="bugs">Bugs</h2>
+<ul class="task-list">
+<li><label><input type="checkbox" />eprint2rdm missing metadata
+attributes</label>
+<ul class="task-list">
+<li><label><input type="checkbox" checked="" />journal related fields
+(e.g. journal:journal) in custom fields</label></li>
+<li><label><input type="checkbox" />thesis related fields</label></li>
+<li><label><input type="checkbox" />meeting:meeting in custom
+fields</label></li>
+<li><label><input type="checkbox" checked="" />migrate resolver id
+(eprint.IDNumber) to metadata.identifiers</label></li>
+<li><label><input type="checkbox" />Map CaltechTHESIS custom fields,
+issue #44</label></li>
+<li><label><input type="checkbox" />Group transfer problem, see issue
+#42</label></li>
+</ul></li>
+<li><label><input type="checkbox" />rdmuil</label>
+<ul class="task-list">
+<li><label><input type="checkbox" />Send to Cummunity not
+working</label></li>
+<li><label><input type="checkbox" />Submit Draft not
+working</label></li>
+<li><label><input type="checkbox" />Review Drafft not
+wokring</label></li>
+<li><label><input type="checkbox" />Submit Publish not
+working</label></li>
+<li><label><input type="checkbox" checked="" />Upload files to
+Draft</label></li>
+<li><label><input type="checkbox" checked="" />Delete files from
+Draft</label></li>
+<li><label><input type="checkbox" />Import Files to Draft</label></li>
+<li><label><input type="checkbox" />Put eprints ‘suggests’ private notes
+into review comments, see issue #16</label></li>
+<li><label><input type="checkbox" />Do file mapping, see issue
+#3</label></li>
+</ul></li>
+<li><label><input type="checkbox" />migrate_record.py (running Python
+Fixup code)</label>
+<ul class="task-list">
+<li><label><input type="checkbox" checked="" />resolver id
+migrated</label></li>
+<li><label><input type="checkbox" />migrate DOI to metadata.identifiers
+if already in repository, issue #15</label></li>
+</ul></li>
+<li><label><input type="checkbox" />doi2rdm</label>
+<ul class="task-list">
+<li><label><input type="checkbox" />Migrate monographs from CrossRef
+more effectively, see issue #40</label></li>
+<li><label><input type="checkbox" />figure out how to transform mml
+markup, issue #36</label></li>
+</ul></li>
+</ul>
+<h2 id="next">Next</h2>
+<ul class="task-list">
+<li><label><input type="checkbox" checked="" />add put_record to
+rdmutil, actually done as many steps, new_record, new_draft,
+update_draft, …</label></li>
+<li><label><input type="checkbox" checked="" />Implement a CrossRef to
+Invenio RDM record</label></li>
+<li><label><input type="checkbox" checked="" />Figure out a faster way
+to retrieve RDM ids without using the API or OAI-PMH. Possibly options
+would be to create an rdmapid service, or direct query via
+PostgreSQL.</label>
+<ul>
+<li>PostgREST can provide a RESTful JSON API to our Invenio RDM data
+stored in Postgres</li>
+</ul></li>
+</ul>
+<h2 id="someday-maybe">Someday, maybe</h2>
+</section>
+
+<footer>
+<span>&copy; 2023 <a href="https://www.library.caltech.edu/copyright">Caltech Library</a></span>
+<address>1200 E California Blvd, Mail Code 1-32, Pasadena, CA 91125-3200</address>
+<span><a href="mailto:library@caltech.edu">Email Us</a></span>
+<span>Phone: <a href="tel:+1-626-395-3405">(626)395-3405</a></span>
+</footer>
+</body>
+</html>

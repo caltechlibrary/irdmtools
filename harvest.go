@@ -77,7 +77,7 @@ func Harvest(cfg *Config, fName string, debug bool) error {
 	iTime, reportProgress := time.Now(), false
 	cfg.rl = new(RateLimit)
 	for i, id := range recordIds {
-		rec, err := GetRecord(cfg, id)
+		rec, err := GetRecord(cfg, id, false)
 		if err != nil {
 			msg := fmt.Sprintf("%s", err)
 			if strings.HasPrefix(msg, "429 ") {

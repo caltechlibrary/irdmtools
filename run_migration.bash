@@ -187,8 +187,8 @@ function do_rdm_import() {
 	echo "$(wc -l "${KEY_LIST}") keys found in ${KEY_LIST}"
 	echo ""
 	if [ -f "${KEY_LIST}" ]; then
-		echo "running migrate_records.py -exit_on_error -eprintids ${KEY_LIST} ${C_NAME}"
-		if ! python3 migrate_records.py -exit_on_error -eprintids "${KEY_LIST}" "$C_NAME"; then
+		echo "running migrate_records_to_dataset.py -exit_on_error -eprintids ${KEY_LIST} ${C_NAME}"
+		if ! python3 migrate_records_to_dataset.py -exit_on_error -eprintids "${KEY_LIST}" "$C_NAME"; then
 			echo "Failed to process ${KEY_LIST} using ${C_NAME}"
 			exit 1
 		fi

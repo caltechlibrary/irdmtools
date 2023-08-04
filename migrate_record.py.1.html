@@ -23,49 +23,37 @@
 </nav>
 
 <section>
-<h1 id="about-this-software">About this software</h1>
-<h2 id="irdmtools-0.0.30">irdmtools 0.0.30</h2>
-<h3 id="authors">Authors</h3>
-<ul>
-<li>R. S. Doiel</li>
-<li>Tom Morrell</li>
-</ul>
-<h3 id="contributors">Contributors</h3>
-<ul>
-<li>Kathy Johnson</li>
-<li>George Porter</li>
-</ul>
-<p>Tools for working with institutional repositories and data management
-systems. Current implementation targets Invenio-RDM.</p>
-<ul>
-<li>License: <a
-href="https://caltechlibrary.github.io/irdmtools/LICENSE"
-class="uri">https://caltechlibrary.github.io/irdmtools/LICENSE</a></li>
-<li>GitHub: <a href="https://github.com/caltechlibrary/irdmtools"
-class="uri">https://github.com/caltechlibrary/irdmtools</a></li>
-<li>Issues: <a href="https://github.com/caltechlibrary/irdmtools/issues"
-class="uri">https://github.com/caltechlibrary/irdmtools/issues</a></li>
-</ul>
-<h3 id="programming-languages">Programming languages</h3>
-<ul>
-<li>Go</li>
-<li>Python</li>
-</ul>
-<h3 id="operating-systems">Operating Systems</h3>
-<ul>
-<li>Linux</li>
-<li>macOS</li>
-<li>Windows</li>
-</ul>
-<h3 id="software-requiremets">Software Requiremets</h3>
-<ul>
-<li>Go &gt;= 1.20.4</li>
-<li>PostgreSQL &gt;= 15</li>
-<li>PostgREST &gt;= 11</li>
-<li>Pandoc &gt;= 3</li>
-<li>MySQL &gt;= 8</li>
-<li>SQLite &gt;= 3</li>
-</ul>
+<h1 id="name">NAME</h1>
+<p>migrate_record.py</p>
+<h1 id="synopsis">SYNOPSIS</h1>
+<p>migrate_record.py <a href="#options">OPTIONS</a></p>
+<h1 id="description">DESCRIPTION</h1>
+<p>migrate_record.py is a filter program. It reads from standard input
+and writes fixed up RDM records to standard output. It is intended to be
+used in a pipe line with eprint2rdm and rdmutil.</p>
+<h1 id="options">OPTIONS</h1>
+<dl>
+<dt>-h, –help</dt>
+<dd>
+show this help message and exit
+</dd>
+<dt>-help</dt>
+<dd>
+display help details
+</dd>
+<dt>-license</dt>
+<dd>
+display license details
+</dd>
+<dt>-version</dt>
+<dd>
+display version
+</dd>
+</dl>
+<h1 id="examples">EXAMPLES</h1>
+<p>Retrieves record 85542 from caltechauthors.ds and return a JSON
+object as an Invenio-RDM structure.</p>
+<pre><code>    eprint2rdm authors.library.caltech.edu 85542 |      migrate_record.py | rdmutil new_record</code></pre>
 </section>
 
 <footer>
