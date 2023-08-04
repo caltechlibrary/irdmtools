@@ -11,4 +11,9 @@ Tools
 - [people2vocabulary](people2vocabulary.1.md) transfor a JSON array of Person objects into a YAML vocabularly file suitable for RDM.
 - [Extending RDM with PostgREST](extending-rdm-with-postgrest.md)
 
+Project Status
+--------------
 
+- [Issues](https://github.com/caltechlibrary/irdmtools/issues)
+- [Releases](https://github.com/caltechlibrary/irdmtools/releases)
+- [TODO list](TODO.html)
