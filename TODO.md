@@ -13,9 +13,10 @@ Bugs
 	- [ ] Map CaltechTHESIS custom fields, issue #44
 	- [ ] Group transfer problem, see issue #42
 - [ ] rdmuil
-	- [ ] Send to Cummunity not consistently working
-	- [ ] Submit Draft not consistently working
-	- [ ] Submit Review not consistently working
+	- [ ] Send to Cummunity not working
+	- [ ] Submit Draft not working
+    - [ ] Review Drafft not wokring
+	- [ ] Submit Publish not working
 	- [x] Upload files to Draft
 	- [x] Delete files from Draft
 	- [ ] Import Files to Draft
