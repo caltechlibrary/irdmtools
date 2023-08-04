@@ -983,8 +983,10 @@ func filesFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record) error {
     					entry.FileID = docFile.URL
     					entry.Size = docFile.FileSize
     					entry.MimeType = docFile.MimeType
-    					if doc.Content == "submitted" {
-    						entry.VersionID = "submitted"
+    					if doc.Content == "submitted"  || 
+							doc.Content == "preprint" || 
+							doc.Content == "published" {
+    						entry.VersionID = doc.Content
     					}
     					if docFile.Hash != "" {
     						entry.CheckSum = fmt.Sprintf("%s:%s", strings.ToLower(docFile.HashType), docFile.Hash)

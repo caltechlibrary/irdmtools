@@ -228,20 +228,26 @@ normlzied record dict that is a for migration into Invenio-RDM."""
                 "scheme": "eprintid", "identifier": f"{eprintid}"
             })
     if not files:
-        record["files"] = { "enabled": False, "order": [] }
+        if 'files' in record:
+            record["files"] = { "enabled": True, "order": [] }
+        else:
+            record["files"] = { "enabled": False, "order": [] }
     # Normalize DOI, issue #39
     doi = normalize_doi(get_dict_path(record, ['pids', 'doi', 'identifier']))
     if doi is not None:
         # See if DOI already exists in CaltechAUTHORS, if so move it to metadata identifiers.
         if check_for_doi(doi, in_production):
-            del record['pids']['doi'] # ['identifier']['provider'] = 'external'
+            del record['pids']['doi'] 
             if "metadata" not in record:
                 record["metadata"] = {}
             if "identifiers" not in record["metadata"]:
                 record["metadata"]["identifiers"] = []
             record["metadata"]["identifiers"].append({ "scheme": "doi", "identifier": f"{doi}" })
             doi = None
-        else:
+        # Force DOI to be "external" for migration purposes.
+        if 'pids' in record and \
+            'doi' in record['pids'] and \
+            'identifier' in record['pids']['doi']:
             record['pids']['doi']['identifier']['provider'] = 'external'
 
     # Run through related URLs, if DOI then normalize DOI, if DOI match
