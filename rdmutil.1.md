@@ -1,6 +1,6 @@
-%rdmutil(1) irdmtools user manual | version 0.0.30 a38e246
+%rdmutil(1) irdmtools user manual | version 0.0.31 08a4023
 % R. S. Doiel and Tom Morrell
-% 2023-08-04
+% 2023-08-07
 
 # NAME
 
@@ -71,7 +71,7 @@ get_raw_record RECORD_ID
 : Returns a specific map/dictionary record indicated by RECORD_ID, e.g. bq3se-47g50. The REORCID_ID is a required parameter.
 
 get_files RECORD_ID
-: Returns a list of file entries for a indicated by RECORD_ID, e.g. bq3se-47g50. The REORCID_ID is a required parameter.
+: Return a list of files for record with RECORD_ID.  RECORD_ID is required.
 
 get_file RECORD_ID FILENAME
 : Returns the metadata for a file indicated by RECORD_ID and FILENAME, e.g. bq3se-47g50 is a record id and article.pdf is a filename. RECORD_ID and FILENAME are required parameters.
@@ -100,14 +100,14 @@ get_draft RECORD_ID
 update_draft RECORD_ID [FILENAME]
 : Update a draft record. RECORD_ID is required. FILENAME is optional, if one is provided the JSON document is used to update RDM, otherwise standard input is used to get the JSON required to do the update.
 
-send_to_community RECORD_ID COMMUNITY_ID
-: Set the community for the draft record id. RECORD_ID and COMMUMITY_ID are required.
-
 set_files_enable RECORD_ID true|false
 : This will flip the files.enabled value to true and update the draft. RECORD_ID is required. The one of the values true or false are required.
 
 upload_files RECORD_ID FILENAME [FILENAME ...]
 : Upload files to a draft record. RECORD_ID is required as are one or more filenames.
+
+get_files RECORD_ID
+: Retrieve the list of files attached to a draft. RECORD_ID is required.
 
 delete_files RECORD_ID FILENAME [FILENAME ...]
 : Delete files in a draft record. RECORD_ID is required as are one or more filenames.
@@ -115,17 +115,17 @@ delete_files RECORD_ID FILENAME [FILENAME ...]
 discard_draft
 : Discard (delete) a draft record from RDM. RECORD_ID is required.
 
-submit_draft RECORD_ID
-: Submit the draft record for review. RECORD_ID is required.
-
 review_comment RECORD_ID [FILENAME]
 : Submit a comment to a review. RECORD_ID is required. If FILENAME is provided the comment is read from a file otherwise it is read from standard input.
 
-review_draft RECORD_ID accept|decline|"" [COMMENT]
-: Review a submitted draft record. the values "accept", "decline" or "" and an optional COMMENT.
+send_to_community RECORD_ID COMMUNITY_ID
+: Submit a draft record to a community for review. RECORD_ID and COMMUMITY_ID are required.
 
-publish_draft RECORD_ID
-: Publish a draft record in review. RECORD_ID is required.
+get_review
+: Get review requests assocaited with RECORD_ID. RECORD_ID is required.
+
+review_request RECORD_ID accept|decline|cancel|"" [COMMENT]
+: Review a submitted draft record. the values "accept", "decline" or "" and an optional COMMENT.
 
 get_access RECORD_ID [ACCESS_TYPE]
 : This will return the JSON for the access attribute in the record. If you include ACCESS_TYPE of "files" or "records" it will return just that attribute.  RECORD_ID is always required.
@@ -135,6 +135,7 @@ set_access RECORD_ID ACCESS_TYPE ACCESS_VALUE
 
 harvest KEY_JSON
 : harvest takes a JSON file containing a list of keys and harvests each record into the dataset collection.
+
 
 get_endpoint PATH
 : Perform a GET to the end point indicated by PATH. PATH is required.

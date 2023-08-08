@@ -233,6 +233,33 @@ func (app *RdmUtil) GetRawRecord(id string) ([]byte, error) {
 	return src, nil
 }
 
+// GetDraftFiles returns the metadata for a draft's files
+//
+// ```
+//
+// app := new(irdmtools.RdmUtil)
+// if err := app.LoadConfig("irdmtools.json"); err != nil {
+//   // ... handle error ...
+// }
+// recordId := "woie-x0121"
+// src, err := app.GetFiles(recordId)
+// if err != nil {
+//   // ... handle error ...
+// }
+// fmt.Printf("%s\n", src)
+//
+// ```
+func (app *RdmUtil) GetDraftFiles(recordId string) ([]byte, error) {
+	if app.Debug {
+		fmt.Fprintf(os.Stderr, "DEBUG running GetDraftFiles(%q) ...\n", recordId)
+	}
+	data, err := GetDraftFiles(app.Cfg, recordId, app.Debug)
+	if err != nil {
+		return nil, err
+	}
+	return json.MarshalIndent(data, "", "    ")
+}
+
 // GetFiles returns the metadata for working with files
 //
 // ```
@@ -249,17 +276,17 @@ func (app *RdmUtil) GetRawRecord(id string) ([]byte, error) {
 // fmt.Printf("%s\n", src)
 //
 // ```
-func (app *RdmUtil) GetFiles(id string) ([]byte, error) {
-	obj, err := GetFiles(app.Cfg, id)
+func (app *RdmUtil) GetFiles(recordId string) ([]byte, error) {
+	if app.Debug {
+		fmt.Fprintf(os.Stderr, "DEBUG running GetFiles(%q) ...\n", recordId)
+	}
+	data, err := GetFiles(app.Cfg, recordId, app.Debug)
 	if err != nil {
 		return nil, err
 	}
-	src, err := json.MarshalIndent(obj, "", "    ")
-	if err != nil {
-		return nil, err
-	}
-	return src, nil
+	return json.MarshalIndent(data, "", "    ")
 }
+
 
 // GetFile returns the metadata for a file
 //
@@ -555,6 +582,7 @@ func (app *RdmUtil) UploadFiles(recordId string, filenames []string) ([]byte, er
 }
 
 
+
 // DeleteFiles takes a RDM record id an list of files and removes them from a draft.
 //
 // ```
@@ -611,8 +639,8 @@ func (app *RdmUtil) DiscardDraft(recordId string) ([]byte, error) {
 	return json.MarshalIndent(data, "", "    ")
 }
 
-// PublishDraft takes a record id for a draft in review and publishes
-// the draft.
+// GetReview takes a record id and returns information about
+// review requests.
 //
 // ```
 // app := new(irdmtools.RdmUtil)
@@ -620,50 +648,24 @@ func (app *RdmUtil) DiscardDraft(recordId string) ([]byte, error) {
 //   // ... handle error ...
 // }
 // id := "woie-x0121"
-// src, err := app.PublishDraft(id)
+// src, err := app.GetReview(id, "accept", "")
 // if err != nil {
 //   // ... handle error ...
 // }
 // fmt.Printf("%s\n", src)
 // ```
-func (app *RdmUtil) PublishDraft(recordId string) ([]byte, error) {
+func (app *RdmUtil) GetReview(recordId string) ([]byte, error) {
 	if app.Debug {
-		fmt.Fprintf(os.Stderr, "DEBUG runnning PublishDraft(%q) ...\n", recordId)
+		fmt.Fprintf(os.Stderr, "DEBUG running GetReview(%s) ...\n", recordId)
 	}
-	data, err := PublishDraft(app.Cfg, recordId, app.Debug)
+	data, err := GetReview(app.Cfg, recordId, app.Debug)
 	if err != nil {
 		return nil, err
 	}
 	return json.MarshalIndent(data, "", "    ")
 }
 
-// SubmitDraft takes a record id, JSON data and submits it for review draft.
-//
-// ```
-// app := new(irdmtools.RdmUtil)
-// if err := app.LoadConfig("irdmtools.json"); err != nil {
-//   // ... handle error ...
-// }
-// id := "woie-x0121"
-// src, err := app.SubmitDraft(id)
-// if err != nil {
-//   // ... handle error ...
-// }
-// fmt.Printf("%s\n", src)
-// ```
-func (app *RdmUtil) SubmitDraft(recordId string) ([]byte, error) {
-	if app.Debug {
-		fmt.Fprintf(os.Stderr, "DEBUG running SubmitDraft(%q) ...n\n", recordId)
-	}
-	data, err := SubmitDraft(app.Cfg, recordId, app.Debug)
-	if err != nil {
-		return nil, err
-	}
-	return json.MarshalIndent(data, "", "    ")
-}
-
-
-// ReviewDraft takes a record id, a decision and a comment and
+// ReviewRequest takes a record id, a decision and a comment and
 // submits it to the review process.
 //
 // ```
@@ -678,11 +680,12 @@ func (app *RdmUtil) SubmitDraft(recordId string) ([]byte, error) {
 // }
 // fmt.Printf("%s\n", src)
 // ```
-func (app *RdmUtil) ReviewDraft(recordId string, decision string, comment string) ([]byte, error) {
+func (app *RdmUtil) ReviewRequest(recordId string, decision string, comment string) ([]byte, error) {
 	if app.Debug {
-		fmt.Fprintf(os.Stderr, "DEBUG running ReviewDraft(%q, %s, %q) ...\n", recordId, decision, comment)
+		fmt.Fprintf(os.Stderr, "DEBUG running ReviewRequest(%q, %s, %q) ...\n", recordId, decision, comment)
 	}
-	data, err := ReviewDraft(app.Cfg, recordId, decision, comment, app.Debug)
+	data, err := ReviewRequest(app.Cfg, recordId, decision, comment, app.Debug)
+	fmt.Fprintf(os.Stderr, "DEBUG data\n%+v\n\terr %+v\n", data, err)
 	if err != nil {
 		return nil, err
 	}
@@ -779,6 +782,12 @@ func (app *RdmUtil) PutEndpoint(p string, data []byte) ([]byte, error) {
 // PATH provided.
 func (app *RdmUtil) PatchEndpoint(p string, data []byte) ([]byte, error) {
 	return PatchEndpoint(app.Cfg, p, data)
+}
+
+// DeleteEndpoint performs a DELETE on the endpoint indicated by 
+// PATH provided.
+func (app *RdmUtil) DeleteEndpoint(p string) ([]byte, error) {
+	return DeleteEndpoint(app.Cfg, p)
 }
 
 
@@ -954,6 +963,18 @@ func (app *RdmUtil) Run(in io.Reader, out io.Writer, eout io.Writer, action stri
 	var (
 		src []byte
 		err error
+		recordId string
+		communityId string
+		inName string
+		outName string
+		enable bool
+		decision string
+		comment string
+		accessType string
+		val string
+		p string
+		data []byte
+		filenames []string
 	)
 	switch action {
 	case "setup":
@@ -982,35 +1003,41 @@ func (app *RdmUtil) Run(in io.Reader, out io.Writer, eout io.Writer, action stri
 	case "get_all_ids":
 		src, err = app.GetRecordIds()
 	case "get_raw_record":
-		recordId, _, _, err := getRecordParams(params, true, false, false)
+		recordId, _, _, err = getRecordParams(params, true, false, false)
 		if err != nil {
 			return err
 		}
 		src, err = app.GetRawRecord(recordId)
 	case "get_record":
-		recordId, _, _, err := getRecordParams(params, true, false, false)
+		recordId, _, _, err = getRecordParams(params, true, false, false)
 		if err != nil {
 			return err
 		}
 		src, err = app.GetRecord(recordId)
+	case "get_draft_files":
+		recordId, _, _, err = getRecordParams(params, true, false, false)
+		if err != nil {
+			return err
+		}
+		src, err = app.GetDraftFiles(recordId)
 	case "get_files":
-		recordId, _, _, err := getRecordParams(params, true, false, false)
+		recordId, _, _, err = getRecordParams(params, true, false, false)
 		if err != nil {
 			return err
 		}
 		src, err = app.GetFiles(recordId)
 	case "get_file":
-		recordId, inName, _, err := getRecordParams(params, true, true, false)
+		recordId, inName, _, err = getRecordParams(params, true, true, false)
 		if err != nil {
 			return err
 		}
 		src, err = app.GetFile(recordId, inName)
 	case "retrieve_file":
-		recordId, inName, outName, err := getRecordParams(params, true, true, true)
+		recordId, inName, outName, err = getRecordParams(params, true, true, true)
 		if err != nil {
 			return err
 		}
-		data, err := app.RetrieveFile(recordId, inName)
+		data, err = app.RetrieveFile(recordId, inName)
 		if err != nil {
 			return err
 		}
@@ -1020,17 +1047,17 @@ func (app *RdmUtil) Run(in io.Reader, out io.Writer, eout io.Writer, action stri
 		fmt.Fprintf(out, "Wrote %s %d bytes\n", outName, len(data))
 		return nil
 	case "get_versions":
-		recordId, _, _, err := getRecordParams(params, true, false, false)
+		recordId, _, _, err = getRecordParams(params, true, false, false)
 		if err != nil {
 			return err
 		}
 		src, err = app.GetVersions(recordId)
 	case "get_latest_version":
-		recordId, _, outName, err := getRecordParams(params, true, false, false)
+		recordId, _, outName, err = getRecordParams(params, true, false, false)
 		if err != nil {
 			return err
 		}
-		src, err := app.GetVersionLatest(recordId)
+		src, err = app.GetVersionLatest(recordId)
 		if err != nil {
 			return err
 		}
@@ -1041,7 +1068,7 @@ func (app *RdmUtil) Run(in io.Reader, out io.Writer, eout io.Writer, action stri
 			return nil
 		}
 	case "new_record":
-		inName, outName, err := getIOParams(params, false, false)
+		inName, outName, err = getIOParams(params, false, false)
 		if inName != "" && inName != "-" {
 			src, err = os.ReadFile(inName)
 		} else {
@@ -1061,25 +1088,25 @@ func (app *RdmUtil) Run(in io.Reader, out io.Writer, eout io.Writer, action stri
 			return nil
 		}
 	case "new_version":
-		recordId, _, _, err := getRecordParams(params, true, false, false)
+		recordId, _, _, err = getRecordParams(params, true, false, false)
 		if err != nil {
 			return err
 		}	
 		src, err = app.NewRecordVersion(recordId)
 	case "new_draft":
-		recordId, _, _, err := getRecordParams(params, true, false, false)
+		recordId, _, _, err = getRecordParams(params, true, false, false)
 		if err != nil {
 			return err
 		}
 		src, err = app.NewDraft(recordId)
 	case "get_draft":
-		recordId, _, _, err := getRecordParams(params, true, false, false)
+		recordId, _, _, err = getRecordParams(params, true, false, false)
 		if err !=nil {
 			return err
 		}
 		src, err = app.GetDraft(recordId)
 	case "update_draft":
-		recordId, inName, _, err := getRecordParams(params, true, false, false)
+		recordId, inName, _, err = getRecordParams(params, true, false, false)
 		if err != nil {
 			return err
 		}
@@ -1093,12 +1120,6 @@ func (app *RdmUtil) Run(in io.Reader, out io.Writer, eout io.Writer, action stri
 			return err
 		}
 		src, err = app.UpdateDraft(recordId, src)
-	case "send_to_community":
-		if len(params) != 2 {
-			return fmt.Errorf("expected record id and comminity UUID")
-		}
-		recordId, communityId := params[0], params[1]
-		src, err = app.SendToCommunity(recordId, communityId)
 	case "set_files_enable":
 		if len(params) != 2 {
 			return fmt.Errorf("expected record id and either true or false")
@@ -1106,52 +1127,53 @@ func (app *RdmUtil) Run(in io.Reader, out io.Writer, eout io.Writer, action stri
 		if params[1] != "true" && params[1] != "false" {
 			return fmt.Errorf("files.enable can be set to true or false")
 		}
-		recordId, enable := params[0], (params[1] == "true")
+		recordId, enable = params[0], (params[1] == "true")
 		src, err = app.SetFilesEnable(recordId, enable)
 	case "upload_files":
-		recordId, filenames, err := getFileParams(params, true, true)
+		recordId, filenames, err = getFileParams(params, true, true)
 		if err != nil {
 			return err
 		}
 		src, err = app.UploadFiles(recordId, filenames)
 	case "delete_files":
-		recordId, filenames, err := getFileParams(params, true, true)
+		recordId, filenames, err = getFileParams(params, true, true)
 		if err != nil {
 			return err
 		}
 		src, err = app.DeleteFiles(recordId, filenames)
 	case "discard_draft":
-		recordId, _, _, err := getRecordParams(params, true, false, false)
+		recordId, _, _, err = getRecordParams(params, true, false, false)
 		if err != nil {
 			return err
 		}
 		src, err = app.DiscardDraft(recordId)
-	case "submit_draft":
-		recordId, _, _, err := getRecordParams(params, true, false, false)
+	case "send_to_community":
+		if len(params) != 2 {
+			return fmt.Errorf("expected record id and RDM comminity id")
+		}
+		recordId, communityId = params[0], params[1]
+		src, err = app.SendToCommunity(recordId, communityId)
+	case "get_review":
+		if len(params) != 1 {
+			return fmt.Errorf("expected record id")
+		}
+		recordId := params[0]
+		src, err = app.GetReview(recordId)
+	case "review_request":
+		recordId, decision, comment, err = getReviewParams(params, true, true, false)
 		if err != nil {
 			return err
 		}
-		src, err = app.SubmitDraft(recordId)
-	case "review_draft":
-		recordId, decision, comment, err := getReviewParams(params, true, true, false)
-		if err != nil {
-			return err
-		}
-		src, err = app.ReviewDraft(recordId, decision, comment)
-	case "publish_draft":
-		recordId, _, _, err := getRecordParams(params, true, false, false)
-		if err != nil {
-			return err
-		}
-		src, err = app.PublishDraft(recordId)
+		src, err = app.ReviewRequest(recordId, decision, comment)
+		fmt.Fprintf(eout, "DEBUG eout review requests err -> %+v\n", err)
 	case "get_access":
-		recordId, accessType, _, err := getAccessParams(params, true, false, false)
+		recordId, accessType, _, err = getAccessParams(params, true, false, false)
 		if err != nil {
 			return err
 		}
 		src, err = app.GetAccess(recordId, accessType)
 	case "set_access":
-		recordId, accessType, val, err := getAccessParams(params, true, true, true)
+		recordId, accessType, val, err = getAccessParams(params, true, true, true)
 		if err != nil {
 			return err
 		}
@@ -1162,7 +1184,7 @@ func (app *RdmUtil) Run(in io.Reader, out io.Writer, eout io.Writer, action stri
 		}
 		src, err = app.GetEndpoint(params[0])
 	case "post_endpoint":
-		p, inName, err := getEndpointParams(params, true, false)
+		p, inName, err = getEndpointParams(params, true, false)
 		if err != nil {
 			return err
 		}
@@ -1174,7 +1196,7 @@ func (app *RdmUtil) Run(in io.Reader, out io.Writer, eout io.Writer, action stri
 		}
 		src, err = app.PostEndpoint(p, data)
 	case "put_endpoint":
-		p, inName, err := getEndpointParams(params, true, false)
+		p, inName, err = getEndpointParams(params, true, false)
 		if err != nil {
 			return err
 		}
@@ -1186,7 +1208,7 @@ func (app *RdmUtil) Run(in io.Reader, out io.Writer, eout io.Writer, action stri
 		}
 		src, err = app.PutEndpoint(p, data)
 	case "patch_endpoint":
-		p, inName, err := getEndpointParams(params, true, false)
+		p, inName, err = getEndpointParams(params, true, false)
 		if err != nil {
 			return err
 		}
@@ -1197,6 +1219,12 @@ func (app *RdmUtil) Run(in io.Reader, out io.Writer, eout io.Writer, action stri
 			data, err = io.ReadAll(os.Stdin)
 		}
 		src, err = app.PatchEndpoint(p, data)
+	case "delete_endpoint":
+		p, _, err = getEndpointParams(params, true, false)
+		if err != nil {
+			return err
+		}
+		src, err = app.DeleteEndpoint(p)
 	case "harvest":
 		if len(params) != 1 {
 			return fmt.Errorf("JSON Identifier file required")

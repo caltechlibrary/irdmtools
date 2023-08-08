@@ -198,7 +198,7 @@ func getRawFile(token string, uri string, contentType string) ([]byte, http.Head
 
 // postJSON takes a token, uri and JSON source as byte slice 
 // and sends it to the RDM instance for processing.
-func postJSON(token string, uri string, src []byte) ([]byte, http.Header, error) {
+func postJSON(token string, uri string, src []byte, expectedStatusCode int, debug bool) ([]byte, http.Header, error) {
 	var (
 		req *http.Request
 		err error
@@ -222,8 +222,11 @@ func postJSON(token string, uri string, src []byte) ([]byte, http.Header, error)
 		return nil, nil, err
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode < 200 || resp.StatusCode > 201 {
-		return nil, resp.Header, fmt.Errorf("%s %s", resp.Status, uri)
+	if debug {
+		fmt.Fprintf(os.Stderr, "DEBUG postJSON(token, %q, src, true) -> %d, %s\n", uri, resp.StatusCode, resp.Status)
+	}
+	if resp.StatusCode != expectedStatusCode {
+		return nil, resp.Header, fmt.Errorf("POST %s %s, expected %d\n\tpayload\n%s\n", resp.Status, uri, expectedStatusCode, src)
 	}
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -237,7 +240,7 @@ func postJSON(token string, uri string, src []byte) ([]byte, http.Header, error)
 
 // putJSON takes a token, uri and JSON source as byte slice
 // and sends it to RDM instance for processing.
-func putJSON(token string, uri string, src []byte) ([]byte, http.Header, error) {
+func putJSON(token string, uri string, src []byte, expectedStatusCode int, debug bool) ([]byte, http.Header, error) {
 	client := &http.Client{}
 	req, err := http.NewRequest("PUT", uri, bytes.NewBuffer(src))
 	if err != nil {
@@ -250,8 +253,11 @@ func putJSON(token string, uri string, src []byte) ([]byte, http.Header, error) 
 		return nil, resp.Header, err
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode < 200 || resp.StatusCode > 201 {
-		return nil, resp.Header, fmt.Errorf("%s %s", resp.Status, uri)
+	if debug {
+		fmt.Fprintf(os.Stderr, "DEBUG putJSON(token, %q, src, true) -> %d, %s\n", uri, resp.StatusCode, resp.Status)
+	}
+	if resp.StatusCode != expectedStatusCode {
+		return nil, resp.Header, fmt.Errorf("PUT %s %s, expected %d\n\tpayload\n%s\n", resp.Status, uri, expectedStatusCode, src)
 	}
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -262,7 +268,7 @@ func putJSON(token string, uri string, src []byte) ([]byte, http.Header, error) 
 
 // patchJSON takes a token, a uri and JSON source as byte slice
 // and sends it to RDM instance for processing.
-func patchJSON(token string, uri string, src []byte) ([]byte, http.Header, error) {
+func patchJSON(token string, uri string, src []byte, expectedStatusCode int, debug bool) ([]byte, http.Header, error) {
 	client := &http.Client{}
 	req, err := http.NewRequest("PATCH", uri, bytes.NewBuffer(src))
 	if err != nil {
@@ -275,8 +281,11 @@ func patchJSON(token string, uri string, src []byte) ([]byte, http.Header, error
 		return nil, resp.Header, err
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode < 200 || resp.StatusCode > 201 {
-		return nil, resp.Header, fmt.Errorf("%s %s", resp.Status, uri)
+	if resp.StatusCode != expectedStatusCode {
+		return nil, resp.Header, fmt.Errorf("PATCH %s %s, expected %d\n\tpayload\n%s\n", resp.Status, uri, expectedStatusCode, src)
+	}
+	if debug {
+		fmt.Fprintf(os.Stderr, "DEBUG patchJSON(token, %q, %s, %d, true) ->%d %s\n", uri, src, expectedStatusCode, resp.StatusCode, resp.Status)
 	}
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -288,7 +297,7 @@ func patchJSON(token string, uri string, src []byte) ([]byte, http.Header, error
 
 // delJSON takes a token, uri and sends it to RDM instance 
 // for processing.
-func delJSON(token string, uri string) ([]byte, http.Header, error) {
+func delJSON(token string, uri string, expectedStatusCode int, debug bool) ([]byte, http.Header, error) {
 	client := &http.Client{}
 	req, err := http.NewRequest("DELETE", uri, nil)
 	if err != nil {
@@ -300,8 +309,8 @@ func delJSON(token string, uri string) ([]byte, http.Header, error) {
 		return nil, resp.Header, err
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode < 200 || resp.StatusCode > 299 {
-		return nil, resp.Header, fmt.Errorf("%s %s", resp.Status, uri)
+	if resp.StatusCode != expectedStatusCode {
+		return nil, resp.Header, fmt.Errorf("%s %s, expected %d", resp.Status, uri, expectedStatusCode)
 	}
 	data, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -310,7 +319,7 @@ func delJSON(token string, uri string) ([]byte, http.Header, error) {
 	return data, resp.Header, err
 }
 
-func putFile(token string, uri string, fName string) ([]byte, http.Header, error) {
+func putFile(token string, uri string, fName string, expectedStatusCode int, debug bool) ([]byte, http.Header, error) {
 	client := &http.Client{}
 	src, err := os.ReadFile(fName)
 	if err != nil {
@@ -326,13 +335,16 @@ func putFile(token string, uri string, fName string) ([]byte, http.Header, error
 	if err != nil {
 		return nil, resp.Header, err
 	}
-	if resp.StatusCode != 200 {
-		return nil, resp.Header, fmt.Errorf("%s %s", resp.Status, uri)
+	if debug {
+		fmt.Fprintf(os.Stderr, "DEBUG putFile(tokan, %q, %q, %d, true) -> %d, %s", uri, fName, expectedStatusCode, resp.StatusCode, resp.Status)
+	}
+	if resp.StatusCode != expectedStatusCode {
+		return nil, resp.Header, fmt.Errorf("%s %s, expected %d", resp.Status, uri, expectedStatusCode)
 	}
 	return nil, resp.Header, err
 }
 
-func deleteFile(token string, uri string, fName string) ([]byte, http.Header, error) {
+func deleteFile(token string, uri string, fName string, expectedStatusCode int, debug bool) ([]byte, http.Header, error) {
 	client := &http.Client{}
 	req, err := http.NewRequest("DELETE", uri, nil)
 	if err != nil {
@@ -343,8 +355,11 @@ func deleteFile(token string, uri string, fName string) ([]byte, http.Header, er
 	if err != nil {
 		return nil, resp.Header, err
 	}
-	if resp.StatusCode != 204 { 
-		return nil, resp.Header, fmt.Errorf("%s %s", resp.Status, uri)
+	if resp.StatusCode != expectedStatusCode { 
+		return nil, resp.Header, fmt.Errorf("%s %s, expected %d", resp.Status, uri, expectedStatusCode)
+	}
+	if debug {
+		fmt.Fprintf(os.Stderr, "DEBUG deleteFile(token, %q, %q, %d, true) -> %d, %s\n", uri, fName, expectedStatusCode, resp.StatusCode, resp.Status)
 	}
 	return nil, resp.Header, err
 }
@@ -639,43 +654,6 @@ func GetRecord(cfg *Config, id string, draft bool) (*simplified.Record, error) {
 }
 
 
-// GetFiles takes a configuration object and record id,
-// contacts an RDM instance and returns the files metadata
-// and an error value.
-//
-// The configuration object must have the InvenioAPI and
-// InvenioToken attributes set.
-//
-// ```
-// cfg, _ := LoadConfig("config.json")
-// id := "qez01-2309a"
-// entries, err := GetFiles(cfg, id)
-// if err != nil {
-//    // ... handle error ...
-// }
-//
-// ```
-func GetFiles(cfg *Config, id string) (*simplified.FileListing, error) {
-	// Make sure we have a valid URL
-	u, err := url.Parse(cfg.InvenioAPI)
-	if err != nil {
-		return nil, err
-	}
-	// Setup API request for a record
-	uri := fmt.Sprintf("%s/api/records/%s/files", u.String(), id)
-
-	src, headers, err := getJSON(cfg.InvenioToken, uri)
-	if err != nil {
-		return nil, err
-	}
-	cfg.rl.FromHeader(headers)
-	obj := new(simplified.FileListing)
-	if err := json.Unmarshal(src, &obj); err != nil {
-		return nil, err
-	}
-	return obj, nil
-}
-
 // GetFile takes a configuration object, record id and filename,
 // contacts an RDM instance and returns the specific file metadata
 // and an error value.
@@ -855,7 +833,7 @@ func NewRecord(cfg *Config, src []byte) (map[string]interface{}, error) {
 	// Setup API request for a new record, the JSON returned is supposed
 	// to contain the record id and rest of record.
 	uri := fmt.Sprintf("%s/api/records", u.String())
-	src, headers, err := postJSON(cfg.InvenioToken, uri, src)
+	src, headers, err := postJSON(cfg.InvenioToken, uri, src, http.StatusCreated, false)
 	if err != nil {
 		return nil, err
 	}
@@ -893,7 +871,7 @@ func NewRecordVersion(cfg *Config, recordId string) (map[string]interface{}, err
 	// Setup API request for a new record, the JSON returned is supposed
 	// to contain the record id and rest of record.
 	uri := fmt.Sprintf("%s/api/records/%s/versions", u.String(), recordId)
-	src, headers, err := postJSON(cfg.InvenioToken, uri, nil)
+	src, headers, err := postJSON(cfg.InvenioToken, uri, nil, http.StatusCreated, false)
 	if err != nil {
 		return nil, err
 	}
@@ -932,7 +910,7 @@ func NewDraft(cfg *Config, recordId string) (map[string]interface{}, error) {
 	}
 	// Setup API request for a record
 	uri := fmt.Sprintf("%s/api/records/%s/draft", u.String(), recordId)
-	src, headers, err := postJSON(cfg.InvenioToken, uri, nil)
+	src, headers, err := postJSON(cfg.InvenioToken, uri, nil, http.StatusCreated, false)
 	if err != nil {
 		return nil, err
 	}
@@ -1009,13 +987,13 @@ func UpdateDraft(cfg *Config, recordId string, payloadSrc []byte, debug bool) (m
 	}
 	// Setup API request for a record
 	uri := fmt.Sprintf("%s/api/records/%s/draft", u.String(), recordId)
-	src, headers, err := putJSON(cfg.InvenioToken, uri, payloadSrc)
+	src, headers, err := putJSON(cfg.InvenioToken, uri, payloadSrc, http.StatusOK, debug)
 	if err != nil {
 		return nil, err
 	}
 	cfg.rl.FromHeader(headers)
 	if debug {
-		fmt.Fprintf(os.Stderr, "DEBUG UpdateDraft, putJSON(token, %q, %s) ->\n\tsrc %s\n\theaders %+v\n\terror %s\n",
+		fmt.Fprintf(os.Stderr, "DEBUG UpdateDraft, putJSON(token, %q, %s, true) ->\n\tsrc %s\n\theaders %+v\n\terror %s\n",
 			uri, payloadSrc, src, headers, errorToString(err))
 	}
 	obj := map[string]interface{}{}
@@ -1052,7 +1030,7 @@ func DiscardDraft(cfg *Config, recordId string, debug bool) (map[string]interfac
 	if debug {
 		fmt.Fprintf(os.Stderr, "DEBUG DiscardDraft, uri %s\n", uri)
 	}
-	src, headers, err := delJSON(cfg.InvenioToken, uri)
+	src, headers, err := delJSON(cfg.InvenioToken, uri, http.StatusNoContent, debug)
 	if err != nil {
 		return nil, err
 	}
@@ -1063,331 +1041,18 @@ func DiscardDraft(cfg *Config, recordId string, debug bool) (map[string]interfac
 	return nil, nil
 }
 
-
-// getRecordLink retrieve a the record link uri for attribute name
-// from a map[string]interface{} representation of a record under 
-// links attribute.
-func getRecordLink(m map[string]interface{}, attr string) (string, bool) {
-	if elem, ok := m["links"]; ok {
-		links := elem.(map[string]interface{})
-		if link, hasLink := links[attr]; hasLink {
-			return link.(string), true
-		}
-	}
-	return "", false
-}
-
-// PublishDraft takes a configuration object and record id,
-// contacts an RDM instance and publishes the draft record 
-// and returns an error value.
-//
-// The configuration object must have the InvenioAPI and
-// InvenioToken attributes set.
+// SetFilesEnable will set the metadata.files.enable value.
 //
 // ```
 // cfg, _ := LoadConfig("config.json")
 // id := "qez01-2309a"
+// enabled := true
 // debug := true
-// _, err := PublishDraft(cfg, id, debug)
+// _, err := SetFilesEnable(cfg, id, enabled, debug)
 // if err != nil {
 //    // ... handle error ...
 // }
 // ```
-func PublishDraft(cfg *Config, recordId string, debug bool) (map[string]interface{}, error) {
-	m, err := GetDraft(cfg, recordId)
-	if err != nil {
-		return nil, err
-	}
-	payloadSrc, err := json.MarshalIndent(m, "", "    ")
-	if err != nil {
-		return nil, err
-	}
-	// First see if we're submitting this for review
-	link, ok := getRecordLink(m, "publish")
-	if ! ok {
-		return nil, fmt.Errorf("cannot publish %q, no link", recordId)
-	}
-	// Setup API request for a record
-	// Make sure we have a valid URL
-	src, headers, err := postJSON(cfg.InvenioToken, link, payloadSrc)
-	if err != nil {
-		return nil, err
-	}
-	if debug {
-		fmt.Fprintf(os.Stderr, "DEBUG PublishDraft, postJSON(token, %q, %s) ->\n\tsrc %s\n\theaders %+v\n\terror %s\n", link, payloadSrc, src, headers, errorToString(err))
-	}
-	cfg.rl.FromHeader(headers)
-	obj := map[string]interface{}{}
-	if err := json.Unmarshal(src, &obj); err != nil {
-		return nil, err
-	}
-	return obj, nil
-}
-
-
-// SubmitDraft takes a configuration object and record id,
-// contacts an RDM instance and submits a draft record 
-// for review. It returns JSON results and an error value.
-//
-// The configuration object must have the InvenioAPI and
-// InvenioToken attributes set.
-//
-// ```
-// cfg, _ := LoadConfig("config.json")
-// id := "qez01-2309a"
-// debug := true
-// _, err := SubmitDraft(cfg, id, debug)
-// if err != nil {
-//    // ... handle error ...
-// }
-// ```
-func SubmitDraft(cfg *Config, recordId string, debug bool) (map[string]interface{}, error) {
-	m, err := GetDraft(cfg, recordId)
-	if err != nil {
-		return nil, err
-	}
-	// First see if we're submitting this for review
-	link, ok := getRecordLink(m, "submit-review")
-	if ! ok {
-		link, ok = getRecordLink(m, "publish")
-		if ! ok {
-			return nil, fmt.Errorf("cannot submit for review %q, no link to review or submit-review", recordId)
-		}
-	}
-	appName := path.Base(os.Args[0])
-	payload := map[string]string{
-			"content": fmt.Sprintf("This record is submitted automatically with %s", appName),
-			"format": "html",
-	}
-	payloadSrc, err := json.MarshalIndent(payload, "", "     ")
-	if err != nil {
-		return nil, err
-	}
-	// Setup API request for a record
-	// Make sure we have a valid URL
-	src, headers, err := postJSON(cfg.InvenioToken, link, payloadSrc)
-	if err != nil {
-		return nil, err
-	}
-	cfg.rl.FromHeader(headers)
-	if debug {
-		fmt.Fprintf(os.Stderr, "DEBUG SubmitDraft, postJSON(token, %q, %s) ->\n\tsrc %s\n\theaders %+v\n\terror %s\n", link, payloadSrc, src, headers, errorToString(err))
-	}
-	obj := map[string]interface{}{}
-	if err := json.Unmarshal(src, &obj); err != nil {
-		return nil, err
-	}
-	return obj, nil
-}
-
-
-// getReviewLink retrieve a the record review link uri for 
-// attribute name from a map[string]interface{} representation of a record.
-func getReviewLink(m map[string]interface{}, attr string) (string, bool) {
-	if elem, ok := m["links"]; ok {
-		links := elem.(map[string]interface{})
-		if attr == "accept" || attr == "cancel" || attr == "decline" {
-			if elem, ok = links["actions"]; ok {
-				links = elem.(map[string]interface{})
-				if link, hasLink := links[attr]; hasLink {
-					return link.(string), true
-				}
-			}
-		} else {
-			if elem, ok = links[attr]; ok {
-				return elem.(string), true
-			}
-		}
-	}
-	return "", false
-}
-
-// getReviewCommunity takes a review record as map[string]interface{} and
-// returns the comminuty uuid is found.
-func getReviewCommunity(m map[string]interface{}) (string, bool) {
-	if elem, ok := m["reciever"]; ok {
-		data := elem.(map[string]interface{})
-		if elem, ok = data["community"]; ok {
-			return elem.(string), true
-		}
-	}
-	return "", false
-}
-
-// ReviewDraft takes a configuration object and record id, a decision,
-// and optional comment contacts an RDM instance and updates the 
-// review status for the submitted draft record.
-//
-// The configuration object must have the InvenioAPI and
-// InvenioToken attributes set.
-//
-// ```
-// cfg, _ := LoadConfig("config.json")
-// id := "qez01-2309a"
-// debug := true
-// _, err := ReviewDraft(cfg, id, "accept", "", debug)
-// if err != nil {
-//    // ... handle error ...
-// }
-// ```
-func ReviewDraft(cfg *Config, recordId string, decision string, comment string, debug bool) (map[string]interface{}, error) {
-	m, err := GetDraft(cfg, recordId)
-	if err != nil {
-		return nil, err
-	}
-
-	// Setup for API review request for a record
-	link, ok := getRecordLink(m, "review")
-	if ! ok {
-		return nil, fmt.Errorf("cannot find review link for %q", recordId)
-	}
-	src, headers, err := getJSON(cfg.InvenioToken, link)
-	if err != nil {
-		return nil, err
-	}
-	cfg.rl.FromHeader(headers)
-	if debug {
-		fmt.Fprintf(os.Stderr, "DEBUG ReviewDraft, getJSON(token, %q) ->\n%s\n\theaders %+v\n\terror %s\n", 
-			link, src, headers, errorToString(err))
-	}
-
-	reviewObj := map[string]interface{}{}
-	err = json.Unmarshal(src, &reviewObj)
-	if err != nil {
-		return nil, err
-	}
-	// Get Review links
-	commentLink, _ := getReviewLink(reviewObj, "comments")
-	acceptLink, _ := getReviewLink(reviewObj, "accept")
-	cancelLink, _ := getReviewLink(reviewObj, "cancel")
-	declineLink, _ := getReviewLink(reviewObj, "decline")
-
-	// Pick link to do update
-	switch decision {
-		case "accept":
-			link = acceptLink
-		case "cancel":
-			link = cancelLink
-		case "decline":
-			link = declineLink
-		case "":
-			link = commentLink
-		default:
-			return nil, fmt.Errorf("unsupported decision type %q", decision)
-	}
-
-	// Setup payload for update
-	if comment == "" {
-		appName := path.Base(os.Args[0])
-		fmt.Sprintf(`this record was processed by %s`, appName)
-	}
-	data := map[string]interface{}{
-		"content": comment,
-		"format": "html",
-	}
-	payloadSrc, err := json.MarshalIndent(data, "", "    ")
-	if err != nil {
-		return nil, err
-	}
-	// Make review request with Payload
-	src, headers, err = postJSON(cfg.InvenioToken, link, payloadSrc)
-	if err != nil {
-		return nil, err
-	}
-	cfg.rl.FromHeader(headers)
-	if debug {
-		fmt.Fprintf(os.Stderr, "DEBUG ReviewDraft, postJSON(token, %q, %s) ->\n%s\n\theaders %+v\n\terror %s\n", 
-			link, payloadSrc, src, headers, errorToString(err))
-	}
-	obj := map[string]interface{}{}
-	if err := json.Unmarshal(src, &obj); err != nil {
-		return nil, err
-	}
-	return obj, nil
-}
-
-// SendToCommunity sets a community for a draft. This will trigger the review step need for publication.
-// You need the record id and a community id (looks like a UUID). Returns a map[string]interface{} and error
-// values.
-//
-// ```
-// cfg, _ := LoadConfig("config.json")
-// id := "qez01-2309a"
-// comminityId := ... // this is a UUID like value
-// debug := true
-// src, err := SendToCommunity(cfg, id, communityId, debug)
-// if err != nil {
-//    // ... handle error ...
-// }
-// ```
-func SendToCommunity(cfg *Config, recordId string, communityId string, debug bool) (map[string]interface{}, error) {
-	appName := path.Base(os.Args[0])
-	m, err := GetDraft(cfg, recordId)
-	if err != nil {
-		return nil, err
-	}
-	if m == nil {
-		return nil, fmt.Errorf("unabled to find draft for %q", recordId)
-	}
-	link, ok := getRecordLink(m, "review")
-	if ! ok {
-		return nil, fmt.Errorf("review link not found for %q", recordId)
-	}
-	data := map[string]interface{}{
-		"reciever": map[string]interface{}{
-			"community": communityId,
-		},
-		"type": "community-submission",
-	}
-	payloadSrc, err := json.MarshalIndent(data, "", "    ")
-	if err != nil {
-		return nil, err
-	}
-	src, headers, err := putJSON(cfg.InvenioToken, link, payloadSrc)
-	if err != nil {
-		return nil, err
-	}
-	cfg.rl.FromHeader(headers)
-	if debug {
-		fmt.Fprintf(os.Stderr, "DEBUG SendToCommunity, putJSON(token, %q, %s) ->\n\tsrc %s\n\theaders %+v\n\terror %s\n", 
-			link, payloadSrc, src, headers, errorToString(err))
-	}
-	data = map[string]interface{}{
-		"payload": map[string]interface{}{
-			"comment": fmt.Sprintf("This record is submitted automatically with %s", appName),
-			"format": "html",
-		},
-	}
-	if err := json.Unmarshal(src, &m); err != nil {
-		return nil, err
-	}
-	link, ok = getRecordLink(m, "submit")
-	if ! ok {
-		return nil, fmt.Errorf("tailed to get submit link to set community for %q", recordId)
-	}
-	data = map[string]interface{}{
-		"payload": map[string]interface{}{
-			"comment": fmt.Sprintf("This record is submitted automatically with %s", appName),
-			"format": "html",
-		},
-	}
-	payloadSrc, err = json.MarshalIndent(data, "", "    ")
-	if err != nil {
-		return nil, err
-	}
-	src, headers, err = postJSON(cfg.InvenioToken, link, payloadSrc)
-	cfg.rl.FromHeader(headers)
-	if debug {
-		fmt.Fprintf(os.Stderr, "DEBUG SendToCommunity, postJSON(token, %q, %s) ->\n\tsrc %s\n\theaders %+v\n\terror %s\n", 
-			link, payloadSrc, src, headers, errorToString(err))
-	}
-	if err := json.Unmarshal(src, &m); err != nil {
-		return nil, err
-	}
-	return m, err
-}
-
-
 func SetFilesEnable(cfg *Config, recordId string, enable bool, debug bool) (map[string]interface{}, error) {
 	m, err := GetDraft(cfg, recordId)
 	if err != nil {
@@ -1425,6 +1090,88 @@ func SetFilesEnable(cfg *Config, recordId string, enable bool, debug bool) (map[
 	return m, nil
 }
 
+// GetDraftFiles takes a configuration object and record id,
+// contacts an RDM instance and returns the files metadata
+// and an error value.
+//
+// The configuration object must have the InvenioAPI and
+// InvenioToken attributes set.
+//
+// ```
+// cfg, _ := LoadConfig("config.json")
+// id := "qez01-2309a"
+// debug := true
+// entries, err := GetDraftFiles(cfg, id, debug)
+// if err != nil {
+//    // ... handle error ...
+// }
+// ```
+func GetDraftFiles(cfg *Config, recordId string, debug bool) (map[string]interface{}, error) {
+	// Make sure we have a valid URL
+	u, err := url.Parse(cfg.InvenioAPI)
+	if err != nil {
+		return nil, err
+	}
+	uri := fmt.Sprintf("%s/%s/draft/files", u.String(), recordId)
+	if debug {
+		fmt.Fprintf(os.Stderr, "DEBUG GetDraftFiles(cfg, %q, true) -> uri %q\n", recordId, uri)
+	}
+	src, headers, err := getJSON(cfg.InvenioToken, uri)
+	if err != nil {
+		return nil, err
+	}
+	cfg.rl.FromHeader(headers)
+	if debug {
+		fmt.Fprintf(os.Stderr, "DEBUG GetDraftFiles(cfg, %q, true) ->\n%s\n", recordId, src)
+	}
+	m := map[string]interface{}{}
+	if err := json.Unmarshal(src, &m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
+// GetFiles takes a configuration object and record id,
+// contacts an RDM instance and returns the files metadata
+// and an error value.
+//
+// The configuration object must have the InvenioAPI and
+// InvenioToken attributes set.
+//
+// ```
+// cfg, _ := LoadConfig("config.json")
+// id := "qez01-2309a"
+// debug := true
+// entries, err := GetFiles(cfg, id, debug)
+// if err != nil {
+//    // ... handle error ...
+// }
+// ```
+func GetFiles(cfg *Config, recordId string, debug bool) (map[string]interface{}, error) {
+	// Make sure we have a valid URL
+	u, err := url.Parse(cfg.InvenioAPI)
+	if err != nil {
+		return nil, err
+	}
+	uri := fmt.Sprintf("%s/%s/files", u.String(), recordId)
+	if debug {
+		fmt.Fprintf(os.Stderr, "DEBUG GetFiles(cfg, %q, true) -> uri %q\n", recordId, uri)
+	}
+	src, headers, err := getJSON(cfg.InvenioToken, uri)
+	if err != nil {
+		return nil, err
+	}
+	cfg.rl.FromHeader(headers)
+	if debug {
+		fmt.Fprintf(os.Stderr, "DEBUG GetFiles(cfg, %q, true) ->\n%s\n", recordId, src)
+	}
+	m := map[string]interface{}{}
+	if err := json.Unmarshal(src, &m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // UploadFiles takes a configuration object and record id,
 // and a map to filename and paths contacts an RDM instance 
 // and adds the files to a draft record.
@@ -1443,7 +1190,7 @@ func SetFilesEnable(cfg *Config, recordId string, enable bool, debug bool) (map[
 // }
 // fmt.Printf("%+v\n", draft)
 // ```
-func UploadFiles(cfg *Config, recordId string, filenames []string, debug bool) ([]byte, error) {
+func UploadFiles(cfg *Config, recordId string, filenames []string, debug bool) (map[string]interface{}, error) {
 	// Make sure we have a valid URL
 	u, err := url.Parse(cfg.InvenioAPI)
 	if err != nil {
@@ -1462,13 +1209,13 @@ func UploadFiles(cfg *Config, recordId string, filenames []string, debug bool) (
 	}
 	// Setup API request for a record
 	uri := fmt.Sprintf("%s/api/records/%s/draft/files", u.String(), recordId)
-	src, headers, err := postJSON(cfg.InvenioToken, uri, payloadSrc)
+	src, headers, err := postJSON(cfg.InvenioToken, uri, payloadSrc, http.StatusCreated, debug)
 	if err != nil {
 		return nil, err
 	}
 	cfg.rl.FromHeader(headers)
 	if debug {
-		fmt.Fprintf(os.Stderr, "DEBUG UploadFiles, postJSON(token, %q, %s) ->\n\tsrc %s\n\theaders %+v\n\terror %s\n", 
+		fmt.Fprintf(os.Stderr, "DEBUG UploadFiles, postJSON(token, %q, %s, true) ->\n\tsrc %s\n\theaders %+v\n\terror %s\n", 
 			uri, payloadSrc, src, headers, errorToString(err))
 	}
 	filesInfo := new(simplified.FileListing)
@@ -1482,7 +1229,7 @@ func UploadFiles(cfg *Config, recordId string, filenames []string, debug bool) (
 	for _, fName := range filenames {
 		key := path.Base(fName)
 		uri = fmt.Sprintf("%s/api/records/%s/draft/files/%s/content", u.String(), recordId, key)
-		src, headers, err := putFile(cfg.InvenioToken, uri, fName)
+		src, headers, err := putFile(cfg.InvenioToken, uri, fName, http.StatusOK, debug)
 		if err != nil {
 			return nil, err
 		}
@@ -1493,17 +1240,17 @@ func UploadFiles(cfg *Config, recordId string, filenames []string, debug bool) (
 		}
 		// Commit the upload
 		uri = fmt.Sprintf("%s/api/records/%s/draft/files/%s/commit", u.String(), recordId, key)
-		src, headers, err = postJSON(cfg.InvenioToken, uri, nil)
+		src, headers, err = postJSON(cfg.InvenioToken, uri, nil, http.StatusOK, debug)
 		if err != nil {
 			return nil, err
 		}
 		if debug {
-			fmt.Fprintf(os.Stderr, "DEBUG UploadFiles, postJSON(token, %q, nil) ->\n\tsrc %s\n\theaders %+v\n\terror %s\n", 
+			fmt.Fprintf(os.Stderr, "DEBUG UploadFiles, postJSON(token, %q, nil, true) ->\n\tsrc %s\n\theaders %+v\n\terror %s\n", 
 				uri, src, headers, errorToString(err))
 		}
 		cfg.rl.FromHeader(headers)
 	}
-	return nil, nil
+	return GetDraft(cfg, recordId)
 }
 
 
@@ -1535,7 +1282,7 @@ func DeleteFiles(cfg *Config, recordId string, filenames []string, debug bool) (
 	for _, fName := range filenames {
 		key := path.Base(fName)
 		uri = fmt.Sprintf("%s/api/records/%s/draft/files/%s", u.String(), recordId, key)
-		src, headers, err := deleteFile(cfg.InvenioToken, uri, fName)
+		src, headers, err := deleteFile(cfg.InvenioToken, uri, fName, http.StatusNoContent, debug)
 		if err != nil {
 			return nil, err
 		}
@@ -1671,12 +1418,242 @@ func SetAccess(cfg *Config, recordId string, accessType string, accessValue stri
 	if err != nil {
 		return nil, err
 	}
-	src, headers, err := postJSON(cfg.InvenioToken, uri, src)
+	src, headers, err := postJSON(cfg.InvenioToken, uri, src, http.StatusOK, debug)
 	if err != nil {
 		return nil, err
 	}
 	cfg.rl.FromHeader(headers)
 	return src, nil
+}
+
+
+// SendToCommunity sends a draft to an RDM community. This will trigger
+// the review step need for publication. You need the record id and a
+// community id (looks like a UUID). Returns a map[string]interface{}
+// and error values.
+//
+// ```
+// cfg, _ := LoadConfig("config.json")
+// id := "qez01-2309a"
+// comminityId := ... // this is a UUID like value
+// debug := true
+// src, err := SendToCommunity(cfg, id, communityId, debug)
+// if err != nil {
+//    // ... handle error ...
+// }
+// ```
+func SendToCommunity(cfg *Config, recordId string, communityId string, debug bool) (map[string]interface{}, error) {
+	appName := path.Base(os.Args[0])
+	// Make sure we have a URL
+	u, err := url.Parse(cfg.InvenioAPI)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get draft so we have the links we need to do submissions
+	m, err := GetDraft(cfg, recordId)
+	if err != nil {
+		return nil, err
+	}
+	if m == nil {
+		return nil, fmt.Errorf("unabled to find draft for %q", recordId)
+	}
+
+	// Get review and submit links
+	reviewLink := fmt.Sprintf("%s/api/records/%s/draft/review", u.String(), recordId)
+	if debug {
+		fmt.Fprintf(os.Stderr, "DEBUG SendToCommunity,\n\treview link %q\n", reviewLink)
+	}
+
+	payload := fmt.Sprintf(`{
+  "receiver": {
+    "community": %q
+  },
+  "type": "community-submission"
+}
+`, communityId)
+	src, headers, err := putJSON(cfg.InvenioToken, reviewLink, []byte(payload), http.StatusOK, debug)
+	if err != nil {
+		return nil, err
+	}
+	cfg.rl.FromHeader(headers)
+
+	if debug {
+		fmt.Fprintf(os.Stderr, "DEBUG SendToCommunity, putJSON(token, %q, %s, true) ->\n\tsrc %s\n\theaders %+v\n\terror %s\n", 
+			reviewLink, payload, src, headers, errorToString(err))
+	}
+	data := map[string]interface{}{}
+	err = json.Unmarshal(src, &data)
+	
+	requestId, ok := data["id"]
+	if !ok {
+		return nil, fmt.Errorf("failed to get request id from PUT, payload received\n%s", payload)
+	}
+
+	// Figure out the submitLink for the comment now that we have a 
+	// request id.
+	submitLink := fmt.Sprintf("%s/api/requests/%s/comments", u.String(), requestId)
+
+	// Add Submit Review and comment with a POST and submit-review link
+	comment := fmt.Sprintf("This record is submitted automatically with %s", appName)
+	payload = fmt.Sprintf(`{
+  "payload": {
+    "content": %q,
+    "format": "html"
+  }
+}`, comment)
+	src, headers, err = postJSON(cfg.InvenioToken, submitLink, []byte(payload), http.StatusCreated, debug)
+	if err != nil {
+		return nil, err
+	}
+	cfg.rl.FromHeader(headers)
+	if debug {
+		fmt.Fprintf(os.Stderr, "DEBUG SendToCommunity, postJSON(token, %q, %s) ->\n\tsrc %s\n\theaders %+v\n\terror %s\n", 
+			submitLink, payload, src, headers, errorToString(err))
+	}
+	data = map[string]interface{}{}
+	err = json.Unmarshal(src, &data)
+	if err != nil {
+		return nil, err
+	}
+	if debug {
+		fmt.Fprintf(os.Stderr, "DEBUG result of POST comment %+v\n", data)
+	}
+
+	// Now we need to "submit for review" to community.
+	submitReviewLink := fmt.Sprintf("%s/api/records/%s/draft/actions/submit-review", u.String(), recordId)
+	payload = `{
+  "payload": {
+    "content": "Thank you in advance for the review.",
+    "format": "html"
+  }
+}`
+	src, headers, err = postJSON(cfg.InvenioToken, submitReviewLink, []byte(payload), http.StatusAccepted, debug)
+	if err != nil {
+		return nil, err
+	}
+	cfg.rl.FromHeader(headers)
+	if debug {
+		fmt.Fprintf(os.Stderr, "DEBUG SendToCommunity, postJSON(token, %q, %s) ->\n\tsrc %s\n\theaders %+v\n\terror %s\n", 
+			submitReviewLink, payload, src, headers, errorToString(err))
+	}
+
+	// Get the updated record and return it.
+	return GetDraft(cfg, recordId)
+}
+
+// getReviewCommunity takes a review record as map[string]interface{} and
+// returns the comminuty uuid is found.
+func getReviewCommunity(m map[string]interface{}) (string, bool) {
+	if elem, ok := m["reciever"]; ok {
+		data := elem.(map[string]interface{})
+		if elem, ok = data["community"]; ok {
+			return elem.(string), true
+		}
+	}
+	return "", false
+}
+
+
+// GetReview takes a configuration object, record id and
+// returns an review object (which includes a request id) and error code.
+func GetReview(cfg *Config, recordId string, debug  bool) (map[string]interface{}, error) {
+	// Make sure we have a URL
+	u, err := url.Parse(cfg.InvenioAPI)
+	if err != nil {
+		return nil, err
+	}
+	uri := fmt.Sprintf("%s/api/records/%s/draft/review", u.String(), recordId)
+	src, headers, err := getJSON(cfg.InvenioToken, uri)
+	if err != nil {
+		return nil, err
+	}
+	cfg.rl.FromHeader(headers)
+	if debug {
+		fmt.Fprintf(os.Stderr, "DEBUG GetReview, getJSON(token, %q) ->\n%s\n", uri, src)
+	}
+	m := map[string]interface{}{}
+	err = json.Unmarshal(src, &m)
+	if err != nil {
+		return nil, err
+	}
+	return m, err	
+}
+
+// ReviewRequest takes a configuration object and record id, a decision,
+// and optional comment contacts an RDM instance and updates the 
+// review status for the submitted draft record.
+//
+// The configuration object must have the InvenioAPI and
+// InvenioToken attributes set.
+//
+// ```
+// cfg, _ := LoadConfig("config.json")
+// id := "qez01-2309a"
+// debug := true
+// _, err := ReviewDraft(cfg, id, "accept", "", debug)
+// if err != nil {
+//    // ... handle error ...
+// }
+// ```
+func ReviewRequest(cfg *Config, recordId string, decision string, comment string, debug bool) (map[string]interface{}, error) {
+	// Make sure we have a URL
+	u, err := url.Parse(cfg.InvenioAPI)
+	if err != nil {
+		return nil, err
+	}
+	// GetReview data
+	m, err := GetReview(cfg, recordId, debug)
+	if err != nil {
+		return nil, err
+	}
+	// Figure out the request id.
+	requestId, ok := m["id"]
+	if ! ok {
+		return nil, fmt.Errorf("could not retrieve review request for %q", recordId)
+	}
+	if debug {
+		fmt.Fprintf(os.Stderr, "DEBUG ReviewRequest, request id %q\n", requestId)
+	}
+
+	// Pick link and status code for update
+	link, expectedStatusCode, payload := "", http.StatusOK, ""
+	switch decision {
+		case "accept":
+			link = fmt.Sprintf("%s/api/requests/%s/actions/accept", u.String(), requestId)
+			payload = `{ "payload": {"content": "You are in!", "format": "html"} }`
+		case "cancel":
+			link = fmt.Sprintf("%s/api/requests/%s/actions/cancel", u.String(), requestId)
+			payload = `{ "payload": {"content": "Didn't mean to do that!", "format": "html"} }`
+		case "decline":
+			link = fmt.Sprintf("%s/api/requests/%s/actions/decline", u.String(), requestId)
+			payload = `{ "payload": {"content": "You are not in!", "format": "html"} }`
+		case "comment":
+			link = fmt.Sprintf("%s/api/requests/%s/comments", u.String(), requestId)
+			payload = fmt.Sprintf(`{ "payload": {"content": %q, "format": "html"}`, comment)
+			expectedStatusCode = http.StatusCreated
+		default:
+			return nil, fmt.Errorf("unsupported decision type %q", decision)
+	}
+	if debug {
+		fmt.Fprintf(os.Stderr, "DEBUG ReviewRequest link %q, expected status code %d\n", link, expectedStatusCode)
+	}
+
+	// Make review request with Payload
+	src, headers, err := postJSON(cfg.InvenioToken, link, []byte(payload), expectedStatusCode, debug)
+	if err != nil {
+		return nil, err
+	}
+	cfg.rl.FromHeader(headers)
+	if debug {
+		fmt.Fprintf(os.Stderr, "DEBUG ReviewDraft, postJSON(token, %q, %s, %d, true) ->\n%s\n\theaders %+v\n\terror %s\n", 
+			link, payload, expectedStatusCode, src, headers, errorToString(err))
+	}
+	obj := map[string]interface{}{}
+	if err := json.Unmarshal(src, &obj); err != nil {
+		return nil, err
+	}
+	return obj, nil
 }
 
 
@@ -1733,7 +1710,7 @@ func PostEndpoint(cfg *Config, p string, payload []byte) ([]byte, error) {
 		return nil, err
 	}
 	uri := fmt.Sprintf("%s/%s", u.String(), p)
-	src, headers, err := postJSON(cfg.InvenioToken, uri, payload)
+	src, headers, err := postJSON(cfg.InvenioToken, uri, payload, http.StatusOK, false)
 	if err != nil {
 		return nil, err
 	}
@@ -1764,7 +1741,7 @@ func PutEndpoint(cfg *Config, p string, payload []byte) ([]byte, error) {
 		return nil, err
 	}
 	uri := fmt.Sprintf("%s/%s", u.String(), p)
-	src, headers, err := putJSON(cfg.InvenioToken, uri, payload)
+	src, headers, err := putJSON(cfg.InvenioToken, uri, payload, http.StatusOK, false)
 	if err != nil {
 		return nil, err
 	}
@@ -1796,7 +1773,38 @@ func PatchEndpoint(cfg *Config, p string, payload []byte) ([]byte, error) {
 		return nil, err
 	}
 	uri := fmt.Sprintf("%s/%s", u.String(), p)
-	src, headers, err := patchJSON(cfg.InvenioToken, uri, payload)
+	src, headers, err := patchJSON(cfg.InvenioToken, uri, payload, http.StatusOK, false)
+	if err != nil {
+		return nil, err
+	}
+	cfg.rl.FromHeader(headers)
+	return src, nil
+}
+
+
+// DeleteEndpoint takes an access token and endpoint path along with
+// JSON source as payload and returns JSON source and error value.
+//
+// The configuration object must have the InvenioAPI and
+// InvenioToken attributes set.
+//
+// ```
+// cfg, _ := LoadConfig("config.json")
+// p := "api/records/qez01-2309a/draft"
+// src, err := DeleteEndpoint(cfg.InvenioToken, p)
+// if err != nil {
+//    // ... handle error ...
+// }
+// fmt.Printf("%s\n", src)
+// ```
+func DeleteEndpoint(cfg *Config, p string) ([]byte, error) {
+	// Make sure we have a URL
+	u, err := url.Parse(cfg.InvenioAPI)
+	if err != nil {
+		return nil, err
+	}
+	uri := fmt.Sprintf("%s/%s", u.String(), p)
+	src, headers, err := delJSON(cfg.InvenioToken, uri, http.StatusNoContent, false)
 	if err != nil {
 		return nil, err
 	}

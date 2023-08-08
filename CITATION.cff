@@ -14,7 +14,7 @@ authors:
 
 
 repository-code: "https://github.com/caltechlibrary/irdmtools"
-version: 0.0.30
+version: 0.0.31
 license-url: "https://caltechlibrary.github.io/irdmtools/LICENSE"
 keywords: [ "institutional repository", "data
 management", "Invenio", "Invenio-RDM" ]

@@ -247,8 +247,8 @@ normlzied record dict that is a for migration into Invenio-RDM."""
         # Force DOI to be "external" for migration purposes.
         if 'pids' in record and \
             'doi' in record['pids'] and \
-            'identifier' in record['pids']['doi']:
-            record['pids']['doi']['identifier']['provider'] = 'external'
+            'provider' in record ['pids']['doi']:
+            record['pids']['doi']['provider'] = 'external'
 
     # Run through related URLs, if DOI then normalize DOI, if DOI match
     # pids.doi.identifier then discard related url value, issue #39

@@ -48,10 +48,16 @@ fi
 function migrate_record() {
 	EPRINT_HOST="$1"
 	EPRINT_ID="$2"
-	RDM_RECORD_ID=$(eprint2rdm "${EPRINT_HOST}" "${EPRINT_ID}" | ./migrate_record.py | rdmutil new_record | jq -r .id)
+	eprint2rdm "${EPRINT_HOST}" "${EPRINT_ID}" >"${EPRINT_ID}.json"
+	RDM_RECORD_ID=$(cat "${EPRINT_ID}.json" | ./migrate_record.py | rdmutil new_record | jq -r .id)
 	if [ "${RDM_RECORD_ID}" = "" ]; then
 		echo "Failed to return RDM_RECORD_ID from pipline"
 		exit 1
+	fi
+	rdmutil get_draft "${RDM_RECORD_ID}" >"${RDM_RECORD_ID}.json"
+	HAS_FILES=$(jq .files.enable "${RDM_RECORD_ID}.json")
+	if [ "$HAS_FILES" = "true" ]; then
+	    # Attach the public files. FIXME: Need to iterate over the map to files, convert each URL into a file path or curl them down.
 	fi
 	echo "${RDM_RECORD_ID}"
 }

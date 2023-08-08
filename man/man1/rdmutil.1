@@ -14,7 +14,7 @@
 . ftr VB CB
 . ftr VBI CBI
 .\}
-.TH "rdmutil" "1" "2023-08-04" "irdmtools user manual" "version 0.0.30 a38e246"
+.TH "rdmutil" "1" "2023-08-07" "irdmtools user manual" "version 0.0.31 08a4023"
 .hy
 .SH NAME
 .PP
@@ -109,9 +109,8 @@ e.g.\ bq3se-47g50.
 The REORCID_ID is a required parameter.
 .TP
 get_files RECORD_ID
-Returns a list of file entries for a indicated by RECORD_ID,
-e.g.\ bq3se-47g50.
-The REORCID_ID is a required parameter.
+Return a list of files for record with RECORD_ID.
+RECORD_ID is required.
 .TP
 get_file RECORD_ID FILENAME
 Returns the metadata for a file indicated by RECORD_ID and FILENAME,
@@ -158,10 +157,6 @@ FILENAME is optional, if one is provided the JSON document is used to
 update RDM, otherwise standard input is used to get the JSON required to
 do the update.
 .TP
-send_to_community RECORD_ID COMMUNITY_ID
-Set the community for the draft record id.
-RECORD_ID and COMMUMITY_ID are required.
-.TP
 set_files_enable RECORD_ID true|false
 This will flip the files.enabled value to true and update the draft.
 RECORD_ID is required.
@@ -171,6 +166,10 @@ upload_files RECORD_ID FILENAME [FILENAME \&...]
 Upload files to a draft record.
 RECORD_ID is required as are one or more filenames.
 .TP
+get_files RECORD_ID
+Retrieve the list of files attached to a draft.
+RECORD_ID is required.
+.TP
 delete_files RECORD_ID FILENAME [FILENAME \&...]
 Delete files in a draft record.
 RECORD_ID is required as are one or more filenames.
@@ -179,24 +178,24 @@ discard_draft
 Discard (delete) a draft record from RDM.
 RECORD_ID is required.
 .TP
-submit_draft RECORD_ID
-Submit the draft record for review.
-RECORD_ID is required.
-.TP
 review_comment RECORD_ID [FILENAME]
 Submit a comment to a review.
 RECORD_ID is required.
 If FILENAME is provided the comment is read from a file otherwise it is
 read from standard input.
 .TP
-review_draft RECORD_ID accept|decline|\[lq]\[rq] [COMMENT]
+send_to_community RECORD_ID COMMUNITY_ID
+Submit a draft record to a community for review.
+RECORD_ID and COMMUMITY_ID are required.
+.TP
+get_review
+Get review requests assocaited with RECORD_ID.
+RECORD_ID is required.
+.TP
+review_request RECORD_ID accept|decline|cancel|\[lq]\[rq] [COMMENT]
 Review a submitted draft record.
 the values \[lq]accept\[rq], \[lq]decline\[rq] or \[lq]\[rq] and an
 optional COMMENT.
-.TP
-publish_draft RECORD_ID
-Publish a draft record in review.
-RECORD_ID is required.
 .TP
 get_access RECORD_ID [ACCESS_TYPE]
 This will return the JSON for the access attribute in the record.
