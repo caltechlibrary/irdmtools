@@ -1,6 +1,6 @@
-%eprint2rdm(1) irdmtools user manual | version 0.0.31 0832ba4
+%eprint2rdm(1) irdmtools user manual | version 0.0.32 501b9c0
 % R. S. Doiel and Tom Morrell
-% 2023-08-07
+% 2023-08-08
 
 # NAME
 
@@ -58,6 +58,9 @@ contributor types.  The contributor map file is a comma delimited file
 without a header row. The first column is the value stored in the EPrints
 table "eprint_contributor_type" and the second value is the string used
 in the RDM instance.
+
+-doc-files DOC_SECURITY_TYPE
+: The filter to use to generate .files in simplified record. DOC_SECURITY_TYPE should be one of 'internal', 'public', 'staffonly', 'validuser'. Default is 'public'
 
 
 # EXAMPLE

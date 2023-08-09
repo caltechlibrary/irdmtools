@@ -1,3 +1,4 @@
+pymysql >= 1.1.0
 idutils
 progressbar2
 s3fs

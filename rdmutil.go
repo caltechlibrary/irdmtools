@@ -446,6 +446,32 @@ func (app *RdmUtil) NewRecordVersion(recordId string) ([]byte, error) {
 	return json.MarshalIndent(data, "", "    ")
 }
 
+// PublishRecordVersion publish a new version draft using the 
+// version's record id.
+//
+// ```
+// app := new(irdmtools.RdmUtil)
+// if err := app.LoadConfig("irdmtools.json"); err != nil {
+//   // ... handle error ...
+// }
+// recordId = "woie-x0121"
+// version, pubDate := "internal", "2022-08"
+// src, err := app.PublishRecordVersion(recordId)
+// if err != nil {
+//   // ... handle error ...
+// }
+// fmt.Printf("%s\n", src)
+// ```
+func (app *RdmUtil) PublishRecordVersion(recordId string, version string, pubDate string) ([]byte, error) {
+	data, err := PublishRecordVersion(app.Cfg, recordId, version, pubDate, app.Debug)
+	if err != nil {
+		return nil, err
+	}
+	return json.MarshalIndent(data, "", "    ")
+}
+
+
+
 // NewDraft returns the a new draft of an existing record.
 //
 // ```
@@ -829,6 +855,37 @@ func getRecordParams(params []string, requireRecordId bool, requireInName bool, 
 	return recordId, inName, outName, nil
 }
 
+// getVersionParams parse the command parameters for record id and
+// version oriented values.
+func getVersionParams(params []string, requireRecordId bool, requireVersion bool, requirePubDate bool) (string, string, string, error) {
+	var (
+		recordId string
+		version string
+		pubDate string
+	)
+	i := 0
+	if len(params) > i {
+		recordId = params[i]
+		i++
+	} else if requireRecordId {
+		return "", "", "", fmt.Errorf("(%d) Missing record id", i)
+	}
+	if len(params) > i {
+		version = params[i]
+		i++
+	} else if requireVersion {
+		return recordId, "", "", fmt.Errorf("(%d) Missing version label", i)
+	}
+	if len(params) > i {
+		pubDate = params[i]
+		// FIXME: Should vet the format of the date ...
+		i++
+	} else if requirePubDate {
+		return recordId, version, "", fmt.Errorf("(%d) Missing publication date", i)
+	}
+	return recordId, version, pubDate, nil
+}
+
 // getIOParams parse the command parameters where the only options
 // are setting input and output (i.e. no record id involved).
 func getIOParams(params []string, requireInName bool, requireOutName bool) (string, string, error) {
@@ -975,6 +1032,8 @@ func (app *RdmUtil) Run(in io.Reader, out io.Writer, eout io.Writer, action stri
 		p string
 		data []byte
 		filenames []string
+		version string
+		pubDate string
 	)
 	switch action {
 	case "setup":
@@ -1093,6 +1152,12 @@ func (app *RdmUtil) Run(in io.Reader, out io.Writer, eout io.Writer, action stri
 			return err
 		}	
 		src, err = app.NewRecordVersion(recordId)
+	case "publish_version":
+		recordId, version, pubDate, err = getVersionParams(params, true, false, false)
+		if err != nil {
+			return err
+		}
+		src, err = app.PublishRecordVersion(recordId, version, pubDate)
 	case "new_draft":
 		recordId, _, _, err = getRecordParams(params, true, false, false)
 		if err != nil {

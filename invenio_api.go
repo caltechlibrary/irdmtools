@@ -845,10 +845,9 @@ func NewRecord(cfg *Config, src []byte) (map[string]interface{}, error) {
 	return obj, nil
 }
 
-// NewRecordVersion takes a configuration object and JSON record values.
-// It contacts an RDM instance and create a new record return the 
-// JSON for the newly created record with a record id. When records
-// are created they are in "draft" state.
+// NewRecordVersion takes a configuration object and record id to
+// create the new version draft. The returns JSON record values includes
+// the new record id identifying the new version.
 //
 // The configuration object must have the InvenioAPI and
 // InvenioToken attributes set.
@@ -872,6 +871,76 @@ func NewRecordVersion(cfg *Config, recordId string) (map[string]interface{}, err
 	// to contain the record id and rest of record.
 	uri := fmt.Sprintf("%s/api/records/%s/versions", u.String(), recordId)
 	src, headers, err := postJSON(cfg.InvenioToken, uri, nil, http.StatusCreated, false)
+	if err != nil {
+		return nil, err
+	}
+	cfg.rl.FromHeader(headers)
+	if len(src) > 0 {
+		obj := map[string]interface{}{}
+		if err := json.Unmarshal(src, &obj); err != nil {
+			return nil, err
+		}
+		return obj, nil
+	}
+	return nil, nil
+}
+
+// PublishRecordVersion takes a configuration object and record id of
+// a new version draft and publishes it. NOTE: creating a new
+// version will clear .metadata.publication_date, version label and DOI.
+// These can be replace when publishing in the version and pubDate
+// parameter. If those values are empty string no change is made
+// to the draft before publishing.
+//
+// The configuration object must have the InvenioAPI and
+// InvenioToken attributes set.
+//
+// ```
+// cfg, _ := LoadConfig("config.json")
+// id = "38rg4-36m04" 
+// version, pubDate := "internal", "2022-08"
+// record, err := PublicRecordVersion(cfg, id, version, pubDate)
+// if err != nil {
+//    // ... handle error ...
+// }
+// fmt.Printf("%+v\n", record)
+// ```
+func PublishRecordVersion(cfg *Config, recordId string, version string, pubDate string, debug bool) (map[string]interface{}, error) {
+	// Make sure we have a valid URL
+	u, err := url.Parse(cfg.InvenioAPI)
+	if err != nil {
+		return nil, err
+	}
+	if version != "" || pubDate != "" {
+		// We need fetch and update the draft before publising it.
+		m, err := GetDraft(cfg, recordId)
+		if err != nil {
+			return nil, err
+		}
+		metadata, ok := m["metadata"].(map[string]interface{})
+		if ! ok {
+			return nil, fmt.Errorf("missing metadata element in draft record %s", recordId)
+		}
+		if version != "" {
+			metadata["version"] = version
+		}
+		if pubDate != "" {
+			metadata["publication_date"] = pubDate
+		}
+		m["metadata"] = metadata
+		payload, err := json.MarshalIndent(m, "", "     ")
+		if err != nil {
+			return nil, err
+		}
+		_, err = UpdateDraft(cfg, recordId, payload, debug)
+		if err != nil {
+			return nil, err
+		}
+	}
+	// Setup API request for a new record, the JSON returned is supposed
+	// to contain the record id and rest of record.
+	uri := fmt.Sprintf("%s/api/records/%s/draft/actions/publish", u.String(), recordId)
+	src, headers, err := postJSON(cfg.InvenioToken, uri, nil, http.StatusAccepted, false)
 	if err != nil {
 		return nil, err
 	}

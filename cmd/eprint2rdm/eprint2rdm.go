@@ -105,6 +105,9 @@ without a header row. The first column is the value stored in the EPrints
 table "eprint_contributor_type" and the second value is the string used
 in the RDM instance.
 
+-doc-files DOC_SECURITY_TYPE
+: The filter to use to generate .files in simplified record. DOC_SECURITY_TYPE should be one of 'internal', 'public', 'staffonly', 'validuser'. Default is 'public'
+
 
 # EXAMPLE
 
@@ -172,6 +175,7 @@ func main() {
 	showHelp, showVersion, showLicense := false, false, false
 	allIds, debug := false, false
 	idList, cName := "", ""
+	docSecurity := "public"
 	resourceTypesFName, contributorTypesFName := "", ""
 	flag.BoolVar(&showHelp, "help", false, "display help")
 	flag.BoolVar(&showVersion, "version", false, "display version")
@@ -182,6 +186,7 @@ func main() {
 	flag.StringVar(&cName, "harvest", cName, "harvest the record into a dataset collection")
 	flag.StringVar(&resourceTypesFName, "resource-map", resourceTypesFName, "use this file to map resource types from EPrints to Invenio RDM")
 	flag.StringVar(&contributorTypesFName, "contributor-map", contributorTypesFName, "use this file to map contributor types from EPrints to Invenio RDM")
+	flag.StringVar(&docSecurity, "doc-files", docSecurity, "include only files with this document security setting in RDM .files attribute")
 	flag.Parse()
 	args := flag.Args()
 
@@ -219,7 +224,7 @@ func main() {
 			host, eprintid = args[0], args[1]
 		}
 	}
-	if err := app.Run(os.Stdin, os.Stdout, os.Stderr, eprintUser, eprintPassword, host, eprintid, resourceTypesFName, contributorTypesFName, allIds, idList, cName, debug); err != nil {
+	if err := app.Run(os.Stdin, os.Stdout, os.Stderr, eprintUser, eprintPassword, host, eprintid, resourceTypesFName, contributorTypesFName, allIds, idList, cName, docSecurity, debug); err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
 		os.Exit(1)
 	}

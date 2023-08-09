@@ -136,7 +136,13 @@ new_record [FILENAME]
 : Create a new record from JSON source. If FILENAME is set then json source is read from FILENAME otherwise it reads from standard input.
 
 new_version RECORD_ID
-: This will create a new version of the record. RECORD_ID is required.
+: This will create a new version of the record. RECORD_ID is required. NOTE: When you create a new version .metadata.publication_date and .metadata.version are removed.  These need to be you recreated in the draft of the new version as well as to handle any files, access restrictions before publishing the new version draft.
+
+publish_version RECORD_ID [VERSION_LABEL]
+: This will publish a new draft version. RECORD_ID is required. VERSION_LABEL is optional.
+
+
+will need to set .metadata.publication_date, doi and version name in the versioned draft before publish_version is called. RECORD_ID is required.
 
 new_draft RECORD_ID
 : Create a new draft for an existing record. RECORD_ID is required. 

@@ -14,7 +14,7 @@
 . ftr VB CB
 . ftr VBI CBI
 .\}
-.TH "rdmutil" "1" "2023-08-07" "irdmtools user manual" "version 0.0.31 0832ba4"
+.TH "rdmutil" "1" "2023-08-08" "irdmtools user manual" "version 0.0.32 501b9c0"
 .hy
 .SH NAME
 .PP
@@ -139,6 +139,20 @@ reads from standard input.
 .TP
 new_version RECORD_ID
 This will create a new version of the record.
+RECORD_ID is required.
+NOTE: When you create a new version .metadata.publication_date and
+\&.metadata.version are removed.
+These need to be you recreated in the draft of the new version as well
+as to handle any files, access restrictions before publishing the new
+version draft.
+.TP
+publish_version RECORD_ID [VERSION_LABEL]
+This will publish a new draft version.
+RECORD_ID is required.
+VERSION_LABEL is optional.
+.PP
+will need to set .metadata.publication_date, doi and version name in the
+versioned draft before publish_version is called.
 RECORD_ID is required.
 .TP
 new_draft RECORD_ID

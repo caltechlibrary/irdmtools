@@ -317,6 +317,9 @@ normlzied record dict that is a for migration into Invenio-RDM."""
         else:
             del record['metadata']['identifiers']
 
+    # Remove eprint revision version number if is makes it through from
+    if 'metadata' in record and 'version' in record['metadata']:
+        del record['metadata']['version']
     # FIXME: Normalize funder structures
     return record
 
