@@ -4,20 +4,44 @@
 from EPrints 3.3 to RDM 11.'''
 
 import sys
-from subprocess import Popen, PIPE
 import os
-import csv
 import json
-import pymysql
-import pymysql.cursors
-import irdm
+from urllib.parse import urlparse
+from subprocess import Popen, PIPE
+from irdm import RdmUtil, eprint2rdm, fixup_record
 
+class WorkObject:
+    '''create a working object from dict for managing state in complete function.'''
+    def __init__(self, working_object):
+        self.eprintid = working_object.get('eprintid', None)
+        self.community_id = working_object.get('rdm_community_id', None)
+        self.root_rdm_id = working_object.get('root_rdm_id', None)
+        self.rdm_id = working_object.get('rdm_id', None)
+        self.version_record = working_object.get('version_record', None)
+        self.rec = working_object.get('record', None)
+        self.restriction = working_object.get('restriction', None)
+
+    def display(self):
+        '''return a JSON version of object contents.'''
+        return json.dumps(self)
+
+    def as_dict(self):
+        '''return object as a dict'''
+        return {
+            'eprintid': self.eprintid,
+            'community_id': self.community_id,
+            'root_rdm_id': self.root_rdm_id,
+            'rdm_id': self.rdm_id,
+            'version_record': self.version_record,
+            'rec': self.rec,
+            'restrictions': self.restriction,
+        }
 
 def check_environment():
     '''Check to make sure all the environment variables have values and are avialable'''
     varnames = [
         'REPO_ID',
-        'EPRINT_HOST', 'EPRINT_USER', 'EPRINT_PASSWORD',
+        'EPRINT_HOST', 'EPRINT_USER', 'EPRINT_PASSWORD', 'EPRINT_DOC_PATH',
         'DB_NAME', 'DB_USER', 'DB_PASSWORD',
         'RDM_URL',
         'RDMTOK',
@@ -26,7 +50,7 @@ def check_environment():
     config = {}
     is_ok = True
     for varname in varnames:
-        val = os.getenv(varname)
+        val = os.getenv(varname, None)
         if val is None:
             print(f'missing enviroment {varname}', file = sys.stderr)
             is_ok = False
@@ -34,152 +58,247 @@ def check_environment():
             config[varname] = val
     return config, is_ok
 
-def generate_document_and_eprintids(config, f_name):
-    '''Generate a tab delimited file of eprintid and document informaition'''
-    documents = []
-    conn = pymysql.connect(host = 'localhost',
-                             user = config['DB_USER'],
-                             password = config['DB_PASSWORD'],
-                             database = config['DB_NAME'],
-                             charset='utf8mb4',
-                             cursorclass=pymysql.cursors.DictCursor)
-    with conn:
-        with conn.cursor() as cursor:
-            sql = '''
-SELECT eprint.eprintid AS eprintid,
-       IFNULL(document.security, 'metadata_only') AS security
-FROM eprint LEFT JOIN document ON (eprint.eprintid = document.eprintid)
-WHERE eprint.eprint_status = 'archive' AND
-      ((IFNULL(document.formatdesc, '') NOT LIKE 'Generate %') AND
-       (IFNULL(document.formatdesc, '') NOT LIKE 'Thumbnail%'))
-ORDER BY eprint.eprintid,
-     CASE IFNULL(document.security, 'metadata_only')
-         WHEN 'internal' THEN 1
-         WHEN 'staffonly' THEN 1
-         WHEN 'validuser' THEN 2
-         WHEN 'public' THEN 4
-         WHEN 'metadata_only' THEN 5
-         ELSE 6
-     END ASC
-'''
-            cursor.execute(sql)
-            obj = {}
-            last_eprint_id = None
-            row = cursor.fetchone()
-            while row is not None:
-                eprint_id = row['eprintid']
-                if last_eprint_id != eprint_id:
-                    if 'eprintid' in obj:
-                        print(f'DEBUG obj -> {obj}')
-                        documents.append(obj)
-                    obj = {
-                        'eprintid': eprint_id,
-                        'internal': (row['security'] == 'internal'),
-                        'staffonly': (row['security'] == 'staffonly'),
-                        'campus_only': (row['security'] == 'validuser'),
-                        'public': (row['security'] == 'public'),
-                        'metadata_only': (row['security'] == ''),
-                    }
-                    last_eprint_id = eprint_id
-                else:
-                    if row['security'] == 'internal':
-                        obj['internal'] = True
-                        obj['metadata_only'] = False
-                    elif row['security'] == 'staffonly':
-                        obj['staffonly'] = True
-                        obj['metadata_only'] = False
-                    elif row['security'] == 'validuser':
-                        obj['campus_only'] = True
-                        obj['metadata_only'] = False
-                    elif row['security'] == 'public':
-                        obj['public'] = True
-                        obj['metadata_only'] = False
-                row = cursor.fetchone()
-    # After collecting eprintids and document types, write our CSV file.
-    if len(documents) == 0:
-        print('nothing found to process', file = sys.stderr)
-        return False
-    with open(f_name, 'w', newline = '', encoding = 'utf-8') as csvfile:
-        fieldnames = [
-            'eprintid', 'metadata_only', 'internal',
-            'staffonly', 'campus_only', 'public'
-        ]
-        _w = csv.DictWriter(csvfile, fieldnames = fieldnames)
-        _w.writeheader()
-        for obj in documents:
-            _w.writerow(obj)
-    return True
+def get_restrictions(obj):
+    '''return any restrictins indicated in .access attribute'''
+    restrict_record = False
+    restrict_files = False
+    if 'access' in obj and 'record' in obj['access']:
+        restrict_record = obj['access']['record'] == 'restricted'
+    if 'access' in obj and 'files' in obj['access']:
+        restrict_files = obj['access']['files'] == 'restricted'
+    return restrict_record, restrict_files
 
-def eprint2rdm(eprint_host, eprint_id, doc_files = None):
-    '''Run the eprint2rdm command and get back a converted eprint record'''
-    cmd = ["eprint2rdm"]
-    if doc_files is not None:
-        cmd.append('-doc-files')
-        cmd.append(doc_files)
-    cmd.append(eprint_host)
-    cmd.append(eprint_id)
-    print(f"DEBUG cmd {cmd}")
+def is_metadata_only(rec):
+    '''look at the files attribute and determine if this is a metadata only record'''
+    if 'files' in rec and 'enable' in rec['files']:
+        return rec['files']['enable'] is True
+    return False
+
+def set_restrictions(rdmutil, rdm_id, rec):
+    '''set the restrictions for a draft using rec'''
+    restrict_record, restrict_files = get_restrictions(rec)
+    if restrict_files:
+        err = rdmutil.set_access(rdm_id, 'files', 'restricted')
+        if err is not None:
+            return err
+    if restrict_record:
+        err = rdmutil.set_access(rdm_id, 'record', 'restricted')
+        if err is not None:
+            return err
+    return None
+
+def pairtree(txt):
+    '''take a text string and generate a pairtree path from it.'''
+    return '/'.join([txt[i:i+2] for i in range(0, len(txt), 2)])
+
+def url_to_scp(config, url, target_filename):
+    '''turn an EPrint file URL into a scp command'''
+    doc_path = config.get('EPRINT_DOC_PATH', '')
+    _u = urlparse(url)
+    hostname = _u.hostname
+    parts = _u.path.split('/')[1:]
+    eprintid = parts[0].zfill(8)
+    version = parts[1].zfill(2)
+    filename = parts[2]
+    host_path =  '/'.join([doc_path, 'documents', 'disk0', pairtree(eprintid), version, filename])
+    return [ 'scp', f'{hostname}:{host_path}', target_filename]
+
+def run_scp(cmd):
+    '''take the scp command built iwth url_to_scp and run it.'''
     with Popen(cmd, stdout = PIPE, stderr = PIPE) as proc:
-        src, err = proc.communicate()
+        out, err = proc.communicate()
         exit_code = proc.returncode
         if exit_code > 0:
-            print(f'error {err}', file=sys.stderr)
-            return None, err
-        if not isinstance(src, bytes):
-            src = src.encode('utf-8')
-        rec = json.loads(src)
-        return rec, None
-    return None, 'failed to run command.'
+            print(f'exit code {exit_code}, {err}', file = sys.stderr)
+            return err
+        if out is not None:
+            print(f'out: {out}')
+        return None
+    return f'''failed to run {' '.join(cmd)}'''
 
+def get_file_list(config, rec, security):
+    '''given a record get the internal files as
+    list of objects where each object is a filename and a path/url to the file.'''
+    file_list = []
+    if 'files' in rec:
+        files = rec.get('files')
+        if files is not None:
+            entries = files.get('entries')
+            if entries is not None:
+                for filename in entries:
+                    print(f'DEBUG filename {filename}')
+                    file = files.get(filename, None)
+                    print(f'DEBUG  file -> {file}')
+                    if file is not None:
+                        metadata = file.get('metadata', None)
+                        if metadata is not None:
+                            _security = metadata.get('security', None)
+                        if _security is not None and security == _security:
+                            file_url = file['file_id']
+                            cmd = url_to_scp(config, file_url, filename)
+                            file_list.append({'filename': filename, 'file_url': file_url, 'cmd': cmd})
+    if len(file_list) == 0:
+        return None
+    return file_list
 
-def migrate_record(config, obj):
-    '''Migrate a single record from EPrints to RDM using the document security model
-to guide versioning.
+def update_record(config, rdmutil, obj):
+    '''update draft record handling versioning if needed'''
+    file_list = None
+    err = None
+    if obj.restriction in [ 'internal', 'staffonly' ]:
+        restrict_record = restrict_files = 'restricted'
+    else:
+        restrict_record = restrict_files = 'public'
 
-This processing approach per Tom's slack description:
+    if obj.version_record:
+        # We need to create a new draft version to work with.
+        draft, err = rdmutil.get_draft(obj.rdm_id)
+        if err is not None:
+            print(f'failed ({obj.eprintid}): get_draft {obj.rdm_id}, {err}', file = sys.stderr)
+            sys.exit(1) # DEBUG, maybe should be return!
+        publication_date = draft['metadata']['publication_date']
+        obj.rdm_id, err = rdmutil.new_version(obj.root_rdm_id)
+        if err is not None:
+            print(f'failed ({obj.eprintid}), new_version {obj.root_rdm_id}', file = sys.stderr)
+            return err
+        draft, err = rdmutil.get_draft(obj.rdm_id)
+        if err is not None:
+            print(f'failed ({obj.eprintid}, new version): get_draft {obj.rdm_id}, {err}',
+                  file = sys.stderr)
+            sys.exit(1) # DEBUG, maybe should be return!
+        # Need to re-populate the publication date of new version.
+        draft['metadata']['publication_date'] = publication_date
+        # Need to give it a version label.
+        draft['metadata']['version'] = obj.restriction
+        # Save the updated draft before proceeding.
+        err = rdmutil.update_draft(rdmutil, draft)
+        if err is not None:
+            print(f'failed ({obj.eprintid}, new version): update_draft {rdm_id} data, {err}',
+                  file = sys.stderr)
 
-    Yes. Here's a more detailed possible logic: If a eprints record has internal
-    or staffonly files, create a fully restricted record with those files.
-    If the eprints record also has public files, create an open version
-    with the public files. Otherwise, create a public metadata only version
-    with the metadata
-'''
-    eprint_id = config['eprintid']
-    eprint_host = config['eprint_host']
-#FIXME: Need to take the eprint2rdm records and follow Tom's algorythm.
-    return 'migrate_record() not implemented'
+    err = rdmutil.set_access(obj.rdm_id, 'files', restrict_files)
+    if err is not None:
+        print(f'failed ({obj.eprintid}), set access {obj.rdm_id} files {restrict_files}, {err}',
+              file = sys.stderr)
+    err = rdmutil.set_access(obj.rdm_id, 'record', restrict_record)
+    if err is not None:
+        print(f'failed ({obj.eprintid}), set access {obj.rdm_id} record {restrict_record}, {err}',
+              file = sys.stderr)
 
-def process_document_and_eprintids(config, f_name):
-    '''Reads in the tab separate value file and runs the
-    migration using those documents/eprintids listed'''
-    is_ok = True
-    with open(f_name, newline = '', encoding = 'utf-8') as csvfile:
-        _r = csv.DictReader(csvfile)
-        for i, obj in enumerate(_r):
-            err = migrate_record(cfg, obj)
+    file_list = get_file_list(config, obj.rec, obj.restriction)
+    if file_list is not None:
+        for file in file_list:
+            # Copy file with scp.
+            cmd = file['cmd']
+            filename = file['filename']
+            err = run_scp(cmd)
             if err is not None:
-                print(f'error processing {f_name}, row {i}, {err}')
-                is_ok = False
-            if i > 5: # DEBUG
-                sys.exit(0) # DEBUG
-    return is_ok
+                print(f'failed ({obj.eprintid}): scp {filename}, {err}', file = sys.stderr)
+                break
+            if obj.restrictions == 'validuser':
+                err = rdmutil.upload_campusonly_file(obj.rdm_id, filename)
+                if err is not None:
+                    print(f'failed ({obj.eprintid}): update_campusonly_file' +
+                          ' {rdm_id} {filename}, {err}', file = sys.stderr)
+            else:
+                err = rdmutil.upload_files(obj.rdm_id, filename)
+                if err is not None:
+                    print(f'failed ({obj.eprintid}): update_file' +
+                          '{obj.rdm_id} {filename}, {err}', file = sys.stderr)
+    if obj.version_record:
+        # Save version
+        err = rdmutil.publish_version(obj.rdm_id, obj.community_id)
+    else:
+        # send to community and accept first draft
+        err = rdmutil.send_to_community(obj.rdm_id, obj.community_id)
+        if err is not None:
+            print(f'failed ({obj.eprintid}): send_to_community' +
+                  ' {obj.rdm_id} {obj.community_id}, {err}', file = sys.stderr)
+        else:
+            err = rdmutil.review_request(obj.rdm_id, 'accept')
+            if err is not None:
+                print(f'failed ({obj.eprintid}): review_request' +
+                      ' {obj.rdm_id} accepted, {err}', file = sys.stderr)
+    obj.version_record = True
+    return obj.rdm_id, obj.version_record, err
+
+def migrate_record(config, eprintid):
+    '''Migrate a single record from EPrints to RDM using the document security model
+to guide versioning.'''
+    rdmutil = RdmUtil(config)
+    eprint_host = config.get('EPRINT_HOST', None)
+    rdm_community_id = config.get('RDM_COMMUNITY_ID', None)
+    if rdm_community_id is None or eprint_host is None:
+        print(f'failed ({eprintid}): missing configuration, ' +
+              'eprint host or rdm community id, aborting', file = sys.stderr)
+        sys.exit(1)
+    rdm_id = None
+    root_rdm_id = None
+    rec, err = eprint2rdm(eprint_host, eprintid)
+    if err is None:
+        rdm_id, err  = rdmutil.new_record(fixup_record(rec))
+    if err is None:
+        print(f'Creating RDM record {rdm_id} from eprint {eprintid} as draft')
+        root_rdm_id = rdm_id
+
+    version_record = False
+    for restriction in [ 'internal', 'staffonly', 'validuser', 'public' ]:
+        obj = WorkObject({
+            'community_id': rdm_community_id,
+            'eprintid': eprintid,
+            'root_rdm_id': root_rdm_id,
+            'rdm_id': rdm_id,
+            'version_record': version_record,
+            'record': rec,
+            'restriction': restriction,
+        })
+        rdm_id, version_record, err = update_record(config, rdmutil, obj)
+
+    if err is None:
+        err = 'migrate_record() not fully implemented'
+    return err
+
+def process_document_and_eprintids(config, eprintids):
+    '''Process and array of EPrint Ids and migrate those records.'''
+    for i, _id in enumerate(eprintids):
+        err = migrate_record(config, _id)
+        if err is not None:
+            print(f'error processing {_id}, row {i}, {err}')
+            return err
+        if i > 5: # DEBUG
+            sys.exit(0) # DEBUG
+    return None
+
+def get_eprint_ids():
+    '''review the command line parameters and get a list of eprint ids'''
+    eprint_ids = []
+    if len(sys.argv):
+        arg = sys.argv[1]
+        if os.path.exists(arg):
+            with open(arg, encoding = 'utf-8') as _f:
+                for line in _f:
+                    eprint_ids.append(line.strip())
+        elif arg.isdigit():
+            args = sys.argv[:]
+            for eprint_id in args[1:]:
+                eprint_ids.append(eprint_id.strip())
+    return eprint_ids
 
 #
 # Migrate a records using eprint2rdm, ./migrate_record.py and rdmutil.
 #
-if __name__ == '__main__':
+def main():
+    '''main program entry point. I'm avoiding global scope on variables.'''
     app_name = os.path.basename(sys.argv[0])
-    DOCUMENT_AND_EPRINTIDS = 'document_and_eprintids.csv'
-    cfg, ok = check_environment()
-    if not ok:
+    config, is_ok = check_environment()
+    if is_ok:
+        err = process_document_and_eprintids(config, get_eprint_ids())
+        if err is not None:
+            print(f'Aborting {app_name}, {err}', file = sys.stderr)
+            sys.exit(1)
+    else:
         print(f'Aborting {app_name}, environment not setup')
         sys.exit(1)
-    #if not os.path.exists(DOCUMENT_AND_EPRINTIDS):
-    if generate_document_and_eprintids(cfg, DOCUMENT_AND_EPRINTIDS):
-        print(f'{DOCUMENT_AND_EPRINTIDS} generated')
-    else:
-        print(f'{DOCUMENT_AND_EPRINTIDS} not generated, aborting')
-        sys.exit(1)
-    if not process_document_and_eprintids(cfg, DOCUMENT_AND_EPRINTIDS):
-        print(f'Aborting {app_name}', file = sys.stderr)
-        sys.exit(1)
+
+if __name__ == '__main__':
+    main()

@@ -131,8 +131,8 @@ def normalize_pub(pub_url = None, doi = None):
                 return pub_url
     return None
 
-# fixup_record takes the simple record and files dict making final
-# record changes suitable before importing into Invenio-RDM.
+# fixup_record takes the simplfied record and prepares a
+# draft record structure for import using rdmutil. 
 #
 # This include things like crosswalking vocabularies to map from an
 # existing Caltech Library EPrints repository to
@@ -141,7 +141,7 @@ def normalize_pub(pub_url = None, doi = None):
 # Where possible these adjustments should be ported back
 # into eprinttools' simple.go and crosswalk.go.
 #
-def fixup_record(record, files):
+def fixup_record(record):
     """fixup_record accepts a dict of simple record and files returns a 
 normlzied record dict that is a for migration into Invenio-RDM."""
     record_id = get_dict_path(record, ["pid", "id"])
@@ -227,11 +227,11 @@ normlzied record dict that is a for migration into Invenio-RDM."""
             record["metadata"]["identifier"].append({
                 "scheme": "eprintid", "identifier": f"{eprintid}"
             })
-    if not files:
-        if 'files' in record:
-            record["files"] = { "enabled": True, "order": [] }
-        else:
-            record["files"] = { "enabled": False, "order": [] }
+    # Setup an empty .files attribute for use with rdmutil upload_files
+    if 'files' in record:
+        record["files"] = { "enabled": True, "order": [] }
+    else:
+        record["files"] = { "enabled": False, "order": [] }
     # Normalize DOI, issue #39
     doi = normalize_doi(get_dict_path(record, ['pids', 'doi', 'identifier']))
     if doi is not None:

@@ -326,7 +326,7 @@ func customFieldsMetadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.
 // CrosswalkEPrintToRecord implements a crosswalk between
 // an EPrint 3.x EPrint XML record as struct to a Invenio RDM
 // record as struct.
-func CrosswalkEPrintToRecord(eprint *eprinttools.EPrint, rec *simplified.Record, resourceTypes map[string]string, contributorTypes map[string]string, docSecurity string) error {
+func CrosswalkEPrintToRecord(eprint *eprinttools.EPrint, rec *simplified.Record, resourceTypes map[string]string, contributorTypes map[string]string) error {
 	rec.Schema = `local://records/record-v2.0.0.json`
 	rec.ID = fmt.Sprintf("%s:%d", eprint.Collection, eprint.EPrintID)
 
@@ -355,7 +355,7 @@ func CrosswalkEPrintToRecord(eprint *eprinttools.EPrint, rec *simplified.Record,
 	if err := customFieldsMetadataFromEPrint(eprint, rec); err != nil {
 		return err
 	}
-	if err := filesFromEPrint(eprint, rec, docSecurity); err != nil {
+	if err := filesFromEPrint(eprint, rec); err != nil {
 		return err
 	}
 
@@ -685,8 +685,8 @@ func recordAccessFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record) 
 		isPublic = false
 	}
 	rec.RecordAccess = new(simplified.RecordAccess)
-	// By default lets assume the files are restricted.
-	rec.RecordAccess.Files = "resticted"
+	// By default lets assume the files are public.
+	rec.RecordAccess.Files = "public"
 	if isPublic {
 		rec.RecordAccess.Record = "public"
 	} else {
@@ -696,6 +696,9 @@ func recordAccessFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record) 
 	if eprint.Documents != nil {
 		for i := 0; i < eprint.Documents.Length(); i++ {
 			doc := eprint.Documents.IndexOf(i)
+			if doc.Security == "internal" || doc.Security == "staffonly" || doc.Security == "validuser" {
+				rec.RecordAccess.Files = "restricted"
+			}
 			if doc.DateEmbargo != "" {
 				embargo := new(simplified.Embargo)
 				embargo.Until = doc.DateEmbargo
@@ -946,11 +949,13 @@ func metadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record, cont
 	return nil
 }
 
-// Decide if to migrate filename based on name and document security type.
-func migrateFile(fName string, docSecurity string, securityType string) bool {
-	// Don't include indexcodes.txt, these are EPrints internal files
-	// not user submitted files.
-	if (fName == "indexcodes.txt") || docSecurity != securityType {
+// Decide if to migrate filename based on name and format description
+func migrateFile(fName string, doc *eprinttools.Document) bool {
+	// Always explude indexcodes.txt and thumbnails. These are 
+	// EPrints internal files not user submitted files.
+	if (fName == "indexcodes.txt") || 
+		strings.HasPrefix(doc.FormatDesc, "Generate") ||
+		strings.HasPrefix(doc.FormatDesc, "Thumbnail") {
 		return false
 	}
 	return true
@@ -959,7 +964,7 @@ func migrateFile(fName string, docSecurity string, securityType string) bool {
 // filesFromEPrint extracts all the files specific metadata from the
 // EPrint record with a specific document.security string (e.g.
 // 'internal', 'public', 'staffonly', 'validuser')
-func filesFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record, security string) error {
+func filesFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record) error {
 	// crosswalk Files from EPrints DocumentList
 	if (eprint != nil) && (eprint.Documents != nil) && (eprint.Documents.Length() > 0) {
 		addFiles := false
@@ -973,12 +978,22 @@ func filesFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record, securit
 				for _, docFile := range doc.Files {
 					// Check to make sure we want to retain file 
 					// information.
-					if migrateFile(docFile.Filename, doc.Security, security) {
+					if migrateFile(docFile.Filename, doc) {
     					addFiles = true
     					entry := new(simplified.Entry)
     					entry.FileID = docFile.URL
     					entry.Size = docFile.FileSize
     					entry.MimeType = docFile.MimeType
+						entry.Metadata = map[string]interface{}{
+							"security": doc.Security,
+							"format": doc.Format,
+							"format_desc": doc.FormatDesc,
+							"main": doc.Main,
+							"content": doc.Content,
+							"file_id": docFile.FileID,
+							"object_id": docFile.ObjectID,
+							"filename": docFile.Filename,
+						}
     					if doc.Content == "submitted"  || 
 							doc.Content == "preprint" || 
 							doc.Content == "published" {
@@ -1084,7 +1099,7 @@ func createdUpdatedFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record
 //		fmt.Printf("%s\n", src)
 //
 // ```
-func (app *EPrint2Rdm) Run(in io.Reader, out io.Writer, eout io.Writer, username string, password string, host string, eprintId string, resourceTypesFName string, contributorTypesFName string, allIds bool, idList string, cName string, docSecurity string, debug bool) error {
+func (app *EPrint2Rdm) Run(in io.Reader, out io.Writer, eout io.Writer, username string, password string, host string, eprintId string, resourceTypesFName string, contributorTypesFName string, allIds bool, idList string, cName string, debug bool) error {
 	if username == "" || password == "" {
 		return fmt.Errorf("username or password missing")
 	}
@@ -1171,7 +1186,7 @@ func (app *EPrint2Rdm) Run(in io.Reader, out io.Writer, eout io.Writer, username
 					continue
 				}
 				record := new(simplified.Record)
-				if err := CrosswalkEPrintToRecord(eprints.EPrint[0], record, resourceTypes, contributorTypes, docSecurity); err != nil {
+				if err := CrosswalkEPrintToRecord(eprints.EPrint[0], record, resourceTypes, contributorTypes); err != nil {
 					log.Printf("line %d, crosswalking %q, %s", i+1, eprintId, err)
 					continue
 				}
@@ -1201,7 +1216,7 @@ func (app *EPrint2Rdm) Run(in io.Reader, out io.Writer, eout io.Writer, username
 			return err
 		}
 		record := new(simplified.Record)
-		if err := CrosswalkEPrintToRecord(eprints.EPrint[0], record, resourceTypes, contributorTypes, docSecurity); err != nil {
+		if err := CrosswalkEPrintToRecord(eprints.EPrint[0], record, resourceTypes, contributorTypes); err != nil {
 			return err
 		}
 		if cName != "" {
