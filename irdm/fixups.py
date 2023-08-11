@@ -275,12 +275,13 @@ normlzied record dict that is a for migration into Invenio-RDM."""
                 elif scheme == 'pmcid':
                     related_pmcid = normalize_pmcid(get_dict_path(identifier, [ 'identifier']))
                     if related_pmcid is not None:
+                        identifier['scheme'] = 'pmcid'
                         identifier['identifier'] = related_pmcid
                         keep_identifiers.append(identifier)
                 elif scheme == 'pmc':
                     related_pmcid = normalize_pmcid(get_dict_path(identifier, ['identifier']))
                     if related_pmcid is not None:
-                        identifier['scheme'] = 'pcmid'
+                        identifier['scheme'] = 'pmcid'
                         identifier['identifier'] = related_pmcid
                         if related_pmcid != pmcid:
                             keep_identifiers.append(identifier)
@@ -290,6 +291,7 @@ normlzied record dict that is a for migration into Invenio-RDM."""
                         identifier['identifier'] = related_arxiv
                         keep_identifiers.append(identifier)
                 elif scheme == 'ads':
+                    #FIXME: make sure we don't have a duplic pmcid
                     related_ads = normalize_ads(get_dict_path(identifier, ['identifier']))
                     if related_ads is not None:
                         identifier['identifier'] = related_ads
@@ -316,10 +318,20 @@ normlzied record dict that is a for migration into Invenio-RDM."""
             record['metadata']['identifiers'] = keep_identifiers
         else:
             del record['metadata']['identifiers']
-
+    
+    # Check to see if pids object is empty
+    pids = record.get('pids', None)
+    if pids is not None:
+        doi = pids.get('doi', {})
+        doi_identifier = doi.get('identifier')
+        if doi_identifier == "":
+            del pids['doi']
+        if len(pids) == 0:
+            del record['pids']
     # Remove eprint revision version number if is makes it through from
     if 'metadata' in record and 'version' in record['metadata']:
         del record['metadata']['version']
-    # FIXME: Normalize funder structures
+    # FIXME: Need to make sure we don't have duplicate related identifiers ...,
+    # pmcid seem to have duplicates in some case.
     return record
 

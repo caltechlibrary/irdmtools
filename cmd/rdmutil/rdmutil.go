@@ -132,14 +132,20 @@ get_versions
 get_latest_version
 : Retreive the latest version metadata for a RECORD_ID. RECORD_ID is requireed.
 
+set_version RECORD_ID VERSION_STRING
+: This sets the version string in .metadata.version of a draft. RECORD_ID and VERSION_STRING are required.
+
+set_publication_date RECORD_ID PUBICLATION_DATE
+: This sets the publication date, .metadata.publication_date, in draft. RECORD_ID and PUBLICATION_DATE required. PUBLICATION_DATE can be in YYYY, YYYY-MM, YYYY-MM-DD format. 
+
 new_record [FILENAME]
 : Create a new record from JSON source. If FILENAME is set then json source is read from FILENAME otherwise it reads from standard input.
 
 new_version RECORD_ID
 : This will create a new version of the record. RECORD_ID is required. NOTE: When you create a new version .metadata.publication_date and .metadata.version are removed.  These need to be you recreated in the draft of the new version as well as to handle any files, access restrictions before publishing the new version draft.
 
-publish_version RECORD_ID [VERSION_LABEL]
-: This will publish a new draft version. RECORD_ID is required. VERSION_LABEL is optional.
+publish_version RECORD_ID [VERSION_LABEL] [PUBLICATION_DATE]
+: This will publish a new draft version. RECORD_ID is required. VERSION_LABEL is optional. PUBLICATION_DATE is optional. PUBLICATION_DATE is in YYYY, YYYY-MM or YYYY-MM-DD format.
 
 
 will need to set .metadata.publication_date, doi and version name in the versioned draft before publish_version is called. RECORD_ID is required.

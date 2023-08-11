@@ -1026,6 +1026,17 @@ func GetDraft(cfg *Config, id string) (map[string]interface{}, error) {
 	if err := json.Unmarshal(src, &obj); err != nil {
 		return nil, err
 	}
+	// Sometimes .pids.doi comes back with missing indentifier value
+	// but scheme is doi. If this is the case removed it.
+	if elem, ok := obj["pids"]; ok {
+		pids := elem.(map[string]interface{})
+		if elem, ok := pids["doi"]; ok {
+			doi := elem.(map[string]interface{})
+			if identifier, ok := doi["identifier"]; ok && identifier.(string) == "" {
+				delete(pids, "doi")
+			}
+		} 
+	}
 	return obj, nil
 }
 
@@ -1157,6 +1168,72 @@ func SetFilesEnable(cfg *Config, recordId string, enable bool, debug bool) (map[
 		return UpdateDraft(cfg, recordId, src, debug)
 	}
 	return m, nil
+}
+
+// SetVersion will set the metadata.version value.
+//
+// ```
+// cfg, _ := LoadConfig("config.json")
+// id := "qez01-2309a"
+// versoin := 'public files'
+// debug := true
+// _, err := SetVersion(cfg, id, version, debug)
+// if err != nil {
+//    // ... handle error ...
+// }
+// ```
+func SetVersion(cfg *Config, recordId string, version string, debug bool) (map[string]interface{}, error) {
+	m, err := GetDraft(cfg, recordId)
+	if err != nil {
+		return nil, err
+	}
+	if m == nil {
+		return nil, fmt.Errorf("unabled to find draft for %q", recordId)
+	}
+	if elem, ok := m["metadata"]; ok {
+		data := elem.(map[string]interface{})
+		data["version"] = version
+		m["metadata"] = data
+		src, err := json.MarshalIndent(m, "", "    ")
+		if err != nil {
+			return m, err
+		}
+		return UpdateDraft(cfg, recordId, src, debug)
+	}
+	return nil, fmt.Errorf("could not find .metadata.version")
+}
+
+// SetPubDate will set the metadata.publication_date value.
+//
+// ```
+// cfg, _ := LoadConfig("config.json")
+// id := "qez01-2309a"
+// pubDate := "2016"
+// debug := true
+// _, err := SetPublicationDate(cfg, id, pubDate, debug)
+// if err != nil {
+//    // ... handle error ...
+// }
+// ```
+func SetPubDate(cfg *Config, recordId string, pubDate string, debug bool) (map[string]interface{}, error) {
+	m, err := GetDraft(cfg, recordId)
+	if err != nil {
+		return nil, err
+	}
+	if m == nil {
+		return nil, fmt.Errorf("unabled to find draft for %q", recordId)
+	}
+	if elem, ok := m["metadata"]; ok {
+		data := elem.(map[string]interface{})
+		data["publication_date"] = pubDate
+		m["metadata"] = data
+		src, err := json.MarshalIndent(m, "", "    ")
+		if err != nil {
+			return m, err
+		}
+		return UpdateDraft(cfg, recordId, src, debug)
+	}
+	return nil, fmt.Errorf("could not find .metadata.publication_date")
 }
 
 // GetDraftFiles takes a configuration object and record id,

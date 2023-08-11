@@ -696,7 +696,7 @@ func recordAccessFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record) 
 	if eprint.Documents != nil {
 		for i := 0; i < eprint.Documents.Length(); i++ {
 			doc := eprint.Documents.IndexOf(i)
-			if doc.Security == "internal" || doc.Security == "staffonly" || doc.Security == "validuser" {
+			if doc.Security == "internal" || doc.Security == "validuser" {
 				rec.RecordAccess.Files = "restricted"
 			}
 			if doc.DateEmbargo != "" {
@@ -963,7 +963,8 @@ func migrateFile(fName string, doc *eprinttools.Document) bool {
 
 // filesFromEPrint extracts all the files specific metadata from the
 // EPrint record with a specific document.security string (e.g.
-// 'internal', 'public', 'staffonly', 'validuser')
+// 'internal', 'public', 'staffonly', 'validuser'). NOTE: "staffonly"
+// security setting is normalized to "internal" in this func.
 func filesFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record) error {
 	// crosswalk Files from EPrints DocumentList
 	if (eprint != nil) && (eprint.Documents != nil) && (eprint.Documents.Length() > 0) {
@@ -974,6 +975,11 @@ func filesFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record) error {
 		files.Entries = map[string]*simplified.Entry{}
 		for i := 0; i < eprint.Documents.Length(); i++ {
 			doc := eprint.Documents.IndexOf(i)
+			// NOTE: We normalize staffonly to internal, per Kathy
+			// at migration project meeting 2023-08-10. RSD
+			if doc.Security == "staffonly" {
+				doc.Security = "internal"
+			}
 			if len(doc.Files) > 0 {
 				for _, docFile := range doc.Files {
 					// Check to make sure we want to retain file 
