@@ -7,7 +7,7 @@ import sys
 import os
 import json
 from datetime import datetime
-from urllib.parse import urlparse
+from urllib.parse import urlparse, unquote_plus
 from subprocess import Popen, PIPE
 from irdm import RdmUtil, eprint2rdm, fixup_record
 
@@ -97,23 +97,21 @@ def pairtree(txt):
     '''take a text string and generate a pairtree path from it.'''
     return '/'.join([txt[i:i+2] for i in range(0, len(txt), 2)])
 
-def url_to_scp(config, url, target_name):
+def file_to_scp(config, eprintid, pos, target_name):
     '''turn an EPrint file URL into a scp command'''
+    hostname = config.get('EPRINT_HOST', None)
     doc_path = config.get('EPRINT_DOC_PATH', None)
-    if doc_path is None:
-        print(f'failed: parse url {url} for {target_name}', file = sys.stderr)
+    if doc_path is None or hostname is None:
+        print('failed: EPRINT_HOST and EPRINT_DOC_PATH not set'
+              + ' for {target_name}', file = sys.stderr)
         sys.exit(1)
-    _u = urlparse(url)
-    hostname = _u.hostname
-    parts = _u.path.split('/')[1:]
-    eprintid = parts[0].zfill(8)
-    version = parts[1].zfill(2)
-    filename = parts[2].replace('%20', ' ')
-    host_path =  '/'.join([
+    _eprint_id = eprintid.zfill(8)
+    pos = f'{pos}'.zfill(2)
+    host_path = os.path.join(
         doc_path, 'documents', 'disk0',
-        pairtree(eprintid), version, filename
-    ])
-    return [ 'scp', f"{hostname}:'{host_path}'", f"'{target_name}'" ]
+        pairtree(_eprint_id), pos, target_name
+    )
+    return [ 'scp', f"{hostname}:{host_path}", f"{target_name}" ]
 
 def run_scp(cmd):
     '''take the scp command built iwth url_to_scp and run it.'''
@@ -121,14 +119,18 @@ def run_scp(cmd):
         out, err = proc.communicate()
         exit_code = proc.returncode
         if exit_code > 0:
+            if isinstance(err, bytes):
+                err = err.decode('utf-8').strip()
             print(f'exit code {exit_code}, {err}', file = sys.stderr)
             return err
-        if out is not None and out.strip() != "":
+        if isinstance(out, bytes):
+            out = out.decode('utf-8').strip()
+        if out is not None and out != "":
             print(f'out: {out}')
         return None
     return f'''failed to run {' '.join(cmd)}'''
 
-def get_file_list(config, rec, security):
+def get_file_list(config, eprintid, rec, security):
     '''given a record get the internal files as
     list of objects where each object is a filename and a path/url to the file.'''
     file_list = []
@@ -140,11 +142,13 @@ def get_file_list(config, rec, security):
         file = entries[filename]
         metadata = file.get('metadata', {})
         _security = metadata.get('security', None)
+        pos = metadata.get('pos', 1)
+        target_name = metadata.get('filename', filename)
         if _security is not None and security == _security:
             file_url = file['file_id']
-            cmd = url_to_scp(config, file_url, filename)
+            cmd = file_to_scp(config, eprintid, pos, target_name)
             file_list.append({
-                'filename': filename, 
+                'filename': target_name,
                 'file_url': file_url, 
                 'cmd': cmd
             })
@@ -154,9 +158,6 @@ def update_record(config, rec, rdmutil, obj):
     '''update draft record handling versioning if needed'''
     file_list = None
     err = None
-    restrict_record = restrict_files = 'public'
-    if obj.restriction == 'internal':
-        restrict_record = restrict_files = 'restricted'
 
     if obj.version_record:
         # Create the new version after saving the publication_date value
@@ -165,18 +166,12 @@ def update_record(config, rec, rdmutil, obj):
             print(f'failed ({obj.eprintid}), new_version {obj.root_rdm_id}', file = sys.stderr)
             return obj.rdm_id, obj.version_record, err
 
-    if 'restricted' in [ restrict_record, restrict_files ]:
-        _, err = rdmutil.set_access(obj.rdm_id, 'files', restrict_files)
-        if err is not None:
-            print(f'failed ({obj.eprintid}), set access {obj.rdm_id} files {restrict_files}, {err}',
-                file = sys.stderr)
-        _, err = rdmutil.set_access(obj.rdm_id, 'record', restrict_record)
-        if err is not None:
-            print(f'failed ({obj.eprintid}), set access {obj.rdm_id} record {restrict_record}, {err}',
-                file = sys.stderr)
-
-    file_list = get_file_list(config, rec, obj.restriction)
+    file_list = get_file_list(config, obj.eprintid, rec, obj.restriction)
     if len(file_list) > 0:
+        _, err = rdmutil.set_files_enable(obj.rdm_id, True)
+        if err is not None:
+            print(f'failed ({obj.eprintid}): set_files_enable {obj.rdm_id} true', file = sys.stderr)
+            sys.exit(1)
         for file in file_list:
             filename = file['filename']
             # Copy file with scp.
@@ -195,13 +190,29 @@ def update_record(config, rec, rdmutil, obj):
                 _, err = rdmutil.upload_file(obj.rdm_id, filename)
                 if err is not None:
                     print(f'failed ({obj.eprintid}): upload_file' +
-                            f'{obj.rdm_id} {filename}, {err}', file = sys.stderr)
+                            f' {obj.rdm_id} {filename}, {err}', file = sys.stderr)
                     sys.exit(1)
     else:
         _, err = rdmutil.set_files_enable(obj.rdm_id, False)
         if err is not None:
             print(f'failed ({obj.eprintid}): set_files_enable {obj.rdm_id} false', file = sys.stderr)
             sys.exit(1)
+
+    restrict_record = restrict_files = 'public'
+    if obj.restriction == 'internal':
+        restrict_record = restrict_files = 'restricted'
+    if obj.restriction == 'public' or obj.restriction == 'metadata_only':
+        restrict_record = restrict_files = 'public'
+
+    _, err = rdmutil.set_access(obj.rdm_id, 'files', restrict_files)
+    if err is not None:
+        print(f'failed ({obj.eprintid}), set access {obj.rdm_id} files {restrict_files}, {err}',
+            file = sys.stderr)
+    _, err = rdmutil.set_access(obj.rdm_id, 'record', restrict_record)
+    if err is not None:
+        print(f'failed ({obj.eprintid}), set access {obj.rdm_id} record {restrict_record}, {err}',
+            file = sys.stderr)
+
 
     if obj.version_record:
         # Save version

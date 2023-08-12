@@ -994,6 +994,8 @@ func filesFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record) error {
 							"security": doc.Security,
 							"format": doc.Format,
 							"format_desc": doc.FormatDesc,
+							"rev_number": doc.RevNumber,
+							"pos": doc.Pos,
 							"main": doc.Main,
 							"content": doc.Content,
 							"file_id": docFile.FileID,
