@@ -26,15 +26,14 @@
 <h1 id="name">NAME</h1>
 <p>eprint2rdm</p>
 <h1 id="synopsis">SYNOPSIS</h1>
-<p>eprint2rdm <a href="#options">OPTIONS</a> EPRINT_HOSTNANE
-EPRINT_ID</p>
+<p>eprint2rdm <a href="#options">OPTIONS</a> [EPRINT_HOST] EPRINT_ID</p>
 <h1 id="description">DESCRIPTION</h1>
 <p>eprint2rdm is a Caltech Library centric command line application that
 takes an EPrint hostname and EPrint ID and returns a JSON document
 suitable to import into Invenio RDM. It relies on access to EPrint’s
-REST API. It uses EPRINT_USER and EPRINT_PASSWORD environment variables
-to access the API. Using the “-all-ids” options you can get a list of
-keys available from the EPrints REST API.</p>
+REST API. It uses EPRINT_USER, EPRINT_PASSWORD and EPRINT_HOST
+environment variables to access the API. Using the “-all-ids” options
+you can get a list of keys available from the EPrints REST API.</p>
 <p>eprint2rdm can havest a set of eprint ids into a dataset collection
 using the “-id-list” and “-harvest” options. You map also provide
 customized resource type and person role mapping for the content you
@@ -87,14 +86,14 @@ string used in the RDM instance.
 <p>Example generating a JSON document for from the EPrints repository
 hosted as “eprints.example.edu” for EPrint ID 118621. Access to the
 EPrint REST API is configured in the environment. The result is saved in
-“article.json”.</p>
+“article.json”. EPRINT_USER, EPRINT_PASSWORD and EPRINT_HOST
+(e.g. eprints.example.edu) via the shell environment.</p>
 <pre><code>EPRINT_USER=&quot;__USERNAME_GOES_HERE__&quot;
 EPRINT_PASSWORD=&quot;__PASSWORD_GOES_HERE__&quot;
-eprint2rdm eprints.example.edu 118621 \
-    &gt;article.json</code></pre>
-<p>Generate a list of EPrint ids from a repository
-(e.g. eprints.example.edu).</p>
-<pre><code>eprint2rdm -all-ids eprints.example.edu &gt;eprintids.txt</code></pre>
+EPRINT_HOST=&quot;eprints.example.edu&quot;
+eprint2rdm 118621 &gt;article.json</code></pre>
+<p>Generate a list of EPrint ids from a repository</p>
+<pre><code>eprint2rdm -all-ids &gt;eprintids.txt</code></pre>
 <p>Generate a JSON document from the EPrints repository hosted as
 “eprints.example.edu” for EPrint ID 118621 using a resource map file to
 map the EPrints resource type to an Invenio RDM resource type and a
@@ -114,9 +113,8 @@ mapping</li>
 <li>Harvest the eprint records and save in our dataset collection</li>
 </ol>
 <pre><code>dataset init eprints.ds
-eprint2rdm -all-ids eprints.example.edu &gt;eprintids.txt
-eprint2rdm -id-list eprintids.txt -harvest eprints.ds \
-            eprints.example.edu</code></pre>
+eprint2rdm -all-ids &gt;eprintids.txt
+eprint2rdm -id-list eprintids.txt -harvest eprints.ds</code></pre>
 <p>At this point you would be ready to improve the records in eprints.ds
 before migrating them into Invenio RDM.</p>
 </section>
