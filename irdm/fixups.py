@@ -263,6 +263,7 @@ normlzied record dict that is a for migration into Invenio-RDM."""
         keep_identifiers = []
         for identifier in identifiers:
             scheme = get_dict_path(identifier, ['scheme'])
+            id_val = get_dict_path(identifier, ['identifier'])
             if scheme is not None:
                 if scheme == 'doi':
                     related_doi = normalize_doi(get_dict_path(identifier, ['identifier']))
@@ -293,15 +294,15 @@ normlzied record dict that is a for migration into Invenio-RDM."""
                     if related_pub is not None:
                         keep_identifiers.append({"scheme": "url", "identifier": related_pub})
                 elif scheme == 'eprintid':
-                    keep_identifiers.append({"scheme": "eprintid", "identifier": identifier["identifier"]})
+                    keep_identifiers.append({"scheme": "eprintid", "identifier": id_val})
                 elif scheme == 'resolverid':
-                    keep_identifiers.append({"scheme": "resolverid", "identifier": identifier["identifier"]})
+                    keep_identifiers.append({"scheme": "resolverid", "identifier": id_val})
                 else:
-                    if 'identifier' in identifier and identifier['identifier'].strip() != "":
+                    if id_val is not None and id_val.strip() != "":
                         if idutils.is_url(identifier['identifier']):
-                            keep_identifiers.append({"scheme":"url", "identifier": identifier['identifier']})
+                            keep_identifiers.append({"scheme":"url", "identifier": id_val})
             else:
-                keep_identifiers.append({"scheme": identifier["scheme"], "identifier": identifier["identifier"]})
+                keep_identifiers.append({"scheme": scheme, "identifier": id_val})
         if len(keep_identifiers) > 0:
             record['metadata']['identifiers'] = keep_identifiers
         else:
