@@ -749,7 +749,7 @@ func dateTypeFromTimestamp(dtType string, timestamp string, description string) 
 	return dt
 }
 
-func mkSimpleIdentifier(scheme, value string) *simplified.Identifier {
+func mkSimpleIdentifier(scheme string, value string) *simplified.Identifier {
 	identifier := new(simplified.Identifier)
 	identifier.Scheme = scheme
 	identifier.Identifier = value

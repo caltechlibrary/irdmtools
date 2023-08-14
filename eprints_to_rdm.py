@@ -192,6 +192,8 @@ def update_record(config, rec, rdmutil, obj):
                     print(f'failed ({obj.eprintid}): upload_file' +
                             f' {obj.rdm_id} {filename}, {err}', file = sys.stderr)
                     sys.exit(1)
+            # NOTE: We want to remove the copied file if successfully uploaded.
+            os.unlink(filename)
     else:
         _, err = rdmutil.set_files_enable(obj.rdm_id, False)
         if err is not None:
@@ -319,11 +321,14 @@ to guide versioning.'''
 
 def process_document_and_eprintids(config, eprintids):
     '''Process and array of EPrint Ids and migrate those records.'''
+    started = datetime.now()
+    print(f'Processing {len(eprintids)} eprintids, started {started}')
     for i, _id in enumerate(eprintids):
         err = migrate_record(config, _id)
         if err is not None:
             print(f'error processing {_id}, row {i}, {err}')
             return err
+    print(f'Processing {len(eprintids)} eprintids, completed {started}')
     return None
 
 def get_eprint_ids():

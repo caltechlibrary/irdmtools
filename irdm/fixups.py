@@ -79,11 +79,11 @@ def normalize_pmcid(pmcid = None):
     '''normalize PCM ids to just the id, trim from URL if needed.'''
     if pmcid is not None:
         if idutils.is_url(pmcid):
+            if idutils.is_doi(pmcid):
+                return None
             _u = urlparse(pmcid)
             pmcid = os.path.basename(_u.path.rstrip('/')).lower()
-        else:
-            pmcid = pmcid.upper()
-    return pmcid
+    return pmcid.upper()
 
 def trim_prefixes(text, prefixes):
     '''trim prefixes from string'''
@@ -267,53 +267,41 @@ normlzied record dict that is a for migration into Invenio-RDM."""
                 if scheme == 'doi':
                     related_doi = normalize_doi(get_dict_path(identifier, ['identifier']))
                     if related_doi is not None:
-                        identifier['identifier'] = related_doi
                         if related_doi != doi:
-                            keep_identifiers.append(identifier)
+                            keep_identifiers.append({"scheme": "doi", "identifier": related_doi})
                             if doi is None:
                                 doi = related_doi
                 elif scheme == 'pmcid':
                     related_pmcid = normalize_pmcid(get_dict_path(identifier, [ 'identifier']))
                     if related_pmcid is not None:
-                        identifier['scheme'] = 'pmcid'
-                        identifier['identifier'] = related_pmcid
-                        keep_identifiers.append(identifier)
+                        keep_identifiers.append({"scheme":"pmcid", "identifier": related_pmcid})
                 elif scheme == 'pmc':
                     related_pmcid = normalize_pmcid(get_dict_path(identifier, ['identifier']))
                     if related_pmcid is not None:
-                        identifier['scheme'] = 'pmcid'
-                        identifier['identifier'] = related_pmcid
                         if related_pmcid != pmcid:
-                            keep_identifiers.append(identifier)
+                            keep_identifiers.append({"scheme": "pmcid", "identifier": related_pmcid})
                 elif scheme == 'arxiv':
                     related_arxiv = normalize_arxiv(get_dict_path(identifier, ['identifier']))
                     if related_arxiv is not None:
-                        identifier['identifier'] = related_arxiv
-                        keep_identifiers.append(identifier)
+                        keep_identifiers.append({"scheme": "arxiv", "identifier": related_arxiv})
                 elif scheme == 'ads':
-                    #FIXME: make sure we don't have a duplic pmcid
                     related_ads = normalize_ads(get_dict_path(identifier, ['identifier']))
                     if related_ads is not None:
-                        identifier['identifier'] = related_ads
-                        keep_identifiers.append(identifier)
+                        keep_identifiers.append({"scheme": "ads", "identifier": related_ads})
                 elif scheme == 'pub':
-                    identifier['scheme'] = 'url'
                     related_pub = normalize_pub(get_dict_path(identifier, ['identifier']), doi)
                     if related_pub is not None:
-                        identifier['identifier'] = related_pub
-                        keep_identifiers.append(identifier)
+                        keep_identifiers.append({"scheme": "url", "identifier": related_pub})
                 elif scheme == 'eprintid':
-                    keep_identifiers.append(identifier)
+                    keep_identifiers.append({"scheme": "eprintid", "identifier": identifier["identifier"]})
                 elif scheme == 'resolverid':
-                    keep_identifiers.append(identifier)
+                    keep_identifiers.append({"scheme": "resolverid", "identifier": identifier["identifier"]})
                 else:
                     if 'identifier' in identifier and identifier['identifier'].strip() != "":
                         if idutils.is_url(identifier['identifier']):
-                            identifier['scheme'] = 'url'
-                            identifier['identifier'] = identifier['identifier']
-                            keep_identifiers.append(identifier)
+                            keep_identifiers.append({"scheme":"url", "identifier": identifier['identifier']})
             else:
-                keep_identifiers.append(identifier)
+                keep_identifiers.append({"scheme": identifier["scheme"], "identifier": identifier["identifier"]})
         if len(keep_identifiers) > 0:
             record['metadata']['identifiers'] = keep_identifiers
         else:
