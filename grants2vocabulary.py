@@ -111,10 +111,8 @@ funder_mapping = {
 with open("awards.csv", "r") as f:
     reader = csv.DictReader(f)
     awards = {}
-    for award in reader:
-        awards[award["Award #"]] = award
-    for award in awards:
-        data = awards[award]
+    for data in reader:
+        award = data['Award #']
         title = data["Award Full Name"]
         if data["Prime Funding Source"] != "":
             try:
@@ -130,14 +128,15 @@ with open("awards.csv", "r") as f:
                 print("No mapping for", data["Oracle Funding Source Name"])
                 exit()
             number = data["Funding Src Award #"]
-        vocab.append(
-            {
-                "id": award,
-                "title": {"en": title},
-                "number": number,
-                "funder": {"id": funder},
-            }
-        )
+        if number not in ["","unknown"]:
+            vocab.append(
+                {
+                    "id": award,
+                    "title": {"en": title},
+                    "number": number,
+                    "funder": {"id": funder},
+                }
+            )
 
 with open("awards.jsonl", "w") as f:
     for award in vocab:
