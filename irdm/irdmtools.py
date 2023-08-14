@@ -228,10 +228,9 @@ class RdmUtil:
         return None, f'upload_campusonly_file(self, "{rdm_id}", "{filename}") not implemented'
 
 
-def eprint2rdm(eprint_host, eprint_id):
+def eprint2rdm(eprint_id):
     '''Run the eprint2rdm command and get back a converted eprint record'''
     cmd = ["eprint2rdm"]
-    cmd.append(eprint_host)
     cmd.append(eprint_id)
     with Popen(cmd, stdout = PIPE, stderr = PIPE) as proc:
         src, err = proc.communicate()
@@ -243,4 +242,4 @@ def eprint2rdm(eprint_host, eprint_id):
             src = src.encode('utf-8')
         rec = json.loads(src)
         return rec, None
-    return None, f'failed to run command eprint2rdm {eprint_host} {eprint_id}.'
+    return None, f'failed to run command eprint2rdm {eprint_id}.'

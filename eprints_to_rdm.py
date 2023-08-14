@@ -282,7 +282,7 @@ to guide versioning.'''
         sys.exit(1)
     rdm_id = None
     root_rdm_id = None
-    rec, err = eprint2rdm(eprint_host, eprintid)
+    rec, err = eprint2rdm(eprintid)
     if err is not None:
         print(f'fialed ({eprintid}): eprint2rdm {eprint_host} {eprintid}', file = sys.stderr)
         sys.exit(1)
