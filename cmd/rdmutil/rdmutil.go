@@ -118,7 +118,7 @@ get_raw_record RECORD_ID
 : Returns a specific map/dictionary record indicated by RECORD_ID, e.g. bq3se-47g50. The REORCID_ID is a required parameter.
 
 get_files RECORD_ID
-: Returns a list of file entries for a indicated by RECORD_ID, e.g. bq3se-47g50. The REORCID_ID is a required parameter.
+: Return a list of files for record with RECORD_ID.  RECORD_ID is required.
 
 get_file RECORD_ID FILENAME
 : Returns the metadata for a file indicated by RECORD_ID and FILENAME, e.g. bq3se-47g50 is a record id and article.pdf is a filename. RECORD_ID and FILENAME are required parameters.
@@ -132,11 +132,23 @@ get_versions
 get_latest_version
 : Retreive the latest version metadata for a RECORD_ID. RECORD_ID is requireed.
 
+set_version RECORD_ID VERSION_STRING
+: This sets the version string in .metadata.version of a draft. RECORD_ID and VERSION_STRING are required.
+
+set_publication_date RECORD_ID PUBICLATION_DATE
+: This sets the publication date, .metadata.publication_date, in draft. RECORD_ID and PUBLICATION_DATE required. PUBLICATION_DATE can be in YYYY, YYYY-MM, YYYY-MM-DD format. 
+
 new_record [FILENAME]
 : Create a new record from JSON source. If FILENAME is set then json source is read from FILENAME otherwise it reads from standard input.
 
 new_version RECORD_ID
-: This will create a new version of the record. RECORD_ID is required.
+: This will create a new version of the record. RECORD_ID is required. NOTE: When you create a new version .metadata.publication_date and .metadata.version are removed.  These need to be you recreated in the draft of the new version as well as to handle any files, access restrictions before publishing the new version draft.
+
+publish_version RECORD_ID [VERSION_LABEL] [PUBLICATION_DATE]
+: This will publish a new draft version. RECORD_ID is required. VERSION_LABEL is optional. PUBLICATION_DATE is optional. PUBLICATION_DATE is in YYYY, YYYY-MM or YYYY-MM-DD format.
+
+
+will need to set .metadata.publication_date, doi and version name in the versioned draft before publish_version is called. RECORD_ID is required.
 
 new_draft RECORD_ID
 : Create a new draft for an existing record. RECORD_ID is required. 
@@ -147,14 +159,14 @@ get_draft RECORD_ID
 update_draft RECORD_ID [FILENAME]
 : Update a draft record. RECORD_ID is required. FILENAME is optional, if one is provided the JSON document is used to update RDM, otherwise standard input is used to get the JSON required to do the update.
 
-send_to_community RECORD_ID COMMUNITY_ID
-: Set the community for the draft record id. RECORD_ID and COMMUMITY_ID are required.
-
 set_files_enable RECORD_ID true|false
 : This will flip the files.enabled value to true and update the draft. RECORD_ID is required. The one of the values true or false are required.
 
 upload_files RECORD_ID FILENAME [FILENAME ...]
 : Upload files to a draft record. RECORD_ID is required as are one or more filenames.
+
+get_files RECORD_ID
+: Retrieve the list of files attached to a draft. RECORD_ID is required.
 
 delete_files RECORD_ID FILENAME [FILENAME ...]
 : Delete files in a draft record. RECORD_ID is required as are one or more filenames.
@@ -162,17 +174,17 @@ delete_files RECORD_ID FILENAME [FILENAME ...]
 discard_draft
 : Discard (delete) a draft record from RDM. RECORD_ID is required.
 
-submit_draft RECORD_ID
-: Submit the draft record for review. RECORD_ID is required.
-
 review_comment RECORD_ID [FILENAME]
 : Submit a comment to a review. RECORD_ID is required. If FILENAME is provided the comment is read from a file otherwise it is read from standard input.
 
-review_draft RECORD_ID accept|decline|"" [COMMENT]
-: Review a submitted draft record. the values "accept", "decline" or "" and an optional COMMENT.
+send_to_community RECORD_ID COMMUNITY_ID
+: Submit a draft record to a community for review. RECORD_ID and COMMUMITY_ID are required.
 
-publish_draft RECORD_ID
-: Publish a draft record in review. RECORD_ID is required.
+get_review
+: Get review requests assocaited with RECORD_ID. RECORD_ID is required.
+
+review_request RECORD_ID accept|decline|cancel|"" [COMMENT]
+: Review a submitted draft record. the values "accept", "decline" or "" and an optional COMMENT.
 
 get_access RECORD_ID [ACCESS_TYPE]
 : This will return the JSON for the access attribute in the record. If you include ACCESS_TYPE of "files" or "records" it will return just that attribute.  RECORD_ID is always required.
@@ -182,6 +194,7 @@ set_access RECORD_ID ACCESS_TYPE ACCESS_VALUE
 
 harvest KEY_JSON
 : harvest takes a JSON file containing a list of keys and harvests each record into the dataset collection.
+
 
 get_endpoint PATH
 : Perform a GET to the end point indicated by PATH. PATH is required.

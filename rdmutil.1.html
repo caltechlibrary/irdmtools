@@ -122,8 +122,7 @@ e.g. bq3se-47g50. The REORCID_ID is a required parameter.
 </dd>
 <dt>get_files RECORD_ID</dt>
 <dd>
-Returns a list of file entries for a indicated by RECORD_ID,
-e.g. bq3se-47g50. The REORCID_ID is a required parameter.
+Return a list of files for record with RECORD_ID. RECORD_ID is required.
 </dd>
 <dt>get_file RECORD_ID FILENAME</dt>
 <dd>
@@ -147,6 +146,17 @@ Retrieve metadata about versions for RECORD_ID. RECORD_ID is required.
 Retreive the latest version metadata for a RECORD_ID. RECORD_ID is
 requireed.
 </dd>
+<dt>set_version RECORD_ID VERSION_STRING</dt>
+<dd>
+This sets the version string in .metadata.version of a draft. RECORD_ID
+and VERSION_STRING are required.
+</dd>
+<dt>set_publication_date RECORD_ID PUBICLATION_DATE</dt>
+<dd>
+This sets the publication date, .metadata.publication_date, in draft.
+RECORD_ID and PUBLICATION_DATE required. PUBLICATION_DATE can be in
+YYYY, YYYY-MM, YYYY-MM-DD format.
+</dd>
 <dt>new_record [FILENAME]</dt>
 <dd>
 Create a new record from JSON source. If FILENAME is set then json
@@ -155,7 +165,22 @@ source is read from FILENAME otherwise it reads from standard input.
 <dt>new_version RECORD_ID</dt>
 <dd>
 This will create a new version of the record. RECORD_ID is required.
+NOTE: When you create a new version .metadata.publication_date and
+.metadata.version are removed. These need to be you recreated in the
+draft of the new version as well as to handle any files, access
+restrictions before publishing the new version draft.
 </dd>
+<dt>publish_version RECORD_ID [VERSION_LABEL] [PUBLICATION_DATE]</dt>
+<dd>
+This will publish a new draft version. RECORD_ID is required.
+VERSION_LABEL is optional. PUBLICATION_DATE is optional.
+PUBLICATION_DATE is in YYYY, YYYY-MM or YYYY-MM-DD format.
+</dd>
+</dl>
+<p>will need to set .metadata.publication_date, doi and version name in
+the versioned draft before publish_version is called. RECORD_ID is
+required.</p>
+<dl>
 <dt>new_draft RECORD_ID</dt>
 <dd>
 Create a new draft for an existing record. RECORD_ID is required.
@@ -171,11 +196,6 @@ Update a draft record. RECORD_ID is required. FILENAME is optional, if
 one is provided the JSON document is used to update RDM, otherwise
 standard input is used to get the JSON required to do the update.
 </dd>
-<dt>send_to_community RECORD_ID COMMUNITY_ID</dt>
-<dd>
-Set the community for the draft record id. RECORD_ID and COMMUMITY_ID
-are required.
-</dd>
 <dt>set_files_enable RECORD_ID true|false</dt>
 <dd>
 This will flip the files.enabled value to true and update the draft.
@@ -186,6 +206,10 @@ RECORD_ID is required. The one of the values true or false are required.
 Upload files to a draft record. RECORD_ID is required as are one or more
 filenames.
 </dd>
+<dt>get_files RECORD_ID</dt>
+<dd>
+Retrieve the list of files attached to a draft. RECORD_ID is required.
+</dd>
 <dt>delete_files RECORD_ID FILENAME [FILENAME …]</dt>
 <dd>
 Delete files in a draft record. RECORD_ID is required as are one or more
@@ -195,24 +219,25 @@ filenames.
 <dd>
 Discard (delete) a draft record from RDM. RECORD_ID is required.
 </dd>
-<dt>submit_draft RECORD_ID</dt>
-<dd>
-Submit the draft record for review. RECORD_ID is required.
-</dd>
 <dt>review_comment RECORD_ID [FILENAME]</dt>
 <dd>
 Submit a comment to a review. RECORD_ID is required. If FILENAME is
 provided the comment is read from a file otherwise it is read from
 standard input.
 </dd>
-<dt>review_draft RECORD_ID accept|decline|“” [COMMENT]</dt>
+<dt>send_to_community RECORD_ID COMMUNITY_ID</dt>
+<dd>
+Submit a draft record to a community for review. RECORD_ID and
+COMMUMITY_ID are required.
+</dd>
+<dt>get_review</dt>
+<dd>
+Get review requests assocaited with RECORD_ID. RECORD_ID is required.
+</dd>
+<dt>review_request RECORD_ID accept|decline|cancel|“” [COMMENT]</dt>
 <dd>
 Review a submitted draft record. the values “accept”, “decline” or “”
 and an optional COMMENT.
-</dd>
-<dt>publish_draft RECORD_ID</dt>
-<dd>
-Publish a draft record in review. RECORD_ID is required.
 </dd>
 <dt>get_access RECORD_ID [ACCESS_TYPE]</dt>
 <dd>

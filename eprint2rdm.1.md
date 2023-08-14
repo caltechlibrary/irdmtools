@@ -1,6 +1,6 @@
-%eprint2rdm(1) irdmtools user manual | version 0.0.30 a38e246
+%eprint2rdm(1) irdmtools user manual | version 0.0.33 67bf49c
 % R. S. Doiel and Tom Morrell
-% 2023-08-04
+% 2023-08-14
 
 # NAME
 
@@ -8,16 +8,17 @@ eprint2rdm
 
 # SYNOPSIS
 
-eprint2rdm [OPTIONS] EPRINT_HOSTNANE EPRINT_ID
+eprint2rdm [OPTIONS] [EPRINT_HOST] EPRINT_ID
 
 # DESCRIPTION
 
 eprint2rdm is a Caltech Library centric command line application
 that takes an EPrint hostname and EPrint ID and returns a JSON
 document suitable to import into Invenio RDM. It relies on
-access to EPrint's REST API. It uses EPRINT_USER and EPRINT_PASSWORD
-environment variables to access the API. Using the "-all-ids" options
-you can get a list of keys available from the EPrints REST API.
+access to EPrint's REST API. It uses EPRINT_USER, EPRINT_PASSWORD
+and EPRINT_HOST environment variables to access the API. Using
+the "-all-ids" options you can get a list of keys available from
+the EPrints REST API.
 
 eprint2rdm can havest a set of eprint ids into a dataset collection
 using the "-id-list" and "-harvest" options. You map also provide
@@ -59,26 +60,26 @@ without a header row. The first column is the value stored in the EPrints
 table "eprint_contributor_type" and the second value is the string used
 in the RDM instance.
 
-
 # EXAMPLE
 
 
 Example generating a JSON document for from the EPrints repository
 hosted as "eprints.example.edu" for EPrint ID 118621.  Access to
 the EPrint REST API is configured in the environment.  The result
-is saved in "article.json".
+is saved in "article.json". EPRINT_USER, EPRINT_PASSWORD and
+EPRINT_HOST (e.g. eprints.example.edu) via the shell environment.
 
 ~~~
 EPRINT_USER="__USERNAME_GOES_HERE__"
 EPRINT_PASSWORD="__PASSWORD_GOES_HERE__"
-eprint2rdm eprints.example.edu 118621 \
-	>article.json
+EPRINT_HOST="eprints.example.edu"
+eprint2rdm 118621 >article.json
 ~~~
 
-Generate a list of EPrint ids from a repository (e.g. eprints.example.edu).
+Generate a list of EPrint ids from a repository 
 
 ~~~
-eprint2rdm -all-ids eprints.example.edu >eprintids.txt
+eprint2rdm -all-ids >eprintids.txt
 ~~~
 
 Generate a JSON document from the EPrints repository
@@ -105,9 +106,8 @@ migration.
 
 ~~~
 dataset init eprints.ds
-eprint2rdm -all-ids eprints.example.edu >eprintids.txt
-eprint2rdm -id-list eprintids.txt -harvest eprints.ds \
-            eprints.example.edu
+eprint2rdm -all-ids >eprintids.txt
+eprint2rdm -id-list eprintids.txt -harvest eprints.ds
 ~~~
 
 At this point you would be ready to improve the records in

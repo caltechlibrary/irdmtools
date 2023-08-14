@@ -54,16 +54,17 @@ var (
 
 # SYNOPSIS
 
-{app_name} [OPTIONS] EPRINT_HOSTNANE EPRINT_ID
+{app_name} [OPTIONS] [EPRINT_HOST] EPRINT_ID
 
 # DESCRIPTION
 
 {app_name} is a Caltech Library centric command line application
 that takes an EPrint hostname and EPrint ID and returns a JSON
 document suitable to import into Invenio RDM. It relies on
-access to EPrint's REST API. It uses EPRINT_USER and EPRINT_PASSWORD
-environment variables to access the API. Using the "-all-ids" options
-you can get a list of keys available from the EPrints REST API.
+access to EPrint's REST API. It uses EPRINT_USER, EPRINT_PASSWORD
+and EPRINT_HOST environment variables to access the API. Using
+the "-all-ids" options you can get a list of keys available from
+the EPrints REST API.
 
 {app_name} can havest a set of eprint ids into a dataset collection
 using the "-id-list" and "-harvest" options. You map also provide
@@ -105,26 +106,26 @@ without a header row. The first column is the value stored in the EPrints
 table "eprint_contributor_type" and the second value is the string used
 in the RDM instance.
 
-
 # EXAMPLE
 
 
 Example generating a JSON document for from the EPrints repository
 hosted as "eprints.example.edu" for EPrint ID 118621.  Access to
 the EPrint REST API is configured in the environment.  The result
-is saved in "article.json".
+is saved in "article.json". EPRINT_USER, EPRINT_PASSWORD and
+EPRINT_HOST (e.g. eprints.example.edu) via the shell environment.
 
 ~~~
 EPRINT_USER="__USERNAME_GOES_HERE__"
 EPRINT_PASSWORD="__PASSWORD_GOES_HERE__"
-{app_name} eprints.example.edu 118621 \
-	>article.json
+EPRINT_HOST="eprints.example.edu"
+{app_name} 118621 >article.json
 ~~~
 
-Generate a list of EPrint ids from a repository (e.g. eprints.example.edu).
+Generate a list of EPrint ids from a repository 
 
 ~~~
-{app_name} -all-ids eprints.example.edu >eprintids.txt
+{app_name} -all-ids >eprintids.txt
 ~~~
 
 Generate a JSON document from the EPrints repository
@@ -151,9 +152,8 @@ migration.
 
 ~~~
 dataset init eprints.ds
-{app_name} -all-ids eprints.example.edu >eprintids.txt
-{app_name} -id-list eprintids.txt -harvest eprints.ds \
-            eprints.example.edu
+{app_name} -all-ids >eprintids.txt
+{app_name} -id-list eprintids.txt -harvest eprints.ds
 ~~~
 
 At this point you would be ready to improve the records in
@@ -187,6 +187,8 @@ func main() {
 
 	eprintUser := os.Getenv("EPRINT_USER")
 	eprintPassword := os.Getenv("EPRINT_PASSWORD")
+	eprintHostname := os.Getenv("EPRINT_HOST")
+	eprintid := ""
 
 	if showHelp {
 		fmt.Fprintf(os.Stdout, "%s\n", fmtHelp(helpText, appName, version, releaseDate, releaseHash))
@@ -202,24 +204,25 @@ func main() {
 	}
 
 	// Create a appity object
-	host, eprintid := "", ""
 	app := new(irdmtools.EPrint2Rdm)
-	if allIds || idList != "" {
+	if (allIds || idList != "") && eprintHostname == "" {
 		if len(args) != 1 {
 			fmt.Fprintf(os.Stderr, "expected an EPrint hostname with either -all-ids or -ids-list and -harvest options")
 			os.Exit(1)
 		} else {
-			host = args[0]
+			eprintHostname = args[0]
 		}
 	} else {
-		if len(args) != 2 {
+		if eprintHostname != "" && len(args) == 1 {
+			eprintid = args[0]
+		} else if len(args) != 2 {
 			fmt.Fprintf(os.Stderr, "expected an EPrint hostname and EPrint ID")
 			os.Exit(1)
 		} else {
-			host, eprintid = args[0], args[1]
+			eprintHostname, eprintid = args[0], args[1]
 		}
 	}
-	if err := app.Run(os.Stdin, os.Stdout, os.Stderr, eprintUser, eprintPassword, host, eprintid, resourceTypesFName, contributorTypesFName, allIds, idList, cName, debug); err != nil {
+	if err := app.Run(os.Stdin, os.Stdout, os.Stderr, eprintUser, eprintPassword, eprintHostname, eprintid, resourceTypesFName, contributorTypesFName, allIds, idList, cName, debug); err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
 		os.Exit(1)
 	}

@@ -40,7 +40,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strings"
 )
 
 // RdmUtil holds the configuration for rdmutil cli.
@@ -233,6 +232,30 @@ func (app *RdmUtil) GetRawRecord(id string) ([]byte, error) {
 	return src, nil
 }
 
+// GetDraftFiles returns the metadata for a draft's files
+//
+// ```
+//
+// app := new(irdmtools.RdmUtil)
+// if err := app.LoadConfig("irdmtools.json"); err != nil {
+//   // ... handle error ...
+// }
+// recordId := "woie-x0121"
+// src, err := app.GetFiles(recordId)
+// if err != nil {
+//   // ... handle error ...
+// }
+// fmt.Printf("%s\n", src)
+//
+// ```
+func (app *RdmUtil) GetDraftFiles(recordId string) ([]byte, error) {
+	data, err := GetDraftFiles(app.Cfg, recordId, app.Debug)
+	if err != nil {
+		return nil, err
+	}
+	return json.MarshalIndent(data, "", "    ")
+}
+
 // GetFiles returns the metadata for working with files
 //
 // ```
@@ -249,17 +272,14 @@ func (app *RdmUtil) GetRawRecord(id string) ([]byte, error) {
 // fmt.Printf("%s\n", src)
 //
 // ```
-func (app *RdmUtil) GetFiles(id string) ([]byte, error) {
-	obj, err := GetFiles(app.Cfg, id)
+func (app *RdmUtil) GetFiles(recordId string) ([]byte, error) {
+	data, err := GetFiles(app.Cfg, recordId, app.Debug)
 	if err != nil {
 		return nil, err
 	}
-	src, err := json.MarshalIndent(obj, "", "    ")
-	if err != nil {
-		return nil, err
-	}
-	return src, nil
+	return json.MarshalIndent(data, "", "    ")
 }
+
 
 // GetFile returns the metadata for a file
 //
@@ -419,6 +439,32 @@ func (app *RdmUtil) NewRecordVersion(recordId string) ([]byte, error) {
 	return json.MarshalIndent(data, "", "    ")
 }
 
+// PublishRecordVersion publish a new version draft using the 
+// version's record id.
+//
+// ```
+// app := new(irdmtools.RdmUtil)
+// if err := app.LoadConfig("irdmtools.json"); err != nil {
+//   // ... handle error ...
+// }
+// recordId = "woie-x0121"
+// version, pubDate := "internal", "2022-08"
+// src, err := app.PublishRecordVersion(recordId)
+// if err != nil {
+//   // ... handle error ...
+// }
+// fmt.Printf("%s\n", src)
+// ```
+func (app *RdmUtil) PublishRecordVersion(recordId string, version string, pubDate string) ([]byte, error) {
+	data, err := PublishRecordVersion(app.Cfg, recordId, version, pubDate, app.Debug)
+	if err != nil {
+		return nil, err
+	}
+	return json.MarshalIndent(data, "", "    ")
+}
+
+
+
 // NewDraft returns the a new draft of an existing record.
 //
 // ```
@@ -489,9 +535,6 @@ func (app *RdmUtil) GetDraft(id string) ([]byte, error) {
 //
 // ```
 func (app *RdmUtil) UpdateDraft(recordId string, src []byte) ([]byte, error) {
-	if app.Debug {
-		fmt.Fprintf(os.Stderr, "DEBUG running UpdateDraft(%q, src) ... \n", recordId)
-	}
 	data, err := UpdateDraft(app.Cfg, recordId, src, app.Debug)
 	if err != nil {
 		return nil, err
@@ -502,9 +545,6 @@ func (app *RdmUtil) UpdateDraft(recordId string, src []byte) ([]byte, error) {
 // SendToCommunity takes a RDM record id and community UUID. It populates the
 // the parent element approriately for draft to be submitted to a specific community.
 func (app *RdmUtil) SendToCommunity(recordId string, communityId string) ([]byte, error) {
-	if app.Debug {
-		fmt.Fprintf(os.Stderr, "DEBUG running SendToCommunity(%q, %q) ...\n", recordId, communityId)
-	}
 	data, err := SendToCommunity(app.Cfg, recordId, communityId, app.Debug)
 	if err != nil {
 		return nil, err
@@ -516,10 +556,27 @@ func (app *RdmUtil) SendToCommunity(recordId string, communityId string) ([]byte
 // the files.enabled value in a draft record. Returns the draft record
 // and an error value.
 func (app *RdmUtil) SetFilesEnable(recordId string, enable bool) ([]byte, error) {
-	if app.Debug {
-		fmt.Fprintf(os.Stderr, "DEBUG running SetFilesEnable(%q, %t) ...\n", recordId, enable)
-	}
 	m, err := SetFilesEnable(app.Cfg, recordId, enable, app.Debug)
+	if err != nil {
+		return nil, err
+	}
+	return json.MarshalIndent(m, "", "     ")
+}
+
+// SetVersion takes a RDM record id and version string
+// setting the .metadata.version in a draft record.
+func (app *RdmUtil) SetVersion(recordId string, version string) ([]byte, error) {
+	m, err := SetVersion(app.Cfg, recordId, version, app.Debug)
+	if err != nil {
+		return nil, err
+	}
+	return json.MarshalIndent(m, "", "     ")
+}
+
+// SetPubDate takes a RDM record id and publication date string
+// setting the .metadata.publication_date in a draft record.
+func (app *RdmUtil) SetPubDate(recordId string, pubDate string) ([]byte, error) {
+	m, err := SetPubDate(app.Cfg, recordId, pubDate, app.Debug)
 	if err != nil {
 		return nil, err
 	}
@@ -544,15 +601,13 @@ func (app *RdmUtil) SetFilesEnable(recordId string, enable bool) ([]byte, error)
 //
 // ```
 func (app *RdmUtil) UploadFiles(recordId string, filenames []string) ([]byte, error) {
-	if app.Debug {
-		fmt.Fprintf(os.Stderr, "DEBUG running UploadFiles(%q, [\"%s\"]) ...\n", recordId, strings.Join(filenames, `", "`))
-	}
 	data, err := UploadFiles(app.Cfg, recordId, filenames, app.Debug)
 	if err != nil {
 		return nil, err
 	}
 	return json.MarshalIndent(data, "", "    ")
 }
+
 
 
 // DeleteFiles takes a RDM record id an list of files and removes them from a draft.
@@ -573,9 +628,6 @@ func (app *RdmUtil) UploadFiles(recordId string, filenames []string) ([]byte, er
 //
 // ```
 func (app *RdmUtil) DeleteFiles(recordId string, filenames []string) ([]byte, error) {
-	if app.Debug {
-		fmt.Fprintf(os.Stderr, "DEBUG running DeleteFiles(%q, [\"%s\"]) ...\n", recordId, strings.Join(filenames, `", "`))
-	}
 	data, err := DeleteFiles(app.Cfg, recordId, filenames, app.Debug)
 	if err != nil {
 		return nil, err
@@ -601,9 +653,6 @@ func (app *RdmUtil) DeleteFiles(recordId string, filenames []string) ([]byte, er
 //
 // ```
 func (app *RdmUtil) DiscardDraft(recordId string) ([]byte, error) {
-	if app.Debug {
-		fmt.Fprintf(os.Stderr, "DEBUG running DiscardDraft(%s) ...\n", recordId)
-	}
 	data, err := DiscardDraft(app.Cfg, recordId, app.Debug)
 	if err != nil {
 		return nil, err
@@ -611,8 +660,8 @@ func (app *RdmUtil) DiscardDraft(recordId string) ([]byte, error) {
 	return json.MarshalIndent(data, "", "    ")
 }
 
-// PublishDraft takes a record id for a draft in review and publishes
-// the draft.
+// GetReview takes a record id and returns information about
+// review requests.
 //
 // ```
 // app := new(irdmtools.RdmUtil)
@@ -620,50 +669,21 @@ func (app *RdmUtil) DiscardDraft(recordId string) ([]byte, error) {
 //   // ... handle error ...
 // }
 // id := "woie-x0121"
-// src, err := app.PublishDraft(id)
+// src, err := app.GetReview(id, "accept", "")
 // if err != nil {
 //   // ... handle error ...
 // }
 // fmt.Printf("%s\n", src)
 // ```
-func (app *RdmUtil) PublishDraft(recordId string) ([]byte, error) {
-	if app.Debug {
-		fmt.Fprintf(os.Stderr, "DEBUG runnning PublishDraft(%q) ...\n", recordId)
-	}
-	data, err := PublishDraft(app.Cfg, recordId, app.Debug)
+func (app *RdmUtil) GetReview(recordId string) ([]byte, error) {
+	data, err := GetReview(app.Cfg, recordId, app.Debug)
 	if err != nil {
 		return nil, err
 	}
 	return json.MarshalIndent(data, "", "    ")
 }
 
-// SubmitDraft takes a record id, JSON data and submits it for review draft.
-//
-// ```
-// app := new(irdmtools.RdmUtil)
-// if err := app.LoadConfig("irdmtools.json"); err != nil {
-//   // ... handle error ...
-// }
-// id := "woie-x0121"
-// src, err := app.SubmitDraft(id)
-// if err != nil {
-//   // ... handle error ...
-// }
-// fmt.Printf("%s\n", src)
-// ```
-func (app *RdmUtil) SubmitDraft(recordId string) ([]byte, error) {
-	if app.Debug {
-		fmt.Fprintf(os.Stderr, "DEBUG running SubmitDraft(%q) ...n\n", recordId)
-	}
-	data, err := SubmitDraft(app.Cfg, recordId, app.Debug)
-	if err != nil {
-		return nil, err
-	}
-	return json.MarshalIndent(data, "", "    ")
-}
-
-
-// ReviewDraft takes a record id, a decision and a comment and
+// ReviewRequest takes a record id, a decision and a comment and
 // submits it to the review process.
 //
 // ```
@@ -678,11 +698,8 @@ func (app *RdmUtil) SubmitDraft(recordId string) ([]byte, error) {
 // }
 // fmt.Printf("%s\n", src)
 // ```
-func (app *RdmUtil) ReviewDraft(recordId string, decision string, comment string) ([]byte, error) {
-	if app.Debug {
-		fmt.Fprintf(os.Stderr, "DEBUG running ReviewDraft(%q, %s, %q) ...\n", recordId, decision, comment)
-	}
-	data, err := ReviewDraft(app.Cfg, recordId, decision, comment, app.Debug)
+func (app *RdmUtil) ReviewRequest(recordId string, decision string, comment string) ([]byte, error) {
+	data, err := ReviewRequest(app.Cfg, recordId, decision, comment, app.Debug)
 	if err != nil {
 		return nil, err
 	}
@@ -741,9 +758,6 @@ func (app *RdmUtil) GetAccess(id string, accessType string) ([]byte, error) {
 // ```
 func (app *RdmUtil) SetAccess(id string, accessType string, accessValue string) ([]byte, error) {
 	var src []byte
-	if app.Debug {
-		fmt.Fprintf(os.Stderr, "DEBUG running SetAccess(%q, %q, %q) ...\n", id, accessType, accessValue)
-	}
 	if accessType != "record" && accessType != "files" && accessType != "embargo" {
 		return nil, fmt.Errorf("%q is not a supported access type (e.g. files, record)", accessType)
 	}
@@ -779,6 +793,12 @@ func (app *RdmUtil) PutEndpoint(p string, data []byte) ([]byte, error) {
 // PATH provided.
 func (app *RdmUtil) PatchEndpoint(p string, data []byte) ([]byte, error) {
 	return PatchEndpoint(app.Cfg, p, data)
+}
+
+// DeleteEndpoint performs a DELETE on the endpoint indicated by 
+// PATH provided.
+func (app *RdmUtil) DeleteEndpoint(p string) ([]byte, error) {
+	return DeleteEndpoint(app.Cfg, p)
 }
 
 
@@ -818,6 +838,37 @@ func getRecordParams(params []string, requireRecordId bool, requireInName bool, 
 		return recordId, inName, "", fmt.Errorf("(%d) Missing output filename", i)
 	}
 	return recordId, inName, outName, nil
+}
+
+// getVersionParams parse the command parameters for record id and
+// version oriented values.
+func getVersionParams(params []string, requireRecordId bool, requireVersion bool, requirePubDate bool) (string, string, string, error) {
+	var (
+		recordId string
+		version string
+		pubDate string
+	)
+	i := 0
+	if len(params) > i {
+		recordId = params[i]
+		i++
+	} else if requireRecordId {
+		return "", "", "", fmt.Errorf("(%d) Missing record id", i)
+	}
+	if len(params) > i {
+		version = params[i]
+		i++
+	} else if requireVersion {
+		return recordId, "", "", fmt.Errorf("(%d) Missing version label", i)
+	}
+	if len(params) > i {
+		pubDate = params[i]
+		// FIXME: Should vet the format of the date ...
+		i++
+	} else if requirePubDate {
+		return recordId, version, "", fmt.Errorf("(%d) Missing publication date", i)
+	}
+	return recordId, version, pubDate, nil
 }
 
 // getIOParams parse the command parameters where the only options
@@ -954,6 +1005,20 @@ func (app *RdmUtil) Run(in io.Reader, out io.Writer, eout io.Writer, action stri
 	var (
 		src []byte
 		err error
+		recordId string
+		communityId string
+		inName string
+		outName string
+		enable bool
+		decision string
+		comment string
+		accessType string
+		val string
+		p string
+		data []byte
+		filenames []string
+		version string
+		pubDate string
 	)
 	switch action {
 	case "setup":
@@ -982,35 +1047,41 @@ func (app *RdmUtil) Run(in io.Reader, out io.Writer, eout io.Writer, action stri
 	case "get_all_ids":
 		src, err = app.GetRecordIds()
 	case "get_raw_record":
-		recordId, _, _, err := getRecordParams(params, true, false, false)
+		recordId, _, _, err = getRecordParams(params, true, false, false)
 		if err != nil {
 			return err
 		}
 		src, err = app.GetRawRecord(recordId)
 	case "get_record":
-		recordId, _, _, err := getRecordParams(params, true, false, false)
+		recordId, _, _, err = getRecordParams(params, true, false, false)
 		if err != nil {
 			return err
 		}
 		src, err = app.GetRecord(recordId)
+	case "get_draft_files":
+		recordId, _, _, err = getRecordParams(params, true, false, false)
+		if err != nil {
+			return err
+		}
+		src, err = app.GetDraftFiles(recordId)
 	case "get_files":
-		recordId, _, _, err := getRecordParams(params, true, false, false)
+		recordId, _, _, err = getRecordParams(params, true, false, false)
 		if err != nil {
 			return err
 		}
 		src, err = app.GetFiles(recordId)
 	case "get_file":
-		recordId, inName, _, err := getRecordParams(params, true, true, false)
+		recordId, inName, _, err = getRecordParams(params, true, true, false)
 		if err != nil {
 			return err
 		}
 		src, err = app.GetFile(recordId, inName)
 	case "retrieve_file":
-		recordId, inName, outName, err := getRecordParams(params, true, true, true)
+		recordId, inName, outName, err = getRecordParams(params, true, true, true)
 		if err != nil {
 			return err
 		}
-		data, err := app.RetrieveFile(recordId, inName)
+		data, err = app.RetrieveFile(recordId, inName)
 		if err != nil {
 			return err
 		}
@@ -1020,17 +1091,17 @@ func (app *RdmUtil) Run(in io.Reader, out io.Writer, eout io.Writer, action stri
 		fmt.Fprintf(out, "Wrote %s %d bytes\n", outName, len(data))
 		return nil
 	case "get_versions":
-		recordId, _, _, err := getRecordParams(params, true, false, false)
+		recordId, _, _, err = getRecordParams(params, true, false, false)
 		if err != nil {
 			return err
 		}
 		src, err = app.GetVersions(recordId)
 	case "get_latest_version":
-		recordId, _, outName, err := getRecordParams(params, true, false, false)
+		recordId, _, outName, err = getRecordParams(params, true, false, false)
 		if err != nil {
 			return err
 		}
-		src, err := app.GetVersionLatest(recordId)
+		src, err = app.GetVersionLatest(recordId)
 		if err != nil {
 			return err
 		}
@@ -1041,7 +1112,7 @@ func (app *RdmUtil) Run(in io.Reader, out io.Writer, eout io.Writer, action stri
 			return nil
 		}
 	case "new_record":
-		inName, outName, err := getIOParams(params, false, false)
+		inName, outName, err = getIOParams(params, false, false)
 		if inName != "" && inName != "-" {
 			src, err = os.ReadFile(inName)
 		} else {
@@ -1061,25 +1132,31 @@ func (app *RdmUtil) Run(in io.Reader, out io.Writer, eout io.Writer, action stri
 			return nil
 		}
 	case "new_version":
-		recordId, _, _, err := getRecordParams(params, true, false, false)
+		recordId, _, _, err = getRecordParams(params, true, false, false)
 		if err != nil {
 			return err
 		}	
 		src, err = app.NewRecordVersion(recordId)
+	case "publish_version":
+		recordId, version, pubDate, err = getVersionParams(params, true, false, false)
+		if err != nil {
+			return err
+		}
+		src, err = app.PublishRecordVersion(recordId, version, pubDate)
 	case "new_draft":
-		recordId, _, _, err := getRecordParams(params, true, false, false)
+		recordId, _, _, err = getRecordParams(params, true, false, false)
 		if err != nil {
 			return err
 		}
 		src, err = app.NewDraft(recordId)
 	case "get_draft":
-		recordId, _, _, err := getRecordParams(params, true, false, false)
+		recordId, _, _, err = getRecordParams(params, true, false, false)
 		if err !=nil {
 			return err
 		}
 		src, err = app.GetDraft(recordId)
 	case "update_draft":
-		recordId, inName, _, err := getRecordParams(params, true, false, false)
+		recordId, inName, _, err = getRecordParams(params, true, false, false)
 		if err != nil {
 			return err
 		}
@@ -1093,12 +1170,6 @@ func (app *RdmUtil) Run(in io.Reader, out io.Writer, eout io.Writer, action stri
 			return err
 		}
 		src, err = app.UpdateDraft(recordId, src)
-	case "send_to_community":
-		if len(params) != 2 {
-			return fmt.Errorf("expected record id and comminity UUID")
-		}
-		recordId, communityId := params[0], params[1]
-		src, err = app.SendToCommunity(recordId, communityId)
 	case "set_files_enable":
 		if len(params) != 2 {
 			return fmt.Errorf("expected record id and either true or false")
@@ -1106,52 +1177,64 @@ func (app *RdmUtil) Run(in io.Reader, out io.Writer, eout io.Writer, action stri
 		if params[1] != "true" && params[1] != "false" {
 			return fmt.Errorf("files.enable can be set to true or false")
 		}
-		recordId, enable := params[0], (params[1] == "true")
+		recordId, enable = params[0], (params[1] == "true")
 		src, err = app.SetFilesEnable(recordId, enable)
+	case "set_version":
+		if len(params) != 2 {
+			return fmt.Errorf("expected record id and version string")
+		}
+		recordId, version = params[0], params[1]
+		src, err = app.SetVersion(recordId, version)
+	case "set_publication_date":
+		if len(params) != 2 {
+			return fmt.Errorf("expected record id and publication date")
+		}
+		recordId, pubDate = params[0], params[1]
+		src, err = app.SetPubDate(recordId, pubDate)
 	case "upload_files":
-		recordId, filenames, err := getFileParams(params, true, true)
+		recordId, filenames, err = getFileParams(params, true, true)
 		if err != nil {
 			return err
 		}
 		src, err = app.UploadFiles(recordId, filenames)
 	case "delete_files":
-		recordId, filenames, err := getFileParams(params, true, true)
+		recordId, filenames, err = getFileParams(params, true, true)
 		if err != nil {
 			return err
 		}
 		src, err = app.DeleteFiles(recordId, filenames)
 	case "discard_draft":
-		recordId, _, _, err := getRecordParams(params, true, false, false)
+		recordId, _, _, err = getRecordParams(params, true, false, false)
 		if err != nil {
 			return err
 		}
 		src, err = app.DiscardDraft(recordId)
-	case "submit_draft":
-		recordId, _, _, err := getRecordParams(params, true, false, false)
+	case "send_to_community":
+		if len(params) != 2 {
+			return fmt.Errorf("expected record id and RDM comminity id")
+		}
+		recordId, communityId = params[0], params[1]
+		src, err = app.SendToCommunity(recordId, communityId)
+	case "get_review":
+		if len(params) != 1 {
+			return fmt.Errorf("expected record id")
+		}
+		recordId := params[0]
+		src, err = app.GetReview(recordId)
+	case "review_request":
+		recordId, decision, comment, err = getReviewParams(params, true, true, false)
 		if err != nil {
 			return err
 		}
-		src, err = app.SubmitDraft(recordId)
-	case "review_draft":
-		recordId, decision, comment, err := getReviewParams(params, true, true, false)
-		if err != nil {
-			return err
-		}
-		src, err = app.ReviewDraft(recordId, decision, comment)
-	case "publish_draft":
-		recordId, _, _, err := getRecordParams(params, true, false, false)
-		if err != nil {
-			return err
-		}
-		src, err = app.PublishDraft(recordId)
+		src, err = app.ReviewRequest(recordId, decision, comment)
 	case "get_access":
-		recordId, accessType, _, err := getAccessParams(params, true, false, false)
+		recordId, accessType, _, err = getAccessParams(params, true, false, false)
 		if err != nil {
 			return err
 		}
 		src, err = app.GetAccess(recordId, accessType)
 	case "set_access":
-		recordId, accessType, val, err := getAccessParams(params, true, true, true)
+		recordId, accessType, val, err = getAccessParams(params, true, true, true)
 		if err != nil {
 			return err
 		}
@@ -1162,7 +1245,7 @@ func (app *RdmUtil) Run(in io.Reader, out io.Writer, eout io.Writer, action stri
 		}
 		src, err = app.GetEndpoint(params[0])
 	case "post_endpoint":
-		p, inName, err := getEndpointParams(params, true, false)
+		p, inName, err = getEndpointParams(params, true, false)
 		if err != nil {
 			return err
 		}
@@ -1174,7 +1257,7 @@ func (app *RdmUtil) Run(in io.Reader, out io.Writer, eout io.Writer, action stri
 		}
 		src, err = app.PostEndpoint(p, data)
 	case "put_endpoint":
-		p, inName, err := getEndpointParams(params, true, false)
+		p, inName, err = getEndpointParams(params, true, false)
 		if err != nil {
 			return err
 		}
@@ -1186,7 +1269,7 @@ func (app *RdmUtil) Run(in io.Reader, out io.Writer, eout io.Writer, action stri
 		}
 		src, err = app.PutEndpoint(p, data)
 	case "patch_endpoint":
-		p, inName, err := getEndpointParams(params, true, false)
+		p, inName, err = getEndpointParams(params, true, false)
 		if err != nil {
 			return err
 		}
@@ -1197,6 +1280,12 @@ func (app *RdmUtil) Run(in io.Reader, out io.Writer, eout io.Writer, action stri
 			data, err = io.ReadAll(os.Stdin)
 		}
 		src, err = app.PatchEndpoint(p, data)
+	case "delete_endpoint":
+		p, _, err = getEndpointParams(params, true, false)
+		if err != nil {
+			return err
+		}
+		src, err = app.DeleteEndpoint(p)
 	case "harvest":
 		if len(params) != 1 {
 			return fmt.Errorf("JSON Identifier file required")

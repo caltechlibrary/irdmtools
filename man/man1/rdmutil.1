@@ -14,7 +14,7 @@
 . ftr VB CB
 . ftr VBI CBI
 .\}
-.TH "rdmutil" "1" "2023-08-04" "irdmtools user manual" "version 0.0.30 a38e246"
+.TH "rdmutil" "1" "2023-08-14" "irdmtools user manual" "version 0.0.33 67bf49c"
 .hy
 .SH NAME
 .PP
@@ -109,9 +109,8 @@ e.g.\ bq3se-47g50.
 The REORCID_ID is a required parameter.
 .TP
 get_files RECORD_ID
-Returns a list of file entries for a indicated by RECORD_ID,
-e.g.\ bq3se-47g50.
-The REORCID_ID is a required parameter.
+Return a list of files for record with RECORD_ID.
+RECORD_ID is required.
 .TP
 get_file RECORD_ID FILENAME
 Returns the metadata for a file indicated by RECORD_ID and FILENAME,
@@ -133,6 +132,15 @@ get_latest_version
 Retreive the latest version metadata for a RECORD_ID.
 RECORD_ID is requireed.
 .TP
+set_version RECORD_ID VERSION_STRING
+This sets the version string in .metadata.version of a draft.
+RECORD_ID and VERSION_STRING are required.
+.TP
+set_publication_date RECORD_ID PUBICLATION_DATE
+This sets the publication date, .metadata.publication_date, in draft.
+RECORD_ID and PUBLICATION_DATE required.
+PUBLICATION_DATE can be in YYYY, YYYY-MM, YYYY-MM-DD format.
+.TP
 new_record [FILENAME]
 Create a new record from JSON source.
 If FILENAME is set then json source is read from FILENAME otherwise it
@@ -140,6 +148,22 @@ reads from standard input.
 .TP
 new_version RECORD_ID
 This will create a new version of the record.
+RECORD_ID is required.
+NOTE: When you create a new version .metadata.publication_date and
+\&.metadata.version are removed.
+These need to be you recreated in the draft of the new version as well
+as to handle any files, access restrictions before publishing the new
+version draft.
+.TP
+publish_version RECORD_ID [VERSION_LABEL] [PUBLICATION_DATE]
+This will publish a new draft version.
+RECORD_ID is required.
+VERSION_LABEL is optional.
+PUBLICATION_DATE is optional.
+PUBLICATION_DATE is in YYYY, YYYY-MM or YYYY-MM-DD format.
+.PP
+will need to set .metadata.publication_date, doi and version name in the
+versioned draft before publish_version is called.
 RECORD_ID is required.
 .TP
 new_draft RECORD_ID
@@ -158,10 +182,6 @@ FILENAME is optional, if one is provided the JSON document is used to
 update RDM, otherwise standard input is used to get the JSON required to
 do the update.
 .TP
-send_to_community RECORD_ID COMMUNITY_ID
-Set the community for the draft record id.
-RECORD_ID and COMMUMITY_ID are required.
-.TP
 set_files_enable RECORD_ID true|false
 This will flip the files.enabled value to true and update the draft.
 RECORD_ID is required.
@@ -171,6 +191,10 @@ upload_files RECORD_ID FILENAME [FILENAME \&...]
 Upload files to a draft record.
 RECORD_ID is required as are one or more filenames.
 .TP
+get_files RECORD_ID
+Retrieve the list of files attached to a draft.
+RECORD_ID is required.
+.TP
 delete_files RECORD_ID FILENAME [FILENAME \&...]
 Delete files in a draft record.
 RECORD_ID is required as are one or more filenames.
@@ -179,24 +203,24 @@ discard_draft
 Discard (delete) a draft record from RDM.
 RECORD_ID is required.
 .TP
-submit_draft RECORD_ID
-Submit the draft record for review.
-RECORD_ID is required.
-.TP
 review_comment RECORD_ID [FILENAME]
 Submit a comment to a review.
 RECORD_ID is required.
 If FILENAME is provided the comment is read from a file otherwise it is
 read from standard input.
 .TP
-review_draft RECORD_ID accept|decline|\[lq]\[rq] [COMMENT]
+send_to_community RECORD_ID COMMUNITY_ID
+Submit a draft record to a community for review.
+RECORD_ID and COMMUMITY_ID are required.
+.TP
+get_review
+Get review requests assocaited with RECORD_ID.
+RECORD_ID is required.
+.TP
+review_request RECORD_ID accept|decline|cancel|\[lq]\[rq] [COMMENT]
 Review a submitted draft record.
 the values \[lq]accept\[rq], \[lq]decline\[rq] or \[lq]\[rq] and an
 optional COMMENT.
-.TP
-publish_draft RECORD_ID
-Publish a draft record in review.
-RECORD_ID is required.
 .TP
 get_access RECORD_ID [ACCESS_TYPE]
 This will return the JSON for the access attribute in the record.

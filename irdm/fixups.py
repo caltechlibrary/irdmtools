@@ -79,11 +79,11 @@ def normalize_pmcid(pmcid = None):
     '''normalize PCM ids to just the id, trim from URL if needed.'''
     if pmcid is not None:
         if idutils.is_url(pmcid):
+            if idutils.is_doi(pmcid):
+                return None
             _u = urlparse(pmcid)
             pmcid = os.path.basename(_u.path.rstrip('/')).lower()
-        else:
-            pmcid = pmcid.upper()
-    return pmcid
+    return pmcid.upper()
 
 def trim_prefixes(text, prefixes):
     '''trim prefixes from string'''
@@ -131,8 +131,8 @@ def normalize_pub(pub_url = None, doi = None):
                 return pub_url
     return None
 
-# fixup_record takes the simple record and files dict making final
-# record changes suitable before importing into Invenio-RDM.
+# fixup_record takes the simplfied record and prepares a
+# draft record structure for import using rdmutil. 
 #
 # This include things like crosswalking vocabularies to map from an
 # existing Caltech Library EPrints repository to
@@ -141,7 +141,7 @@ def normalize_pub(pub_url = None, doi = None):
 # Where possible these adjustments should be ported back
 # into eprinttools' simple.go and crosswalk.go.
 #
-def fixup_record(record, files):
+def fixup_record(record):
     """fixup_record accepts a dict of simple record and files returns a 
 normlzied record dict that is a for migration into Invenio-RDM."""
     record_id = get_dict_path(record, ["pid", "id"])
@@ -227,11 +227,11 @@ normlzied record dict that is a for migration into Invenio-RDM."""
             record["metadata"]["identifier"].append({
                 "scheme": "eprintid", "identifier": f"{eprintid}"
             })
-    if not files:
-        if 'files' in record:
-            record["files"] = { "enabled": True, "order": [] }
-        else:
-            record["files"] = { "enabled": False, "order": [] }
+    # Setup an empty .files attribute for use with rdmutil upload_files
+    if 'files' in record:
+        record["files"] = { "enabled": True, "order": [] }
+    else:
+        record["files"] = { "enabled": False, "order": [] }
     # Normalize DOI, issue #39
     doi = normalize_doi(get_dict_path(record, ['pids', 'doi', 'identifier']))
     if doi is not None:
@@ -247,8 +247,8 @@ normlzied record dict that is a for migration into Invenio-RDM."""
         # Force DOI to be "external" for migration purposes.
         if 'pids' in record and \
             'doi' in record['pids'] and \
-            'identifier' in record['pids']['doi']:
-            record['pids']['doi']['identifier']['provider'] = 'external'
+            'provider' in record ['pids']['doi']:
+            record['pids']['doi']['provider'] = 'external'
 
     # Run through related URLs, if DOI then normalize DOI, if DOI match
     # pids.doi.identifier then discard related url value, issue #39
@@ -263,60 +263,64 @@ normlzied record dict that is a for migration into Invenio-RDM."""
         keep_identifiers = []
         for identifier in identifiers:
             scheme = get_dict_path(identifier, ['scheme'])
+            id_val = get_dict_path(identifier, ['identifier'])
             if scheme is not None:
                 if scheme == 'doi':
                     related_doi = normalize_doi(get_dict_path(identifier, ['identifier']))
                     if related_doi is not None:
-                        identifier['identifier'] = related_doi
                         if related_doi != doi:
-                            keep_identifiers.append(identifier)
+                            keep_identifiers.append({"scheme": "doi", "identifier": related_doi})
                             if doi is None:
                                 doi = related_doi
                 elif scheme == 'pmcid':
                     related_pmcid = normalize_pmcid(get_dict_path(identifier, [ 'identifier']))
                     if related_pmcid is not None:
-                        identifier['identifier'] = related_pmcid
-                        keep_identifiers.append(identifier)
+                        keep_identifiers.append({"scheme":"pmcid", "identifier": related_pmcid})
                 elif scheme == 'pmc':
                     related_pmcid = normalize_pmcid(get_dict_path(identifier, ['identifier']))
                     if related_pmcid is not None:
-                        identifier['scheme'] = 'pcmid'
-                        identifier['identifier'] = related_pmcid
                         if related_pmcid != pmcid:
-                            keep_identifiers.append(identifier)
+                            keep_identifiers.append({"scheme": "pmcid", "identifier": related_pmcid})
                 elif scheme == 'arxiv':
                     related_arxiv = normalize_arxiv(get_dict_path(identifier, ['identifier']))
                     if related_arxiv is not None:
-                        identifier['identifier'] = related_arxiv
-                        keep_identifiers.append(identifier)
+                        keep_identifiers.append({"scheme": "arxiv", "identifier": related_arxiv})
                 elif scheme == 'ads':
                     related_ads = normalize_ads(get_dict_path(identifier, ['identifier']))
                     if related_ads is not None:
-                        identifier['identifier'] = related_ads
-                        keep_identifiers.append(identifier)
+                        keep_identifiers.append({"scheme": "ads", "identifier": related_ads})
                 elif scheme == 'pub':
-                    identifier['scheme'] = 'url'
                     related_pub = normalize_pub(get_dict_path(identifier, ['identifier']), doi)
                     if related_pub is not None:
-                        identifier['identifier'] = related_pub
-                        keep_identifiers.append(identifier)
+                        keep_identifiers.append({"scheme": "url", "identifier": related_pub})
                 elif scheme == 'eprintid':
-                    keep_identifiers.append(identifier)
+                    keep_identifiers.append({"scheme": "eprintid", "identifier": id_val})
                 elif scheme == 'resolverid':
-                    keep_identifiers.append(identifier)
+                    keep_identifiers.append({"scheme": "resolverid", "identifier": id_val})
                 else:
-                    if 'identifier' in identifier and identifier['identifier'].strip() != "":
+                    if id_val is not None and id_val.strip() != "":
                         if idutils.is_url(identifier['identifier']):
-                            identifier['scheme'] = 'url'
-                            identifier['identifier'] = identifier['identifier']
-                            keep_identifiers.append(identifier)
+                            keep_identifiers.append({"scheme":"url", "identifier": id_val})
             else:
-                keep_identifiers.append(identifier)
+                keep_identifiers.append({"scheme": scheme, "identifier": id_val})
         if len(keep_identifiers) > 0:
             record['metadata']['identifiers'] = keep_identifiers
         else:
             del record['metadata']['identifiers']
-
-    # FIXME: Normalize funder structures
+    
+    # Check to see if pids object is empty
+    pids = record.get('pids', None)
+    if pids is not None:
+        doi = pids.get('doi', {})
+        doi_identifier = doi.get('identifier')
+        if doi_identifier == "":
+            del pids['doi']
+        if len(pids) == 0:
+            del record['pids']
+    # Remove eprint revision version number if is makes it through from
+    if 'metadata' in record and 'version' in record['metadata']:
+        del record['metadata']['version']
+    # FIXME: Need to make sure we don't have duplicate related identifiers ...,
+    # pmcid seem to have duplicates in some case.
     return record
 

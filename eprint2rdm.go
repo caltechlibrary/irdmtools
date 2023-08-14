@@ -685,8 +685,8 @@ func recordAccessFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record) 
 		isPublic = false
 	}
 	rec.RecordAccess = new(simplified.RecordAccess)
-	// By default lets assume the files are restricted.
-	rec.RecordAccess.Files = "resticted"
+	// By default lets assume the files are public.
+	rec.RecordAccess.Files = "public"
 	if isPublic {
 		rec.RecordAccess.Record = "public"
 	} else {
@@ -696,6 +696,9 @@ func recordAccessFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record) 
 	if eprint.Documents != nil {
 		for i := 0; i < eprint.Documents.Length(); i++ {
 			doc := eprint.Documents.IndexOf(i)
+			if doc.Security == "internal" || doc.Security == "validuser" {
+				rec.RecordAccess.Files = "restricted"
+			}
 			if doc.DateEmbargo != "" {
 				embargo := new(simplified.Embargo)
 				embargo.Until = doc.DateEmbargo
@@ -746,7 +749,7 @@ func dateTypeFromTimestamp(dtType string, timestamp string, description string) 
 	return dt
 }
 
-func mkSimpleIdentifier(scheme, value string) *simplified.Identifier {
+func mkSimpleIdentifier(scheme string, value string) *simplified.Identifier {
 	identifier := new(simplified.Identifier)
 	identifier.Scheme = scheme
 	identifier.Identifier = value
@@ -875,11 +878,6 @@ func metadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record, cont
 			rec.Metadata.Dates = append(rec.Metadata.Dates, dateTypeFromTimestamp("status_changed", eprint.StatusChanged, "Created from EPrint's status_changed field"))
 		}
 	*/
-	/* Version number in EPrints is not needed. Skipping per Tom.
-	if eprint.RevNumber != 0 {
-		rec.Metadata.Version = fmt.Sprintf("v%d", eprint.RevNumber)
-	}
-	*/
 	if eprint.Publisher != "" {
 		rec.Metadata.Publisher = eprint.Publisher
 	} else if eprint.Publication != "" {
@@ -951,17 +949,22 @@ func metadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record, cont
 	return nil
 }
 
-func migrateFile(fName string) bool {
-	// Don't include indexcodes.txt, these are EPrints internal files
-	// not user submitted files.
-	if fName == "indexcodes.txt" {
+// Decide if to migrate filename based on name and format description
+func migrateFile(fName string, doc *eprinttools.Document) bool {
+	// Always explude indexcodes.txt and thumbnails. These are 
+	// EPrints internal files not user submitted files.
+	if (fName == "indexcodes.txt") || 
+		strings.HasPrefix(doc.FormatDesc, "Generate") ||
+		strings.HasPrefix(doc.FormatDesc, "Thumbnail") {
 		return false
 	}
 	return true
 }
 
-// filesFromEPrint extracts all the file specific metadata from the
-// EPrint record
+// filesFromEPrint extracts all the files specific metadata from the
+// EPrint record with a specific document.security string (e.g.
+// 'internal', 'public', 'staffonly', 'validuser'). NOTE: "staffonly"
+// security setting is normalized to "internal" in this func.
 func filesFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record) error {
 	// crosswalk Files from EPrints DocumentList
 	if (eprint != nil) && (eprint.Documents != nil) && (eprint.Documents.Length() > 0) {
@@ -969,20 +972,36 @@ func filesFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record) error {
 		files := new(simplified.Files)
 		files.Order = []string{}
 		files.Enabled = true
-		//files.Entries = map[string]*simplified.Entry{}
 		files.Entries = map[string]*simplified.Entry{}
 		for i := 0; i < eprint.Documents.Length(); i++ {
 			doc := eprint.Documents.IndexOf(i)
+			// NOTE: We normalize staffonly to internal, per Kathy
+			// at migration project meeting 2023-08-10. RSD
+			if doc.Security == "staffonly" {
+				doc.Security = "internal"
+			}
 			if len(doc.Files) > 0 {
 				for _, docFile := range doc.Files {
 					// Check to make sure we want to retain file 
 					// information.
-					if migrateFile(docFile.Filename) {
+					if migrateFile(docFile.Filename, doc) {
     					addFiles = true
     					entry := new(simplified.Entry)
     					entry.FileID = docFile.URL
     					entry.Size = docFile.FileSize
     					entry.MimeType = docFile.MimeType
+						entry.Metadata = map[string]interface{}{
+							"security": doc.Security,
+							"format": doc.Format,
+							"format_desc": doc.FormatDesc,
+							"rev_number": doc.RevNumber,
+							"pos": doc.Pos,
+							"main": doc.Main,
+							"content": doc.Content,
+							"file_id": docFile.FileID,
+							"object_id": docFile.ObjectID,
+							"filename": docFile.Filename,
+						}
     					if doc.Content == "submitted"  || 
 							doc.Content == "preprint" || 
 							doc.Content == "published" {

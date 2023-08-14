@@ -18,3 +18,5 @@ from .client import (
     IRDM_Client
 )
 from .fixups import fixup_record, get_dict_path
+from .irdmtools import RdmUtil, eprint2rdm
+
