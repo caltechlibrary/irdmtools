@@ -308,6 +308,19 @@ normlzied record dict that is a for migration into Invenio-RDM."""
         else:
             del record['metadata']['identifiers']
     
+    # Clean up caltech groups
+    groups = get_dict_path(record, [ 'custom_fields', 'caltech:groups'])
+    new = []
+    if groups:
+        for group in groups:
+            if group['id'] == "Institute-for-Quantum-Information-and-Matter":
+                new.append({'id':'IQIM'})
+            elif group['id'] == 'Owens-Valley-Radio-Observatory-(OVRO)':
+                new.append({'id':'Owens-Valley-Radio-Observatory'})
+            else:
+                new.append(group)
+        record['custom_fields']['caltech:groups'] = new
+
     # Check to see if pids object is empty
     pids = record.get('pids', None)
     if pids is not None:

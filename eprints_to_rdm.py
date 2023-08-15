@@ -319,16 +319,41 @@ to guide versioning.'''
     print(f'Saved {obj.eprintid} as {root_rdm_id} record')
     return None
 
-def process_document_and_eprintids(config, eprintids):
+def process_status(app_name, tot, cnt, started):
+    if (cnt % 10) == 0:
+        # calculate the duration in minutes.
+        now = datetime.now()
+        duration = (now - started).total_seconds()
+        x = cnt / duration
+        minutes_remaining = round((tot - cnt) * x)
+        percent_completed = round((cnt/tot)*100)
+        if cnt == 0:
+            print(f'{now} {app_name}: {cnt}/{tot} {percent_completed}%  eta: unknown')
+        else:
+            print(f'{now} {app_name}: {cnt}/{tot} {percent_completed}%  eta: {minutes_remaining} minutes')
+
+def display_status(app_name, tot, cnt, started, completed):
+    # calculate the duration in minutes.
+    duration = round((completed - started).total_seconds()/60)
+    x = round(cnt / duration)
+    print(f'    records processed: {cnt}')
+    print(f'             duration: {duration}')
+    print(f'   records per minute: {x}')
+    print(f'{app_name} started: {started}, completed: {completed}')
+
+def process_document_and_eprintids(config, app_name, eprintids):
     '''Process and array of EPrint Ids and migrate those records.'''
     started = datetime.now()
-    print(f'Processing {len(eprintids)} eprintids, started {started}')
+    tot = len(eprintids)
+    print(f'Processing {tot} eprintids, started {started}')
     for i, _id in enumerate(eprintids):
         err = migrate_record(config, _id)
         if err is not None:
             print(f'error processing {_id}, row {i}, {err}')
             return err
-    print(f'Processing {len(eprintids)} eprintids, completed {started}')
+        process_status(app_name, tot, i, started)
+    completed = datetime.now()
+    display_status(len(eprintids), started, completed)
     return None
 
 def get_eprint_ids():
@@ -354,7 +379,7 @@ def main():
     app_name = os.path.basename(sys.argv[0])
     config, is_ok = check_environment()
     if is_ok:
-        err = process_document_and_eprintids(config, get_eprint_ids())
+        err = process_document_and_eprintids(config, app_name, get_eprint_ids())
         if err is not None:
             print(f'Aborting {app_name}, {err}', file = sys.stderr)
             sys.exit(1)

@@ -8,9 +8,16 @@ EPrints is running version 3.3. RDM is running version 11.
 ## Requirements
 
 1. A POSIX compatible shell (e.g. Bash)
-2. The lastest irdmtools
-3. jq for working with JSON and extracting interesting bits
-4. Unix split command to split files into smaller lists
+2. Python 3 and packages in requirments.txt
+3. The lastest irdmtools
+4. Latest jq for working with JSON and extracting interesting bits
+
+To install the depenedent packages found in the requirements.txt
+file you can use the following command.
+
+~~~
+python3 -m pip install -r requirements.txt
+~~~
 
 ## Setup
 
@@ -69,39 +76,32 @@ At this stage of our migration project we can support all the record types in RD
 eprint2rdm -all-ids $EPRINT_HOST >eprint-ids.txt
 ~~~
 
+You can also generate eprint id lists via using MySQL client directory.
+See [get_eprintids_by_year.bash].
+
+~~~
+#!/bin/bash
+#
+# NOTE: REPO_ID is imported from the environment.
+#
+YEAR="$1"
+mysql --batch --skip-column-names \
+  --execute "SELECT eprintid FROM eprint WHERE date_year = '$YEAR' AND eprint_status = 'archive' ORDER BY date_year, date_month, date_day, eprintid" "${REPO_ID}"
+~~~
+
 ## Migrating records
 
-We have over 100,000 records so migration is going to take a couple days. We're migrating the metadata and any publicly visible files.
+We have over 100,000 records so migration is going to take a couple days. We're migrating the metadata and any publicly visible files. I've found working by year to be helpful way of batching up record loads.
 
-I've found it convient to split up the eprint-ids.txt file into a series of smaller files and migrate them in smaller batches. This POSIX split command does this nicely.
-
-~~~sh
-split -l 1000 eprint-ids.txt eprints-ids.
-~~~
-
-This will result in files with an extensions of ".aa" through ".zz" for the file you split.
-
-You can use a simple bash script to iterate over a file and process the EPrints record and file information to migrate from one system to another.  Here are the steps to migrate a single record. Below are the steps taken to migrate each record.
-
-1. Get an EPrint record id from our list (E.g. it is numeric) and fetch the JSON version of the record using eprint2rdm
-2. Create a new RDM draft using migrate_record.py and rdmutil
-3. Use rdmutil to create a new RDM draft record; capture the assigned RDM record id by piping the result through `jq -r .id`.
-4. Evaludate the EPrint JSON to see if we have files to attach
-5. If we have files, using rdmutil to upload them to the draft RDM record
-6. Send the draft RDM record to the community using the environment RDM_COMMUNITY_ID
-7. Accept the draft record in the community
-8. Cleanup temportary files and proceed to next record
-
-Example of processing, assumes eprint id was assigned to the environment variable EP_PRINT
-
-~~~sh
-eprint2rdm $EPRINT_HOST $EPRINT_ID >"${EPRINT_ID}.json"
-RDM_RECORD_ID=$(cat "${EPRINT_ID}.json" | ./migrate_record.py | rdmutil new_record | jq -r .id)
-rdmutil get_draft "${RDM_RECORD_ID}" >"${RDM_RECORD_ID}.json"
-HAS_FILES=$(jq .files.enable "${RDM_RECORD_ID})
-if [ "$HAS_FILES" = "true" ]; then
-    # Attach the files listing in ${EPRINT_ID}.json
-    # FIXME: need to implement scripted implemented
-fi
+For a given set of eprintid in a file called "migrate-ids.txt" you can use
+the `eprints_to_rdm.py` script along with an environment setup to
+automatically migrate both metadata and files from CaltechAUTHORS to the
+new RDM deployment.
 
 ~~~
+. caltechauthors.env
+./eprints_to_rdm.py migrate-ids.txt
+~~~
+
+The migration tool with stop on error. This is deliberate. When it stops you need to investigate the error and either manually migrate the record or take other mediation actions.
+

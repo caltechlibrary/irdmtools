@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Institutional Repository Data Management</title>
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="https://caltechlibrary.github.io/css/site.css">
+</head>
+<body>
+<header>
+<a href="http://library.caltech.edu" title="link to Caltech Library Homepage"><img src="https://caltechlibrary.github.io/assets/liblogo.gif" alt="Caltech Library logo"></a>
+</header>
+<nav>
+<ul>
+    <li><a href="/">Home</a></li>
+    <li><a href="index.html">README</a></li>
+    <li><a href="LICENSE">LICENSE</a></li>
+    <li><a href="INSTALL.html">INSTALL</a></li>
+    <li><a href="user-manual.html">User Manual</a></li>
+<!--    <li><a href="search.html">Search Docs</a></li> -->
+    <li><a href="about.html">About</a></li>
+    <li><a href="https://github.com/caltechlibrary/irdmtools">GitHub</a></li>
+</ul>
+</nav>
+
+<section>
+<h1 id="migration-workflow">Migration Workflow</h1>
+<p>This is a working document for how Caltech Library is migrating from
+EPrints to Invenio RDM using irdmtools for our CaltechAUTHORS
+repository.</p>
+<p>EPrints is running version 3.3. RDM is running version 11.</p>
+<h2 id="requirements">Requirements</h2>
+<ol type="1">
+<li>A POSIX compatible shell (e.g. Bash)</li>
+<li>Python 3 and packages in requirments.txt</li>
+<li>The lastest irdmtools</li>
+<li>Latest jq for working with JSON and extracting interesting bits</li>
+</ol>
+<p>To install the depenedent packages found in the requirements.txt file
+you can use the following command.</p>
+<pre><code>python3 -m pip install -r requirements.txt</code></pre>
+<h2 id="setup">Setup</h2>
+<p>You need to configure your environment correctly for this to work.
+Here is an example environment file based on ours for
+CaltechAUTHORS.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/bin/sh</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Setup for caltechauthors</span></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># This will be sourced from the environment by </span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a><span class="va">REPO_ID</span><span class="op">=</span><span class="st">&quot;&lt;REPO_ID&gt;&quot;</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a><span class="va">EPRINT_HOST</span><span class="op">=</span><span class="st">&quot;&lt;EPRINT_HOSTNAME&gt;&quot;</span></span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a><span class="va">EPRINT_USER</span><span class="op">=</span><span class="st">&quot;&lt;EPRINT_REST_USERNAME&gt;&quot;</span></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="va">EPRINT_PASSWORD</span><span class="op">=</span><span class="st">&quot;EPRITN_REST_PASSWORD&gt;&quot;</span></span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Dataset collection setup</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a><span class="va">DB_USER</span><span class="op">=</span><span class="st">&quot;&lt;POSTGRES_USERNAME&gt;&quot;</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a><span class="va">DB_PASSWORD</span><span class="op">=</span><span class="st">&quot;&lt;POSTGRES_PASSWORD&gt;&quot;</span></span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Invenio-RDM access setup</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="va">RDM_URL</span><span class="op">=</span><span class="st">&quot;&lt;URL_TO_RDM_REPOSITORY&gt;&quot;</span></span>
+<span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a><span class="va">RDMTOK</span><span class="op">=</span><span class="st">&quot;&lt;RDM_TOKEN_FOR_USER_ACCOUNT_USED_TO_MIGRATE&gt;&quot;</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="co"># RDM_COMMUNITY_ID should be the default community you are migrating</span></span>
+<span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a><span class="co"># content to.</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="va">RDM_COMMUNITY_ID</span><span class="op">=</span><span class="st">&quot;&lt;RDM_COMMUNITY_ID&gt;&quot;</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">REPO_ID</span></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">EPRINT_HOST</span></span>
+<span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">EPRINT_USER</span></span>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">EPRINT_PASSWORD</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DB_USER</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">DB_PASSWORD</span></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">RDM_URL</span></span>
+<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">RDMTOK</span></span>
+<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-33"><a href="#cb2-33" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb2-34"><a href="#cb2-34" aria-hidden="true" tabindex="-1"></a><span class="co"># Setup psql environment</span></span>
+<span id="cb2-35"><a href="#cb2-35" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb2-36"><a href="#cb2-36" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">PSQL_EDITOR</span><span class="op">=</span><span class="st">&quot;vi&quot;</span> <span class="co"># &quot;/Users/rsdoiel/bin/micro&quot;</span></span></code></pre></div>
+<p>I usually source this at the beginning of my working session.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="bu">.</span> caltechauthors.env</span></code></pre></div>
+<h2 id="getting-a-list-of-ids-to-migrate">Getting a list of ids to
+migrate</h2>
+<p>At this stage of our migration project we can support all the record
+types in RDM we want to migrate from EPrints. As a result we can migrate
+all the EPrint ids remaining in CaltechAUTHORS. You can generate a list
+of record ids using eprint2rdm and the option <code>-all-ids</code></p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">eprint2rdm</span> <span class="at">-all-ids</span> <span class="va">$EPRINT_HOST</span> <span class="op">&gt;</span>eprint-ids.txt</span></code></pre></div>
+<p>You can also generate eprint id lists via using MySQL client
+directory. See [get_eprintids_by_year.bash].</p>
+<pre><code>#!/bin/bash
+#
+# NOTE: REPO_ID is imported from the environment.
+#
+YEAR=&quot;$1&quot;
+mysql --batch --skip-column-names \
+  --execute &quot;SELECT eprintid FROM eprint WHERE date_year = &#39;$YEAR&#39; AND eprint_status = &#39;archive&#39; ORDER BY date_year, date_month, date_day, eprintid&quot; &quot;${REPO_ID}&quot;</code></pre>
+<h2 id="migrating-records">Migrating records</h2>
+<p>We have over 100,000 records so migration is going to take a couple
+days. We’re migrating the metadata and any publicly visible files. I’ve
+found working by year to be helpful way of batching up record loads.</p>
+<p>For a given set of eprintid in a file called “migrate-ids.txt” you
+can use the <code>eprints_to_rdm.py</code> script along with an
+environment setup to automatically migrate both metadata and files from
+CaltechAUTHORS to the new RDM deployment.</p>
+<pre><code>. caltechauthors.env
+./eprints_to_rdm.py migrate-ids.txt</code></pre>
+<p>The migration tool with stop on error. This is deliberate. When it
+stops you need to investigate the error and either manually migrate the
+record or take other mediation actions.</p>
+</section>
+
+<footer>
+<span>&copy; 2023 <a href="https://www.library.caltech.edu/copyright">Caltech Library</a></span>
+<address>1200 E California Blvd, Mail Code 1-32, Pasadena, CA 91125-3200</address>
+<span><a href="mailto:library@caltech.edu">Email Us</a></span>
+<span>Phone: <a href="tel:+1-626-395-3405">(626)395-3405</a></span>
+</footer>
+</body>
+</html>
