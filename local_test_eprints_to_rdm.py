@@ -136,21 +136,30 @@ def get_file_list(config, eprintid, rec, security):
         return file_list
     files = rec.get('files', {})
     entries = files.get('entries', [])
+    content_mapping = {'accepted': 'Accepted Version', 'archival': 
+    'Archival Material', 'bibliography': 'Bibliography', 'coverimage': 
+    'Cover Image', 'discussion': 'Discussion', 'draft': 'Draft', 'erratum': 'Erratum',
+    'inpress': 'In Press', 'metadata': 'Additional Metadata', 'other': 'Other', 
+    'permission': 'Release Permission', 'presentation': 'Presentation',
+    'reprint': 'Reprint', 'submitted': 'Submitted', 'supplemental': 'Supplemental Material',
+    'updated': 'Updated', 'waiver': 'OA Policy Waiver', 'published': 'Published'}
     for filename in entries:
-        print(entries)
-        exit()
         file = entries[filename]
         metadata = file.get('metadata', {})
         _security = metadata.get('security', None)
         pos = metadata.get('pos', 1)
         target_name = metadata.get('filename', filename)
+        content = metadata.get('content', None)
+        if content:
+            content = content_mapping[content]
         if _security is not None and security == _security:
             file_url = file['file_id']
             cmd = file_to_scp(config, eprintid, pos, target_name)
             file_list.append({
                 'filename': target_name,
                 'file_url': file_url, 
-                'cmd': cmd
+                'cmd': cmd,
+                'content': content
             })
     return file_list
 
@@ -167,6 +176,8 @@ def update_record(config, rec, rdmutil, obj):
             return obj.rdm_id, obj.version_record, err
 
     file_list = get_file_list(config, obj.eprintid, rec, obj.restriction)
+    file_description = ''
+    file_types = set()
     if len(file_list) > 0:
         _, err = rdmutil.set_files_enable(obj.rdm_id, True)
         if err is not None:
@@ -174,6 +185,10 @@ def update_record(config, rec, rdmutil, obj):
             sys.exit(1)
         for file in file_list:
             filename = file['filename']
+            content = file['content']
+            if content:
+                file_description += f'<p>{content} - <a href="/records/{obj.rdm_id}/files/{filename}?download=1">{filename}</a></p>'
+                file_types.add(content)
             # Copy file with scp.
             #cmd = file['cmd']
             #err = run_scp(cmd)
@@ -202,6 +217,19 @@ def update_record(config, rec, rdmutil, obj):
             print(f'failed ({obj.eprintid}): set_files_enable {obj.rdm_id} false', file = sys.stderr)
             sys.exit(1)
 
+    #Add file descriptions
+    additional_descriptions = rec['metadata'].get('additional_descriptions', [])
+    additional_descriptions.append({'type': {'id':'attached-files'}, 'description': file_description})
+    rec['metadata']['additional_descriptions'] = additional_descriptions
+    rec['metadata']['version'] = ' + '.join(file_types)
+    # Set the draft.
+    print(json.dumps(rec))
+    rec, err = rdmutil.update_draft(obj.rdm_id, rec)
+    if err is not None:
+        print(f'failed ({obj.eprintid}): update_draft' +
+            f' {obj.rdm_id} {rec}, {err}', file = sys.stderr)
+        sys.exit(1)
+
     restrict_record = restrict_files = 'public'
     if obj.restriction == 'internal':
         restrict_record = restrict_files = 'restricted'
@@ -225,12 +253,6 @@ def update_record(config, rec, rdmutil, obj):
             print(f'failed ({obj.eprintid}/{obj.root_rdm_id})' +
                   f' publish_version {obj.rdm_id} {obj.restriction} {obj.publication_date}, {err}')
     else:
-        # Set the version string.
-        _, err = rdmutil.set_version(obj.rdm_id, obj.restriction)
-        if err is not None:
-            print(f'failed ({obj.eprintid}): set_version' +
-                  f' {obj.rdm_id} {obj.restriction}, {err}', file = sys.stderr)
-            sys.exit(1)
         # send to community and accept first draft
         _, err = rdmutil.send_to_community(obj.rdm_id, obj.community_id)
         if err is not None:
