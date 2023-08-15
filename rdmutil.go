@@ -117,6 +117,36 @@ func (app *RdmUtil) Query(q string, sort string) ([]byte, error) {
 	return src, nil
 }
 
+// CheckDOI checks the .pids.doi.identifier and returns a record from
+// the match DOI.
+//
+// ```
+//
+//	app := new(irdmtools.RdmUtil)
+//	if err := app.LoadConfig("irdmtools.json"); err != nil {
+//	   // ... handle error ...
+//	}
+//  doi := '10.1126/science.82.2123.219'
+//	src, err := app.CheckDOI(doi)
+//	if err != nil {
+//	    // ... handle error ...
+//	}
+//	fmt.Printf("%s\n", src)
+//
+// ```
+func (app *RdmUtil) CheckDOI(doi string) ([]byte, error) {
+	records, err := CheckDOI(app.Cfg, doi)
+	if err != nil {
+		return nil, err
+	}
+	src, err := json.MarshalIndent(records, "", "    ")
+	if err != nil {
+		return nil, err
+	}
+	return src, nil
+}
+
+
 // GetModified returns a byte slice for a JSON encode list
 // of record ids modified (created, updated, deleted) in
 // the given time range. If a problem occurs an error is returned.
@@ -1026,6 +1056,12 @@ func (app *RdmUtil) Run(in io.Reader, out io.Writer, eout io.Writer, action stri
 			return fmt.Errorf("missing configuration name")
 		}
 		src, err = SampleConfig(params[0])
+	case "check_doi":
+		if len(params) == 0 {
+			return fmt.Errorf("missing DOI to match")
+		}
+		doi := params[0]
+		src, err = app.CheckDOI(doi)
 	case "query":
 		if len(params) == 0 {
 			return fmt.Errorf("missing query string")
