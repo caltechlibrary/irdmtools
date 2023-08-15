@@ -120,6 +120,34 @@ class RdmUtil:
             return json.loads(src), None
         return None, f'failed to upload_file {rdm_id} {filename}'
 
+    def upload_campusonly_file(self, rdm_id, filename):
+        '''Upload the campus only file to the S3 bucket,
+        then generate HTML to link to it in record'''
+        draft, err = self.get_draft(rdm_id)
+        if err is not None:
+            return None, err
+        metadata = draft.get("metadata", {})
+        additional_descriptions = draft.metadata.get("", [])
+        campus_file = {
+            "description": htmlSrc,
+            "type": {
+                "id": "files",
+            },
+            "lang": "en-us"
+        }
+        additional_descriptions.append(campus_file)
+        draft.metadata["additional_descriptions"] = additional_descriptions
+
+#         additional_descriptions: [
+# {
+# description: "The files for this record are restricted to users on the Caltech campus network:",
+# type: {
+# id: "files",
+# }
+# }
+# ],
+        return None, f'upload_campusonly_file(self, "{rdm_id}", "{filename}") not implemented'
+
     def send_to_community(self, rdm_id, community_id = None):
         '''send a draft to the community'''
         if community_id is None:
@@ -221,11 +249,6 @@ class RdmUtil:
             obj = json.loads(src)
             return obj, None
         return None, 'failed to run update_draft'
-
-    def upload_campusonly_file(self, rdm_id, filename):
-        '''Upload the campus only file to the S3 bucket,
-        then generate HTML to link to it in record'''
-        return None, f'upload_campusonly_file(self, "{rdm_id}", "{filename}") not implemented'
 
 
 def eprint2rdm(eprint_id):

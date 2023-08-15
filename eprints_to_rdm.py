@@ -64,7 +64,7 @@ def check_environment():
     for varname in varnames:
         val = os.getenv(varname, None)
         if val is None:
-            print(f'missing enviroment {varname}', file = sys.stderr)
+            print(f'missing enviroment {varname}')
             is_ok = False
         else:
             config[varname] = val
@@ -97,19 +97,19 @@ def pairtree(txt):
     '''take a text string and generate a pairtree path from it.'''
     return '/'.join([txt[i:i+2] for i in range(0, len(txt), 2)])
 
-def file_to_scp(config, eprintid, pos, target_name):
+def file_to_scp(config, eprintid, pos, source_name, target_name):
     '''turn an EPrint file URL into a scp command'''
     hostname = config.get('EPRINT_HOST', None)
     doc_path = config.get('EPRINT_DOC_PATH', None)
     if doc_path is None or hostname is None:
         print('failed: EPRINT_HOST and EPRINT_DOC_PATH not set'
-              + ' for {target_name}', file = sys.stderr)
+              + ' for {target_name}')
         sys.exit(1)
     _eprint_id = eprintid.zfill(8)
     pos = f'{pos}'.zfill(2)
     host_path = os.path.join(
         doc_path, 'documents', 'disk0',
-        pairtree(_eprint_id), pos, target_name
+        pairtree(_eprint_id), pos, source_name
     )
     return [ 'scp', f"{hostname}:{host_path}", f"{target_name}" ]
 
@@ -121,7 +121,7 @@ def run_scp(cmd):
         if exit_code > 0:
             if isinstance(err, bytes):
                 err = err.decode('utf-8').strip()
-            print(f'exit code {exit_code}, {err}', file = sys.stderr)
+            print(f'exit code {exit_code}, {err}')
             return err
         if isinstance(out, bytes):
             out = out.decode('utf-8').strip()
@@ -144,9 +144,20 @@ def get_file_list(config, eprintid, rec, security):
         _security = metadata.get('security', None)
         pos = metadata.get('pos', 1)
         target_name = metadata.get('filename', filename)
+        if '%' in target_name:
+            target_name = target_name.replace('%', '_')
+        if '[' in target_name:
+            target_name = target_name.replace('[', '_')
+        if ']' in target_name:
+            target_name = target_name.replace(']', '_')
+        source_name = filename
+        if '[' in source_name:
+            source_name = source_name.replace('[', '\[')
+        if ']' in source_name:
+            source_name = source_name.replace(']', '\]')
         if _security is not None and security == _security:
             file_url = file['file_id']
-            cmd = file_to_scp(config, eprintid, pos, target_name)
+            cmd = file_to_scp(config, eprintid, pos, source_name, target_name)
             file_list.append({
                 'filename': target_name,
                 'file_url': file_url, 
@@ -163,41 +174,41 @@ def update_record(config, rec, rdmutil, obj):
         # Create the new version after saving the publication_date value
         obj.rdm_id, err = rdmutil.new_version(obj.root_rdm_id)
         if err is not None:
-            print(f'failed ({obj.eprintid}), new_version {obj.root_rdm_id}', file = sys.stderr)
+            print(f'failed ({obj.eprintid}), new_version {obj.root_rdm_id}')
             return obj.rdm_id, obj.version_record, err
 
     file_list = get_file_list(config, obj.eprintid, rec, obj.restriction)
     if len(file_list) > 0:
         _, err = rdmutil.set_files_enable(obj.rdm_id, True)
         if err is not None:
-            print(f'failed ({obj.eprintid}): set_files_enable {obj.rdm_id} true', file = sys.stderr)
+            print(f'failed ({obj.eprintid}): set_files_enable {obj.rdm_id} true')
             sys.exit(1)
         for file in file_list:
-            filename = file['filename']
+            filename = file.get('filename', None)
             # Copy file with scp.
-            cmd = file['cmd']
+            cmd = file.get('cmd', None)
             err = run_scp(cmd)
             if err is not None:
-                print(f'failed ({obj.eprintid}): {" ".join(cmd)}, {err}', file = sys.stderr)
+                print(f'failed ({obj.eprintid}): {" ".join(cmd)}, {err}')
                 sys.exit(1)
             if obj.restriction == 'validuser':
                 _, err = rdmutil.upload_campusonly_file(obj.rdm_id, filename)
                 if err is not None:
                     print(f'failed ({obj.eprintid}): upload_campusonly_file' +
-                            f' {obj.rdm_id} {filename}, {err}', file = sys.stderr)
+                            f' {obj.rdm_id} {filename}, {err}')
                     sys.exit(1)
             else:
                 _, err = rdmutil.upload_file(obj.rdm_id, filename)
                 if err is not None:
                     print(f'failed ({obj.eprintid}): upload_file' +
-                            f' {obj.rdm_id} {filename}, {err}', file = sys.stderr)
+                            f' {obj.rdm_id} {filename}, {err}')
                     sys.exit(1)
             # NOTE: We want to remove the copied file if successfully uploaded.
             os.unlink(filename)
     else:
         _, err = rdmutil.set_files_enable(obj.rdm_id, False)
         if err is not None:
-            print(f'failed ({obj.eprintid}): set_files_enable {obj.rdm_id} false', file = sys.stderr)
+            print(f'failed ({obj.eprintid}): set_files_enable {obj.rdm_id} false')
             sys.exit(1)
 
     restrict_record = restrict_files = 'public'
@@ -227,18 +238,18 @@ def update_record(config, rec, rdmutil, obj):
         _, err = rdmutil.set_version(obj.rdm_id, obj.restriction)
         if err is not None:
             print(f'failed ({obj.eprintid}): set_version' +
-                  f' {obj.rdm_id} {obj.restriction}, {err}', file = sys.stderr)
+                  f' {obj.rdm_id} {obj.restriction}, {err}')
             sys.exit(1)
         # send to community and accept first draft
         _, err = rdmutil.send_to_community(obj.rdm_id, obj.community_id)
         if err is not None:
             print(f'failed ({obj.eprintid}): send_to_community' +
-                  f' {obj.rdm_id} {obj.community_id}, {err}', file = sys.stderr)
+                  f' {obj.rdm_id} {obj.community_id}, {err}')
             sys.exit(1)
         _, err = rdmutil.review_request(obj.rdm_id, 'accept')
         if err is not None:
             print(f'failed ({obj.eprintid}): review_request' +
-                f' {obj.rdm_id} accepted, {err}', file = sys.stderr)
+                f' {obj.rdm_id} accepted, {err}')
             sys.exit(1)
     obj.version_record = True
     return obj.rdm_id, obj.version_record, err
@@ -280,13 +291,13 @@ to guide versioning.'''
     community_id = config.get('RDM_COMMUNITY_ID', None)
     if community_id is None or eprint_host is None:
         print(f'failed ({eprintid}): missing configuration, ' +
-              'eprint host or rdm community id, aborting', file = sys.stderr)
+              'eprint host or rdm community id, aborting')
         sys.exit(1)
     rdm_id = None
     root_rdm_id = None
     rec, err = eprint2rdm(eprintid)
     if err is not None:
-        print(f'fialed ({eprintid}): eprint2rdm {eprint_host} {eprintid}', file = sys.stderr)
+        print(f'fialed ({eprintid}): eprint2rdm {eprint_host} {eprintid}')
         sys.exit(1)
     # NOTE: fixup_record is destructive. This is the rare case of where we want to work
     # on a copy of the rec rather than modify rec!!!
@@ -327,25 +338,25 @@ def process_status(app_name, tot, cnt, started):
         x = cnt / duration
         minutes_remaining = round((tot - cnt) * x)
         percent_completed = round((cnt/tot)*100)
-        if cnt == 0:
-            print(f'{now} {app_name}: {cnt}/{tot} {percent_completed}%  eta: unknown')
+        if cnt == 0 or duration == 0:
+            print(f'# {now.isoformat(" ", "seconds")} {app_name}: {cnt}/{tot} {percent_completed}%  eta: unknown')
         else:
-            print(f'{now} {app_name}: {cnt}/{tot} {percent_completed}%  eta: {minutes_remaining} minutes')
+            print(f'# {now.isoformat(" ", "seconds")} {app_name}: {cnt}/{tot} {percent_completed}%  eta: {minutes_remaining} minutes')
 
-def display_status(app_name, tot, cnt, started, completed):
+def display_status(app_name, cnt, started, completed):
     # calculate the duration in minutes.
-    duration = round((completed - started).total_seconds()/60)
+    duration = round((completed - started).total_seconds()/60) + 1
     x = round(cnt / duration)
     print(f'    records processed: {cnt}')
-    print(f'             duration: {duration}')
+    print(f'             duration: {duration} minutes')
     print(f'   records per minute: {x}')
-    print(f'{app_name} started: {started}, completed: {completed}')
+    print(f'{app_name} started: {started.isoformat(" ", "seconds")}, completed: {completed.isoformat(" ", "seconds")}')
 
 def process_document_and_eprintids(config, app_name, eprintids):
     '''Process and array of EPrint Ids and migrate those records.'''
     started = datetime.now()
     tot = len(eprintids)
-    print(f'Processing {tot} eprintids, started {started}')
+    print(f'Processing {tot} eprintids, started {started.isoformat(" ", "seconds")}')
     for i, _id in enumerate(eprintids):
         err = migrate_record(config, _id)
         if err is not None:
@@ -353,7 +364,7 @@ def process_document_and_eprintids(config, app_name, eprintids):
             return err
         process_status(app_name, tot, i, started)
     completed = datetime.now()
-    display_status(len(eprintids), started, completed)
+    display_status(app_name, len(eprintids), started, completed)
     return None
 
 def get_eprint_ids():
@@ -381,7 +392,7 @@ def main():
     if is_ok:
         err = process_document_and_eprintids(config, app_name, get_eprint_ids())
         if err is not None:
-            print(f'Aborting {app_name}, {err}', file = sys.stderr)
+            print(f'Aborting {app_name}, {err}')
             sys.exit(1)
     else:
         print(f'Aborting {app_name}, environment not setup')
