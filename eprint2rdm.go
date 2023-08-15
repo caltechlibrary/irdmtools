@@ -953,7 +953,7 @@ func metadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record, cont
 func migrateFile(fName string, doc *eprinttools.Document) bool {
 	// Always explude indexcodes.txt and thumbnails. These are 
 	// EPrints internal files not user submitted files.
-	if (fName == "indexcodes.txt") || 
+	if (fName == "indexcodes.txt") || (fName == "preview.png") ||
 		strings.HasPrefix(doc.FormatDesc, "Generate") ||
 		strings.HasPrefix(doc.FormatDesc, "Thumbnail") {
 		return false
