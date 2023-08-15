@@ -45,13 +45,13 @@ def check_for_doi(doi, production):
     else:
         url = "https://authors.caltechlibrary.dev/api/records"
 
-    query = f'?q=pids.doi.identifier:"{doi}"'
+    query = f'?q=pids.doi.identifier:"{doi}"&allversions=true'
 
     response = requests.get(url + query)
     if response.status_code != 200:
         raise Exception(response.text)
-    metadata = response.json()
-    if metadata["hits"]["total"] > 0:
+    records = response.json()
+    if len(records) > 0:
         return True
     return False
 

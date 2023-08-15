@@ -14,7 +14,7 @@
 . ftr VB CB
 . ftr VBI CBI
 .\}
-.TH "rdmutil" "1" "2023-08-14" "irdmtools user manual" "version 0.0.33 67bf49c"
+.TH "rdmutil" "1" "2023-08-15" "irdmtools user manual" "version 0.0.34 792f2c7"
 .hy
 .SH NAME
 .PP
@@ -88,6 +88,11 @@ Returns a list of all repository record ids.
 The method uses OAI-PMH for id retrieval.
 It is rate limited and will take come time to return all record ids.
 A test instance took 11 minutes to retrieve 24000 record ids.
+.TP
+check_doi DOI
+This takes a DOI and searches the .pids.doi.identifiers for matching rdm
+records or drafts.
+DOI is required.
 .TP
 query QUERY_STRING [size | size sort]
 Returns a result using RDM\[cq]s search engine.

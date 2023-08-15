@@ -1,6 +1,6 @@
-%rdmutil(1) irdmtools user manual | version 0.0.33 67bf49c
+%rdmutil(1) irdmtools user manual | version 0.0.34 792f2c7
 % R. S. Doiel and Tom Morrell
-% 2023-08-14
+% 2023-08-15
 
 # NAME
 
@@ -60,6 +60,9 @@ get_modified_ids START [END]
 
 get_all_ids
 : Returns a list of all repository record ids. The method uses OAI-PMH for id retrieval. It is rate limited and will take come time to return all record ids. A test instance took 11 minutes to retrieve 24000 record ids.
+
+check_doi DOI
+: This takes a DOI and searches the .pids.doi.identifiers for matching rdm records or drafts. DOI is required.
 
 query QUERY_STRING [size | size sort]
 : Returns a result using RDM's search engine. It is limited to about 10K total results. You can use the see RDM's documentation for query construction.  See <https://inveniordm.docs.cern.ch/customize/search/>, <https://inveniordm.docs.cern.ch/reference/rest_api_requests/> and https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-query-string-query.html#query-string-syntax. Query takes one required parameter and two option.

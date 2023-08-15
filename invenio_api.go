@@ -364,6 +364,77 @@ func deleteFile(token string, uri string, fName string, expectedStatusCode int, 
 	return nil, resp.Header, err
 }
 
+
+// CheckDOI takes a DOI and does a lookup to see if there are any
+// matching .pids.doi.indentifier values.
+//
+// ```
+// doi := "10.1126/science.82.2123.219"
+// records, err := CheckDOI(cfg, doi)
+// if err != nil {
+//    // ... handle error ...
+// }
+// for _, rec := ranges {
+//    // ... process results ...
+// }
+// ```
+func CheckDOI(cfg *Config, doi string) ([]map[string]interface{}, error) {
+	// Make sure we have a URL
+	u, err := url.Parse(cfg.InvenioAPI)
+	if err != nil {
+		return nil, err
+	}
+	// Setup our query parameters, i.e. q=*
+	// ?q=pids.doi.identifier:"10.1126/science.82.2123.219"&allversions=true
+	u.Path = "/api/records"
+	
+	q := url.Values{}
+	q.Set("q", fmt.Sprintf("pids.doi.identifier:%q", doi))
+	q.Set("allversions", "true")
+	uri := fmt.Sprintf("%s?%s", u.String(), q.Encode())
+	tot := 0
+	t0 := time.Now()
+	reportProgress := false
+	iTime := time.Now()
+	results := new(QueryResponse)
+	records := []map[string]interface{}{}
+	for i := 0; uri != ""; i++ {
+		if iTime, reportProgress = CheckWaitInterval(iTime, time.Minute); reportProgress || (i == 0) {
+			log.Printf("(%d/%d) %s", len(records), tot, ProgressETR(t0, len(records), tot))
+		}
+		dbgPrintf(cfg, "requesting %s", uri)
+		src, headers, err := getJSON(cfg.InvenioToken, uri)
+		if err != nil {
+			return nil, err
+		}
+		cfg.rl.FromHeader(headers)
+		// NOTE: Need to unparse the response structure and
+		// then extract the IDs from the individual Hits results
+		if err := json.Unmarshal(src, &results); err != nil {
+			return nil, err
+		}
+		if results != nil && results.Hits != nil &&
+			results.Hits.Hits != nil && len(results.Hits.Hits) > 0 {
+			for _, hit := range results.Hits.Hits {
+				records = append(records, hit)
+			}
+			tot = results.Hits.Total
+			dbgPrintf(cfg, "(%d/%d) %s\n", len(records), tot, doi)
+		}
+		if results.Links != nil && results.Links.Self != results.Links.Next {
+			uri = results.Links.Next
+		} else {
+			uri = ""
+		}
+		if uri != "" {
+			// NOTE: We need to respect the rate limits of RDM's API
+			cfg.rl.Throttle(i, tot)
+		}
+	}
+	return records, nil
+}
+
+
 // Query takes a query string and returns the paged object
 // results as a slice of `map[string]interface{}`
 //
