@@ -315,6 +315,8 @@ normlzied record dict that is a for migration into Invenio-RDM."""
         for group in groups:
             if group['id'] == "Institute-for-Quantum-Information-and-Matter":
                 new.append({'id':'IQIM'})
+            elif group['id'] == 'Owens-Valley-Radio-Observatory-(OVRO)':
+                new.append({'id':'Owens-Valley-Radio-Observatory'})
             else:
                 new.append(group)
         record['custom_fields']['caltech:groups'] = new
