@@ -325,12 +325,12 @@ def process_status(app_name, tot, cnt, started):
         now = datetime.now()
         duration = (now - started).total_seconds()
         x = cnt / duration
-        minutes_remaining = (tot - cnt) * x
+        minutes_remaining = round((tot - cnt) * x)
         percent_completed = round((cnt/tot)*100)
         if cnt == 0:
             print(f'{now} {app_name}: {cnt}/{tot} {percent_completed}%  eta: unknown')
         else:
-            print(f'{now} {app_name}: {cnt}/{tot} {percent_completed}%  eta: {minutes_remaining} (minutes)')
+            print(f'{now} {app_name}: {cnt}/{tot} {percent_completed}%  eta: {minutes_remaining} minutes')
 
 def display_status(app_name, tot, cnt, started, completed):
     # calculate the duration in minutes.
