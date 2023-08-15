@@ -310,8 +310,6 @@ normlzied record dict that is a for migration into Invenio-RDM."""
     
     # Clean up caltech groups
     groups = get_dict_path(record, [ 'custom_fields', 'caltech:groups'])
-    print('HELLO')
-    print(groups)
     new = []
     if groups:
         for group in groups:
