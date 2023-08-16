@@ -225,6 +225,19 @@ func listMapHasID(l []map[string]string, target string) bool {
 	return false
 }
 
+
+func normalizeThesisType(s string) string {
+	switch s {
+	case	"phd":
+		return "PhD"
+	default:
+		if len(s) > 1 {
+			parts := strings.SplitN(s, "", 2)
+			return fmt.Sprintf("%s%s", strings.ToUpper(parts[0]), strings.ToLower(parts[1]))
+		}
+	}
+	return s
+}
 func customFieldsMetadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record) error {
 	/*NOTE: Custom fields for Journal data
 		"custom_fields": {
@@ -248,6 +261,7 @@ func customFieldsMetadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.
 	if rec.CustomFields == nil {
 		rec.CustomFields = map[string]interface{}{}
 	}
+	// NOTE: handle thesis type including capitalization of types.
 	if eprint.Type == "article" && eprint.Publication != "" {
 		if err := SetJournalField(rec, "title", eprint.Publication); err != nil {
 			return err
@@ -280,6 +294,15 @@ func customFieldsMetadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.
 	}
 	if eprint.PlaceOfPub != "" && eprint.ISBN == "" {
 		SetCustomField(rec, "caltech:place_of_publication", "", eprint.PlaceOfPub)
+	}
+	// NOTE: handle thesis type including capitalization of types.
+	if eprint.Type == "thesis" {
+		val := map[string]interface{}{
+			"type": normalizeThesisType(eprint.ThesisType),
+			"unversity": eprint.Institution,
+			"department": eprint.Department,
+		}
+		SetCustomField(rec, "thesis:thesis", "", val)
 	}
 	// NOTE: handle "local_group" mapped from eprint_local_group table.
 	if eprint.LocalGroup != nil && eprint.LocalGroup.Length() > 0 {
@@ -394,7 +417,6 @@ func itemToPersonOrOrg(item *eprinttools.Item) *simplified.PersonOrOrg {
 		//lineage := item.Name.Lineage
 		if person.FamilyName != "" || person.GivenName != "" {
 			person.Name = fmt.Sprintf("%s, %s", person.FamilyName, person.GivenName)
-			fmt.Fprintf(os.Stderr, "DEBUG assigning clpid -> %q\n", item.Name.ID)
 			clPeopleID = item.ID
 			orcid = item.Name.ORCID
 		} else {
