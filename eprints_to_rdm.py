@@ -397,6 +397,7 @@ to guide versioning.'''
             return err # sys.exit(1)
         print(f'{obj.eprintid}, {rdm_id}, {restriction}')
     print(f'{obj.eprintid}, {root_rdm_id}, migrated')
+    sys.stdout.flush()
     return None
 
 def process_status(app_name, tot, cnt, started):
