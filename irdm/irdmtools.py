@@ -25,7 +25,6 @@ class RdmUtil:
             src, err = proc.communicate(input = src)
             exit_code = proc.returncode
             if exit_code > 0:
-                print(f'error new_record: {err}', file=sys.stderr)
                 return None, err
             if not isinstance(src, bytes):
                 src = src.encode('utf-8')
@@ -42,7 +41,6 @@ class RdmUtil:
             src, err = proc.communicate()
             exit_code = proc.returncode
             if exit_code > 0:
-                print(f'error {err}', file=sys.stderr)
                 return None, err
             if not isinstance(src, bytes):
                 src = src.encode('utf-8')
@@ -56,7 +54,6 @@ class RdmUtil:
             src, err = proc.communicate()
             exit_code = proc.returncode
             if exit_code > 0:
-                print(f'error {err}', file=sys.stderr)
                 return None, err
             if not isinstance(src, bytes):
                 src = src.encode('utf-8')
@@ -70,7 +67,6 @@ class RdmUtil:
             src, err = proc.communicate()
             exit_code = proc.returncode
             if exit_code > 0:
-                print(f'error {err}', file=sys.stderr)
                 return None, err
             if not isinstance(src, bytes):
                 src = src.encode('utf-8')
@@ -87,7 +83,6 @@ class RdmUtil:
             src, err = proc.communicate()
             exit_code = proc.returncode
             if exit_code > 0:
-                print(f'error {err}', file=sys.stderr)
                 return None, err
             if not isinstance(src, bytes):
                 src = src.encode('utf-8')
@@ -100,7 +95,6 @@ class RdmUtil:
             src, err = proc.communicate()
             exit_code = proc.returncode
             if exit_code > 0:
-                print(f'error {err}', file=sys.stderr)
                 return None, err
             if not isinstance(src, bytes):
                 src = src.encode('utf-8')
@@ -115,7 +109,6 @@ class RdmUtil:
             src, err = proc.communicate()
             exit_code = proc.returncode
             if exit_code > 0:
-                print(f'error {err}', file=sys.stderr)
                 return None, err
             if not isinstance(src, bytes):
                 src = src.encode('utf-8')
@@ -174,7 +167,6 @@ class RdmUtil:
             src, err = proc.communicate()
             exit_code = proc.returncode
             if exit_code > 0:
-                print(f'error {err}', file=sys.stderr)
                 return None, err
             if not isinstance(src, bytes):
                 src = src.encode('utf-8')
@@ -188,7 +180,6 @@ class RdmUtil:
             src, err = proc.communicate()
             exit_code = proc.returncode
             if exit_code > 0:
-                print(f'error {err}', file=sys.stderr)
                 return None, err
             if not isinstance(src, bytes):
                 src = src.encode('utf-8')
@@ -202,7 +193,6 @@ class RdmUtil:
             src, err = proc.communicate()
             exit_code = proc.returncode
             if exit_code > 0:
-                print(f'error {err}', file=sys.stderr)
                 return None, err
             if not isinstance(src, bytes):
                 src = src.encode('utf-8')
@@ -221,7 +211,6 @@ class RdmUtil:
             src, err = proc.communicate()
             exit_code = proc.returncode
             if exit_code > 0:
-                print(f'error {err}', file=sys.stderr)
                 return None, err
             if not isinstance(src, bytes):
                 src = src.encode('utf-8')
@@ -239,7 +228,6 @@ class RdmUtil:
             src, err = proc.communicate()
             exit_code = proc.returncode
             if exit_code > 0:
-                print(f'error {err}', file=sys.stderr)
                 return None, err
             if not isinstance(src, bytes):
                 src = src.encode('utf-8')
@@ -259,7 +247,6 @@ class RdmUtil:
             src, err = proc.communicate(input = src)
             exit_code = proc.returncode
             if exit_code > 0:
-                print(f'error {err}', file=sys.stderr)
                 return None, err
             if src is None:
                 return None, f'error, rdmutil update_draft failed to return object'
@@ -279,7 +266,6 @@ def eprint2rdm(eprint_id):
         src, err = proc.communicate()
         exit_code = proc.returncode
         if exit_code > 0:
-            print(f'error {err}', file=sys.stderr)
             return None, err
         if not isinstance(src, bytes):
             src = src.encode('utf-8')
