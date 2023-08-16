@@ -394,7 +394,8 @@ func itemToPersonOrOrg(item *eprinttools.Item) *simplified.PersonOrOrg {
 		//lineage := item.Name.Lineage
 		if person.FamilyName != "" || person.GivenName != "" {
 			person.Name = fmt.Sprintf("%s, %s", person.FamilyName, person.GivenName)
-			clPeopleID = item.Name.ID
+			fmt.Fprintf(os.Stderr, "DEBUG assigning clpid -> %q\n", item.Name.ID)
+			clPeopleID = item.ID
 			orcid = item.Name.ORCID
 		} else {
 			person.Type = "organizational"
