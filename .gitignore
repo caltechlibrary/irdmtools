@@ -105,3 +105,4 @@ scratch/
 *.jsonl
 test-*.txt
 *.yaml
+s3_uploads/

@@ -1,6 +1,8 @@
 '''irdmtools.py wraps the Go based command line tools integrating
 them in as Python object and functions.'''
 
+from distutils.file_util import move_file
+import os
 import sys
 import json
 from subprocess import Popen, PIPE
@@ -126,19 +128,18 @@ class RdmUtil:
         draft, err = self.get_draft(rdm_id)
         if err is not None:
             return None, err
-        metadata = draft.get("metadata", {})
-        additional_descriptions = draft.metadata.get("", [])
-        campus_file = {
-            "description": htmlSrc,
-            "type": {
-                "id": "files",
-            },
-            "lang": "en-us"
-        }
-        additional_descriptions.append(campus_file)
-        draft.metadata["additional_descriptions"] = additional_descriptions
 
-#         additional_descriptions: [
+        # NOTE: We want to put the files in place first, then update the draft.
+        staging_dir = f's3_uploads/{rdm_id}'
+        dest = os.path.join(staging_dir, filename)
+        if not os.path.exists(staging_dir):
+            os.makedirs(staging_dir, 0o775, exist_ok = True )
+        move_file(filename, dest, verbose = True)
+        # NOTE: Now that we saved the file for S3 upload, we can update the metadata.additi
+        metadata = draft.get("metadata", {})
+        additional_descriptions = metadata.get("additional_descriptions", [])
+        print(f'DEBUG additional_descriptions -> {additional_descriptions}')
+# additional_descriptions: [
 # {
 # description: "The files for this record are restricted to users on the Caltech campus network:",
 # type: {
@@ -146,7 +147,21 @@ class RdmUtil:
 # }
 # }
 # ],
-        return None, f'upload_campusonly_file(self, "{rdm_id}", "{filename}") not implemented'
+# The S3 URL can be embedded in the description, save the file to a subfolder for upload in S3:
+        campus_file = {
+            "description": 'The files for this record are restricted to users on the Caltech campus network:',
+            "type": {
+                "id": "files",
+            },
+        }
+        additional_descriptions.append(campus_file)
+        print(f'DEBUG additional_descriptions -> {additional_descriptions}')
+        metadata["additional_descriptions"] = additional_descriptions
+        draft['metadata'] = metadata
+        draft, err = self.update_draft(rdm_id, draft)
+        if err is not None:
+            return None, err
+        return draft, None
 
     def send_to_community(self, rdm_id, community_id = None):
         '''send a draft to the community'''
@@ -244,9 +259,12 @@ class RdmUtil:
             if exit_code > 0:
                 print(f'error {err}', file=sys.stderr)
                 return None, err
+            if src is None:
+                return None, f'error, rdmutil update_draft failed to return object'
             if not isinstance(src, bytes):
                 src = src.encode('utf-8')
             obj = json.loads(src)
+            
             return obj, None
         return None, 'failed to run update_draft'
 
