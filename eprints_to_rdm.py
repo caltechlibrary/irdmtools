@@ -233,7 +233,7 @@ def update_record(config, rec, rdmutil, obj):
             err = run_scp(cmd)
             if err is not None:
                 print(f'failed ({obj.eprintid}): {" ".join(cmd)}, {err}')
-                sys.exit(1)
+                continue # sys.exit(1)
             if obj.restriction == 'validuser':
                 # NOTE: We want to put the files in place first, then update the draft.
                 staging_dir = f's3_uploads/{obj.rdm_id}'
@@ -248,14 +248,15 @@ def update_record(config, rec, rdmutil, obj):
                 _, err = rdmutil.set_files_enable(obj.rdm_id, True)
                 if err is not None:
                     print(f'failed ({obj.eprintid}): set_files_enable {obj.rdm_id} true')
-                    sys.exit(1)
+                    continue # sys.exit(1)
                 _, err = rdmutil.upload_file(obj.rdm_id, filename)
                 if err is not None:
                     print(f'failed ({obj.eprintid}): upload_file' +
                             f' {obj.rdm_id} {filename}, {err}')
-                    sys.exit(1)
+                    continue # sys.exit(1)
                 # NOTE: We want to remove the copied file if successfully uploaded.
-                os.unlink(filename)
+                if os.path.exists(filename):
+                    os.unlink(filename)
     if file_description != "" or campusonly_files:
         additional_descriptions = rec['metadata'].get('additional_descriptions', [])
         if file_description != "" and obj.restriction == "public":
@@ -272,7 +273,7 @@ def update_record(config, rec, rdmutil, obj):
         if err is not None:
             print(f'failed ({obj.eprintid}): update_draft' +
                 f' {obj.rdm_id} {rec}, {err}', file = sys.stderr)
-            sys.exit(1)
+            return obj.rdm_id, obj.version_record, err # sys.exit(1)
 
     restrict_record = restrict_files = 'public'
     if obj.restriction == 'internal':
@@ -294,7 +295,7 @@ def update_record(config, rec, rdmutil, obj):
         _, err = rdmutil.set_files_enable(obj.rdm_id, False)
         if err is not None:
             print(f'failed ({obj.eprintid}): set_files_enable {obj.rdm_id} false')
-            sys.exit(1) 
+            return obj.rdm_id, obj.version_record, err # sys.exit(1)
     if obj.version_record:
         # Save version
         _, err = rdmutil.publish_version(obj.rdm_id, obj.restriction, obj.publication_date)
@@ -307,18 +308,18 @@ def update_record(config, rec, rdmutil, obj):
         if err is not None:
             print(f'failed ({obj.eprintid}): set_version' +
                   f' {obj.rdm_id} {obj.restriction}, {err}')
-            sys.exit(1)
+            return obj.rdm_id, obj.version_record, err # sys.exit(1)
         # send to community and accept first draft
         _, err = rdmutil.send_to_community(obj.rdm_id, obj.community_id)
         if err is not None:
             print(f'failed ({obj.eprintid}): send_to_community' +
                   f' {obj.rdm_id} {obj.community_id}, {err}')
-            sys.exit(1)
+            return obj.rdm_id, obj.version_record, err # sys.exit(1)
         _, err = rdmutil.review_request(obj.rdm_id, 'accept')
         if err is not None:
             print(f'failed ({obj.eprintid}): review_request' +
                 f' {obj.rdm_id} accepted, {err}')
-            sys.exit(1)
+            return obj.rdm_id, obj.version_record, err # sys.exit(1)
     obj.version_record = True
     return obj.rdm_id, obj.version_record, err
 
@@ -365,14 +366,14 @@ to guide versioning.'''
     root_rdm_id = None
     rec, err = eprint2rdm(eprintid)
     if err is not None:
-        print(f'fialed ({eprintid}): eprint2rdm {eprint_host} {eprintid}')
-        sys.exit(1)
+        print(f'fialed ({eprintid}): eprint2rdm {eprintid}')
+        return err # sys.exit(1)
     # NOTE: fixup_record is destructive. This is the rare case of where we want to work
     # on a copy of the rec rather than modify rec!!!
     rdm_id, err  = rdmutil.new_record(fixup_record(dict(rec)))
     if err is not None:
         print(f'failed ({eprintid}): rdmutil new_record')
-        sys.exit(1)
+        return err # sys.exit(1)
     print(f'Creating RDM record {rdm_id} from eprint {eprintid} as draft')
     root_rdm_id = rdm_id
     version_record = False
@@ -393,7 +394,7 @@ to guide versioning.'''
         rdm_id, version_record, err = update_record(config, rec, rdmutil, obj)
         if err is not None:
             print(f'failed ({obj.eprintid}): update_record(config, rec, rdmutil, {obj.display()})')
-            sys.exit(1)
+            return err # sys.exit(1)
         print(f'Saved {obj.eprintid} as {rdm_id} {restriction}')
     print(f'Saved {obj.eprintid} as {root_rdm_id} record')
     return None
