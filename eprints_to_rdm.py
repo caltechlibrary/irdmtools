@@ -399,9 +399,9 @@ def process_status(app_name, tot, cnt, started):
         minutes_remaining = round((tot - cnt) * x)
         percent_completed = round((cnt/tot)*100)
         if cnt == 0 or duration == 0:
-            print(f'# {now.isoformat(" ", "seconds")} {app_name}: {cnt}/{tot} {percent_completed}%  eta: unknown')
+            print(f'# {now.isoformat(" ", "seconds")} {app_name}: {cnt}/{tot} {percent_completed}%  eta: unknown', file = sys.stderr)
         else:
-            print(f'# {now.isoformat(" ", "seconds")} {app_name}: {cnt}/{tot} {percent_completed}%  eta: {minutes_remaining} minutes')
+            print(f'# {now.isoformat(" ", "seconds")} {app_name}: {cnt}/{tot} {percent_completed}%  eta: {minutes_remaining} minutes', file = sys.stderr)
 
 def display_status(app_name, cnt, started, completed):
     # calculate the duration in minutes.
