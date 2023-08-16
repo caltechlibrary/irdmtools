@@ -3,6 +3,7 @@
 '''eprints_to_rdm.py implements our Migration workflow for CaltechAUTHORS
 from EPrints 3.3 to RDM 11.'''
 
+from distutils.file_util import move_file
 import sys
 import os
 import json
@@ -166,6 +167,7 @@ def get_file_list(config, eprintid, rec, security):
             source_name = source_name.replace(']', '\]')
         if ' ' in source_name:
             source_name = source_name.replace(' ', '\ ')
+        
         content = metadata.get('content', None)
         if content:
             content = content_mapping[content]
@@ -180,11 +182,25 @@ def get_file_list(config, eprintid, rec, security):
             })
     return file_list
 
+def prune_attached_files_description(rec):
+    metadata = rec.get('metadata', None)
+    if metadata is not None:
+        additional_descriptions = metadata.get('additional_descriptions', None)
+        if additional_descriptions is not None:
+            keep_descriptions = []
+            for desc in additional_descriptions:
+                desc_type = desc.get("type", "")
+                if desc_type != "attached_files":
+                    keep_descriptions.append(desc)
+            metadata['additional_descriptions'] = keep_descriptions
+        rec['metadata'] = metadata
+    return rec
+
 def update_record(config, rec, rdmutil, obj):
     '''update draft record handling versioning if needed'''
     file_list = None
     err = None
-
+    rec = prune_attached_files_description(rec)
     if obj.version_record:
         # Create the new version after saving the publication_date value
         obj.rdm_id, err = rdmutil.new_version(obj.root_rdm_id)
@@ -195,6 +211,8 @@ def update_record(config, rec, rdmutil, obj):
     file_list = get_file_list(config, obj.eprintid, rec, obj.restriction)
     file_description = ''
     file_types = set()
+    campusonly_description = 'The files for this record are restricted to users on the Caltech campus network:<p><ul>\n'
+    campusonly_files = False
     if len(file_list) > 0:
         for file in file_list:
             filename = file.get('filename', None)
@@ -209,15 +227,15 @@ def update_record(config, rec, rdmutil, obj):
                 print(f'failed ({obj.eprintid}): {" ".join(cmd)}, {err}')
                 sys.exit(1)
             if obj.restriction == 'validuser':
-                _, err = rdmutil.set_files_enable(obj.rdm_id, False)
-                if err is not None:
-                    print(f'failed ({obj.eprintid}): set_files_enable {obj.rdm_id} false')
-                    sys.exit(1)    
-                _, err = rdmutil.upload_campusonly_file(obj.rdm_id, filename)
-                if err is not None:
-                    print(f'failed ({obj.eprintid}): upload_campusonly_file' +
-                            f' {obj.rdm_id} {filename}, {err}')
-                    sys.exit(1)
+                # NOTE: We want to put the files in place first, then update the draft.
+                staging_dir = f's3_uploads/{obj.rdm_id}'
+                dest = os.path.join(staging_dir, filename)
+                if not os.path.exists(staging_dir):
+                    os.makedirs(staging_dir, 0o775, exist_ok = True )
+                move_file(filename, dest, verbose = True)
+                campusonly_description += f'     <li><a href="https://campus-restricted.library.caltech.edu/{obj.rdm_id}/{filename}">{filename}</a></li>\n'
+                campusonly_files = True
+                file_types.add("campus only")
             else:
                 _, err = rdmutil.set_files_enable(obj.rdm_id, True)
                 if err is not None:
@@ -230,24 +248,23 @@ def update_record(config, rec, rdmutil, obj):
                     sys.exit(1)
                 # NOTE: We want to remove the copied file if successfully uploaded.
                 os.unlink(filename)
-    else:
-        _, err = rdmutil.set_files_enable(obj.rdm_id, False)
+    if file_description != "" or campusonly_files:
+        additional_descriptions = rec['metadata'].get('additional_descriptions', [])
+        if file_description != "" and obj.restriction == "public":
+            # Add file descriptions and version string
+            additional_descriptions.append({'type': {'id':'attached-files'}, 'description': file_description})
+        # Add campusonly descriptions
+        if campusonly_files:
+            additional_descriptions.append({'type': {'id':'files'}, 'description': campusonly_description})
+        rec['metadata']['additional_descriptions'] = additional_descriptions
+        rec['metadata']['version'] = ' + '.join(file_types)
+        # Update the draft.
+        #print(f'DEBUG dump record ->\n' + json.dumps(rec))
+        rec, err = rdmutil.update_draft(obj.rdm_id, rec)
         if err is not None:
-            print(f'failed ({obj.eprintid}): set_files_enable {obj.rdm_id} false')
+            print(f'failed ({obj.eprintid}): update_draft' +
+                f' {obj.rdm_id} {rec}, {err}', file = sys.stderr)
             sys.exit(1)
-
-    # Add file descriptions and version string
-    additional_descriptions = rec['metadata'].get('additional_descriptions', [])
-    additional_descriptions.append({'type': {'id':'attached-files'}, 'description': file_description})
-    rec['metadata']['additional_descriptions'] = additional_descriptions
-    rec['metadata']['version'] = ' + '.join(file_types)
-    # Update the draft.
-    print(json.dumps(rec))
-    rec, err = rdmutil.update_draft(obj.rdm_id, rec)
-    if err is not None:
-        print(f'failed ({obj.eprintid}): update_draft' +
-            f' {obj.rdm_id} {rec}, {err}', file = sys.stderr)
-        sys.exit(1)
 
     restrict_record = restrict_files = 'public'
     if obj.restriction == 'internal':
@@ -264,6 +281,12 @@ def update_record(config, rec, rdmutil, obj):
         print(f'failed ({obj.eprintid}), set access {obj.rdm_id} record {restrict_record}, {err}',
             file = sys.stderr)
 
+    # Make sure .files.enabled is False for metadata only record(s) and versions
+    if obj.restriction in [ "validuser", "metadata_only" ]:
+        _, err = rdmutil.set_files_enable(obj.rdm_id, False)
+        if err is not None:
+            print(f'failed ({obj.eprintid}): set_files_enable {obj.rdm_id} false')
+            sys.exit(1) 
     if obj.version_record:
         # Save version
         _, err = rdmutil.publish_version(obj.rdm_id, obj.restriction, obj.publication_date)
@@ -361,7 +384,7 @@ to guide versioning.'''
         })
         rdm_id, version_record, err = update_record(config, rec, rdmutil, obj)
         if err is not None:
-            print(f'failed ({obj.eprintid}): update_record({config}, rec, rdmutil, {obj.display()})')
+            print(f'failed ({obj.eprintid}): update_record(config, rec, rdmutil, {obj.display()})')
             sys.exit(1)
         print(f'Saved {obj.eprintid} as {rdm_id} {restriction}')
     print(f'Saved {obj.eprintid} as {root_rdm_id} record')
