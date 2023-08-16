@@ -1196,7 +1196,6 @@ func (app *RdmUtil) Run(in io.Reader, out io.Writer, eout io.Writer, action stri
 		if err != nil {
 			return err
 		}
-		src := []byte{}
 		if inName != "" && inName != "-" {
 			src, err = os.ReadFile(inName)
 		} else {
