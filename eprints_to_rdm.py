@@ -366,7 +366,7 @@ to guide versioning.'''
     root_rdm_id = None
     rec, err = eprint2rdm(eprintid)
     if err is not None:
-        print(f'{eprintid}, "", failed ({eprintid}): eprint2rdm {eprintid}')
+        print(f'{eprintid}, None, failed ({eprintid}): eprint2rdm {eprintid}')
         return err # sys.exit(1)
     # NOTE: fixup_record is destructive. This is the rare case of where we want to work
     # on a copy of the rec rather than modify rec!!!
