@@ -65,7 +65,7 @@ def check_environment():
     for varname in varnames:
         val = os.getenv(varname, None)
         if val is None:
-            print(f'missing enviroment {varname}')
+            print(f'missing enviroment {varname}', file = sys.stderr)
             is_ok = False
         else:
             config[varname] = val
@@ -122,12 +122,12 @@ def run_scp(cmd):
         if exit_code > 0:
             if isinstance(err, bytes):
                 err = err.decode('utf-8').strip()
-            print(f'exit code {exit_code}, {err}')
+            print(f'exit code {exit_code}, {err}', file = sys.stderr)
             return err
         if isinstance(out, bytes):
             out = out.decode('utf-8').strip()
         if out is not None and out != "":
-            print(f'out: {out}')
+            print(f'out: {out}', file = sys.stderr)
         return None
     return f'''failed to run {' '.join(cmd)}'''
 
@@ -366,15 +366,15 @@ to guide versioning.'''
     root_rdm_id = None
     rec, err = eprint2rdm(eprintid)
     if err is not None:
-        print(f'fialed ({eprintid}): eprint2rdm {eprintid}')
+        print(f'{eprintid}, "", failed ({eprintid}): eprint2rdm {eprintid}')
         return err # sys.exit(1)
     # NOTE: fixup_record is destructive. This is the rare case of where we want to work
     # on a copy of the rec rather than modify rec!!!
     rdm_id, err  = rdmutil.new_record(fixup_record(dict(rec)))
     if err is not None:
-        print(f'failed ({eprintid}): rdmutil new_record')
+        print(f'{eprintid}, {rdm_id}, failed ({eprintid}): rdmutil new_record')
         return err # sys.exit(1)
-    print(f'Creating RDM record {rdm_id} from eprint {eprintid} as draft')
+    print(f'{eprintid}, {rdm_id}, created draft')
     root_rdm_id = rdm_id
     version_record = False
     publication_date = get_publication_date(rec)
@@ -393,10 +393,10 @@ to guide versioning.'''
         })
         rdm_id, version_record, err = update_record(config, rec, rdmutil, obj)
         if err is not None:
-            print(f'failed ({obj.eprintid}): update_record(config, rec, rdmutil, {obj.display()})')
+            print(f'{obj.eprintid}, {rdm_id}, failed ({obj.eprintid}): update_record(config, rec, rdmutil, {obj.display()})')
             return err # sys.exit(1)
-        print(f'Saved {obj.eprintid} as {rdm_id} {restriction}')
-    print(f'Saved {obj.eprintid} as {root_rdm_id} record')
+        print(f'{obj.eprintid}, {rdm_id}, {restriction}')
+    print(f'{obj.eprintid}, {root_rdm_id}, migrated')
     return None
 
 def process_status(app_name, tot, cnt, started):
@@ -416,20 +416,20 @@ def display_status(app_name, cnt, started, completed):
     # calculate the duration in minutes.
     duration = round((completed - started).total_seconds()/60) + 1
     x = round(cnt / duration)
-    print(f'    records processed: {cnt}')
-    print(f'             duration: {duration} minutes')
+    print(f'    records processed: {cnt}', file = sys.stderr)
+    print(f'             duration: {duration} minutes', file = sys.stderr)
     print(f'   records per minute: {x}')
-    print(f'{app_name} started: {started.isoformat(" ", "seconds")}, completed: {completed.isoformat(" ", "seconds")}')
+    print(f'{app_name} started: {started.isoformat(" ", "seconds")}, completed: {completed.isoformat(" ", "seconds")}', file = sys.stderr)
 
 def process_document_and_eprintids(config, app_name, eprintids):
     '''Process and array of EPrint Ids and migrate those records.'''
     started = datetime.now()
     tot = len(eprintids)
-    print(f'Processing {tot} eprintids, started {started.isoformat(" ", "seconds")}')
+    print(f'Processing {tot} eprintids, started {started.isoformat(" ", "seconds")}', file = sys.stderr)
     for i, _id in enumerate(eprintids):
         err = migrate_record(config, _id)
         if err is not None:
-            print(f'error processing {_id}, row {i}, {err}')
+            print(f'error processing {_id}, row {i}, {err}', file = sys.stderr)
             return err
         process_status(app_name, tot, i, started)
     completed = datetime.now()
@@ -461,10 +461,10 @@ def main():
     if is_ok:
         err = process_document_and_eprintids(config, app_name, get_eprint_ids())
         if err is not None:
-            print(f'Aborting {app_name}, {err}')
+            print(f'Aborting {app_name}, {err}', file = sys.stderr)
             sys.exit(1)
     else:
-        print(f'Aborting {app_name}, environment not setup')
+        print(f'Aborting {app_name}, environment not setup', file = sys.stderr)
         sys.exit(1)
 
 if __name__ == '__main__':
