@@ -134,7 +134,7 @@ def run_scp(cmd):
 def get_file_list(config, eprintid, rec, security):
     '''given a record get the internal files as
     list of objects where each object is a filename and a path/url to the file.'''
-    (ile_list = []
+    file_list = []
     if security == 'metadata_only':
         return file_list
     files = rec.get('files', {})
