@@ -430,7 +430,6 @@ def process_document_and_eprintids(config, app_name, eprintids):
         err = migrate_record(config, _id)
         if err is not None:
             print(f'error processing {_id}, row {i}, {err}', file = sys.stderr)
-            return err
         process_status(app_name, tot, i, started)
     completed = datetime.now()
     display_status(app_name, len(eprintids), started, completed)
