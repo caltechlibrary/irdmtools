@@ -274,6 +274,13 @@ def update_record(config, rec, rdmutil, obj):
             print(f'failed ({obj.eprintid}): update_draft' +
                 f' {obj.rdm_id} {rec}, {err}', file = sys.stderr)
             return obj.rdm_id, obj.version_record, err # sys.exit(1)
+    else:
+        # Set the version string.
+        _, err = rdmutil.set_version(obj.rdm_id, obj.restriction)
+        if err is not None:
+            print(f'failed ({obj.eprintid}): set_version' +
+                  f' {obj.rdm_id} {obj.restriction}, {err}')
+            return obj.rdm_id, obj.version_record, err # sys.exit(1)
 
     restrict_record = restrict_files = 'public'
     if obj.restriction == 'internal':
@@ -303,12 +310,6 @@ def update_record(config, rec, rdmutil, obj):
             print(f'failed ({obj.eprintid}/{obj.root_rdm_id})' +
                   f' publish_version {obj.rdm_id} {obj.restriction} {obj.publication_date}, {err}')
     else:
-        # Set the version string.
-        _, err = rdmutil.set_version(obj.rdm_id, obj.restriction)
-        if err is not None:
-            print(f'failed ({obj.eprintid}): set_version' +
-                  f' {obj.rdm_id} {obj.restriction}, {err}')
-            return obj.rdm_id, obj.version_record, err # sys.exit(1)
         # send to community and accept first draft
         _, err = rdmutil.send_to_community(obj.rdm_id, obj.community_id)
         if err is not None:
