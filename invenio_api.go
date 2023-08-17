@@ -131,9 +131,12 @@ func getJSON(token string, uri string) ([]byte, http.Header, error) {
 	req.Header.Add("Content-type", "application/json")
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, resp.Header, err
+		return nil, nil, err
 	}
 	defer resp.Body.Close()
+	if resp.Header == nil {
+		return nil, nil, fmt.Errorf("nil response header")
+	}
 	if resp.StatusCode != 200 {
 		return nil, resp.Header, fmt.Errorf("%s %s", resp.Status, uri)
 	}
@@ -157,9 +160,12 @@ func getXML(token string, uri string) ([]byte, http.Header, error) {
 	req.Header.Add("Content-type", "application/xml")
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, resp.Header, err
+		return nil, nil, err
 	}
 	defer resp.Body.Close()
+	if resp.Header == nil {
+		return nil, nil, fmt.Errorf("nil response header")
+	}
 	if resp.StatusCode != 200 {
 		return nil, resp.Header, fmt.Errorf("%s %s", resp.Status, uri)
 	}
@@ -183,9 +189,12 @@ func getRawFile(token string, uri string, contentType string) ([]byte, http.Head
 	req.Header.Add("Content-Type", contentType)
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, resp.Header, err
+		return nil, nil, err
 	}
 	defer resp.Body.Close()
+	if resp.Header == nil {
+		return nil, nil, fmt.Errorf("nil response header")
+	}
 	if resp.StatusCode != 200 {
 		return nil, resp.Header, fmt.Errorf("%s %s", resp.Status, uri)
 	}
@@ -222,6 +231,9 @@ func postJSON(token string, uri string, src []byte, expectedStatusCode int, debu
 		return nil, nil, err
 	}
 	defer resp.Body.Close()
+	if resp.Header == nil {
+		return nil, nil, fmt.Errorf("nil response header")
+	}
 	if debug {
 		fmt.Fprintf(os.Stderr, "DEBUG postJSON(token, %q, src, true) -> %d, %s\n", uri, resp.StatusCode, resp.Status)
 	}
@@ -250,9 +262,12 @@ func putJSON(token string, uri string, src []byte, expectedStatusCode int, debug
 	req.Header.Add("Content-Type", "application/json")
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, resp.Header, err
+		return nil, nil, err
 	}
 	defer resp.Body.Close()
+	if resp.Header == nil {
+		return nil, nil, fmt.Errorf("nil response header")
+	}
 	if debug {
 		fmt.Fprintf(os.Stderr, "DEBUG putJSON(token, %q, src, true) -> %d, %s\n", uri, resp.StatusCode, resp.Status)
 	}
@@ -278,9 +293,12 @@ func patchJSON(token string, uri string, src []byte, expectedStatusCode int, deb
 	req.Header.Add("Content-Type", "application/json")
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, resp.Header, err
+		return nil, nil, err
 	}
 	defer resp.Body.Close()
+	if resp.Header == nil {
+		return nil, nil, fmt.Errorf("nil response header")
+	}
 	if resp.StatusCode != expectedStatusCode {
 		return nil, resp.Header, fmt.Errorf("PATCH %s %s, expected %d\n\tpayload\n%s\n", resp.Status, uri, expectedStatusCode, src)
 	}
