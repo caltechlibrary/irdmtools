@@ -1143,10 +1143,6 @@ func UpdateDraft(cfg *Config, recordId string, payloadSrc []byte, debug bool) (m
 		return nil, err
 	}
 	cfg.rl.FromHeader(headers)
-	if debug {
-		fmt.Fprintf(os.Stderr, "DEBUG UpdateDraft, putJSON(token, %q, %s, true) ->\n\tsrc %s\n\theaders %+v\n\terror %s\n",
-			uri, payloadSrc, src, headers, errorToString(err))
-	}
 	obj := map[string]interface{}{}
 	if err := json.Unmarshal(src, &obj); err != nil {
 		return nil, err
@@ -1178,17 +1174,11 @@ func DiscardDraft(cfg *Config, recordId string, debug bool) (map[string]interfac
 	}
 	// Setup API request for a record
 	uri := fmt.Sprintf("%s/api/records/%s/draft", u.String(), recordId)
-	if debug {
-		fmt.Fprintf(os.Stderr, "DEBUG DiscardDraft, uri %s\n", uri)
-	}
-	src, headers, err := delJSON(cfg.InvenioToken, uri, http.StatusNoContent, debug)
+	_, headers, err := delJSON(cfg.InvenioToken, uri, http.StatusNoContent, debug)
 	if err != nil {
 		return nil, err
 	}
 	cfg.rl.FromHeader(headers)
-	if debug {
-		fmt.Fprintf(os.Stderr, "DEBUG DiscardDraft, delJSON(cfg, %s) ->\n\tsrc %s\n\theaders %+v\n\terror %s\n", uri, src, headers, errorToString(err))
-	}
 	return nil, nil
 }
 
@@ -1330,17 +1320,11 @@ func GetDraftFiles(cfg *Config, recordId string, debug bool) (map[string]interfa
 		return nil, err
 	}
 	uri := fmt.Sprintf("%s/%s/draft/files", u.String(), recordId)
-	if debug {
-		fmt.Fprintf(os.Stderr, "DEBUG GetDraftFiles(cfg, %q, true) -> uri %q\n", recordId, uri)
-	}
 	src, headers, err := getJSON(cfg.InvenioToken, uri)
 	if err != nil {
 		return nil, err
 	}
 	cfg.rl.FromHeader(headers)
-	if debug {
-		fmt.Fprintf(os.Stderr, "DEBUG GetDraftFiles(cfg, %q, true) ->\n%s\n", recordId, src)
-	}
 	m := map[string]interface{}{}
 	if err := json.Unmarshal(src, &m); err != nil {
 		return nil, err
@@ -1371,17 +1355,11 @@ func GetFiles(cfg *Config, recordId string, debug bool) (map[string]interface{},
 		return nil, err
 	}
 	uri := fmt.Sprintf("%s/%s/files", u.String(), recordId)
-	if debug {
-		fmt.Fprintf(os.Stderr, "DEBUG GetFiles(cfg, %q, true) -> uri %q\n", recordId, uri)
-	}
 	src, headers, err := getJSON(cfg.InvenioToken, uri)
 	if err != nil {
 		return nil, err
 	}
 	cfg.rl.FromHeader(headers)
-	if debug {
-		fmt.Fprintf(os.Stderr, "DEBUG GetFiles(cfg, %q, true) ->\n%s\n", recordId, src)
-	}
 	m := map[string]interface{}{}
 	if err := json.Unmarshal(src, &m); err != nil {
 		return nil, err
@@ -1431,10 +1409,6 @@ func UploadFiles(cfg *Config, recordId string, filenames []string, debug bool) (
 		return nil, err
 	}
 	cfg.rl.FromHeader(headers)
-	if debug {
-		fmt.Fprintf(os.Stderr, "DEBUG UploadFiles, postJSON(token, %q, %s, true) ->\n\tsrc %s\n\theaders %+v\n\terror %s\n", 
-			uri, payloadSrc, src, headers, errorToString(err))
-	}
 	filesInfo := new(simplified.FileListing)
 	if err := json.Unmarshal(src, &filesInfo); err != nil {
 		return nil, err
@@ -1446,24 +1420,16 @@ func UploadFiles(cfg *Config, recordId string, filenames []string, debug bool) (
 	for _, fName := range filenames {
 		key := path.Base(fName)
 		uri = fmt.Sprintf("%s/api/records/%s/draft/files/%s/content", u.String(), recordId, key)
-		src, headers, err := putFile(cfg.InvenioToken, uri, fName, http.StatusOK, debug)
+		_, headers, err := putFile(cfg.InvenioToken, uri, fName, http.StatusOK, debug)
 		if err != nil {
 			return nil, err
 		}
 		cfg.rl.FromHeader(headers)
-		if debug {
-			fmt.Fprintf(os.Stderr, "DEBUG UploadFiles, putFile(token, %q, %q) ->\n\tsrc %s\n\theaders %+v\n\terror %s\n", 
-				uri, fName, src, headers, errorToString(err))
-		}
 		// Commit the upload
 		uri = fmt.Sprintf("%s/api/records/%s/draft/files/%s/commit", u.String(), recordId, key)
-		src, headers, err = postJSON(cfg.InvenioToken, uri, nil, http.StatusOK, debug)
+		_, headers, err = postJSON(cfg.InvenioToken, uri, nil, http.StatusOK, debug)
 		if err != nil {
 			return nil, err
-		}
-		if debug {
-			fmt.Fprintf(os.Stderr, "DEBUG UploadFiles, postJSON(token, %q, nil, true) ->\n\tsrc %s\n\theaders %+v\n\terror %s\n", 
-				uri, src, headers, errorToString(err))
 		}
 		cfg.rl.FromHeader(headers)
 	}
@@ -1499,15 +1465,11 @@ func DeleteFiles(cfg *Config, recordId string, filenames []string, debug bool) (
 	for _, fName := range filenames {
 		key := path.Base(fName)
 		uri = fmt.Sprintf("%s/api/records/%s/draft/files/%s", u.String(), recordId, key)
-		src, headers, err := deleteFile(cfg.InvenioToken, uri, fName, http.StatusNoContent, debug)
+		_, headers, err := deleteFile(cfg.InvenioToken, uri, fName, http.StatusNoContent, debug)
 		if err != nil {
 			return nil, err
 		}
 		cfg.rl.FromHeader(headers)
-		if debug {
-			fmt.Fprintf(os.Stderr, "DEBUG DeleteFiles, deleteFile(token, %q, %q) ->\n\tsrc %s\n\theaders %+v\n\terror %s\n", 
-				uri, fName, src, headers, errorToString(err))
-		}
 	}
 	return nil, nil
 }
@@ -1678,9 +1640,6 @@ func SendToCommunity(cfg *Config, recordId string, communityId string, debug boo
 
 	// Get review and submit links
 	reviewLink := fmt.Sprintf("%s/api/records/%s/draft/review", u.String(), recordId)
-	if debug {
-		fmt.Fprintf(os.Stderr, "DEBUG SendToCommunity,\n\treview link %q\n", reviewLink)
-	}
 
 	payload := fmt.Sprintf(`{
   "receiver": {
@@ -1695,10 +1654,6 @@ func SendToCommunity(cfg *Config, recordId string, communityId string, debug boo
 	}
 	cfg.rl.FromHeader(headers)
 
-	if debug {
-		fmt.Fprintf(os.Stderr, "DEBUG SendToCommunity, putJSON(token, %q, %s, true) ->\n\tsrc %s\n\theaders %+v\n\terror %s\n", 
-			reviewLink, payload, src, headers, errorToString(err))
-	}
 	data := map[string]interface{}{}
 	err = json.Unmarshal(src, &data)
 	
@@ -1724,17 +1679,11 @@ func SendToCommunity(cfg *Config, recordId string, communityId string, debug boo
 		return nil, err
 	}
 	cfg.rl.FromHeader(headers)
-	if debug {
-		fmt.Fprintf(os.Stderr, "DEBUG SendToCommunity, postJSON(token, %q, %s) ->\n\tsrc %s\n\theaders %+v\n\terror %s\n", 
-			submitLink, payload, src, headers, errorToString(err))
-	}
+
 	data = map[string]interface{}{}
 	err = json.Unmarshal(src, &data)
 	if err != nil {
 		return nil, err
-	}
-	if debug {
-		fmt.Fprintf(os.Stderr, "DEBUG result of POST comment %+v\n", data)
 	}
 
 	// Now we need to "submit for review" to community.
@@ -1750,10 +1699,6 @@ func SendToCommunity(cfg *Config, recordId string, communityId string, debug boo
 		return nil, err
 	}
 	cfg.rl.FromHeader(headers)
-	if debug {
-		fmt.Fprintf(os.Stderr, "DEBUG SendToCommunity, postJSON(token, %q, %s) ->\n\tsrc %s\n\theaders %+v\n\terror %s\n", 
-			submitReviewLink, payload, src, headers, errorToString(err))
-	}
 
 	// Get the updated record and return it.
 	return GetDraft(cfg, recordId)
@@ -1786,9 +1731,7 @@ func GetReview(cfg *Config, recordId string, debug  bool) (map[string]interface{
 		return nil, err
 	}
 	cfg.rl.FromHeader(headers)
-	if debug {
-		fmt.Fprintf(os.Stderr, "DEBUG GetReview, getJSON(token, %q) ->\n%s\n", uri, src)
-	}
+
 	m := map[string]interface{}{}
 	err = json.Unmarshal(src, &m)
 	if err != nil {
@@ -1829,9 +1772,6 @@ func ReviewRequest(cfg *Config, recordId string, decision string, comment string
 	if ! ok {
 		return nil, fmt.Errorf("could not retrieve review request for %q", recordId)
 	}
-	if debug {
-		fmt.Fprintf(os.Stderr, "DEBUG ReviewRequest, request id %q\n", requestId)
-	}
 
 	// Pick link and status code for update
 	link, expectedStatusCode, payload := "", http.StatusOK, ""
@@ -1852,9 +1792,6 @@ func ReviewRequest(cfg *Config, recordId string, decision string, comment string
 		default:
 			return nil, fmt.Errorf("unsupported decision type %q", decision)
 	}
-	if debug {
-		fmt.Fprintf(os.Stderr, "DEBUG ReviewRequest link %q, expected status code %d\n", link, expectedStatusCode)
-	}
 
 	// Make review request with Payload
 	src, headers, err := postJSON(cfg.InvenioToken, link, []byte(payload), expectedStatusCode, debug)
@@ -1862,10 +1799,7 @@ func ReviewRequest(cfg *Config, recordId string, decision string, comment string
 		return nil, err
 	}
 	cfg.rl.FromHeader(headers)
-	if debug {
-		fmt.Fprintf(os.Stderr, "DEBUG ReviewDraft, postJSON(token, %q, %s, %d, true) ->\n%s\n\theaders %+v\n\terror %s\n", 
-			link, payload, expectedStatusCode, src, headers, errorToString(err))
-	}
+
 	obj := map[string]interface{}{}
 	if err := json.Unmarshal(src, &obj); err != nil {
 		return nil, err

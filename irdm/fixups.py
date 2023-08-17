@@ -49,7 +49,8 @@ def check_for_doi(doi, production):
 
     response = requests.get(url + query)
     if response.status_code != 200:
-        raise Exception(response.text)
+        print(f'error {response.text}', file = sys.sdterr)
+        return False
     records = response.json()
     if len(records) > 0:
         return True
