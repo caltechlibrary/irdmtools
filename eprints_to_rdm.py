@@ -152,6 +152,8 @@ def get_file_list(config, eprintid, rec, security):
         _security = metadata.get('security', None)
         pos = metadata.get('pos', 1)
         target_name = metadata.get('filename', filename)
+        if '&' in target_name:
+            target_name = target_name.replace('&', '_')
         if '%' in target_name:
             target_name = target_name.replace('%', '_')
         if '[' in target_name:
@@ -165,6 +167,8 @@ def get_file_list(config, eprintid, rec, security):
         if ')' in target_name:
             target_name = target_name.replace(')', '_')
         source_name = filename
+        if '&' in source_name:
+            source_name = source_name.replace('&', '\&')
         if '[' in source_name:
             source_name = source_name.replace('[', '\[')
         if ']' in source_name:
