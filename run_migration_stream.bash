@@ -48,5 +48,5 @@ cat <<EOT
 
 EOT
 touch "${WORKING_LOG}"
-./eprints_to_rdm.py "${WORKING_LIST}" >"${WORKING_LOG}"
+./eprints_to_rdm.py "${WORKING_LIST}" >>"${WORKING_LOG}"
 
