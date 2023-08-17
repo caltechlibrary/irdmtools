@@ -360,19 +360,21 @@ to guide versioning.'''
     community_id = config.get('RDM_COMMUNITY_ID', None)
     if community_id is None or eprint_host is None:
         print(f'failed ({eprintid}): missing configuration, ' +
-              'eprint host or rdm community id, aborting')
+              'eprint host or rdm community id, aborting', file = sys.stderr)
         sys.exit(1)
     rdm_id = None
     root_rdm_id = None
     rec, err = eprint2rdm(eprintid)
     if err is not None:
         print(f'{eprintid}, None, failed ({eprintid}): eprint2rdm {eprintid}')
+        sys.stdout.flush()
         return err # sys.exit(1)
     # NOTE: fixup_record is destructive. This is the rare case of where we want to work
     # on a copy of the rec rather than modify rec!!!
     rdm_id, err  = rdmutil.new_record(fixup_record(dict(rec)))
     if err is not None:
         print(f'{eprintid}, {rdm_id}, failed ({eprintid}): rdmutil new_record')
+        sys.stdout.flush()
         return err # sys.exit(1)
     print(f'{eprintid}, {rdm_id}, created draft')
     root_rdm_id = rdm_id
@@ -417,16 +419,16 @@ def display_status(app_name, cnt, started, completed):
     # calculate the duration in minutes.
     duration = round((completed - started).total_seconds()/60) + 1
     x = round(cnt / duration)
-    print(f'    records processed: {cnt}', file = sys.stderr)
-    print(f'             duration: {duration} minutes', file = sys.stderr)
-    print(f'   records per minute: {x}')
-    print(f'{app_name} started: {started.isoformat(" ", "seconds")}, completed: {completed.isoformat(" ", "seconds")}', file = sys.stderr)
+    print(f'#    records processed: {cnt}', file = sys.stderr)
+    print(f'#             duration: {duration} minutes', file = sys.stderr)
+    print(f'#   records per minute: {x}')
+    print(f'#   {app_name} started: {started.isoformat(" ", "seconds")}, completed: {completed.isoformat(" ", "seconds")}', file = sys.stderr)
 
 def process_document_and_eprintids(config, app_name, eprintids):
     '''Process and array of EPrint Ids and migrate those records.'''
     started = datetime.now()
     tot = len(eprintids)
-    print(f'Processing {tot} eprintids, started {started.isoformat(" ", "seconds")}', file = sys.stderr)
+    print(f'# Processing {tot} eprintids, started {started.isoformat(" ", "seconds")}', file = sys.stderr)
     for i, _id in enumerate(eprintids):
         err = migrate_record(config, _id)
         if err is not None:

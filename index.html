@@ -25,13 +25,17 @@
 <section>
 <h1 id="institutional-repository-data-management-tools">Institutional
 Repository Data Management Tools</h1>
-<p>This is a proof of concept set tools and Go packages for working with
-institutional repositories. Initial target is Invenio RDM.</p>
+<p>This is a proof of concept set tools for working with Invenio RDM and
+migrating content from EPrints to RDM. It consists of a small set of Go
+based command line programs along with Python scripts and a wrapping
+irdm Python module.</p>
 <p>The proof of concept is being developed around RDM’s web services
 (e.g. REST API and OAI-PMH), PostgreSQL database and external metadata
 services (e.g. CrossRef, DataCite).</p>
-<p>Caltech Library is using testing the prototype with continuous
-content migration, aggregation and metadata analysis.</p>
+<p>Caltech Library is using irdmtools to migrate content from our legacy
+EPrints 3.3 repositories (heavely customized) to RDM. Post migration the
+core Go tools will remain useful for curration at the collection level
+(e.g. <a href="rdmutil.1.html">rdmutil</a>)</p>
 <h2 id="tools">Tools</h2>
 <h3 id="rdmutil"><code>rdmutil</code></h3>
 <p>This tool is for interacting with an Invenio RDM repository via RDM’s
@@ -56,10 +60,10 @@ details.</p>
 <h2 id="requirements">Requirements</h2>
 <ul>
 <li>An Invenio RDM deployment</li>
-<li>To building the software and documentation
+<li>To building the Go based software and documentation
 <ul>
 <li>git</li>
-<li>Go &gt;= 1.20.4</li>
+<li>Go &gt;= 1.20.7</li>
 <li>Make (e.g. GNU Make)</li>
 <li>Pandoc &gt;= 3</li>
 </ul></li>
@@ -68,10 +72,15 @@ details.</p>
 <li><a href="https://github.com/caltechlibrary/dataset/">dataset</a>
 &gt;= 2</li>
 </ul></li>
+<li>To migrate content from EPrints 3.3 to RDM
+<ul>
+<li>Python 3 and packages listed in [requirements.txt]</li>
+</ul></li>
 </ul>
 <h2 id="quick-install">Quick install</h2>
 <p>If you’re running on Linux, macOS or Raspberry Pi OS you may be able
-to installed irdmtools with the following curl command</p>
+to installed precompiled irdmtools Go based tools with the following
+curl command –</p>
 <pre><code>curl https://caltechlibrary.github.io/irdmtools/installer.sh | sh</code></pre>
 <h2 id="installation-from-source">Installation from source</h2>
 <p>This codebase is speculative. It is likely to change and as issues
@@ -81,7 +90,13 @@ compile it. Here’s the steps I take to install irdmtools.</p>
 cd irdmtools
 make
 make test
-make install</code></pre>
+make install
+python -m pip install -r requirements.txt</code></pre>
+<h2 id="configuration">Configuration</h2>
+<p>The Go based tools rely on a properly configured environment (i.e.
+environment variables set in your POSIX shell). Specific requirements
+are listed in the man pages for each of the Go based command line
+programs.</p>
 </section>
 
 <footer>
