@@ -56,7 +56,7 @@ def check_for_doi(doi, production):
         return False, None
     records = response.json()
     if len(records) > 0:
-        return True
+        return True, None
     return False, None
 
 
@@ -240,7 +240,7 @@ normlzied record dict that is a for migration into Invenio-RDM."""
     doi = normalize_doi(get_dict_path(record, ['pids', 'doi', 'identifier']))
     if doi is not None:
         # See if DOI already exists in CaltechAUTHORS, if so move it to metadata identifiers.
-        has_doi, err = check_for_doi(doi, in_production):
+        has_doi, err = check_for_doi(doi, in_production)
         if err is not None:
             return rec, err
         if has_doi:
@@ -328,6 +328,9 @@ normlzied record dict that is a for migration into Invenio-RDM."""
                 new.append(group)
         record['custom_fields']['caltech:groups'] = new
 
+    # Remove .custom_fields["caltech:internal_note"] if it exist.
+    if "custom_fields" in record and "caltech:internal_note" in record["custom_fields"]:
+        del record["custom_fields"]["caltech:internal_note"]
     # Check to see if pids object is empty
     pids = record.get('pids', None)
     if pids is not None:

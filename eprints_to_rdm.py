@@ -208,7 +208,7 @@ def prune_attached_files_description(rec):
         rec['metadata'] = metadata
     return rec
 
-def update_record(config, rec, rdmutil, obj):
+def update_record(config, rec, rdmutil, obj, internal_note):
     '''update draft record handling versioning if needed'''
     file_list = None
     err = None
@@ -320,7 +320,14 @@ def update_record(config, rec, rdmutil, obj):
             print(f'failed ({obj.eprintid}): send_to_community' +
                   f' {obj.rdm_id} {obj.community_id}, {err}')
             return obj.rdm_id, obj.version_record, err # sys.exit(1)
-        _, err = rdmutil.review_request(obj.rdm_id, 'accept')
+        # NOTE: If internal_note is not empty then we need to append a comment to the review.
+##         if internal_note != "":
+##             _, err = rdmutil.review_comment(obj.rdm_id, internal_note)
+##             if err is not None:
+##                 print(f'failed ({obj.eprintid}): review_comment' +
+##                     f' {obj.rdm_id} {obj.community_id}, {err}')
+##                 return obj.rdm_id, obj.version_record, err # sys.exit(1)
+        _, err = rdmutil.review_request(obj.rdm_id, 'accept', internal_note)
         if err is not None:
             print(f'failed ({obj.eprintid}): review_request' +
                 f' {obj.rdm_id} accepted, {err}')
@@ -374,6 +381,10 @@ to guide versioning.'''
         print(f'{eprintid}, None, failed ({eprintid}): eprint2rdm {eprintid}')
         sys.stdout.flush()
         return err # sys.exit(1)
+    # Let's save our .custom_fields["caltech:internal_note"] value if it exists, per issue #16
+    custom_fields = rec.get("custom_fields", {})
+    internal_note = custom_fields.get("caltech:internal_note", "")
+
     # NOTE: fixup_record is destructive. This is the rare case of where we want to work
     # on a copy of the rec rather than modify rec!!!
     rec_copy, err = fixup_record(dict(rec))
@@ -401,7 +412,7 @@ to guide versioning.'''
             'version_record': version_record,
             'restriction': restriction,
         })
-        rdm_id, version_record, err = update_record(config, rec, rdmutil, obj)
+        rdm_id, version_record, err = update_record(config, rec, rdmutil, obj, internal_note)
         if err is not None:
             print(f'{obj.eprintid}, {rdm_id}, failed ({obj.eprintid}): update_record(config, rec, rdmutil, {obj.display()})')
             return err # sys.exit(1)

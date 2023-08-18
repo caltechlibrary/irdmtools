@@ -337,8 +337,32 @@ func customFieldsMetadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.
 		SetCustomField(rec, "meeting:meeting", "", m)
 	}
 
-	// FIXME: Handle subjects
-	if eprint.Subjects != nil && eprint.Subjects.Length() > 0 {
+	// NOTE: Suggests needs to be mapped to a custom field "caltech:internal-note"
+	if eprint.Suggestions != "" {
+		SetCustomField(rec, "caltech:internal_note", "", eprint.Suggestions)
+	}
+
+	// NOTE: Mapping subjects and keyswords to .metadata.subjects
+	if eprint.Keywords != "" || (eprint.Subjects != nil && eprint.Subjects.Length() > 0) {
+		if rec.Metadata.Subjects == nil {
+			rec.Metadata.Subjects = []*simplified.Subject{}
+		}
+		if eprint.Keywords != "" {
+			keywords := strings.Split(eprint.Keywords, ";")
+			for _, keyword := range keywords {
+				rec.Metadata.Subjects = append(rec.Metadata.Subjects, &simplified.Subject{
+					Subject: keyword,
+				})
+			}
+		}
+		for i := 0; i < eprint.Subjects.Length(); i++ {
+			subject := eprint.Subjects.IndexOf(i)
+			if subject.Value != "" {
+				rec.Metadata.Subjects = append(rec.Metadata.Subjects, &simplified.Subject{
+					Subject: subject.Value,
+				})
+			}
+		}
 	}
 
 	// FIXME: Handle non-subject keyswords
@@ -967,6 +991,28 @@ func metadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record, cont
 				urlValue = strings.TrimSpace(item.URL)
 			}
 			AddRelatedIdentifier(rec, urlType, urlValue)
+		}
+	}
+	// NOTE: Issue #47, Add notes as additional description
+	if eprint.Note != "" || eprint.ErrataText != "" {
+		if rec.Metadata.AdditionalDescriptions == nil {
+			rec.Metadata.AdditionalDescriptions = []*simplified.Description{}
+		}
+		if eprint.Note != "" {
+			rec.Metadata.AdditionalDescriptions = append(rec.Metadata.AdditionalDescriptions , &simplified.Description{
+				Type: &simplified.Type{
+					ID: "additional",
+				},
+				Description: eprint.Note,
+			})
+		}
+		if eprint.ErrataText != "" {
+			rec.Metadata.AdditionalDescriptions = append(rec.Metadata.AdditionalDescriptions , &simplified.Description{
+				Type: &simplified.Type{
+					ID: "errata",
+				},
+				Description: eprint.ErrataText,
+			})
 		}
 	}
 	return nil

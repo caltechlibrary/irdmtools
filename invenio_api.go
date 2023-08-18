@@ -1796,16 +1796,28 @@ func ReviewRequest(cfg *Config, recordId string, decision string, comment string
 	switch decision {
 		case "accept":
 			link = fmt.Sprintf("%s/api/requests/%s/actions/accept", u.String(), requestId)
-			payload = `{ "payload": {"content": "You are in!", "format": "html"} }`
+			if comment == "" {
+				payload = `{ "payload": {"content": "You are in!", "format": "html"} }`
+			} else {
+				payload = fmt.Sprintf(`{ "payload": { "content": %q, "format": "html"} }`, comment)
+			}
 		case "cancel":
 			link = fmt.Sprintf("%s/api/requests/%s/actions/cancel", u.String(), requestId)
-			payload = `{ "payload": {"content": "Didn't mean to do that!", "format": "html"} }`
+			if comment == "" {
+				payload = `{ "payload": {"content": "Didn't mean to do that!", "format": "html"} }`
+			} else {
+				payload = fmt.Sprintf(`{ "payload": { "content": %q, "format": "html"} }`, comment)
+			}
 		case "decline":
 			link = fmt.Sprintf("%s/api/requests/%s/actions/decline", u.String(), requestId)
-			payload = `{ "payload": {"content": "You are not in!", "format": "html"} }`
+			if comment == "" {
+				payload = `{ "payload": {"content": "You are not in!", "format": "html"} }`
+			} else {
+				payload = fmt.Sprintf(`{ "payload": { "content": %q, "format": "html"} }`, comment)
+			}
 		case "comment":
 			link = fmt.Sprintf("%s/api/requests/%s/comments", u.String(), requestId)
-			payload = fmt.Sprintf(`{ "payload": {"content": %q, "format": "html"}`, comment)
+			payload = fmt.Sprintf(`{ "payload": { "content": %q, "format": "html"}`, comment)
 			expectedStatusCode = http.StatusCreated
 		default:
 			return nil, fmt.Errorf("unsupported decision type %q", decision)

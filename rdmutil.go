@@ -722,7 +722,7 @@ func (app *RdmUtil) GetReview(recordId string) ([]byte, error) {
 //   // ... handle error ...
 // }
 // id := "woie-x0121"
-// src, err := app.ReviewPublishDraft(id, "accept", "")
+// src, err := app.ReviewRequest(id, "accept", "")
 // if err != nil {
 //   // ... handle error ...
 // }
@@ -730,6 +730,29 @@ func (app *RdmUtil) GetReview(recordId string) ([]byte, error) {
 // ```
 func (app *RdmUtil) ReviewRequest(recordId string, decision string, comment string) ([]byte, error) {
 	data, err := ReviewRequest(app.Cfg, recordId, decision, comment, app.Debug)
+	if err != nil {
+		return nil, err
+	}
+	return json.MarshalIndent(data, "", "    ")
+}
+
+// ReviewComment takes a record id and a comment and
+// submits the comment to the review process.
+//
+// ```
+// app := new(irdmtools.RdmUtil)
+// if err := app.LoadConfig("irdmtools.json"); err != nil {
+//   // ... handle error ...
+// }
+// id := "woie-x0121"
+// src, err := app.ReviewComment(id, "Not sure about this one, but it is exciting")
+// if err != nil {
+//   // ... handle error ...
+// }
+// fmt.Printf("%s\n", src)
+// ```
+func (app *RdmUtil) ReviewComment(recordId string, comment string) ([]byte, error) {
+	data, err := ReviewRequest(app.Cfg, recordId, "comment", comment, app.Debug)
 	if err != nil {
 		return nil, err
 	}
@@ -986,6 +1009,24 @@ func getEndpointParams(params []string, requirePath bool, requireInName bool) (s
 		return "", "", fmt.Errorf("Missing input filename for endpoint")
 	}
 	return p, inName, nil
+}
+
+func getReviewCommentParams(params []string, requireRecordId bool, requireComment bool) (string, string, error) {
+	recordId, comment := "", ""
+	i := 0
+	if len(params) > i {
+		recordId = params[i]
+		i++
+	} else if requireRecordId {
+		return "", "", fmt.Errorf("Missing record id")
+	}
+	if len(params) > i {
+		comment = params[i]
+		i++
+	} else if requireComment {
+		return recordId, "", fmt.Errorf("Missing comment")
+	}
+	return recordId, comment, nil
 }
 
 func getReviewParams(params []string, requireRecordId bool, requireDecision bool, requireComment bool) (string, string, string, error) {
@@ -1256,6 +1297,12 @@ func (app *RdmUtil) Run(in io.Reader, out io.Writer, eout io.Writer, action stri
 		}
 		recordId := params[0]
 		src, err = app.GetReview(recordId)
+	case "review_comment":
+		recordId, comment, err = getReviewCommentParams(params, true, true)
+		if err != nil {
+			return err
+		}
+		src, err = app.ReviewComment(recordId, comment)
 	case "review_request":
 		recordId, decision, comment, err = getReviewParams(params, true, true, false)
 		if err != nil {
