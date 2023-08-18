@@ -240,7 +240,7 @@ normlzied record dict that is a for migration into Invenio-RDM."""
     doi = normalize_doi(get_dict_path(record, ['pids', 'doi', 'identifier']))
     if doi is not None:
         # See if DOI already exists in CaltechAUTHORS, if so move it to metadata identifiers.
-        has_doi, err = check_for_doi(doi, in_production):
+        has_doi, err = check_for_doi(doi, in_production)
         if err is not None:
             return rec, err
         if has_doi:
