@@ -152,6 +152,8 @@ def get_file_list(config, eprintid, rec, security):
         _security = metadata.get('security', None)
         pos = metadata.get('pos', 1)
         target_name = metadata.get('filename', filename)
+        if '&' in target_name:
+            target_name = target_name.replace('&', '_')
         if '%' in target_name:
             target_name = target_name.replace('%', '_')
         if '[' in target_name:
@@ -165,6 +167,8 @@ def get_file_list(config, eprintid, rec, security):
         if ')' in target_name:
             target_name = target_name.replace(')', '_')
         source_name = filename
+        if '&' in source_name:
+            source_name = source_name.replace('&', '\&')
         if '[' in source_name:
             source_name = source_name.replace('[', '\[')
         if ']' in source_name:
@@ -372,7 +376,10 @@ to guide versioning.'''
         return err # sys.exit(1)
     # NOTE: fixup_record is destructive. This is the rare case of where we want to work
     # on a copy of the rec rather than modify rec!!!
-    rdm_id, err  = rdmutil.new_record(fixup_record(dict(rec)))
+    rec_copy, err = fixup_record(dict(rec))
+    if err is not None:
+        print(f'{eprintid}, {rdm_id}, failed ({eprintid}): rdmutil new_record, fixup_record failed {err}')
+    rdm_id, err  = rdmutil.new_record(rec_copy)
     if err is not None:
         print(f'{eprintid}, {rdm_id}, failed ({eprintid}): rdmutil new_record')
         sys.stdout.flush()
