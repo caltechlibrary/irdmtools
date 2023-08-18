@@ -376,7 +376,10 @@ to guide versioning.'''
         return err # sys.exit(1)
     # NOTE: fixup_record is destructive. This is the rare case of where we want to work
     # on a copy of the rec rather than modify rec!!!
-    rdm_id, err  = rdmutil.new_record(fixup_record(dict(rec)))
+    rec_copy, err = fixup_record(dict(rec))
+    if err is not None:
+        print(f'{eprintid}, {rdm_id}, failed ({eprintid}): rdmutil new_record, fixup_record failed {err}')
+    rdm_id, err  = rdmutil.new_record(rec_copy)
     if err is not None:
         print(f'{eprintid}, {rdm_id}, failed ({eprintid}): rdmutil new_record')
         sys.stdout.flush()

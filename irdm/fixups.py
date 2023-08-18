@@ -47,14 +47,17 @@ def check_for_doi(doi, production):
 
     query = f'?q=pids.doi.identifier:"{doi}"&allversions=true'
 
-    response = requests.get(url + query)
+    try:
+        response = requests.get(url + query)
+    except Exception as err:
+        return False, err
     if response.status_code != 200:
         print(f'error {response.text}', file = sys.stderr)
-        return False
+        return False, None
     records = response.json()
     if len(records) > 0:
         return True
-    return False
+    return False, None
 
 
 def get_dict_path(obj, args = None):
@@ -237,7 +240,10 @@ normlzied record dict that is a for migration into Invenio-RDM."""
     doi = normalize_doi(get_dict_path(record, ['pids', 'doi', 'identifier']))
     if doi is not None:
         # See if DOI already exists in CaltechAUTHORS, if so move it to metadata identifiers.
-        if check_for_doi(doi, in_production):
+        has_doi, err = check_for_doi(doi, in_production):
+        if err is not None:
+            return rec, err
+        if has_doi:
             del record['pids']['doi'] 
             if "metadata" not in record:
                 record["metadata"] = {}
@@ -336,5 +342,5 @@ normlzied record dict that is a for migration into Invenio-RDM."""
         del record['metadata']['version']
     # FIXME: Need to make sure we don't have duplicate related identifiers ...,
     # pmcid seem to have duplicates in some case.
-    return record
+    return record, None
 
