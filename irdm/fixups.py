@@ -56,7 +56,7 @@ def check_for_doi(doi, production):
         return False, None
     records = response.json()
     if len(records) > 0:
-        return True
+        return True, None
     return False, None
 
 
