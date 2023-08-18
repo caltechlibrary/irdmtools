@@ -173,9 +173,9 @@ class RdmUtil:
             return json.loads(src), None
         return None, f'failed to send_to_community draft {rdm_id} {community_id}'
 
-    def review_request(self, rdm_id, decision):
-        '''review a draft request'''
-        cmd = ["rdmutil", "review_request", rdm_id, decision ]
+    def review_comment(self, rdm_id, comment):
+        '''review a draft comment'''
+        cmd = ["rdmutil", "review_comment", rdm_id, comment ]
         with Popen(cmd, stdout = PIPE, stderr = PIPE) as proc:
             src, err = proc.communicate()
             exit_code = proc.returncode
@@ -184,7 +184,22 @@ class RdmUtil:
             if not isinstance(src, bytes):
                 src = src.encode('utf-8')
             return json.loads(src), None
-        return None, f'failed to review_request {rdm_id} {decision}'
+        return None, f'failed to review_comment {rdm_id} {comment}'
+
+    def review_request(self, rdm_id, decision, comment):
+        '''review a draft request'''
+        cmd = ["rdmutil", "review_request", rdm_id, decision]
+        if comment != "":
+            cmd.append(comment)
+        with Popen(cmd, stdout = PIPE, stderr = PIPE) as proc:
+            src, err = proc.communicate()
+            exit_code = proc.returncode
+            if exit_code > 0:
+                return None, err
+            if not isinstance(src, bytes):
+                src = src.encode('utf-8')
+            return json.loads(src), None
+        return None, f'failed to review_request {rdm_id} {decision} {comment}'
 
     def new_version(self, rdm_id):
         '''create a new version draft'''

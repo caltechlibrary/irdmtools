@@ -328,6 +328,9 @@ normlzied record dict that is a for migration into Invenio-RDM."""
                 new.append(group)
         record['custom_fields']['caltech:groups'] = new
 
+    # Remove .custom_fields["caltech:internal_note"] if it exist.
+    if "custom_fields" in record and "caltech:internal_note" in record["custom_fields"]:
+        del record["custom_fields"]["caltech:internal_note"]
     # Check to see if pids object is empty
     pids = record.get('pids', None)
     if pids is not None:
