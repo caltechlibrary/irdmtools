@@ -3,6 +3,7 @@
 '''eprints_to_rdm.py implements our Migration workflow for CaltechAUTHORS
 from EPrints 3.3 to RDM 11.'''
 
+from distutils.file_util import move_file
 import sys
 import os
 import json
@@ -52,7 +53,7 @@ class WorkObject:
 def check_environment():
     '''Check to make sure all the environment variables have values and are avialable'''
     varnames = [
-        'EPRINT_HOST', 'EPRINT_USER', 'EPRINT_PASSWORD', 
+        'EPRINT_HOST', 'EPRINT_USER', 'EPRINT_PASSWORD', 'EPRINT_DOC_PATH',
         'RDM_URL',
         'RDMTOK',
         'RDM_COMMUNITY_ID'
@@ -95,19 +96,19 @@ def pairtree(txt):
     '''take a text string and generate a pairtree path from it.'''
     return '/'.join([txt[i:i+2] for i in range(0, len(txt), 2)])
 
-def file_to_scp(config, eprintid, pos, target_name):
+def file_to_scp(config, eprintid, pos, source_name, target_name):
     '''turn an EPrint file URL into a scp command'''
     hostname = config.get('EPRINT_HOST', None)
-    doc_path = 'jiunk'#config.get('EPRINT_DOC_PATH', None)
-    #if doc_path is None or hostname is None:
-    #    print('failed: EPRINT_HOST and EPRINT_DOC_PATH not set'
-    #          + ' for {target_name}', file = sys.stderr)
-    #    sys.exit(1)
+    doc_path = config.get('EPRINT_DOC_PATH', None)
+    if doc_path is None or hostname is None:
+        print('failed: EPRINT_HOST and EPRINT_DOC_PATH not set'
+              + ' for {target_name}')
+        sys.exit(1)
     _eprint_id = eprintid.zfill(8)
     pos = f'{pos}'.zfill(2)
     host_path = os.path.join(
         doc_path, 'documents', 'disk0',
-        pairtree(_eprint_id), pos, target_name
+        pairtree(_eprint_id), pos, source_name
     )
     return [ 'scp', f"{hostname}:{host_path}", f"{target_name}" ]
 
@@ -124,7 +125,7 @@ def run_scp(cmd):
         if isinstance(out, bytes):
             out = out.decode('utf-8').strip()
         if out is not None and out != "":
-            print(f'out: {out}')
+            print(f'out: {out}', file = sys.stderr)
         return None
     return f'''failed to run {' '.join(cmd)}'''
 
@@ -136,10 +137,10 @@ def get_file_list(config, eprintid, rec, security):
         return file_list
     files = rec.get('files', {})
     entries = files.get('entries', [])
-    content_mapping = {'accepted': 'Accepted Version', 'archival': 
-    'Archival Material', 'bibliography': 'Bibliography', 'coverimage': 
+    content_mapping = {'accepted': 'Accepted Version', 'archival':
+    'Archival Material', 'bibliography': 'Bibliography', 'coverimage':
     'Cover Image', 'discussion': 'Discussion', 'draft': 'Draft', 'erratum': 'Erratum',
-    'inpress': 'In Press', 'metadata': 'Additional Metadata', 'other': 'Other', 
+    'inpress': 'In Press', 'metadata': 'Additional Metadata', 'other': 'Other',
     'permission': 'Release Permission', 'presentation': 'Presentation',
     'reprint': 'Reprint', 'submitted': 'Submitted', 'supplemental': 'Supplemental Material',
     'updated': 'Updated', 'waiver': 'OA Policy Waiver', 'published': 'Published'}
@@ -149,12 +150,40 @@ def get_file_list(config, eprintid, rec, security):
         _security = metadata.get('security', None)
         pos = metadata.get('pos', 1)
         target_name = metadata.get('filename', filename)
+        if '&' in target_name:
+            target_name = target_name.replace('&', '_')
+        if '%' in target_name:
+            target_name = target_name.replace('%', '_')
+        if '[' in target_name:
+            target_name = target_name.replace('[', '_')
+        if ']' in target_name:
+            target_name = target_name.replace(']', '_')
+        if ' ' in target_name:
+            target_name = target_name.replace(' ', '_')
+        if '(' in target_name:
+            target_name = target_name.replace('(', '_')
+        if ')' in target_name:
+            target_name = target_name.replace(')', '_')
+        source_name = filename
+        if '&' in source_name:
+            source_name = source_name.replace('&', '\&')
+        if '[' in source_name:
+            source_name = source_name.replace('[', '\[')
+        if ']' in source_name:
+            source_name = source_name.replace(']', '\]')
+        if '(' in source_name:
+            source_name = source_name.replace('(', '\(')
+        if ')' in source_name:
+            source_name = source_name.replace(')', '\)')
+        if ' ' in source_name:
+            source_name = source_name.replace(' ', '\ ')
+        
         content = metadata.get('content', None)
         if content:
             content = content_mapping[content]
         if _security is not None and security == _security:
             file_url = file['file_id']
-            cmd = file_to_scp(config, eprintid, pos, target_name)
+            cmd = file_to_scp(config, eprintid, pos, source_name, target_name)
             file_list.append({
                 'filename': target_name,
                 'file_url': file_url, 
@@ -163,73 +192,97 @@ def get_file_list(config, eprintid, rec, security):
             })
     return file_list
 
-def update_record(config, rec, rdmutil, obj):
+def prune_attached_files_description(rec):
+    metadata = rec.get('metadata', None)
+    if metadata is not None:
+        additional_descriptions = metadata.get('additional_descriptions', None)
+        if additional_descriptions is not None:
+            keep_descriptions = []
+            for desc in additional_descriptions:
+                desc_type = desc.get("type", "")
+                if desc_type != "attached_files":
+                    keep_descriptions.append(desc)
+            metadata['additional_descriptions'] = keep_descriptions
+        rec['metadata'] = metadata
+    return rec
+
+def update_record(config, rec, rdmutil, obj, internal_note):
     '''update draft record handling versioning if needed'''
     file_list = None
     err = None
-
+    rec = prune_attached_files_description(rec)
     if obj.version_record:
         # Create the new version after saving the publication_date value
         obj.rdm_id, err = rdmutil.new_version(obj.root_rdm_id)
         if err is not None:
-            print(f'failed ({obj.eprintid}), new_version {obj.root_rdm_id}', file = sys.stderr)
+            print(f'failed ({obj.eprintid}), new_version {obj.root_rdm_id}')
             return obj.rdm_id, obj.version_record, err
 
     file_list = get_file_list(config, obj.eprintid, rec, obj.restriction)
     file_description = ''
     file_types = set()
+    campusonly_description = 'The files for this record are restricted to users on the Caltech campus network:<p><ul>\n'
+    campusonly_files = False
     if len(file_list) > 0:
-        _, err = rdmutil.set_files_enable(obj.rdm_id, True)
-        if err is not None:
-            print(f'failed ({obj.eprintid}): set_files_enable {obj.rdm_id} true', file = sys.stderr)
-            sys.exit(1)
         for file in file_list:
-            filename = file['filename']
+            filename = file.get('filename', None)
             content = file['content']
             if content:
                 file_description += f'<p>{content} - <a href="/records/{obj.rdm_id}/files/{filename}?download=1">{filename}</a></p>'
                 file_types.add(content)
             # Copy file with scp.
-            #cmd = file['cmd']
-            #err = run_scp(cmd)
-            #if err is not None:
-            #    print(f'failed ({obj.eprintid}): {" ".join(cmd)}, {err}', file = sys.stderr)
-            #    sys.exit(1)
+            cmd = file.get('cmd', None)
+            err = run_scp(cmd)
+            if err is not None:
+                print(f'failed ({obj.eprintid}): {" ".join(cmd)}, {err}')
+                continue # sys.exit(1)
             if obj.restriction == 'validuser':
-                print('campus_only')
-                #_, err = rdmutil.upload_campusonly_file(obj.rdm_id, filename)
-                #if err is not None:
-                #    print(f'failed ({obj.eprintid}): upload_campusonly_file' #+
-                #            f' {obj.rdm_id} {filename}, {err}', file = sys.stderr)
-                #    sys.exit(1)
+                # NOTE: We want to put the files in place first, then update the draft.
+                staging_dir = f's3_uploads/{obj.rdm_id}'
+                dest = os.path.join(staging_dir, filename)
+                if not os.path.exists(staging_dir):
+                    os.makedirs(staging_dir, 0o775, exist_ok = True )
+                move_file(filename, dest, verbose = True)
+                campusonly_description += f'     <li><a href="https://campus-restricted.library.caltech.edu/{obj.rdm_id}/{filename}">{filename}</a></li>\n'
+                campusonly_files = True
+                file_types.add("campus only")
             else:
-                print(filename+' mock upload')
-                #_, err = rdmutil.upload_file(obj.rdm_id, filename)
-                #if err is not None:
-                #    print(f'failed ({obj.eprintid}): upload_file' +
-                #            f' {obj.rdm_id} {filename}, {err}', file = sys.stderr)
-                #    sys.exit(1)
-            # NOTE: We want to remove the copied file if successfully uploaded.
-            #os.unlink(filename)
-    #else:
-
-    #Add file descriptions
-    additional_descriptions = rec['metadata'].get('additional_descriptions', [])
-    additional_descriptions.append({'type': {'id':'attached-files'}, 'description': file_description})
-    rec['metadata']['additional_descriptions'] = additional_descriptions
-    rec['metadata']['version'] = ' + '.join(file_types)
-    # Set the draft.
-    print(json.dumps(rec))
-    rec, err = rdmutil.update_draft(obj.rdm_id, rec)
-    if err is not None:
-        print(f'failed ({obj.eprintid}): update_draft' +
-            f' {obj.rdm_id} {rec}, {err}', file = sys.stderr)
-        sys.exit(1)
-
-    _, err = rdmutil.set_files_enable(obj.rdm_id, False)
-    if err is not None:
-            print(f'failed ({obj.eprintid}): set_files_enable {obj.rdm_id} false', file = sys.stderr)
-            sys.exit(1)
+                _, err = rdmutil.set_files_enable(obj.rdm_id, True)
+                if err is not None:
+                    print(f'failed ({obj.eprintid}): set_files_enable {obj.rdm_id} true')
+                    continue # sys.exit(1)
+                _, err = rdmutil.upload_file(obj.rdm_id, filename)
+                if err is not None:
+                    print(f'failed ({obj.eprintid}): upload_file' +
+                            f' {obj.rdm_id} {filename}, {err}')
+                    continue # sys.exit(1)
+                # NOTE: We want to remove the copied file if successfully uploaded.
+                if os.path.exists(filename):
+                    os.unlink(filename)
+    if file_description != "" or campusonly_files:
+        additional_descriptions = rec['metadata'].get('additional_descriptions', [])
+        if file_description != "" and obj.restriction == "public":
+            # Add file descriptions and version string
+            additional_descriptions.append({'type': {'id':'attached-files'}, 'description': file_description})
+        # Add campusonly descriptions
+        if campusonly_files:
+            additional_descriptions.append({'type': {'id':'files'}, 'description': campusonly_description})
+        rec['metadata']['additional_descriptions'] = additional_descriptions
+        rec['metadata']['version'] = ' + '.join(file_types)
+        # Update the draft.
+        #print(f'DEBUG dump record ->\n' + json.dumps(rec))
+        rec, err = rdmutil.update_draft(obj.rdm_id, rec)
+        if err is not None:
+            print(f'failed ({obj.eprintid}): update_draft' +
+                f' {obj.rdm_id} {rec}, {err}', file = sys.stderr)
+            return obj.rdm_id, obj.version_record, err # sys.exit(1)
+    else:
+        # Set the version string.
+        _, err = rdmutil.set_version(obj.rdm_id, obj.restriction)
+        if err is not None:
+            print(f'failed ({obj.eprintid}): set_version' +
+                  f' {obj.rdm_id} {obj.restriction}, {err}')
+            return obj.rdm_id, obj.version_record, err # sys.exit(1)
 
     restrict_record = restrict_files = 'public'
     if obj.restriction == 'internal':
@@ -246,7 +299,12 @@ def update_record(config, rec, rdmutil, obj):
         print(f'failed ({obj.eprintid}), set access {obj.rdm_id} record {restrict_record}, {err}',
             file = sys.stderr)
 
-
+    # Make sure .files.enabled is False for metadata only record(s) and versions
+    if obj.restriction in [ "validuser", "metadata_only" ]:
+        _, err = rdmutil.set_files_enable(obj.rdm_id, False)
+        if err is not None:
+            print(f'failed ({obj.eprintid}): set_files_enable {obj.rdm_id} false')
+            return obj.rdm_id, obj.version_record, err # sys.exit(1)
     if obj.version_record:
         # Save version
         _, err = rdmutil.publish_version(obj.rdm_id, obj.restriction, obj.publication_date)
@@ -255,16 +313,24 @@ def update_record(config, rec, rdmutil, obj):
                   f' publish_version {obj.rdm_id} {obj.restriction} {obj.publication_date}, {err}')
     else:
         # send to community and accept first draft
-        _, err = rdmutil.send_to_community(obj.rdm_id, obj.community_id)
-        if err is not None:
-            print(f'failed ({obj.eprintid}): send_to_community' +
-                  f' {obj.rdm_id} {obj.community_id}, {err}', file = sys.stderr)
-            sys.exit(1)
-        _, err = rdmutil.review_request(obj.rdm_id, 'accept')
-        if err is not None:
-            print(f'failed ({obj.eprintid}): review_request' +
-                f' {obj.rdm_id} accepted, {err}', file = sys.stderr)
-            sys.exit(1)
+        #_, err = rdmutil.send_to_community(obj.rdm_id, obj.community_id)
+        #if err is not None:
+        #    print(f'failed ({obj.eprintid}): send_to_community' +
+        #          f' {obj.rdm_id} {obj.community_id}, {err}')
+        #    return obj.rdm_id, obj.version_record, err # sys.exit(1)
+        # NOTE: If internal_note is not empty then we need to append a comment to the review.
+##         if internal_note != "":
+##             _, err = rdmutil.review_comment(obj.rdm_id, internal_note)
+##             if err is not None:
+##                 print(f'failed ({obj.eprintid}): review_comment' +
+##                     f' {obj.rdm_id} {obj.community_id}, {err}')
+##                 return obj.rdm_id, obj.version_record, err # sys.exit(1)
+        #_, err = rdmutil.review_request(obj.rdm_id, 'accept', internal_note)
+        #if err is not None:
+        #    print(f'failed ({obj.eprintid}): review_request' +
+        #        f' {obj.rdm_id} accepted, {err}')
+        #    return obj.rdm_id, obj.version_record, err # sys.exit(1)
+        print("In this version of the script this point shouldn't be reached - PLEASE STOP AND DEBUG")
     obj.version_record = True
     return obj.rdm_id, obj.version_record, err
 
@@ -297,7 +363,7 @@ def get_restriction_list(rec):
         restriction_list.append('metadata_only')
     return restriction_list
 
-def migrate_record(config, eprintid):
+def migrate_record(config, eprintid, rdm_id):
     '''Migrate a single record from EPrints to RDM using the document security model
 to guide versioning.'''
     rdmutil = RdmUtil(config)
@@ -307,24 +373,28 @@ to guide versioning.'''
         print(f'failed ({eprintid}): missing configuration, ' +
               'eprint host or rdm community id, aborting', file = sys.stderr)
         sys.exit(1)
-    rdm_id = None
     root_rdm_id = None
     rec, err = eprint2rdm(eprintid)
     if err is not None:
-        print(f'fialed ({eprintid}): eprint2rdm {eprint_host} {eprintid}', file = sys.stderr)
-        sys.exit(1)
+        print(f'{eprintid}, None, failed ({eprintid}): eprint2rdm {eprintid}')
+        sys.stdout.flush()
+        return err # sys.exit(1)
+    # Let's save our .custom_fields["caltech:internal_note"] value if it exists, per issue #16
+    custom_fields = rec.get("custom_fields", {})
+    internal_note = custom_fields.get("caltech:internal_note", "")
+    if internal_note == '\n':
+        internal_note = ''
+
     # NOTE: fixup_record is destructive. This is the rare case of where we want to work
     # on a copy of the rec rather than modify rec!!!
-    print(json.dumps(fixup_record(dict(rec))))
-    rdm_id, err  = rdmutil.new_record(fixup_record(dict(rec)))
+    rec_copy, err = fixup_record(dict(rec))
     if err is not None:
-        print(f'failed ({eprintid}): rdmutil new_record')
-        sys.exit(1)
-    print(f'Creating RDM record {rdm_id} from eprint {eprintid} as draft')
+        print(f'{eprintid}, {rdm_id}, failed ({eprintid}): rdmutil new_record, fixup_record failed {err}')
     root_rdm_id = rdm_id
     version_record = False
     publication_date = get_publication_date(rec)
     restriction_list = get_restriction_list(rec)
+    first = True
     # Need to check the EPrint record for the types of files we have.
     for restriction in restriction_list:
         obj = WorkObject({
@@ -337,55 +407,73 @@ to guide versioning.'''
             'version_record': version_record,
             'restriction': restriction,
         })
-        rdm_id, version_record, err = update_record(config, rec, rdmutil, obj)
-        if err is not None:
-            print(f'failed ({obj.eprintid}): update_record({config}, rec, rdmutil, {obj.display()})')
-            sys.exit(1)
-        print(f'Saved {obj.eprintid} as {rdm_id} {restriction}')
-    print(f'Saved {obj.eprintid} as {root_rdm_id} record')
+        if first:
+            # Accept record into community
+            _, err = rdmutil.review_request(obj.rdm_id, 'accept', internal_note)
+            if err is not None:
+                print(f'failed ({obj.eprintid}): review_request' +
+                f' {obj.rdm_id} accepted, {err}')
+                return obj.rdm_id, obj.version_record, err # sys.exit(1)
+            obj.version_record = True
+            first = False
+        else:
+            rdm_id, version_record, err = update_record(config, rec, rdmutil, obj, internal_note)
+            if err is not None:
+                print(f'{obj.eprintid}, {rdm_id}, failed ({obj.eprintid}): update_record(config, rec, rdmutil, {obj.display()})')
+                return err # sys.exit(1)
+            print(f'{obj.eprintid}, {rdm_id}, {restriction}')
+    print(f'{obj.eprintid}, {root_rdm_id}, migrated')
+    sys.stdout.flush()
     return None
 
-def process_document_and_eprintids(config, eprintids):
-    '''Process and array of EPrint Ids and migrate those records.'''
+def process_status(app_name, tot, cnt, started):
+    if (cnt % 10) == 0:
+        # calculate the duration in minutes.
+        now = datetime.now()
+        duration = (now - started).total_seconds()
+        x = cnt / duration
+        minutes_remaining = round((tot - cnt) * x)
+        percent_completed = round((cnt/tot)*100)
+        if cnt == 0 or duration == 0:
+            print(f'# {now.isoformat(" ", "seconds")} {app_name}: {cnt}/{tot} {percent_completed}%  eta: unknown', file = sys.stderr)
+        else:
+            print(f'# {now.isoformat(" ", "seconds")} {app_name}: {cnt}/{tot} {percent_completed}%  eta: {minutes_remaining} minutes', file = sys.stderr)
+
+def display_status(app_name, cnt, started, completed):
+    # calculate the duration in minutes.
+    duration = round((completed - started).total_seconds()/60) + 1
+    x = round(cnt / duration)
+    print(f'#    records processed: {cnt}', file = sys.stderr)
+    print(f'#             duration: {duration} minutes', file = sys.stderr)
+    print(f'#   records per minute: {x}')
+    print(f'#   {app_name} started: {started.isoformat(" ", "seconds")}, completed: {completed.isoformat(" ", "seconds")}', file = sys.stderr)
+
+def process_document_and_eprintids(config, app_name, eprints_id, rdm_id):
+    '''Process eprints id of record with submitted RDM id.'''
     started = datetime.now()
-    print(f'Processing {len(eprintids)} eprintids, started {started}')
-    for i, _id in enumerate(eprintids):
-        err = migrate_record(config, _id)
-        if err is not None:
-            print(f'error processing {_id}, row {i}, {err}')
-            return err
-    print(f'Processing {len(eprintids)} eprintids, completed {started}')
+    err = migrate_record(config, eprints_id, rdm_id)
+    if err is not None:
+        print(f'error processing {eprints_id}, rdm {rdm_id}, {err}', file = sys.stderr)
     return None
 
-def get_eprint_ids():
-    '''review the command line parameters and get a list of eprint ids'''
-    eprint_ids = []
-    if len(sys.argv) > 1:
-        arg = sys.argv[1]
-        if os.path.exists(arg):
-            with open(arg, encoding = 'utf-8') as _f:
-                for line in _f:
-                    eprint_ids.append(line.strip())
-        elif arg.isdigit():
-            args = sys.argv[:]
-            for eprint_id in args[1:]:
-                eprint_ids.append(eprint_id.strip())
-    return eprint_ids
 
 #
 # Migrate a records using eprint2rdm, ./migrate_record.py and rdmutil.
+# Takes a single eprints id and a RDM record ID in the review queue
 #
 def main():
     '''main program entry point. I'm avoiding global scope on variables.'''
     app_name = os.path.basename(sys.argv[0])
+    eprints_id = sys.argv[1]
+    rdm_id = sys.argv[2]
     config, is_ok = check_environment()
     if is_ok:
-        err = process_document_and_eprintids(config, get_eprint_ids())
+        err = process_document_and_eprintids(config, app_name, eprints_id, rdm_id)
         if err is not None:
             print(f'Aborting {app_name}, {err}', file = sys.stderr)
             sys.exit(1)
     else:
-        print(f'Aborting {app_name}, environment not setup')
+        print(f'Aborting {app_name}, environment not setup', file = sys.stderr)
         sys.exit(1)
 
 if __name__ == '__main__':
