@@ -347,20 +347,27 @@ func customFieldsMetadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.
 		if rec.Metadata.Subjects == nil {
 			rec.Metadata.Subjects = []*simplified.Subject{}
 		}
+		subjectsTest := map[string]bool{}
 		if eprint.Keywords != "" {
 			keywords := strings.Split(eprint.Keywords, ";")
 			for _, keyword := range keywords {
-				rec.Metadata.Subjects = append(rec.Metadata.Subjects, &simplified.Subject{
-					Subject: keyword,
-				})
+				if _, duplicate := subjectsTest[keyword]; ! duplicate {
+					subjectsTest[keyword] = true
+					rec.Metadata.Subjects = append(rec.Metadata.Subjects, &simplified.Subject{
+						Subject: keyword,
+					})
+				}
 			}
 		}
 		for i := 0; i < eprint.Subjects.Length(); i++ {
 			subject := eprint.Subjects.IndexOf(i)
 			if subject.Value != "" {
-				rec.Metadata.Subjects = append(rec.Metadata.Subjects, &simplified.Subject{
-					Subject: subject.Value,
-				})
+				if _, duplicate := subjectsTest[subject.Value]; ! duplicate {
+					subjectsTest[subject.Value] = true
+					rec.Metadata.Subjects = append(rec.Metadata.Subjects, &simplified.Subject{
+						Subject: subject.Value,
+					})
+				}
 			}
 		}
 	}
@@ -882,19 +889,6 @@ func metadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record, cont
 		rec.Metadata.Rights = append(rec.Metadata.Rights, rights)
 	}
 
-	// Handle Subjects and Keywords
-	if (eprint.Subjects != nil) && (eprint.Subjects.Items != nil) {
-		for _, item := range eprint.Subjects.Items {
-			AddSubject(rec, item.Value)
-		}
-	}
-	if eprint.Keywords != "" {
-		if strings.Contains(eprint.Keywords, ";") {
-			for _, keyword := range strings.Split(eprint.Keywords, ";") {
-				AddKeyword(rec, keyword)
-			}
-		}
-	}
 
 	// FIXME: Work with Tom to figure out correct mapping of rights from EPrints XML
 	// FIXME: Language appears to be at the "document" level, not record level
