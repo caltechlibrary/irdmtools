@@ -212,10 +212,6 @@ def update_record(config, rec, rdmutil, obj):
             # NOTE: We want to remove the copied file if successfully uploaded.
             #os.unlink(filename)
     #else:
-    _, err = rdmutil.set_files_enable(obj.rdm_id, False)
-    if err is not None:
-            print(f'failed ({obj.eprintid}): set_files_enable {obj.rdm_id} false', file = sys.stderr)
-            sys.exit(1)
 
     #Add file descriptions
     additional_descriptions = rec['metadata'].get('additional_descriptions', [])
@@ -229,6 +225,11 @@ def update_record(config, rec, rdmutil, obj):
         print(f'failed ({obj.eprintid}): update_draft' +
             f' {obj.rdm_id} {rec}, {err}', file = sys.stderr)
         sys.exit(1)
+
+    _, err = rdmutil.set_files_enable(obj.rdm_id, False)
+    if err is not None:
+            print(f'failed ({obj.eprintid}): set_files_enable {obj.rdm_id} false', file = sys.stderr)
+            sys.exit(1)
 
     restrict_record = restrict_files = 'public'
     if obj.restriction == 'internal':
