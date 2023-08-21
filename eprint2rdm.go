@@ -342,7 +342,9 @@ func customFieldsMetadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.
 		SetCustomField(rec, "caltech:internal_note", "", eprint.Suggestions)
 	}
 
-	// NOTE: Mapping subjects and keyswords to .metadata.subjects
+	// NOTE: Mapping subjects and keyswords to .metadata.subjects. We're handling it hear
+	// instread of simplified.go because I need to gaurantee duplicate subjects don't get added
+	// as part of the merging of keywords and subjects from EPrints.
 	if eprint.Keywords != "" || (eprint.Subjects != nil && eprint.Subjects.Length() > 0) {
 		if rec.Metadata.Subjects == nil {
 			rec.Metadata.Subjects = []*simplified.Subject{}

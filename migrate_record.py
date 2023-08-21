@@ -112,4 +112,8 @@ try:
 except Exception as err:
     print(err, file = sys.stderr)
     sys.exit(1)
-print(json.dumps(fixup_record(rec), indent = 4))
+result, err = fixup_record(rec)
+if err is not None:
+    print(f'error: {err}')
+    sys.exit(1)
+print(json.dumps(result, indent = 4))
