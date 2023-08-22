@@ -22,7 +22,7 @@ def process_log(log_name):
             status = row.get('status', '').strip()
             if status == 'migrated':
                 #print(f'rewrite ^/{eprintid}$ /records/{rdm_id};')
-                print(f'/{eprintid}      /records/{rdm_id};')
+                print(f'    /{eprintid}      /records/{rdm_id}/latest;')
 
 def main():
     '''Main processing'''
