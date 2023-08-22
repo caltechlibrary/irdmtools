@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-'''Convert an eprints_to_rdm.py log into a set of rewrite instructions
+'''Convert an eprints_to_rdm.py log into a set of redirect map instructions
 for NginX'''
 
 #
@@ -21,7 +21,8 @@ def process_log(log_name):
             rdm_id = row.get('rdm_id', '').strip()
             status = row.get('status', '').strip()
             if status == 'migrated':
-                print(f'rewrite ^/{eprintid}$ /records/{rdm_id}')
+                #print(f'rewrite ^/{eprintid}$ /records/{rdm_id};')
+                print(f'/{eprintid}      /records/{rdm_id};')
 
 def main():
     '''Main processing'''
