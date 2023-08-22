@@ -106,3 +106,4 @@ scratch/
 test-*.txt
 *.yaml
 s3_uploads/
+migration/
