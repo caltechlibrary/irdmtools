@@ -480,7 +480,7 @@ func simplifyCreators(eprint *eprinttools.EPrint, rec *simplified.Record) error 
 	creators := []*simplified.Creator{}
 	if eprint.Creators != nil && eprint.Creators.Length() > 0 {
 		for i := 0; i < eprint.Creators.Length(); i++ {
-			if item := eprint.Creators.IndexOf(i); item != nil {
+			if item := eprint.Creators.IndexOf(i); item != nil && item.Name != nil {
 				if person := itemToPersonOrOrg(item); person != nil {
 					creators = append(creators, &simplified.Creator{
 						PersonOrOrg: person,
@@ -505,7 +505,7 @@ func simplifyCreators(eprint *eprinttools.EPrint, rec *simplified.Record) error 
 	// in contributors. This is related to issue #9.
 	if len(creators) == 0 && eprint.Editors.Length() > 0 {
 		for i := 0; i < eprint.Editors.Length(); i++ {
-			if item := eprint.Editors.IndexOf(i); item != nil {
+			if item := eprint.Editors.IndexOf(i); item != nil && item.Name != nil {
 				if person := itemToPersonOrOrg(item); person != nil {
 					creators = append(creators, &simplified.Creator{
 						PersonOrOrg: person,
@@ -530,7 +530,7 @@ func simplifyContributors(eprint *eprinttools.EPrint, rec *simplified.Record, co
 	// First add contributors, then editors, etc.
 	if eprint.Contributors != nil && eprint.Contributors.Length() > 0 {
 		for i := 0; i < eprint.Contributors.Length(); i++ {
-			if item := eprint.Contributors.IndexOf(i); item != nil {
+			if item := eprint.Contributors.IndexOf(i); item != nil && item.Name != nil {
 				if person := itemToPersonOrOrg(item); person != nil {
 					contributors = append(contributors, &simplified.Creator{
 						PersonOrOrg: person,
@@ -563,7 +563,7 @@ func simplifyContributors(eprint *eprinttools.EPrint, rec *simplified.Record, co
 	// Add Editors, Adivisors, Committee Members, Thesis Chair, Reviewers, Translators, etc.
 	if eprint.Editors != nil && eprint.Editors.Length() > 0 {
 		for i := 0; i < eprint.Editors.Length(); i++ {
-			if item := eprint.Editors.IndexOf(i); item != nil {
+			if item := eprint.Editors.IndexOf(i); item != nil && item.Name != nil {
 				if person := itemToPersonOrOrg(item); person != nil {
 					contributors = append(contributors, &simplified.Creator{
 						PersonOrOrg: person,
@@ -579,7 +579,7 @@ func simplifyContributors(eprint *eprinttools.EPrint, rec *simplified.Record, co
 	}
 	if eprint.ThesisAdvisor != nil && eprint.ThesisAdvisor.Length() > 0 {
 		for i := 0; i < eprint.ThesisAdvisor.Length(); i++ {
-			if item := eprint.ThesisAdvisor.IndexOf(i); item != nil {
+			if item := eprint.ThesisAdvisor.IndexOf(i); item != nil  && item.Name != nil {
 				if person := itemToPersonOrOrg(item); person != nil {
 					contributors = append(contributors, &simplified.Creator{
 						PersonOrOrg: person,
@@ -595,7 +595,7 @@ func simplifyContributors(eprint *eprinttools.EPrint, rec *simplified.Record, co
 	}
 	if eprint.ThesisCommittee != nil && eprint.ThesisCommittee.Length() > 0 {
 		for i := 0; i < eprint.ThesisCommittee.Length(); i++ {
-			if item := eprint.ThesisCommittee.IndexOf(i); item != nil {
+			if item := eprint.ThesisCommittee.IndexOf(i); item != nil && item.Name != nil {
 				if person := itemToPersonOrOrg(item); person != nil {
 					contributors = append(contributors, &simplified.Creator{
 						PersonOrOrg: person,
