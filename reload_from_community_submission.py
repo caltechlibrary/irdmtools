@@ -381,9 +381,7 @@ to guide versioning.'''
         return err # sys.exit(1)
     # Let's save our .custom_fields["caltech:internal_note"] value if it exists, per issue #16
     custom_fields = rec.get("custom_fields", {})
-    internal_note = custom_fields.get("caltech:internal_note", "")
-    if internal_note == '\n':
-        internal_note = ''
+    internal_note = custom_fields.get("caltech:internal_note", "").strip('\n')
 
     # NOTE: fixup_record is destructive. This is the rare case of where we want to work
     # on a copy of the rec rather than modify rec!!!
@@ -414,8 +412,9 @@ to guide versioning.'''
                 print(f'failed ({obj.eprintid}): review_request' +
                 f' {obj.rdm_id} accepted, {err}')
                 return obj.rdm_id, obj.version_record, err # sys.exit(1)
-            obj.version_record = True
+            version_record = True
             first = False
+            print('Record accepted')
         else:
             rdm_id, version_record, err = update_record(config, rec, rdmutil, obj, internal_note)
             if err is not None:
