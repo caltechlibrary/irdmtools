@@ -53,9 +53,7 @@ class WorkObject:
 def check_environment():
     '''Check to make sure all the environment variables have values and are avialable'''
     varnames = [
-        'REPO_ID',
         'EPRINT_HOST', 'EPRINT_USER', 'EPRINT_PASSWORD', 'EPRINT_DOC_PATH',
-        'DB_NAME', 'DB_USER', 'DB_PASSWORD',
         'RDM_URL',
         'RDMTOK',
         'RDM_COMMUNITY_ID'
@@ -390,6 +388,7 @@ to guide versioning.'''
     rec_copy, err = fixup_record(dict(rec))
     if err is not None:
         print(f'{eprintid}, {rdm_id}, failed ({eprintid}): rdmutil new_record, fixup_record failed {err}')
+    #print(json.dumps(rec_copy))
     rdm_id, err  = rdmutil.new_record(rec_copy)
     if err is not None:
         print(f'{eprintid}, {rdm_id}, failed ({eprintid}): rdmutil new_record')
