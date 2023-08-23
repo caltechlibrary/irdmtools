@@ -463,14 +463,17 @@ def process_document_and_eprintids(config, app_name, eprints_id, rdm_id):
 def main():
     '''main program entry point. I'm avoiding global scope on variables.'''
     app_name = os.path.basename(sys.argv[0])
-    eprints_id = sys.argv[1]
-    rdm_id = sys.argv[2]
     config, is_ok = check_environment()
     if is_ok:
-        err = process_document_and_eprintids(config, app_name, eprints_id, rdm_id)
-        if err is not None:
-            print(f'Aborting {app_name}, {err}', file = sys.stderr)
-            sys.exit(1)
+        filename = 'pending_requests.txt'
+        with open(filename, 'r') as infile:
+            for line in infile:
+                rdm_id, eprints_id = line.split(',')
+                eprints_id = eprints_id.strip('\n')
+                err = process_document_and_eprintids(config, app_name, eprints_id, rdm_id)
+                if err is not None:
+                    print(f'Aborting {app_name}, {err}', file = sys.stderr)
+                    sys.exit(1)
     else:
         print(f'Aborting {app_name}, environment not setup', file = sys.stderr)
         sys.exit(1)
