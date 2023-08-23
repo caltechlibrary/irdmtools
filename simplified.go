@@ -72,14 +72,14 @@ func SetContributors(rec *simplified.Record, contributors []*simplified.Creator)
 	return nil
 }
 
-func AddRelatedIdentifiers(rec *simplified.Record, identifiers []*simplified.Identifier) error {
+func AddIdentifiers(rec *simplified.Record, identifiers []*simplified.Identifier) error {
 	for _, identifier := range identifiers {
 		rec.Metadata.Identifiers = append(rec.Metadata.Identifiers, identifier)
 	}
 	return nil
 }
 
-func AddRelatedIdentifier(rec *simplified.Record, scheme string, identifier string) error {
+func AddIdentifier(rec *simplified.Record, scheme string, identifier string) error {
 	if rec.Metadata == nil {
 		rec.Metadata = new(simplified.Metadata)
 	}
@@ -90,6 +90,32 @@ func AddRelatedIdentifier(rec *simplified.Record, scheme string, identifier stri
 	obj.Scheme = scheme
 	obj.Identifier = identifier
 	rec.Metadata.Identifiers = append(rec.Metadata.Identifiers, obj)
+	return nil
+}
+
+func AddRelatedIdentifiers(rec *simplified.Record, identifiers []*simplified.Identifier) error {
+	for _, identifier := range identifiers {
+		rec.Metadata.RelatedIdentifiers = append(rec.Metadata.RelatedIdentifiers, identifier)
+	}
+	return nil
+}
+
+func AddRelatedIdentifier(rec *simplified.Record, scheme string, relationType string, identifier string) error {
+	if rec.Metadata == nil {
+		rec.Metadata = new(simplified.Metadata)
+	}
+	if rec.Metadata.RelatedIdentifiers == nil {
+		rec.Metadata.RelatedIdentifiers = []*simplified.Identifier{}
+	}
+	obj := new(simplified.Identifier)
+	obj.Scheme = scheme
+	if relationType != "" {
+		obj.RelationType = &simplified.TypeDetail{
+			ID: relationType,
+		}
+	}
+	obj.Identifier = identifier
+	rec.Metadata.RelatedIdentifiers = append(rec.Metadata.RelatedIdentifiers, obj)
 	return nil
 }
 

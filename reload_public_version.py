@@ -230,12 +230,6 @@ def update_record(config, rec, rdmutil, obj, internal_note):
             if content:
                 file_description += f'<p>{content} - <a href="/records/{obj.rdm_id}/files/{filename}?download=1">{filename}</a></p>'
                 file_types.add(content)
-            # Copy file with scp.
-            cmd = file.get('cmd', None)
-            err = run_scp(cmd)
-            if err is not None:
-                print(f'failed ({obj.eprintid}): {" ".join(cmd)}, {err}')
-                continue # sys.exit(1)
             if obj.restriction == 'validuser':
                 # NOTE: We want to put the files in place first, then update the draft.
                 staging_dir = f's3_uploads/{obj.rdm_id}'
@@ -251,14 +245,6 @@ def update_record(config, rec, rdmutil, obj, internal_note):
                 if err is not None:
                     print(f'failed ({obj.eprintid}): set_files_enable {obj.rdm_id} true')
                     continue # sys.exit(1)
-                _, err = rdmutil.upload_file(obj.rdm_id, filename)
-                if err is not None:
-                    print(f'failed ({obj.eprintid}): upload_file' +
-                            f' {obj.rdm_id} {filename}, {err}')
-                    continue # sys.exit(1)
-                # NOTE: We want to remove the copied file if successfully uploaded.
-                if os.path.exists(filename):
-                    os.unlink(filename)
     if file_description != "" or campusonly_files:
         additional_descriptions = rec['metadata'].get('additional_descriptions', [])
         if file_description != "" and obj.restriction == "public":
@@ -305,32 +291,6 @@ def update_record(config, rec, rdmutil, obj, internal_note):
         if err is not None:
             print(f'failed ({obj.eprintid}): set_files_enable {obj.rdm_id} false')
             return obj.rdm_id, obj.version_record, err # sys.exit(1)
-    if obj.version_record:
-        # Save version
-        _, err = rdmutil.publish_version(obj.rdm_id, obj.restriction, obj.publication_date)
-        if err is not None:
-            print(f'failed ({obj.eprintid}/{obj.root_rdm_id})' +
-                  f' publish_version {obj.rdm_id} {obj.restriction} {obj.publication_date}, {err}')
-    else:
-        # send to community and accept first draft
-        #_, err = rdmutil.send_to_community(obj.rdm_id, obj.community_id)
-        #if err is not None:
-        #    print(f'failed ({obj.eprintid}): send_to_community' +
-        #          f' {obj.rdm_id} {obj.community_id}, {err}')
-        #    return obj.rdm_id, obj.version_record, err # sys.exit(1)
-        # NOTE: If internal_note is not empty then we need to append a comment to the review.
-##         if internal_note != "":
-##             _, err = rdmutil.review_comment(obj.rdm_id, internal_note)
-##             if err is not None:
-##                 print(f'failed ({obj.eprintid}): review_comment' +
-##                     f' {obj.rdm_id} {obj.community_id}, {err}')
-##                 return obj.rdm_id, obj.version_record, err # sys.exit(1)
-        #_, err = rdmutil.review_request(obj.rdm_id, 'accept', internal_note)
-        #if err is not None:
-        #    print(f'failed ({obj.eprintid}): review_request' +
-        #        f' {obj.rdm_id} accepted, {err}')
-        #    return obj.rdm_id, obj.version_record, err # sys.exit(1)
-        print("In this version of the script this point shouldn't be reached - PLEASE STOP AND DEBUG")
     obj.version_record = True
     return obj.rdm_id, obj.version_record, err
 
@@ -381,7 +341,9 @@ to guide versioning.'''
         return err # sys.exit(1)
     # Let's save our .custom_fields["caltech:internal_note"] value if it exists, per issue #16
     custom_fields = rec.get("custom_fields", {})
-    internal_note = custom_fields.get("caltech:internal_note", "").strip('\n')
+    internal_note = custom_fields.get("caltech:internal_note", "")
+    if internal_note == '\n':
+        internal_note = ''
 
     # NOTE: fixup_record is destructive. This is the rare case of where we want to work
     # on a copy of the rec rather than modify rec!!!
@@ -389,11 +351,11 @@ to guide versioning.'''
     if err is not None:
         print(f'{eprintid}, {rdm_id}, failed ({eprintid}): rdmutil new_record, fixup_record failed {err}')
     root_rdm_id = rdm_id
-    version_record = False
+    version_record = True
     publication_date = get_publication_date(rec)
     restriction_list = get_restriction_list(rec)
-    first = True
-    # Need to check the EPrint record for the types of files we have.
+    # Only doing the public version
+    restriction_list = ['public']
     for restriction in restriction_list:
         obj = WorkObject({
             'community_id': community_id,
@@ -405,23 +367,13 @@ to guide versioning.'''
             'version_record': version_record,
             'restriction': restriction,
         })
-        if first:
-            # Accept record into community
-            _, err = rdmutil.review_request(obj.rdm_id, 'accept', internal_note)
-            if err is not None:
-                print(f'failed ({obj.eprintid}): review_request' +
-                f' {obj.rdm_id} accepted, {err}')
-                return obj.rdm_id, obj.version_record, err # sys.exit(1)
-            version_record = True
-            first = False
-            print('Record accepted')
-        else:
-            rdm_id, version_record, err = update_record(config, rec, rdmutil, obj, internal_note)
-            if err is not None:
+        rdm_id, version_record, err = update_record(config, rec, rdmutil, obj, internal_note)
+        if err is not None:
                 print(f'{obj.eprintid}, {rdm_id}, failed ({obj.eprintid}): update_record(config, rec, rdmutil, {obj.display()})')
                 return err # sys.exit(1)
-            print(f'{obj.eprintid}, {rdm_id}, {restriction}')
+        print(f'{obj.eprintid}, {rdm_id}, {restriction}')
     print(f'{obj.eprintid}, {root_rdm_id}, migrated')
+    print('REMEMBER TO ADD FILES AND PUBLISH MANUALLY')
     sys.stdout.flush()
     return None
 

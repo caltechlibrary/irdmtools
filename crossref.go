@@ -540,7 +540,7 @@ func CrosswalkCrossRefWork(cfg *Config, work *crossrefapi.Works, resourceTypeMap
 		}
 		if len(values) > 1 {
 			for i := 1; i < len(values); i++ {
-				AddRelatedIdentifier(rec, "issn", values[i])
+				AddIdentifier(rec, "issn", values[i])
 			}
 		}
 	}
