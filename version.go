@@ -12,7 +12,7 @@ const (
     ReleaseDate = "2023-08-23"
 
     // ReleaseHash, the Git hash when version.go was generated
-    ReleaseHash = "406715f"
+    ReleaseHash = "d0460e3"
 
     LicenseText = `
 Redistribution and use in source and binary forms, with or without

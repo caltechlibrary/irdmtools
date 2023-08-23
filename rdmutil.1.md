@@ -1,4 +1,4 @@
-%rdmutil(1) irdmtools user manual | version 0.0.45 406715f
+%rdmutil(1) irdmtools user manual | version 0.0.45 d0460e3
 % R. S. Doiel and Tom Morrell
 % 2023-08-23
 
