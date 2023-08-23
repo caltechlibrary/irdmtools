@@ -358,7 +358,7 @@ func customFieldsMetadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.
 				if _, duplicate := subjectsTest[keyword]; ! duplicate {
 					subjectsTest[keyword] = true
 					rec.Metadata.Subjects = append(rec.Metadata.Subjects, &simplified.Subject{
-						Subject: keyword,
+						Subject: strings.TrimSpace(keyword),
 					})
 				}
 			}
@@ -369,7 +369,7 @@ func customFieldsMetadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.
 				if _, duplicate := subjectsTest[subject.Value]; ! duplicate {
 					subjectsTest[subject.Value] = true
 					rec.Metadata.Subjects = append(rec.Metadata.Subjects, &simplified.Subject{
-						Subject: subject.Value,
+						Subject: strings.TrimSpace(subject.Value),
 					})
 				}
 			}
@@ -399,6 +399,7 @@ func CrosswalkEPrintToRecord(eprint *eprinttools.EPrint, rec *simplified.Record,
 	if err := parentFromEPrint(eprint, rec); err != nil {
 		return err
 	}
+	// NOTE: externalPIDFromEPrint needs to happen before called metdataFromEPrint
 	if err := externalPIDFromEPrint(eprint, rec); err != nil {
 		return err
 	}
@@ -723,7 +724,7 @@ func externalPIDFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record) e
 	if eprint.DOI != "" {
 		pid := new(simplified.PersistentIdentifier)
 		pid.Identifier = eprint.DOI
-		pid.Provider = "datacite"
+		pid.Provider = "external"
 		pid.Client = ""
 		rec.ExternalPIDs["doi"] = pid
 	}
@@ -933,14 +934,16 @@ func metadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record, cont
 
 	// Pickup EPrint ID as "external identifier" in .metadata.identifier
 	if eprint.EPrintID > 0 {
-		rec.Metadata.Identifiers = append(rec.Metadata.Identifiers, mkSimpleIdentifier("eprintid", fmt.Sprintf("%d", eprint.EPrintID)))
+		AddIdentifier(rec, "eprintid", fmt.Sprintf("%d", eprint.EPrintID))
 	}
 
+	// NOTE: I'm adding this in metadataFromEPrint due to cases where multiple
+	// records use the same DOI (something that publishers do at times). 
 	if eprint.DOI != "" {
-		rec.Metadata.Identifiers = append(rec.Metadata.Identifiers, mkSimpleIdentifier("doi", eprint.DOI))
+		AddIdentifier(rec, "doi", eprint.DOI)
 	}
 	if eprint.IDNumber != "" {
-		rec.Metadata.Identifiers = append(rec.Metadata.Identifiers, mkSimpleIdentifier("resolverid", eprint.IDNumber))
+		AddIdentifier(rec, "resolverid", eprint.IDNumber)
 	}
 	if eprint.ISBN != "" {
 		SetImprintField(rec, "isbn", eprint.ISBN)
@@ -961,17 +964,17 @@ func metadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record, cont
 		if strings.Contains(eprint.PMCID, ",") {
 			pmcids := strings.Split(eprint.PMCID, ",")
 			for _, pmcid := range pmcids {
-				pmcid = strings.ToUpper(pmcid)
-				rec.Metadata.Identifiers = append(rec.Metadata.Identifiers, mkSimpleIdentifier("pmcid", strings.TrimSpace(pmcid)))
+				pmcid = strings.TrimSpace(strings.ToUpper(pmcid))
+				AddIdentifier(rec, "pmcid", pmcid)
 			}
 		} else if strings.Contains(eprint.PMCID, ";") {
 			pmcids := strings.Split(eprint.PMCID, ";")
 			for _, pmcid := range pmcids {
-				pmcid = strings.ToUpper(pmcid)
-				rec.Metadata.Identifiers = append(rec.Metadata.Identifiers, mkSimpleIdentifier("pmcid", strings.TrimSpace(pmcid)))
+				pmcid = strings.TrimSpace(strings.ToUpper(pmcid))
+				AddIdentifier(rec, "pmcid", pmcid)
 			}
 		} else {
-			rec.Metadata.Identifiers = append(rec.Metadata.Identifiers, mkSimpleIdentifier("pmcid", strings.TrimSpace(strings.ToUpper(eprint.PMCID))))
+			AddIdentifier(rec, "pmcid", strings.TrimSpace(strings.ToUpper(eprint.PMCID)))
 		}
 	}
 	if (eprint.Funders != nil) && (eprint.Funders.Items != nil) {
@@ -990,7 +993,7 @@ func metadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record, cont
 			}
 			switch urlType {
 			case "doi":
-				AddIdentifier(rec, urlType, urlValue)
+				AddRelatedIdentifier(rec, "doi", "describes", urlValue)
 			case "pmcid":
 				AddIdentifier(rec, urlType, urlValue)
 			case "eprintid":
@@ -998,11 +1001,12 @@ func metadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record, cont
 			case "resolverid":
 				AddIdentifier(rec, urlType, urlValue)
 			case "pmc":
-				AddRelatedIdentifier(rec, "url", "featuredin", urlValue)
+				//NOTE: Per Tom we're not migrating these, their sorta useless ...
+				//AddIdentifier(rec, urlType, urlValue)
 			case "pub":
-				AddRelatedIdentifier(rec, "url", "inpublishedin", urlValue)
+				AddRelatedIdentifier(rec, "url", "ispublishedin", urlValue)
 			default:
-				AddRelatedIdentifier(rec, "url", "featuredin", urlValue)
+				AddRelatedIdentifier(rec, "url", "describes", urlValue)
 			}
 		}
 	}
