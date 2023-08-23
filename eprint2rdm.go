@@ -988,7 +988,22 @@ func metadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record, cont
 			if urlValue == "" {
 				urlValue = strings.TrimSpace(item.URL)
 			}
-			AddRelatedIdentifier(rec, urlType, urlValue)
+			switch urlType {
+			case "doi":
+				AddIdentifier(rec, urlType, urlValue)
+			case "pmcid":
+				AddIdentifier(rec, urlType, urlValue)
+			case "eprintid":
+				AddIdentifier(rec, urlType, urlValue)
+			case "resolverid":
+				AddIdentifier(rec, urlType, urlValue)
+			case "pmc":
+				AddRelatedIdentifier(rec, "url", "featuredin", urlValue)
+			case "pub":
+				AddRelatedIdentifier(rec, "url", "inpublishedin", urlValue)
+			default:
+				AddRelatedIdentifier(rec, "url", "featuredin", urlValue)
+			}
 		}
 	}
 	// NOTE: Issue #47, Add notes as additional description
