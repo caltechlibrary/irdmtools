@@ -381,7 +381,7 @@ to guide versioning.'''
         return err # sys.exit(1)
     # Let's save our .custom_fields["caltech:internal_note"] value if it exists, per issue #16
     custom_fields = rec.get("custom_fields", {})
-    internal_note = custom_fields.get("caltech:internal_note", "")
+    internal_note = custom_fields.get("caltech:internal_note", "").strip('\n')
 
     # NOTE: fixup_record is destructive. This is the rare case of where we want to work
     # on a copy of the rec rather than modify rec!!!
