@@ -101,6 +101,9 @@ map $request_uri $redirect_uri {
     # Site specific redirects.
     ~^/5456/1/hrst.mit.edu(?<suffix>.*)$ https://wayback.archive-it.org/9060/20230418124557/https://authors.library.caltech.edu/5456/1/hrst.mit.edu$suffix;
 
+    # Hide the default search guide
+    /help/search /help;
+
     # EPrint Records and their files redirects.
 ''')
         eprint_id_list = {}
