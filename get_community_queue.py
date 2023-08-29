@@ -6,7 +6,7 @@ token = os.environ["RDMTOK"]
 
 community = 'aedd135f-227e-4fdf-9476-5b3fd011bac6'
 
-url = "https://authors.caltechlibrary.dev/api/records/"
+url = "https://authors.library.caltech.edu/api/records/"
 
 headers = {
         "Authorization": "Bearer %s" % token,
