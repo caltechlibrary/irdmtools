@@ -125,6 +125,10 @@ def update_record(config, rec, rdmutil, rdm_id):
     )
     existing = existing.json()
 
+    # We want to update the pids section
+    existing['pids'] = rec['pids']
+
+    #And add any missed identifiers
     rec = rec['metadata']
     new_ids = []
     for idv in rec["identifiers"]:
@@ -147,7 +151,6 @@ def update_record(config, rec, rdmutil, rdm_id):
             if idv["identifier"] not in new_related:
                 related_identifiers.append(idv)
     existing["metadata"]["related_identifiers"] = related_identifiers
-    #print(json.dumps(existing))
 
     caltechdata_edit(
         rdm_id,
@@ -180,7 +183,7 @@ def fix_record(config, eprintid, rdm_id):
     # Let's save our .custom_fields["caltech:internal_note"] value if it exists, per issue #16
     custom_fields = rec.get("custom_fields", {})
     internal_note = custom_fields.get("caltech:internal_note", "").strip("\n")
-
+    
     # NOTE: fixup_record is destructive. This is the rare case of where we want to work
     # on a copy of the rec rather than modify rec!!!
     rec_copy, err = fixup_record(dict(rec))
@@ -188,7 +191,6 @@ def fix_record(config, eprintid, rdm_id):
         print(
             f"{eprintid}, {rdm_id}, failed ({eprintid}): rdmutil new_record, fixup_record failed {err}"
         )
-    #print(json.dumps(rec_copy))
     update_record(config, rec, rdmutil, rdm_id)
     return None
 

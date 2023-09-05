@@ -41,7 +41,7 @@ def check_for_doi(doi, production):
     '''Check to see if DOI already exists in our RDM instance'''
     # Returns whether or not a DOI has already been added to CaltechAUTHORS
     if production is True:
-        url = "https://authors.caltech.edu/api/records"
+        url = "https://authors.library.caltech.edu/api/records"
     else:
         url = "https://authors.caltechlibrary.dev/api/records"
 
@@ -55,7 +55,7 @@ def check_for_doi(doi, production):
         print(f'error {response.text}', file = sys.stderr)
         return False, None
     records = response.json()
-    if len(records) > 0:
+    if records["hits"]["total"] > 0:
         return True, None
     return False, None
 
@@ -252,10 +252,22 @@ normlzied record dict that is a for migration into Invenio-RDM."""
             record["metadata"]["identifiers"].append({ "scheme": "doi", "identifier": f"{doi}" })
             doi = None
         # Force DOI to be "external" for migration purposes.
-        if 'pids' in record and \
-            'doi' in record['pids'] and \
-            'provider' in record ['pids']['doi']:
-            record['pids']['doi']['provider'] = 'external'
+        #if 'pids' in record and \
+        #    'doi' in record['pids'] and \
+        #    'provider' in record ['pids']['doi']:
+        #    record['pids']['doi']['provider'] = 'external'
+
+    # Make sure records DOI isn't in related identifiers
+    identifiers = get_dict_path(record, [ 'metadata', 'related_identifiers'])
+    if identifiers is not None:
+        keep_identifiers = []
+        for identifier in identifiers:
+            scheme = get_dict_path(identifier, ['scheme'])
+            id_val = normalize_doi(get_dict_path(identifier, ['identifier']))
+            if id_val != doi:
+                identifier['identifier'] = id_val
+                keep_identifiers.append(identifier)
+        record['metadata']['related_identifiers'] = keep_identifiers
 
     # Run through related URLs, if DOI then normalize DOI, if DOI match
     # pids.doi.identifier then discard related url value, issue #39
