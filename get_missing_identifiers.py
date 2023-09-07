@@ -4,7 +4,7 @@ from progressbar import progressbar
 
 
 url = "https://authors.library.caltech.edu/api/records"
-query = '?q=NOT%20_exists_%3Ametadata.identifiers'
+query = '?q=NOT%20_exists_%3Ametadata.identifiers%20%2Bcreated%3A%5B2023-01-01%20TO%202023-08-28%5D'
 
 response = requests.get(f"{url}{query}")
 total = response.json()["hits"]["total"]

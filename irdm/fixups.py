@@ -251,21 +251,26 @@ normlzied record dict that is a for migration into Invenio-RDM."""
                 record["metadata"]["identifiers"] = []
             record["metadata"]["identifiers"].append({ "scheme": "doi", "identifier": f"{doi}" })
             doi = None
-        # Force DOI to be "external" for migration purposes.
-        #if 'pids' in record and \
-        #    'doi' in record['pids'] and \
-        #    'provider' in record ['pids']['doi']:
-        #    record['pids']['doi']['provider'] = 'external'
+        #Mark system DOIs
+        #if doi.startswith('10.7907'):
+        #    record['pids']['doi']['provider'] = 'datacite'
+        #    record['pids']['doi']['client'] = 'datacite'
 
     # Make sure records DOI isn't in related identifiers
     identifiers = get_dict_path(record, [ 'metadata', 'related_identifiers'])
+    print(identifiers)
     if identifiers is not None:
         keep_identifiers = []
         for identifier in identifiers:
             scheme = get_dict_path(identifier, ['scheme'])
-            id_val = normalize_doi(get_dict_path(identifier, ['identifier']))
-            if id_val != doi:
-                identifier['identifier'] = id_val
+            id_val = get_dict_path(identifier, ['identifier'])
+            if idutils.is_doi(id_val):
+                normalized = normalize_doi(id_val)
+                if normalized != doi:
+                    identifier['identifier'] = id_val
+                    identifier['scheme'] = 'doi'
+                    keep_identifiers.append(identifier)
+            else:
                 keep_identifiers.append(identifier)
         record['metadata']['related_identifiers'] = keep_identifiers
 
@@ -336,6 +341,8 @@ normlzied record dict that is a for migration into Invenio-RDM."""
                 new.append({'id':'IQIM'})
             elif group['id'] == 'Owens-Valley-Radio-Observatory-(OVRO)':
                 new.append({'id':'Owens-Valley-Radio-Observatory'})
+            elif group['id'] == 'Library-System-Papers-and-Publications':
+                new.append({'id':'Caltech-Library'})
             else:
                 new.append(group)
         record['custom_fields']['caltech:groups'] = new

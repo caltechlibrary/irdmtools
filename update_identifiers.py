@@ -126,7 +126,8 @@ def update_record(config, rec, rdmutil, rdm_id):
     existing = existing.json()
 
     # We want to update the pids section
-    existing['pids'] = rec['pids']
+    if 'pids' in rec:
+        existing['pids'] = rec['pids']
 
     #And add any missed identifiers
     rec = rec['metadata']
@@ -148,6 +149,7 @@ def update_record(config, rec, rdmutil, rdm_id):
     related_identifiers = rec["related_identifiers"]
     if "related_identifiers" in existing:
         for idv in existing["related_identifiers"]:
+            print(idv)
             if idv["identifier"] not in new_related:
                 related_identifiers.append(idv)
     existing["metadata"]["related_identifiers"] = related_identifiers
@@ -260,6 +262,14 @@ def get_eprint_ids():
             for eprint_id in args[1:]:
                 eprint_ids.append(eprint_id.strip())
     return eprint_ids
+
+def update_identifiers(eprintid,rdm_id):
+    config, is_ok = check_environment()
+    if is_ok:
+        err = fix_record(config, eprintid, rdm_id)
+        if err is not None:
+            print(f"Aborting update_identifiers, {err}", file=sys.stderr)
+            sys.exit(1)
 
 
 #
