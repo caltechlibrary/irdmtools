@@ -149,7 +149,6 @@ def update_record(config, rec, rdmutil, rdm_id):
     related_identifiers = rec["related_identifiers"]
     if "related_identifiers" in existing:
         for idv in existing["related_identifiers"]:
-            print(idv)
             if idv["identifier"] not in new_related:
                 related_identifiers.append(idv)
     existing["metadata"]["related_identifiers"] = related_identifiers
@@ -164,7 +163,7 @@ def update_record(config, rec, rdmutil, rdm_id):
     )
 
 
-def fix_record(config, eprintid, rdm_id):
+def fix_record(config, eprintid, rdm_id,reload=False):
     """Migrate a single record from EPrints to RDM using the document security model
     to guide versioning."""
     rdmutil = RdmUtil(config)
@@ -188,7 +187,7 @@ def fix_record(config, eprintid, rdm_id):
     
     # NOTE: fixup_record is destructive. This is the rare case of where we want to work
     # on a copy of the rec rather than modify rec!!!
-    rec_copy, err = fixup_record(dict(rec))
+    rec_copy, err = fixup_record(dict(rec),reload)
     if err is not None:
         print(
             f"{eprintid}, {rdm_id}, failed ({eprintid}): rdmutil new_record, fixup_record failed {err}"
@@ -263,10 +262,10 @@ def get_eprint_ids():
                 eprint_ids.append(eprint_id.strip())
     return eprint_ids
 
-def update_identifiers(eprintid,rdm_id):
+def update_identifiers(eprintid,rdm_id,reload=False):
     config, is_ok = check_environment()
     if is_ok:
-        err = fix_record(config, eprintid, rdm_id)
+        err = fix_record(config, eprintid, rdm_id,reload)
         if err is not None:
             print(f"Aborting update_identifiers, {err}", file=sys.stderr)
             sys.exit(1)
