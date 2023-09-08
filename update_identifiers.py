@@ -192,6 +192,7 @@ def fix_record(config, eprintid, rdm_id,reload=False):
         print(
             f"{eprintid}, {rdm_id}, failed ({eprintid}): rdmutil new_record, fixup_record failed {err}"
         )
+    #print(json.dumps(rec))
     update_record(config, rec, rdmutil, rdm_id)
     return None
 

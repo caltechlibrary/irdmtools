@@ -269,9 +269,11 @@ normlzied record dict that is a for migration into Invenio-RDM."""
             if idutils.is_doi(id_val):
                 normalized = normalize_doi(id_val)
                 if normalized != doi:
-                    identifier['identifier'] = id_val
-                    identifier['scheme'] = 'doi'
-                    keep_identifiers.append(identifier)
+                    if id_val not in added_identifiers:
+                        identifier['identifier'] = id_val
+                        identifier['scheme'] = 'doi'
+                        added_identifiers.append(id_val)
+                        keep_identifiers.append(identifier)
             else:
                 # We need to be able to run this for only the "pub" dois
                 if relation == "ispublishedin":
