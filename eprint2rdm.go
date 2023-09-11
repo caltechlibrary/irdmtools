@@ -902,7 +902,12 @@ func metadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record, cont
 	// Default to the eprint.Datestamp and correct if DateType is "published"
 	rec.Metadata.PublicationDate = normalizeEPrintDate(eprint.Datestamp)
 
-	if (eprint.DateType == "published") && (eprint.Date != "") {
+	// NOTE: We have a few records that have NULL or empty string 
+	// eprint.date_type fields. These all appear like they should have
+	// the value in eprint.date treated as the publication date if it is
+	// publicated. 
+	// See https://github.com/caltechlibrary/caltechauthors/issues/75
+	if (eprint.DateType == "published" || eprint.DateType == "") && (eprint.Date != "") {
 		rec.Metadata.Dates = append(rec.Metadata.Dates, dateTypeFromTimestamp("pub_date", eprint.Date, "EPrint's Publication Date"))
 		rec.Metadata.PublicationDate = normalizeEPrintDate(eprint.Date)
 	}
