@@ -37,18 +37,27 @@ defined_roles = [
 rdm_url = os.getenv('RDM_URL', None)
 in_production = ((rdm_url is not None) and ('caltech.edu' in rdm_url))
 
-def check_for_doi(doi, production):
+def check_for_doi(doi, production, token=None):
     '''Check to see if DOI already exists in our RDM instance'''
     # Returns whether or not a DOI has already been added to CaltechAUTHORS
     if production is True:
         url = "https://authors.library.caltech.edu/api/records"
     else:
         url = "https://authors.caltechlibrary.dev/api/records"
+    if token:
+        headers = {
+        "Authorization": "Bearer %s" % token,
+        "Content-type": "application/json",
+    }
+    else:
+        headers = {
+        "Content-type": "application/json",
+    }
 
     query = f'?q=pids.doi.identifier:"{doi}"&allversions=true'
 
     try:
-        response = requests.get(url + query)
+        response = requests.get(url + query, headers=headers)
     except Exception as err:
         return False, err
     if response.status_code != 200:
@@ -145,7 +154,7 @@ def normalize_pub(pub_url = None, doi = None):
 # Where possible these adjustments should be ported back
 # into eprinttools' simple.go and crosswalk.go.
 #
-def fixup_record(record,reload=False):
+def fixup_record(record,reload=False,token=None):
     """fixup_record accepts a dict of simple record and files returns a 
 normlzied record dict that is a for migration into Invenio-RDM."""
     record_id = get_dict_path(record, ["pid", "id"])
@@ -241,7 +250,7 @@ normlzied record dict that is a for migration into Invenio-RDM."""
     if doi is not None:
         if not reload:
             # See if DOI already exists in CaltechAUTHORS, if so move it to metadata identifiers.
-            has_doi, err = check_for_doi(doi, in_production)
+            has_doi, err = check_for_doi(doi, in_production, token)
             if err is not None:
                 return rec, err
             if has_doi:
