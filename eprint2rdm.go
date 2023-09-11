@@ -859,20 +859,20 @@ func metadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record, cont
 
 	// Rights are scattered in several EPrints fields, they need to
 	// be evaluated to create a "Rights" object used in DataCite/Invenio
-	addRights := false
-	rights := new(simplified.Right)
 	if eprint.Rights != "" {
-		addRights = true
-		m := map[string]string{
-			"en": eprint.Rights,
-		}
-		rights.Description = m
-		t := map[string]string{
+		rights := new(simplified.Right)
+		rights.Title = map[string]string{
 			"en": "Other",
 		}
-		rights.Title = t
+		rights.Description = map[string]string{
+			"en": eprint.Rights,
+		}
+		rec.Metadata.Rights = append(rec.Metadata.Rights, rights)
 	}
 	// Figure out if our copyright information is in the Note field.
+	/*
+	// NOTE: Removed this mapping based on issue 70 in 
+	// caltechlibrary/caltechauthors repo.
 	if (eprint.Note != "") && (strings.Contains(eprint.Note, "©") || strings.Contains(eprint.Note, "copyright") || strings.Contains(eprint.Note, "(c)")) {
 		addRights = true
 		m := map[string]string{
@@ -880,17 +880,17 @@ func metadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record, cont
 		}
 		rights.Description = m
 	}
-	if addRights {
-		rec.Metadata.Rights = append(rec.Metadata.Rights, rights)
-	}
+	*/
 	// FIXME: work with Tom to sort out how "Rights" and document level
 	// copyright info should work.
 	if eprint.CopyrightStatement != "" {
 		rights := new(simplified.Right)
-		m := map[string]string{
+		rights.Title = map[string]string{
+			"en": "Other",
+		}
+		rights.Description = map[string]string{
 			"en": eprint.CopyrightStatement,
 		}
-		rights.Description = m
 		rec.Metadata.Rights = append(rec.Metadata.Rights, rights)
 	}
 
