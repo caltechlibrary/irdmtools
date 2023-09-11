@@ -143,15 +143,16 @@ def update_record(config, rec, rdmutil, rdm_id):
     existing["metadata"]["identifiers"] = identifiers
 
     new_related = []
-    for idv in rec["related_identifiers"]:
-        new_related.append(idv["identifier"])
+    if "related_identifiers" in rec:
+        for idv in rec["related_identifiers"]:
+            new_related.append(idv["identifier"])
 
-    related_identifiers = rec["related_identifiers"]
+        related_identifiers = rec["related_identifiers"]
     if "related_identifiers" in existing:
         for idv in existing["related_identifiers"]:
             if idv["identifier"] not in new_related:
                 related_identifiers.append(idv)
-    existing["metadata"]["related_identifiers"] = related_identifiers
+        existing["metadata"]["related_identifiers"] = related_identifiers
 
     caltechdata_edit(
         rdm_id,
@@ -187,7 +188,7 @@ def fix_record(config, eprintid, rdm_id,reload=False):
     
     # NOTE: fixup_record is destructive. This is the rare case of where we want to work
     # on a copy of the rec rather than modify rec!!!
-    rec_copy, err = fixup_record(dict(rec),reload)
+    rec_copy, err = fixup_record(dict(rec),reload,token=config['RDMTOK'])
     if err is not None:
         print(
             f"{eprintid}, {rdm_id}, failed ({eprintid}): rdmutil new_record, fixup_record failed {err}"
@@ -283,10 +284,11 @@ def main():
         eprintid = sys.argv[1]
         rdm_id = sys.argv[2]
         err = fix_record(config, eprintid, rdm_id)
-        # err = process_document_and_eprintids(config, app_name, get_eprint_ids())
         if err is not None:
             print(f"Aborting {app_name}, {err}", file=sys.stderr)
             sys.exit(1)
+        with open('migrated_records.csv','a') as outfile:
+                print(f"{eprintid},{rdm_id},public",file=outfile)
     else:
         print(f"Aborting {app_name}, environment not setup", file=sys.stderr)
         sys.exit(1)
