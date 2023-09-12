@@ -289,6 +289,17 @@ func customFieldsMetadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.
 			}
 		}
 	}
+	if eprint.OtherNumberingSystem != nil && eprint.OtherNumberingSystem.Length() > 0 {
+		for i := 0; i < eprint.OtherNumberingSystem.Length(); i++ {
+			item := eprint.OtherNumberingSystem.IndexOf(i)
+			if item.Name != nil && item.Name.Value != "" {
+				SetCustomField(rec, "caltech:other_num_name", "", item.Name.Value)
+			}
+			if item.ID != "" {
+				SetCustomField(rec, "caltech:other_num_id", "", item.ID)
+			}
+		}
+	}
 	if eprint.Series != "" && eprint.ISBN == "" {
 		SetCustomField(rec, "caltech:series", "series", eprint.Series)
 	}
@@ -365,7 +376,9 @@ func customFieldsMetadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.
 		}
 		for i := 0; i < eprint.Subjects.Length(); i++ {
 			subject := eprint.Subjects.IndexOf(i)
-			if subject.Value != "" {
+			//NOTE: irdmtools issue #51, ignore cls as a subject, this was an EPrints-ism
+			// needed for Caltech Library only.
+			if subject.Value != "" && subject.Value != "cls" {
 				if _, duplicate := subjectsTest[subject.Value]; ! duplicate {
 					subjectsTest[subject.Value] = true
 					rec.Metadata.Subjects = append(rec.Metadata.Subjects, &simplified.Subject{
