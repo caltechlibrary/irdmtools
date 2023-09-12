@@ -467,7 +467,12 @@ func itemToPersonOrOrg(item *eprinttools.Item) *simplified.PersonOrOrg {
 		if person.FamilyName != "" || person.GivenName != "" {
 			person.Name = fmt.Sprintf("%s, %s", person.FamilyName, person.GivenName)
 			clPeopleID = item.ID
-			orcid = item.Name.ORCID
+			if item.ORCID != "" {
+				orcid = item.ORCID
+			} else {
+				orcid = item.Name.ORCID
+			}
+			
 		} else {
 			person.Type = "organizational"
 			person.Name = item.Name.Value
@@ -478,10 +483,10 @@ func itemToPersonOrOrg(item *eprinttools.Item) *simplified.PersonOrOrg {
 		person.Identifiers = append(person.Identifiers, mkSimpleIdentifier("clpid", clPeopleID))
 	}
 	if orcid != "" {
-		person.Identifiers = append(person.Identifiers, mkSimpleIdentifier("ORCID", orcid))
+		person.Identifiers = append(person.Identifiers, mkSimpleIdentifier("orcid", orcid))
 	}
 	if ror != "" {
-		person.Identifiers = append(person.Identifiers, mkSimpleIdentifier("ROR", ror))
+		person.Identifiers = append(person.Identifiers, mkSimpleIdentifier("ror", ror))
 	}
 	return person
 }
