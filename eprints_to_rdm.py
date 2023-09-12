@@ -181,6 +181,9 @@ def get_file_list(config, eprintid, rec, security):
         content = metadata.get('content', None)
         if content:
             content = content_mapping[content]
+        format_des = metadata.get('format_des', None)
+        if format_desc:
+            content = content + format_des
         if _security is not None and security == _security:
             file_url = file['file_id']
             cmd = file_to_scp(config, eprintid, pos, source_name, target_name)
@@ -381,10 +384,11 @@ to guide versioning.'''
         return err # sys.exit(1)
     # Let's save our .custom_fields["caltech:internal_note"] value if it exists, per issue #16
     custom_fields = rec.get("custom_fields", {})
-    internal_note = custom_fields.get("caltech:internal_note", "")
+    internal_note = custom_fields.get("caltech:internal_note", "").strip('\n')
 
     # NOTE: fixup_record is destructive. This is the rare case of where we want to work
     # on a copy of the rec rather than modify rec!!!
+    #print(json.dumps(rec))
     rec_copy, err = fixup_record(dict(rec))
     if err is not None:
         print(f'{eprintid}, {rdm_id}, failed ({eprintid}): rdmutil new_record, fixup_record failed {err}')

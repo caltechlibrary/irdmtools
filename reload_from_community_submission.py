@@ -409,8 +409,16 @@ to guide versioning.'''
             # Accept record into community
             _, err = rdmutil.review_request(obj.rdm_id, 'accept', internal_note)
             if err is not None:
-                print(f'failed ({obj.eprintid}): review_request' +
-                f' {obj.rdm_id} accepted, {err}')
+                if 'POST 502' in str(err):
+                    with open('declined.txt', 'a') as ofile:
+                        ofile.write(f'{obj.eprintid}\n')
+                    _, err = rdmutil.review_request(obj.rdm_id, 'decline','')
+                    if err is not None:
+                        print('Decline failed')
+                        print(err)
+                else:
+                    print(f'failed ({obj.eprintid}): review_request' +
+                    f' {obj.rdm_id} accepted, {err}')
                 return obj.rdm_id, obj.version_record, err # sys.exit(1)
             version_record = True
             first = False

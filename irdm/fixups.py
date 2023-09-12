@@ -37,25 +37,34 @@ defined_roles = [
 rdm_url = os.getenv('RDM_URL', None)
 in_production = ((rdm_url is not None) and ('caltech.edu' in rdm_url))
 
-def check_for_doi(doi, production):
+def check_for_doi(doi, production, token=None):
     '''Check to see if DOI already exists in our RDM instance'''
     # Returns whether or not a DOI has already been added to CaltechAUTHORS
     if production is True:
-        url = "https://authors.caltech.edu/api/records"
+        url = "https://authors.library.caltech.edu/api/records"
     else:
         url = "https://authors.caltechlibrary.dev/api/records"
+    if token:
+        headers = {
+        "Authorization": "Bearer %s" % token,
+        "Content-type": "application/json",
+    }
+    else:
+        headers = {
+        "Content-type": "application/json",
+    }
 
     query = f'?q=pids.doi.identifier:"{doi}"&allversions=true'
 
     try:
-        response = requests.get(url + query)
+        response = requests.get(url + query, headers=headers)
     except Exception as err:
         return False, err
     if response.status_code != 200:
         print(f'error {response.text}', file = sys.stderr)
         return False, None
     records = response.json()
-    if len(records) > 0:
+    if records["hits"]["total"] > 0:
         return True, None
     return False, None
 
@@ -145,7 +154,7 @@ def normalize_pub(pub_url = None, doi = None):
 # Where possible these adjustments should be ported back
 # into eprinttools' simple.go and crosswalk.go.
 #
-def fixup_record(record):
+def fixup_record(record,reload=False,token=None):
     """fixup_record accepts a dict of simple record and files returns a 
 normlzied record dict that is a for migration into Invenio-RDM."""
     record_id = get_dict_path(record, ["pid", "id"])
@@ -239,23 +248,53 @@ normlzied record dict that is a for migration into Invenio-RDM."""
     # Normalize DOI, issue #39
     doi = normalize_doi(get_dict_path(record, ['pids', 'doi', 'identifier']))
     if doi is not None:
-        # See if DOI already exists in CaltechAUTHORS, if so move it to metadata identifiers.
-        has_doi, err = check_for_doi(doi, in_production)
-        if err is not None:
-            return rec, err
-        if has_doi:
-            del record['pids']['doi'] 
-            if "metadata" not in record:
-                record["metadata"] = {}
-            if "identifiers" not in record["metadata"]:
-                record["metadata"]["identifiers"] = []
-            record["metadata"]["identifiers"].append({ "scheme": "doi", "identifier": f"{doi}" })
-            doi = None
-        # Force DOI to be "external" for migration purposes.
-        if 'pids' in record and \
-            'doi' in record['pids'] and \
-            'provider' in record ['pids']['doi']:
-            record['pids']['doi']['provider'] = 'external'
+        if not reload:
+            # See if DOI already exists in CaltechAUTHORS, if so move it to metadata identifiers.
+            has_doi, err = check_for_doi(doi, in_production, token)
+            if err is not None:
+                return rec, err
+            if has_doi:
+                del record['pids']['doi'] 
+                if "metadata" not in record:
+                    record["metadata"] = {}
+                if "identifiers" not in record["metadata"]:
+                    record["metadata"]["identifiers"] = []
+                record["metadata"]["identifiers"].append({ "scheme": "doi", "identifier": f"{doi}" })
+                doi = None
+        #Mark system DOIs
+        #if doi.startswith('10.7907'):
+        #    record['pids']['doi']['provider'] = 'datacite'
+        #    record['pids']['doi']['client'] = 'datacite'
+
+    # Make sure records DOI isn't in related identifiers
+    identifiers = get_dict_path(record, [ 'metadata', 'related_identifiers'])
+    added_identifiers = []
+    if identifiers is not None:
+        keep_identifiers = []
+        for identifier in identifiers:
+            scheme = get_dict_path(identifier, ['scheme'])
+            id_val = get_dict_path(identifier, ['identifier'])
+            relation = get_dict_path(identifier,["relation_type","id"])
+            if idutils.is_doi(id_val):
+                normalized = normalize_doi(id_val)
+                if normalized != doi:
+                    if id_val not in added_identifiers:
+                        identifier['identifier'] = id_val
+                        identifier['scheme'] = 'doi'
+                        added_identifiers.append(id_val)
+                        keep_identifiers.append(identifier)
+            else:
+                # We need to be able to run this for only the "pub" dois
+                if relation == "ispublishedin":
+                    normalized = normalize_pub(id_val, doi)
+                else:
+                    normalized = id_val
+                if normalized is not None:
+                    if normalized not in added_identifiers:
+                        identifier["identifier"] = normalized
+                        added_identifiers.append(normalized)
+                        keep_identifiers.append(identifier)
+        record['metadata']['related_identifiers'] = keep_identifiers
 
     # Run through related URLs, if DOI then normalize DOI, if DOI match
     # pids.doi.identifier then discard related url value, issue #39
@@ -324,6 +363,8 @@ normlzied record dict that is a for migration into Invenio-RDM."""
                 new.append({'id':'IQIM'})
             elif group['id'] == 'Owens-Valley-Radio-Observatory-(OVRO)':
                 new.append({'id':'Owens-Valley-Radio-Observatory'})
+            elif group['id'] == 'Library-System-Papers-and-Publications':
+                new.append({'id':'Caltech-Library'})
             else:
                 new.append(group)
         record['custom_fields']['caltech:groups'] = new

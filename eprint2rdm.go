@@ -289,6 +289,17 @@ func customFieldsMetadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.
 			}
 		}
 	}
+	if eprint.OtherNumberingSystem != nil && eprint.OtherNumberingSystem.Length() > 0 {
+		for i := 0; i < eprint.OtherNumberingSystem.Length(); i++ {
+			item := eprint.OtherNumberingSystem.IndexOf(i)
+			if item.Name != nil && item.Name.Value != "" {
+				SetCustomField(rec, "caltech:other_num_name", "", item.Name.Value)
+			}
+			if item.ID != "" {
+				SetCustomField(rec, "caltech:other_num_id", "", item.ID)
+			}
+		}
+	}
 	if eprint.Series != "" && eprint.ISBN == "" {
 		SetCustomField(rec, "caltech:series", "series", eprint.Series)
 	}
@@ -365,7 +376,9 @@ func customFieldsMetadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.
 		}
 		for i := 0; i < eprint.Subjects.Length(); i++ {
 			subject := eprint.Subjects.IndexOf(i)
-			if subject.Value != "" {
+			//NOTE: irdmtools issue #51, ignore cls as a subject, this was an EPrints-ism
+			// needed for Caltech Library only.
+			if subject.Value != "" && subject.Value != "cls" {
 				if _, duplicate := subjectsTest[subject.Value]; ! duplicate {
 					subjectsTest[subject.Value] = true
 					rec.Metadata.Subjects = append(rec.Metadata.Subjects, &simplified.Subject{
@@ -454,7 +467,12 @@ func itemToPersonOrOrg(item *eprinttools.Item) *simplified.PersonOrOrg {
 		if person.FamilyName != "" || person.GivenName != "" {
 			person.Name = fmt.Sprintf("%s, %s", person.FamilyName, person.GivenName)
 			clPeopleID = item.ID
-			orcid = item.Name.ORCID
+			if item.ORCID != "" {
+				orcid = item.ORCID
+			} else {
+				orcid = item.Name.ORCID
+			}
+			
 		} else {
 			person.Type = "organizational"
 			person.Name = item.Name.Value
@@ -465,10 +483,10 @@ func itemToPersonOrOrg(item *eprinttools.Item) *simplified.PersonOrOrg {
 		person.Identifiers = append(person.Identifiers, mkSimpleIdentifier("clpid", clPeopleID))
 	}
 	if orcid != "" {
-		person.Identifiers = append(person.Identifiers, mkSimpleIdentifier("ORCID", orcid))
+		person.Identifiers = append(person.Identifiers, mkSimpleIdentifier("orcid", orcid))
 	}
 	if ror != "" {
-		person.Identifiers = append(person.Identifiers, mkSimpleIdentifier("ROR", ror))
+		person.Identifiers = append(person.Identifiers, mkSimpleIdentifier("ror", ror))
 	}
 	return person
 }
@@ -859,20 +877,20 @@ func metadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record, cont
 
 	// Rights are scattered in several EPrints fields, they need to
 	// be evaluated to create a "Rights" object used in DataCite/Invenio
-	addRights := false
-	rights := new(simplified.Right)
 	if eprint.Rights != "" {
-		addRights = true
-		m := map[string]string{
-			"en": eprint.Rights,
-		}
-		rights.Description = m
-		t := map[string]string{
+		rights := new(simplified.Right)
+		rights.Title = map[string]string{
 			"en": "Other",
 		}
-		rights.Title = t
+		rights.Description = map[string]string{
+			"en": eprint.Rights,
+		}
+		rec.Metadata.Rights = append(rec.Metadata.Rights, rights)
 	}
 	// Figure out if our copyright information is in the Note field.
+	/*
+	// NOTE: Removed this mapping based on issue 70 in 
+	// caltechlibrary/caltechauthors repo.
 	if (eprint.Note != "") && (strings.Contains(eprint.Note, "©") || strings.Contains(eprint.Note, "copyright") || strings.Contains(eprint.Note, "(c)")) {
 		addRights = true
 		m := map[string]string{
@@ -880,17 +898,17 @@ func metadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record, cont
 		}
 		rights.Description = m
 	}
-	if addRights {
-		rec.Metadata.Rights = append(rec.Metadata.Rights, rights)
-	}
+	*/
 	// FIXME: work with Tom to sort out how "Rights" and document level
 	// copyright info should work.
 	if eprint.CopyrightStatement != "" {
 		rights := new(simplified.Right)
-		m := map[string]string{
+		rights.Title = map[string]string{
+			"en": "Other",
+		}
+		rights.Description = map[string]string{
 			"en": eprint.CopyrightStatement,
 		}
-		rights.Description = m
 		rec.Metadata.Rights = append(rec.Metadata.Rights, rights)
 	}
 
@@ -902,7 +920,12 @@ func metadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record, cont
 	// Default to the eprint.Datestamp and correct if DateType is "published"
 	rec.Metadata.PublicationDate = normalizeEPrintDate(eprint.Datestamp)
 
-	if (eprint.DateType == "published") && (eprint.Date != "") {
+	// NOTE: We have a few records that have NULL or empty string 
+	// eprint.date_type fields. These all appear like they should have
+	// the value in eprint.date treated as the publication date if it is
+	// publicated. 
+	// See https://github.com/caltechlibrary/caltechauthors/issues/75
+	if (eprint.DateType == "published" || eprint.DateType == "") && (eprint.Date != "") {
 		rec.Metadata.Dates = append(rec.Metadata.Dates, dateTypeFromTimestamp("pub_date", eprint.Date, "EPrint's Publication Date"))
 		rec.Metadata.PublicationDate = normalizeEPrintDate(eprint.Date)
 	}
