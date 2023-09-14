@@ -182,7 +182,7 @@ def get_file_list(config, eprintid, rec, security):
         if content:
             content = content_mapping[content]
         format_des = metadata.get('format_des', None)
-        if format_desc:
+        if format_des:
             content = content + format_des
         if _security is not None and security == _security:
             file_url = file['file_id']
@@ -421,6 +421,8 @@ to guide versioning.'''
             return err # sys.exit(1)
         print(f'{obj.eprintid}, {rdm_id}, {restriction}')
     print(f'{obj.eprintid}, {root_rdm_id}, migrated')
+    with open('migrated_records.csv','a') as outfile:
+        print(f"{obj.eprintid},{rdm_id},public",file=outfile)
     sys.stdout.flush()
     return None
 

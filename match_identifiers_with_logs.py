@@ -1,5 +1,5 @@
 import glob,sys
-from update_identifiers import update_identifiers
+from update_from_eprints import update_from_eprints
 
 logs = glob.glob('logs/*.log')
 mapping = {}
@@ -21,7 +21,7 @@ with open('missing_identifiers.txt', 'r') as f:
     for idv in ids:
         idv = idv.strip('\n')
         if idv in mapping:
-            update_identifiers(mapping[idv],idv,reload)
+            update_from_eprints(mapping[idv],idv,reload)
             with open('migrated_records.csv','a') as outfile:
                 print(f"{mapping[idv]},{idv},public",file=outfile)
                 print(idv + ',' + mapping[idv])

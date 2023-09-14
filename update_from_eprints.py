@@ -111,52 +111,10 @@ def pairtree(txt):
 
 
 def update_record(config, rec, rdmutil, rdm_id):
-    """update draft record handling versioning if needed"""
-    url = "https://authors.library.caltech.edu/"
-
-    headers = {
-        "Authorization": "Bearer %s" % config['RDMTOK'],
-        "Content-type": "application/json",
-    }
-    # Get existing metadata
-    existing = requests.get(
-        url + "/api/records/" + rdm_id,
-        headers=headers,
-    )
-    existing = existing.json()
-
-    # We want to update the pids section
-    if 'pids' in rec:
-        existing['pids'] = rec['pids']
-
-    #And add any missed identifiers
-    rec = rec['metadata']
-    new_ids = []
-    for idv in rec["identifiers"]:
-        new_ids.append(idv["identifier"])
-
-    identifiers = rec["identifiers"]
-    if "identifiers" in existing:
-        for idv in existing["identifiers"]:
-            if idv["identifier"] not in new_ids:
-                identifiers.append(idv)
-    existing["metadata"]["identifiers"] = identifiers
-
-    new_related = []
-    if "related_identifiers" in rec:
-        for idv in rec["related_identifiers"]:
-            new_related.append(idv["identifier"])
-
-        related_identifiers = rec["related_identifiers"]
-    if "related_identifiers" in existing:
-        for idv in existing["related_identifiers"]:
-            if idv["identifier"] not in new_related:
-                related_identifiers.append(idv)
-        existing["metadata"]["related_identifiers"] = related_identifiers
 
     caltechdata_edit(
         rdm_id,
-        metadata=existing,
+        metadata=rec,
         token=config['RDMTOK'],
         production=True,
         publish=True,
@@ -193,7 +151,6 @@ def fix_record(config, eprintid, rdm_id,reload=False):
         print(
             f"{eprintid}, {rdm_id}, failed ({eprintid}): rdmutil new_record, fixup_record failed {err}"
         )
-    #print(json.dumps(rec))
     update_record(config, rec, rdmutil, rdm_id)
     return None
 
@@ -264,12 +221,12 @@ def get_eprint_ids():
                 eprint_ids.append(eprint_id.strip())
     return eprint_ids
 
-def update_identifiers(eprintid,rdm_id,reload=False):
+def update_from_eprints(eprintid,rdm_id,reload=False):
     config, is_ok = check_environment()
     if is_ok:
         err = fix_record(config, eprintid, rdm_id,reload)
         if err is not None:
-            print(f"Aborting update_identifiers, {err}", file=sys.stderr)
+            print(f"Aborting update_from_eprints, {err}", file=sys.stderr)
             sys.exit(1)
 
 
