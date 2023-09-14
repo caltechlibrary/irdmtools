@@ -359,18 +359,13 @@ func customFieldsMetadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.
 	// instread of simplified.go because I need to gaurantee duplicate subjects don't get added
 	// as part of the merging of keywords and subjects from EPrints.
 	if eprint.Keywords != "" || (eprint.Subjects != nil && eprint.Subjects.Length() > 0) {
-		if rec.Metadata.Subjects == nil {
-			rec.Metadata.Subjects = []*simplified.Subject{}
-		}
-		subjectsTest := map[string]bool{}
+		subjectStrings := []string{}
 		if eprint.Keywords != "" {
 			keywords := strings.Split(eprint.Keywords, ";")
 			for _, keyword := range keywords {
-				if _, duplicate := subjectsTest[keyword]; ! duplicate {
-					subjectsTest[keyword] = true
-					rec.Metadata.Subjects = append(rec.Metadata.Subjects, &simplified.Subject{
-						Subject: strings.TrimSpace(keyword),
-					})
+				val := strings.TrimSpace(keyword)
+				if val != "" && val != "cls" {
+					subjectStrings = append(subjectStrings, val)
 				}
 			}
 		}
@@ -378,19 +373,21 @@ func customFieldsMetadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.
 			subject := eprint.Subjects.IndexOf(i)
 			//NOTE: irdmtools issue #51, ignore cls as a subject, this was an EPrints-ism
 			// needed for Caltech Library only.
-			if subject.Value != "" && subject.Value != "cls" {
-				if _, duplicate := subjectsTest[subject.Value]; ! duplicate {
-					subjectsTest[subject.Value] = true
-					rec.Metadata.Subjects = append(rec.Metadata.Subjects, &simplified.Subject{
-						Subject: strings.TrimSpace(subject.Value),
-					})
+			val := strings.TrimSpace(subject.Value)
+			if val != "" && val != "cls" {
+				subjectStrings = append(subjectStrings, val)
+			}
+		}
+		if len(subjectStrings) > 0 {
+			duplicates := map[string]bool{}
+			for _, subject := range subjectStrings {
+				if _, duplicate := duplicates[subject]; ! duplicate {
+					AddSubject(rec, subject)
 				}
+				duplicates[subject] = true
 			}
 		}
 	}
-
-	// FIXME: Handle non-subject keyswords
-
 	return nil
 }
 
