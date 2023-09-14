@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Institutional Repository Data Management</title>
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="https://caltechlibrary.github.io/css/site.css">
+</head>
+<body>
+<header>
+<a href="http://library.caltech.edu" title="link to Caltech Library Homepage"><img src="https://caltechlibrary.github.io/assets/liblogo.gif" alt="Caltech Library logo"></a>
+</header>
+<nav>
+<ul>
+    <li><a href="/">Home</a></li>
+    <li><a href="index.html">README</a></li>
+    <li><a href="LICENSE">LICENSE</a></li>
+    <li><a href="INSTALL.html">INSTALL</a></li>
+    <li><a href="user-manual.html">User Manual</a></li>
+<!--    <li><a href="search.html">Search Docs</a></li> -->
+    <li><a href="about.html">About</a></li>
+    <li><a href="https://github.com/caltechlibrary/irdmtools">GitHub</a></li>
+</ul>
+</nav>
+
+<section>
+<h1 id="name">NAME</h1>
+<p>eprintrest</p>
+<h1 id="synopsis">SYNOPSIS</h1>
+<p>eprintrest <a href="#options">OPTIONS</a></p>
+<h1 id="description">DESCRIPTION</h1>
+<p>eprintrest is a Caltech Library centric localhost web service that
+creates a funcionally similar replica of the EPrints REST API for
+EPrints 3.3.x based repositories. It uses the path to the “archives”
+directory and a MySQL Database for the repository. It only supports
+“archive” eprint.eprint_status records and only the complete XML. Start
+up time is slow because it builds the data structures representing the
+content in memory. This makes the response times to request VERY fast
+compared to the EPrints REST API.</p>
+<p>NOTE: the rest API does not enforce user permissions, restrictions or
+roles. It is a minimal READ ONLY re-implementation of the EPrints 3.3
+REST API!</p>
+<p>The application is configured from the environment. The following
+environment variables need to be set.</p>
+<dl>
+<dt>REPO_ID</dt>
+<dd>
+The repository id string (e.g. caltechauthors). Also the name of the
+database for the repository.
+</dd>
+<dt>EPRINT_ARCHIVES_PATH</dt>
+<dd>
+A path to the “archives” directory holding your repository content
+(e.g. /usr/local/eprints/archives)
+</dd>
+<dt>DB_USER</dt>
+<dd>
+The user name needed to access the MySQL database<a href="#fn1"
+class="footnote-ref" id="fnref1" role="doc-noteref"><sup>1</sup></a>
+</dd>
+<dt>DB_PASSWORD</dt>
+<dd>
+The password needed to access the MySQL database<a href="#fn2"
+class="footnote-ref" id="fnref2" role="doc-noteref"><sup>2</sup></a>
+</dd>
+<dt>REST_PORT</dt>
+<dd>
+The localhost port to use for the read only REST API.
+</dd>
+</dl>
+<h1 id="options">OPTIONS</h1>
+<dl>
+<dt>-help</dt>
+<dd>
+display help
+</dd>
+<dt>-license</dt>
+<dd>
+display license
+</dd>
+<dt>-version</dt>
+<dd>
+display version
+</dd>
+</dl>
+<h1 id="example">EXAMPLE</h1>
+<p>This is an example environment</p>
+<pre><code>REPO_ID=&quot;caltechauthors&quot;
+EPRINT_ARCHIVES_PATH=&quot;/code/eprints3.3/archives&quot;
+REST_PORT=80
+DB_USER=&quot;eprints&quot;
+DB_PASSWORD=&quot;something_secret_here&quot;</code></pre>
+<p>Running the localhost REST API clone</p>
+<pre><code>eprintrest</code></pre>
+<aside id="footnotes" class="footnotes footnotes-end-of-document"
+role="doc-endnotes">
+<hr />
+<ol>
+<li id="fn1"><p>MySQL, like this REST service assumes to be running on
+localhost.<a href="#fnref1" class="footnote-back"
+role="doc-backlink">↩︎</a></p></li>
+<li id="fn2"><p>MySQL, like this REST service assumes to be running on
+localhost.<a href="#fnref2" class="footnote-back"
+role="doc-backlink">↩︎</a></p></li>
+</ol>
+</aside>
+</section>
+
+<footer>
+<span>&copy; 2023 <a href="https://www.library.caltech.edu/copyright">Caltech Library</a></span>
+<address>1200 E California Blvd, Mail Code 1-32, Pasadena, CA 91125-3200</address>
+<span><a href="mailto:library@caltech.edu">Email Us</a></span>
+<span>Phone: <a href="tel:+1-626-395-3405">(626)395-3405</a></span>
+</footer>
+</body>
+</html>
