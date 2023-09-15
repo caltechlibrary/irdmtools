@@ -176,19 +176,49 @@ func getISSNs(work *crossrefapi.Works) []string {
 // getFunding
 func getFunding(work *crossrefapi.Works) []*simplified.Funder {
 	funding := []*simplified.Funder{}
+	suffixToROR := map[string]string{}
 	if work.Message != nil && work.Message.Funder != nil && len(work.Message.Funder) > 0 {
+		var (
+			suffix string
+			ror string
+			ok bool
+		)
 		for _, funder := range work.Message.Funder {
-			for _, award := range funder.Award {
-				funding = append(funding, &simplified.Funder{
-					Funder: &simplified.Identifier{
-						Name: funder.Name,
-					},
-					Award: &simplified.AwardIdentifier{
-						Number: award,
-						Title: &simplified.TitleDetail{
-							Encoding: " ",
+			agency := &simplified.FunderIdentifier {
+				Name: funder.Name,
+			}
+			ror = ""
+			if funder.DOI != "" && funder.DoiAssertedBy == "publisher" {
+				parts := strings.SplitN(funder.DOI, "/", 2)
+				if len(parts) == 2 {
+					suffix = strings.TrimSpace(parts[1])
+					ror, ok = suffixToROR[suffix]
+					if ! ok {
+						ror, ok = lookupROR(suffix)
+						if ok {
+							suffixToROR[suffix] = ror
+						}
+					}
+				}
+			}
+			if ror != "" {
+				agency.Identifier = ror
+			}
+			if len(funder.Award) > 0 {
+				for _, award := range funder.Award {
+					funding = append(funding, &simplified.Funder{
+						Funder: agency,
+						Award: &simplified.AwardIdentifier{
+							Number: award,
+							Title: &simplified.TitleDetail{
+								Encoding: " ",
+							},
 						},
-					},
+					})
+				}
+			} else {
+				funding = append(funding, &simplified.Funder{
+					Funder: agency,
 				})
 			}
 		}
@@ -443,6 +473,9 @@ func getApproved(work *crossrefapi.Works) *simplified.DateType {
 // and maps the fields into an simplified Record struct return a
 // new struct or error.
 func CrosswalkCrossRefWork(cfg *Config, work *crossrefapi.Works, resourceTypeMap map[string]string, contributorTypeMap map[string]string) (*simplified.Record, error) {
+	if work == nil {
+		return nil, fmt.Errorf("crossref api works not populated")
+	}
 	rec := new(simplified.Record)
 	// .message.type -> .record.metadata.resource_type (via controlled vocabulary)
 	if value := getResourceType(work); value != "" {
