@@ -82,6 +82,9 @@ var (
 		"website":           "other",
 		"other":             "other",
 		"image":             "other",
+		"report":            "publication-workingpaper",
+		"report-component":  "publication-workingpaper",
+		"posted-content":    "publication-preprint",
 	}
 )
 
