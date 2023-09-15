@@ -455,6 +455,14 @@ def fixup_record(record, reload=False, token=None, has_doi=None):
                 if idv['scheme'] == 'clpid':
                     if '-' not in idv['identifier']:
                         idv['identifier'] = idv['identifier']+'-'
+    if 'contributors' in record['metadata']:
+        people = get_dict_path(record, ["metadata","contributors"])
+        for person in people:
+            if 'identifiers' in person['person_or_org']:
+                for idv in person['person_or_org']['identifiers']:
+                    if idv['scheme'] == 'clpid':
+                        if '-' not in idv['identifier']:
+                            idv['identifier'] = idv['identifier']+'-'
 
     # Remove blank descriptions
     if 'additional_descriptions' in record["metadata"]:
