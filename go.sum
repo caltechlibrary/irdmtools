@@ -12,12 +12,14 @@ github.com/caltechlibrary/dsv1 v0.0.0-20220817192039-7c2741c5699d h1:SGz3rTkjsp/
 github.com/caltechlibrary/dsv1 v0.0.0-20220817192039-7c2741c5699d/go.mod h1:ajUo9ZOowgXjLfDXeUdMmJit9CZyHUzgaPIHUh9TBcg=
 github.com/caltechlibrary/eprinttools v1.3.4 h1:HGKyhrLpPhsvEsgeyUzJunC6Q2jY5MElhJtP367DsoU=
 github.com/caltechlibrary/eprinttools v1.3.4/go.mod h1:IDejOqZPSoGwGO1sxoyMIq2g1VGVLCOM9g1gdJ3WkDM=
+github.com/caltechlibrary/eprinttools v1.3.6 h1:uhfvyDvY+paRlU56SWWix8viLEKAqZSl5ZYtTxFpFCI=
+github.com/caltechlibrary/eprinttools v1.3.6/go.mod h1:5qi6bfj5hmTBiNjlM7g539+NwxNJWNrj6wzCp1xCmlI=
 github.com/caltechlibrary/pairtree v1.0.2 h1:zcsFibPW7tBvjOvbxHzkE1CIPm0BxUCfQrLCa+bB5qc=
 github.com/caltechlibrary/pairtree v1.0.2/go.mod h1:VZdWqmXgJ+tMxM37n/W+CjS8CQVPus+0ReFdRL10AS4=
 github.com/caltechlibrary/semver v0.0.0-20220817184719-a504da2d5c6a h1:3q6ct6FfFDF2dEiW06Ran7iEOZ4d9HBiMbkqJUOO2oU=
 github.com/caltechlibrary/semver v0.0.0-20220817184719-a504da2d5c6a/go.mod h1:LxzDpCilL3QqjL8qdirgmlo8riDkSFNsTALfIYYyQtE=
-github.com/caltechlibrary/simplified v0.0.19 h1:zyiGhuanLSe0DcdsvvmG8JV/+saO0m7SDRrB44ohPE4=
-github.com/caltechlibrary/simplified v0.0.19/go.mod h1:T36AVk2yLIhH/0zlM3wTeVEFgcsSn2zqdqFVanntSPc=
+github.com/caltechlibrary/simplified v0.0.21 h1:oZ3Un7KAyDIXyLeonRDUwuP4E3vhJxouhBNb4mdgx0A=
+github.com/caltechlibrary/simplified v0.0.21/go.mod h1:T36AVk2yLIhH/0zlM3wTeVEFgcsSn2zqdqFVanntSPc=
 github.com/dustin/go-humanize v1.0.0/go.mod h1:HtrtbFcZ19U5GC7JDqmcUSB87Iq5E25KnS6fMYU6eOk=
 github.com/glebarez/go-sqlite v1.18.1 h1:w0xtxKWktqYsUsXg//SQK+l1IcpKb3rGOQHmMptvL2U=
 github.com/glebarez/go-sqlite v1.18.1/go.mod h1:ydXIGq2M4OzF4YyNhH129SPp7jWoVvgkEgb6pldmS0s=

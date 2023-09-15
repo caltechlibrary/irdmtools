@@ -443,6 +443,22 @@ def fixup_record(record, reload=False, token=None):
                 new.append(group)
         record["custom_fields"]["caltech:groups"] = new
 
+    # Cleanup caltech person identifiers
+    people = get_dict_path(record, ["metadata","creators"])
+    for person in people:
+        if 'family_name' in  person['person_or_org']:
+            if person['person_or_org']['family_name'] == "Earthquake Engineering Research Laboratory":
+                person['person_or_org'] = {'type': "organizational", 'name': "Earthquake Engineering Research Laboratory,"}
+
+    # Remove blank descriptions
+    if 'additional_descriptions' in record["metadata"]:
+        descriptions = get_dict_path(record, ["metadata","additional_descriptions"])
+        cleaned = []
+        for d in descriptions:
+            if d['description'] != '\n\n':
+                cleaned.append(d)
+        record['metadata']['additional_descriptions'] = cleaned
+
     # Remove .custom_fields["caltech:internal_note"] if it exist.
     if "custom_fields" in record and "caltech:internal_note" in record["custom_fields"]:
         del record["custom_fields"]["caltech:internal_note"]

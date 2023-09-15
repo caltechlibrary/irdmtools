@@ -78,10 +78,10 @@ func TestMain(m *testing.M) {
 	}
 	cfg.Debug = true
 	if cfg.InvenioAPI == "" {
-		l.Fatal("invenio api not configured")
+		l.Printf("invenio api not configured")
 	}
 	if cfg.InvenioToken == "" {
-		l.Fatal("invenio troken not configured")
+		l.Printf("invenio troken not configured")
 	}
 	if idsFName == "" {
 		idsFName = path.Join("testdata", "test_record_ids.json")

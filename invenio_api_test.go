@@ -189,9 +189,9 @@ func Test02GetRecord(t *testing.T) {
 		})
 	*/
 	for i, id := range ids {
-		_, err := GetRecord(cfg, id)
+		_, err := GetRecord(cfg, id, false)
 		if err != nil {
-			t.Errorf("(%d) GetRecord(cfg, %q) %s\n%s", i, id, err, cfg.rl)
+			t.Errorf("(%d) GetRecord(cfg, %q, false) %s\n%s", i, id, err, cfg.rl)
 			t.FailNow()
 		}
 		//cfg.rl.Fprintf(os.Stderr)
