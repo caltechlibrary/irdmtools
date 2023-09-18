@@ -165,7 +165,7 @@ def normalize_pub(pub_url=None, doi=None):
 # Where possible these adjustments should be ported back
 # into eprinttools' simple.go and crosswalk.go.
 #
-def fixup_record(record, reload=False, token=None):
+def fixup_record(record, reload=False, token=None, has_doi=None):
     """fixup_record accepts a dict of simple record and files returns a
     normlzied record dict that is a for migration into Invenio-RDM."""
     record_id = get_dict_path(record, ["pid", "id"])
@@ -278,9 +278,10 @@ def fixup_record(record, reload=False, token=None):
     if doi is not None:
         if not reload:
             # See if DOI already exists in CaltechAUTHORS, if so move it to metadata identifiers.
-            has_doi, err = check_for_doi(doi, in_production, token)
-            if err is not None:
-                return rec, err
+            if not has_doi:
+                has_doi, err = check_for_doi(doi, in_production, token)
+                if err is not None:
+                    return rec, err
             if has_doi:
                 del record["pids"]["doi"]
                 if "metadata" not in record:
@@ -449,6 +450,19 @@ def fixup_record(record, reload=False, token=None):
         if 'family_name' in  person['person_or_org']:
             if person['person_or_org']['family_name'] == "Earthquake Engineering Research Laboratory":
                 person['person_or_org'] = {'type': "organizational", 'name': "Earthquake Engineering Research Laboratory,"}
+        if 'identifiers' in person['person_or_org']:
+            for idv in person['person_or_org']['identifiers']:
+                if idv['scheme'] == 'clpid':
+                    if '-' not in idv['identifier']:
+                        idv['identifier'] = idv['identifier']+'-'
+    if 'contributors' in record['metadata']:
+        people = get_dict_path(record, ["metadata","contributors"])
+        for person in people:
+            if 'identifiers' in person['person_or_org']:
+                for idv in person['person_or_org']['identifiers']:
+                    if idv['scheme'] == 'clpid':
+                        if '-' not in idv['identifier']:
+                            idv['identifier'] = idv['identifier']+'-'
 
     # Remove blank descriptions
     if 'additional_descriptions' in record["metadata"]:

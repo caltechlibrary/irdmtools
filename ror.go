@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -14,7 +15,7 @@ type RorOrgAPIResponse struct {
 }
 
 // lookupROR
-func lookupROR(doiSuffix string) (string, bool) {
+func lookupROR(doiSuffix string, trimPrefix bool) (string, bool) {
 	// Call: https://api.ror.org/organizations?query={doiPrefix}
 	orgAPI := "https://api.ror.org/organizations"
 	client := &http.Client{}
@@ -40,6 +41,9 @@ func lookupROR(doiSuffix string) (string, bool) {
 		if result.Items != nil {
 			for _, item := range result.Items {
 				if id, ok := item["id"].(string); ok {
+					if trimPrefix {
+						return strings.TrimPrefix(id, "https://ror.org/"), true
+					}
 					return id, true
 				}
 			}
