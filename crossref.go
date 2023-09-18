@@ -194,7 +194,7 @@ func getFunding(work *crossrefapi.Works) []*simplified.Funder {
 					suffix = strings.TrimSpace(parts[1])
 					ror, ok = suffixToROR[suffix]
 					if ! ok {
-						ror, ok = lookupROR(suffix)
+						ror, ok = lookupROR(suffix, true)
 						if ok {
 							suffixToROR[suffix] = ror
 						}
