@@ -109,3 +109,4 @@ s3_uploads/
 migration/
 testdata
 *.bash
+problem_files/
