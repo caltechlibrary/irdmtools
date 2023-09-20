@@ -36,7 +36,6 @@ package irdmtools
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"os"
 
@@ -59,6 +58,8 @@ type Config struct {
 	InvenioDSN string `json:"rdm_dsn,omitempty"`
 	// InvenioStorage holds the URI to the default storage of Invenio RDM objects, e.g. local file system or S3 bucket
 	InvenioStorage string `json:"rdm_storage,omitempty"`
+	// InvenioCommunityID holds the community id for use with the API.
+	InvenioCommunityID string `json:"rdm_community_id,omitempty"`
 	// CName holds the dataset collection name used when harvesting content
 	CName string `json:"c_name,omitempty"`
 	// MailTo holds an email address to use when an email (e.g. CrossRef API access) is needed
@@ -149,7 +150,7 @@ func (cfg *Config) LoadConfig(configFName string) error {
 	if err != nil {
 		return err
 	}
-	if err := json.Unmarshal(src, &cfg); err != nil {
+	if err := JSONUnmarshal(src, &cfg); err != nil {
 		return err
 	}
 	return nil
@@ -181,12 +182,12 @@ func SampleConfig(configFName string) ([]byte, error) {
 		// Invenio access token.
 		if s := bytes.TrimSpace(src); len(s) > 0 {
 			config := new(Config)
-			err := json.Unmarshal(src, &config)
+			err := JSONUnmarshal(src, &config)
 			if err != nil {
 				return nil, err
 			}
 			config.InvenioToken = `__RDM_TOKEN_GOES_HERE__`
-			src, err = json.MarshalIndent(config, "", "    ")
+			src, err = JSONMarshalIndent(config, "", "    ")
 			return src, err
 		}
 	}
@@ -211,6 +212,6 @@ func SampleConfig(configFName string) ([]byte, error) {
 	config.InvenioToken = `__RDM_TOKEN_GOES_HERE__`
 	config.CName = cName
 	config.MailTo = mailTo
-	src, err := json.MarshalIndent(config, "", "    ")
+	src, err := JSONMarshalIndent(config, "", "    ")
 	return src, err
 }

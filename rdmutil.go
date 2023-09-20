@@ -36,7 +36,6 @@ package irdmtools
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -110,7 +109,7 @@ func (app *RdmUtil) Query(q string, sort string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	src, err := json.MarshalIndent(records, "", "    ")
+	src, err := JSONMarshalIndent(records, "", "    ")
 	if err != nil {
 		return nil, err
 	}
@@ -139,7 +138,7 @@ func (app *RdmUtil) CheckDOI(doi string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	src, err := json.MarshalIndent(records, "", "    ")
+	src, err := JSONMarshalIndent(records, "", "    ")
 	if err != nil {
 		return nil, err
 	}
@@ -169,7 +168,7 @@ func (app *RdmUtil) GetModifiedIds(start string, end string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	src, err := json.MarshalIndent(ids, "", "    ")
+	src, err := JSONMarshalIndent(ids, "", "    ")
 	if err != nil {
 		return nil, err
 	}
@@ -197,7 +196,7 @@ func (app *RdmUtil) GetRecordIds() ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	src, err := json.MarshalIndent(ids, "", "    ")
+	src, err := JSONMarshalIndent(ids, "", "    ")
 	if err != nil {
 		return nil, err
 	}
@@ -226,7 +225,7 @@ func (app *RdmUtil) GetRecord(id string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	src, err := json.MarshalIndent(rec, "", "    ")
+	src, err := JSONMarshalIndent(rec, "", "    ")
 	if err != nil {
 		return nil, err
 	}
@@ -255,7 +254,7 @@ func (app *RdmUtil) GetRawRecord(id string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	src, err := json.MarshalIndent(rec, "", "    ")
+	src, err := JSONMarshalIndent(rec, "", "    ")
 	if err != nil {
 		return nil, err
 	}
@@ -283,7 +282,7 @@ func (app *RdmUtil) GetDraftFiles(recordId string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return json.MarshalIndent(data, "", "    ")
+	return JSONMarshalIndent(data, "", "    ")
 }
 
 // GetFiles returns the metadata for working with files
@@ -307,7 +306,7 @@ func (app *RdmUtil) GetFiles(recordId string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return json.MarshalIndent(data, "", "    ")
+	return JSONMarshalIndent(data, "", "    ")
 }
 
 
@@ -333,7 +332,7 @@ func (app *RdmUtil) GetFile(id string, fName string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	src, err := json.MarshalIndent(obj, "", "    ")
+	src, err := JSONMarshalIndent(obj, "", "    ")
 	if err != nil {
 		return nil, err
 	}
@@ -386,7 +385,7 @@ func (app *RdmUtil) GetVersions(id string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	src, err := json.MarshalIndent(obj, "", "    ")
+	src, err := JSONMarshalIndent(obj, "", "    ")
 	if err != nil {
 		return nil, err
 	}
@@ -414,7 +413,7 @@ func (app *RdmUtil) GetVersionLatest(id string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	src, err := json.MarshalIndent(obj, "", "    ")
+	src, err := JSONMarshalIndent(obj, "", "    ")
 	if err != nil {
 		return nil, err
 	}
@@ -443,7 +442,7 @@ func (app *RdmUtil) NewRecord(src []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return json.MarshalIndent(data, "", "    ")
+	return JSONMarshalIndent(data, "", "    ")
 }
 
 // NewRecordVersion create a new record version using record id.
@@ -466,7 +465,7 @@ func (app *RdmUtil) NewRecordVersion(recordId string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return json.MarshalIndent(data, "", "    ")
+	return JSONMarshalIndent(data, "", "    ")
 }
 
 // PublishRecordVersion publish a new version draft using the 
@@ -490,7 +489,7 @@ func (app *RdmUtil) PublishRecordVersion(recordId string, version string, pubDat
 	if err != nil {
 		return nil, err
 	}
-	return json.MarshalIndent(data, "", "    ")
+	return JSONMarshalIndent(data, "", "    ")
 }
 
 
@@ -516,7 +515,7 @@ func (app *RdmUtil) NewDraft(recordId string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return json.MarshalIndent(data, "", "    ")
+	return JSONMarshalIndent(data, "", "    ")
 }
 
 // GetDraft returns an existing draft of a record.
@@ -540,7 +539,7 @@ func (app *RdmUtil) GetDraft(id string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	src, err := json.MarshalIndent(obj, "", "    ")
+	src, err := JSONMarshalIndent(obj, "", "    ")
 	if err != nil {
 		return nil, err
 	}
@@ -569,7 +568,7 @@ func (app *RdmUtil) UpdateDraft(recordId string, src []byte) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return json.MarshalIndent(data, "", "    ")
+	return JSONMarshalIndent(data, "", "    ")
 }
 
 // SendToCommunity takes a RDM record id and community UUID. It populates the
@@ -579,7 +578,7 @@ func (app *RdmUtil) SendToCommunity(recordId string, communityId string) ([]byte
 	if err != nil {
 		return nil, err
 	}
-	return json.MarshalIndent(data, "", "    ")
+	return JSONMarshalIndent(data, "", "    ")
 }
 
 // SetFilesEnable takes a RDM record id and either boolean setting
@@ -590,7 +589,7 @@ func (app *RdmUtil) SetFilesEnable(recordId string, enable bool) ([]byte, error)
 	if err != nil {
 		return nil, err
 	}
-	return json.MarshalIndent(m, "", "     ")
+	return JSONMarshalIndent(m, "", "     ")
 }
 
 // SetVersion takes a RDM record id and version string
@@ -600,7 +599,7 @@ func (app *RdmUtil) SetVersion(recordId string, version string) ([]byte, error) 
 	if err != nil {
 		return nil, err
 	}
-	return json.MarshalIndent(m, "", "     ")
+	return JSONMarshalIndent(m, "", "     ")
 }
 
 // SetPubDate takes a RDM record id and publication date string
@@ -610,7 +609,7 @@ func (app *RdmUtil) SetPubDate(recordId string, pubDate string) ([]byte, error) 
 	if err != nil {
 		return nil, err
 	}
-	return json.MarshalIndent(m, "", "     ")
+	return JSONMarshalIndent(m, "", "     ")
 }
 
 // UploadFiles takes a RDM record id an list of files and uploads them to a draft.
@@ -635,7 +634,7 @@ func (app *RdmUtil) UploadFiles(recordId string, filenames []string) ([]byte, er
 	if err != nil {
 		return nil, err
 	}
-	return json.MarshalIndent(data, "", "    ")
+	return JSONMarshalIndent(data, "", "    ")
 }
 
 
@@ -662,7 +661,7 @@ func (app *RdmUtil) DeleteFiles(recordId string, filenames []string) ([]byte, er
 	if err != nil {
 		return nil, err
 	}
-	return json.MarshalIndent(data, "", "    ")
+	return JSONMarshalIndent(data, "", "    ")
 }
 
 
@@ -687,7 +686,7 @@ func (app *RdmUtil) DiscardDraft(recordId string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return json.MarshalIndent(data, "", "    ")
+	return JSONMarshalIndent(data, "", "    ")
 }
 
 // GetReview takes a record id and returns information about
@@ -710,7 +709,7 @@ func (app *RdmUtil) GetReview(recordId string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-	return json.MarshalIndent(data, "", "    ")
+	return JSONMarshalIndent(data, "", "    ")
 }
 
 // ReviewRequest takes a record id, a decision and a comment and
@@ -733,7 +732,7 @@ func (app *RdmUtil) ReviewRequest(recordId string, decision string, comment stri
 	if err != nil {
 		return nil, err
 	}
-	return json.MarshalIndent(data, "", "    ")
+	return JSONMarshalIndent(data, "", "    ")
 }
 
 // ReviewComment takes a record id and a comment and
@@ -756,7 +755,7 @@ func (app *RdmUtil) ReviewComment(recordId string, comment string) ([]byte, erro
 	if err != nil {
 		return nil, err
 	}
-	return json.MarshalIndent(data, "", "    ")
+	return JSONMarshalIndent(data, "", "    ")
 }
 
 // GetAccess returns the JSON for the access attribute in a record if

@@ -38,7 +38,6 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/csv"
-	"encoding/json"
 	"encoding/xml"
 	"fmt"
 	"io"
@@ -1345,7 +1344,7 @@ func (app *EPrint2Rdm) Run(in io.Reader, out io.Writer, eout io.Writer, username
 			}
 			return nil
 		}
-		src, err := json.MarshalIndent(record, "", "   ")
+		src, err := JSONMarshalIndent(record, "", "   ")
 		if err != nil {
 			return err
 		}

@@ -1,7 +1,6 @@
 package irdmtools
 
 import (
-	"encoding/json"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -35,7 +34,7 @@ func lookupROR(doiSuffix string, trimPrefix bool) (string, bool) {
 	if resp.StatusCode == http.StatusOK {
 		body, _ := ioutil.ReadAll(resp.Body)
 		result := new(RorOrgAPIResponse)
-		if err := json.Unmarshal(body, &result); err != nil {
+		if err := JSONUnmarshal(body, &result); err != nil {
 			return "", false
 		}
 		if result.Items != nil {

@@ -35,7 +35,6 @@
 package irdmtools
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -209,7 +208,7 @@ func (app *Doi2Rdm) Run(in io.Reader, out io.Writer, eout io.Writer, options map
 		if err != nil {
 			return err
 		}
-		if err := json.Unmarshal(src, &oWork); err != nil {
+		if err := JSONUnmarshal(src, &oWork); err != nil {
 			return err
 		}
 		oRecord, err = CrosswalkCrossRefWork(app.Cfg, oWork, resourceType, contributorType)
@@ -229,7 +228,7 @@ func (app *Doi2Rdm) Run(in io.Reader, out io.Writer, eout io.Writer, options map
 	if diffFName != "" {
 		src, err = oRecord.DiffAsJSON(nRecord)
 	} else {
-		src, err = json.MarshalIndent(nRecord, "", "    ")
+		src, err = JSONMarshalIndent(nRecord, "", "    ")
 	}
 	if err != nil {
 		return err

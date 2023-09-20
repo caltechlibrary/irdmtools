@@ -9,7 +9,7 @@ RELEASE_DATE = $(shell date +%Y-%m-%d)
 
 RELEASE_HASH=$(shell git log --pretty=format:'%h' -n 1)
 
-PROGRAMS = rdmutil eprint2rdm eprintrest doi2rdm people2vocabulary # $(shell ls -1 cmd)
+PROGRAMS = rdmutil eprint2rdm rdm2eprint eprintrest doi2rdm people2vocabulary # $(shell ls -1 cmd)
 
 MAN_PAGES = $(shell ls -1 *.1.md | sed -E 's/\.1.md/.1/g')
 

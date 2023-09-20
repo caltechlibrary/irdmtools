@@ -35,7 +35,6 @@
 package irdmtools
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -64,7 +63,7 @@ func Harvest(cfg *Config, fName string, debug bool) error {
 		return err
 	}
 	recordIds := []string{}
-	if err := json.Unmarshal(src, &recordIds); err != nil {
+	if err := JSONUnmarshal(src, &recordIds); err != nil {
 		return err
 	}
 	l := log.New(os.Stderr, "", 1)

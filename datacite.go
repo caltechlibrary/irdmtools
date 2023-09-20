@@ -1,7 +1,6 @@
 package irdmtools
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"path"
@@ -21,7 +20,7 @@ func QueryDataCite(cfg *Config, doi string, mailTo string, dotInitials bool, dow
 		return nil, err
 	}
 	if debug {
-		src, _ := json.MarshalIndent(works, "", "    ")
+		src, _ := JSONMarshalIndent(works, "", "    ")
 		fmt.Fprintf(os.Stderr, "works JSON\n\n%s\n\n", src)
 	}
 	return works, nil
