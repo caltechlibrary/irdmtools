@@ -38,6 +38,7 @@ import (
 	"bytes"
 	"fmt"
 	"os"
+	"time"
 
 	// Caltech Library packages
 	"github.com/caltechlibrary/dataset/v2"
@@ -48,7 +49,7 @@ type Config struct {
 	// Debug is set true then methods with access to the Config obect
 	// can use this flag to implement addition logging to standard err
 	Debug bool `json:"-"`
-	// Repository Name, e.g. CaltechAUTHORS, CaltechTHESIS, CaltechDATA
+	// Repository Name, e.g. caltechauthors, caltechthesis, caltechdata
 	RepoName string `json:"repo_name,omitempty"`
 	// InvenioAPI holds the URL to the InvenioAPI
 	InvenioAPI string `json:"rdm_url,omitempty"`
@@ -67,6 +68,16 @@ type Config struct {
 	// ds his a non-public point to an dataset collection structure
 	ds *dataset.Collection
 
+	// EPrint configuration needed for migration related tools
+	EPrintHost string `json:"eprint_host,omitempty"`
+	EPrintUser string `json:"eprint_user,omitempty"`
+	EPrintPassword string `json:"eprint_password,omitempty"`
+	EPrintArchivesPath string `json:"eprint_archives_path,omitempty"` 
+
+	// timeout holds the time out value
+	timeout time.Duration
+	// retry holds the retry count
+	retry int
 	// rl holds rate limiter data for throttling API requests
 	rl *RateLimit
 }
@@ -116,6 +127,22 @@ func (cfg *Config) LoadEnv(prefix string) error {
 	if mailTo := os.Getenv(prefixVar("MAILTO", prefix)); mailTo != "" && cfg.MailTo == "" {
 		cfg.MailTo = mailTo
 	}
+	if eprintHost := os.Getenv(prefixVar("EPRINT_HOST", prefix)); eprintHost != "" && cfg.EPrintHost == "" {
+		cfg.EPrintHost = eprintHost
+	}
+	if eprintUser := os.Getenv(prefixVar("EPRINT_USER", prefix)); eprintUser != "" && cfg.EPrintUser == "" {
+		cfg.EPrintUser = eprintUser
+	}
+	if eprintPassword := os.Getenv(prefixVar("EPRINT_PASSWORD", prefix)); eprintPassword != "" && cfg.EPrintPassword == "" {
+		cfg.EPrintPassword = eprintPassword
+	}
+	if eprintArchivesPath := os.Getenv(prefixVar("EPRINT_ARCHIVES_PATH", prefix)); eprintArchivesPath != "" && cfg.EPrintArchivesPath == "" {
+		cfg.EPrintArchivesPath = eprintArchivesPath
+	}
+	// Set some default values for retry and timeout
+	timeoutSeconds := 10
+	cfg.retry = 3
+	cfg.timeout = time.Duration(timeoutSeconds)
 	return nil
 }
 
@@ -153,6 +180,10 @@ func (cfg *Config) LoadConfig(configFName string) error {
 	if err := JSONUnmarshal(src, &cfg); err != nil {
 		return err
 	}
+	// Set some default values for retry and timeout
+	timeoutSeconds := 10
+	cfg.retry = 3
+	cfg.timeout = time.Duration(timeoutSeconds)
 	return nil
 }
 
@@ -178,8 +209,8 @@ func SampleConfig(configFName string) ([]byte, error) {
 		if err != nil {
 			return nil, fmt.Errorf("%s already exists, failed to read file %s", configFName, err)
 		}
-		// NOTE: If we're reading the file from disk about copying the
-		// Invenio access token.
+		// NOTE: If we're reading the file from disk avoid copying the
+		// Invenio access token or EPrint user password.
 		if s := bytes.TrimSpace(src); len(s) > 0 {
 			config := new(Config)
 			err := JSONUnmarshal(src, &config)
@@ -187,6 +218,7 @@ func SampleConfig(configFName string) ([]byte, error) {
 				return nil, err
 			}
 			config.InvenioToken = `__RDM_TOKEN_GOES_HERE__`
+			config.EPrintPassword = `__EPRINT_USER_PASSWORD_HERE__`
 			src, err = JSONMarshalIndent(config, "", "    ")
 			return src, err
 		}
@@ -205,6 +237,18 @@ func SampleConfig(configFName string) ([]byte, error) {
 	if mailTo == "" {
 		mailTo = "__CROSSREF_API_MAILTO_GOES_HERE__"
 	}
+	eprintHost := os.Getenv("EPRINT_HOST")
+	if eprintHost == "" {
+		eprintHost = "__EPRINT_HOSTNAME_GOES_HERE__"
+	}
+	eprintUser := os.Getenv("EPRINT_USER")
+	if eprintUser == "" {
+		eprintUser = "__EPRINT_USER_GOES_HERE__"
+	}
+	eprintArchivesPath := os.Getenv("EPRINT_ARCHIVES_PATH")
+	if eprintArchivesPath != "" {
+		eprintArchivesPath = "__EPRINT_ARCHIVES_PATH_GOES_HERE__"
+	}
 	config := new(Config)
 	// By default we look for Invenio-RDM as installed with
 	// docker on localhost:5000
@@ -212,6 +256,10 @@ func SampleConfig(configFName string) ([]byte, error) {
 	config.InvenioToken = `__RDM_TOKEN_GOES_HERE__`
 	config.CName = cName
 	config.MailTo = mailTo
+	config.EPrintHost = eprintHost
+	config.EPrintUser = eprintUser
+	config.EPrintPassword = `__EPRINT_PASSWORD_GOES_HERE__`
+	config.EPrintArchivesPath = eprintArchivesPath
 	src, err := JSONMarshalIndent(config, "", "    ")
 	return src, err
 }
