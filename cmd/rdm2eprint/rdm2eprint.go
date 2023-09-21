@@ -36,6 +36,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"path"
 
@@ -102,6 +103,29 @@ RDM_COMMUNITY_ID="rdm.example.edu"
 `
 )
 
+// getRdmIds will read in a JSON list of RDM ids from either standard
+// input or a JSON file.
+func getRdmIds(idsFName string) ([]string, error) {
+	var err error
+ 	in := os.Stdin
+  	if idsFName != "-" {
+   		in, err = os.Open(idsFName)
+   		if err != nil {
+   			return nil, err
+   		}
+   		defer in.Close()
+   	}
+   	src, err := io.ReadAll(in)
+   	if err != nil {
+		return nil, err
+   	}
+   	ids := []string{}
+   	if err := irdmtools.JSONUnmarshal(src, &ids); err != nil {
+		return nil, err
+   	}
+	return ids, nil
+}
+
 func main() {
 	appName := path.Base(os.Args[0])
 	// NOTE: The following are set when version.go is generated
@@ -111,14 +135,18 @@ func main() {
 	fmtHelp := irdmtools.FmtHelp
 
 	showHelp, showVersion, showLicense := false, false, false
-	configFName, debug := "", false
+	configFName, debug, asXML := "", false, false
+	idsFName, cName := "", ""
 	flag.BoolVar(&showHelp, "help", false, "display help")
 	flag.BoolVar(&showVersion, "version", false, "display version")
 	flag.BoolVar(&showLicense, "license", false, "display license")
 	flag.StringVar(&configFName, "config", configFName, "use a config file")
+	flag.BoolVar(&asXML, "xml", asXML, "output as EPrint XML (does not work with harvest")
 	flag.BoolVar(&debug, "debug", debug, "display additional info to stderr")
+	flag.StringVar(&idsFName, "ids", idsFName, "read ids from a file")
+	flag.StringVar(&cName, "harvest", cName, "harvest JSON eprint records into the dataset collection.")
 	flag.Parse()
-	args := flag.Args()
+	rdmids := flag.Args()
 
 	if showHelp {
 		fmt.Fprintf(os.Stdout, "%s\n", fmtHelp(helpText, appName, version, releaseDate, releaseHash))
@@ -132,7 +160,16 @@ func main() {
 		fmt.Fprintf(os.Stdout, "%s\n", irdmtools.LicenseText)
 		os.Exit(0)
 	}
-	if len(args) == 0 {
+	if idsFName != "" {
+		ids, err := getRdmIds(idsFName)
+		if err != nil {
+   			fmt.Fprintf(os.Stderr, "%s\n", err)
+   			os.Exit(1)
+		}
+		rdmids = append(rdmids, ids...)
+	}
+
+	if len(rdmids) == 0 {
 		fmt.Fprintf(os.Stderr, "%s\n", fmtHelp(helpText, appName, version, releaseDate, releaseHash))
 		os.Exit(1)
 	}
@@ -142,7 +179,15 @@ func main() {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
 		os.Exit(1)
 	}
-	if err := app.Run(os.Stdin, os.Stdout, os.Stderr, args); err != nil {
+	if cName != "" {
+		fmt.Fprintf(os.Stderr, "DEBUG app.RunHarvest(in, out, eout, %q, rdmids)", cName)
+		if err := app.RunHarvest(os.Stdin, os.Stdout, os.Stderr, cName, rdmids); err != nil {
+			fmt.Fprintf(os.Stderr, "%s\n", err)
+			os.Exit(1)
+		}
+		os.Exit(0)
+	}
+	if err := app.Run(os.Stdin, os.Stdout, os.Stderr, rdmids, asXML); err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
 		os.Exit(1)
 	}
