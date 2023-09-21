@@ -133,7 +133,7 @@ func HarvestEPrints(cfg *Config, fName string, debug bool) error {
 	if err != nil {
 		return err
 	}
-	recordIds := []string{}
+	recordIds := []int{}
 	if err := JSONUnmarshal(src, &recordIds); err != nil {
 		return err
 	}
@@ -146,15 +146,10 @@ func HarvestEPrints(cfg *Config, fName string, debug bool) error {
 	t0 := time.Now()
 	iTime, reportProgress := time.Now(), false
 	cfg.rl = new(RateLimit)
-	baseURL := fmt.Sprintf("https://%s", cfg.EPrintHost)
-	for i, id := range recordIds {
-		eprintid, err := strconv.Atoi(id)
-		if err != nil {
-			log.Printf("invalid eprintid %q\n", id)
-			eCnt++
-			continue
-		}
-		rec, err := GetEPrint(baseURL, eprintid, cfg.timeout, cfg.retry)
+	timeout := time.Duration(timeoutSeconds)
+	for i, eprintid := range recordIds {
+		id := strconv.Itoa(eprintid)
+		rec, err := GetEPrint(cfg, eprintid, timeout, 3)
 		if err != nil {
 			msg := fmt.Sprintf("%s", err)
 			if strings.HasPrefix(msg, "429 ") {
@@ -187,7 +182,7 @@ func HarvestEPrints(cfg *Config, fName string, debug bool) error {
 			log.Printf("last id %q (%d/%d) %s", id, i, tot, ProgressETR(t0, i, tot))
 		}
 		// NOTE: We need to respect rate limits of RDM API
-		cfg.rl.Throttle(i, tot)
+		//cfg.rl.Throttle(i, tot)
 	}
 	log.Printf("%d harvested, %d errors, running time %s", hCnt, eCnt, time.Since(t0).Round(time.Second))
 	return nil

@@ -129,7 +129,8 @@ func restClient(urlEndPoint string, timeout time.Duration, retryCount int) ([]by
 }
 
 // GetEPrint fetches a single EPrint record via the EPrint REST API.
-func GetEPrint(baseURL string, eprintID int, timeout time.Duration, retryCount int) (*eprinttools.EPrints, error) {
+func GetEPrint(cfg *Config, eprintID int, timeout time.Duration, retryCount int) (*eprinttools.EPrints, error) {
+	baseURL := fmt.Sprintf("https://%s:%s@%s", cfg.EPrintUser, cfg.EPrintPassword, cfg.EPrintHost)
 	endPoint := fmt.Sprintf("%s/rest/eprint/%d.xml", baseURL, eprintID)
 	src, err := restClient(endPoint, timeout, retryCount)
 	if err != nil {
@@ -147,12 +148,13 @@ func GetEPrint(baseURL string, eprintID int, timeout time.Duration, retryCount i
 }
 
 // GetKeys returns a list of eprint record ids from the EPrints REST API
-func GetKeys(baseURL string, timeout time.Duration, retryCount int) ([]int, error) {
+func GetKeys(cfg *Config, timeout time.Duration, retryCount int) ([]int, error) {
 	type eprintKeyPage struct {
 		XMLName xml.Name `xml:"html"`
 		Anchors []string `xml:"body>ul>li>a"`
 	}
 
+	baseURL := fmt.Sprintf("https://%s:%s@%s", cfg.EPrintUser, cfg.EPrintPassword, cfg.EPrintHost)
 	endPoint := fmt.Sprintf("%s/rest/eprint/", baseURL)
 	src, err := restClient(endPoint, timeout, retryCount)
 	if err != nil {

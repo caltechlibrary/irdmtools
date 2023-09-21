@@ -45,8 +45,6 @@ import (
 // Ep3Util holds the configuration for ep3util cli.
 type Ep3Util struct {
 	Cfg *Config
-	Timeout time.Duration
-	RetryCount int
 	Debug bool
 }
 
@@ -108,8 +106,8 @@ func (app *Ep3Util) Configure(configFName string, envPrefix string, debug bool) 
 //
 // ```
 func (app *Ep3Util) GetRecordIds() ([]byte, error) {
-    baseURL := fmt.Sprintf("https://%s:%s@%s", app.Cfg.EPrintUser, app.Cfg.EPrintPassword, app.Cfg.EPrintHost)
-	ids, err := GetKeys(baseURL, app.Cfg.timeout, app.Cfg.retry)
+	timeout := time.Duration(timeoutSeconds)
+	ids, err := GetKeys(app.Cfg, timeout, 3)
 	if err != nil {
 		return nil, err
 	}
@@ -142,8 +140,8 @@ func (app *Ep3Util) GetRecord(id string) ([]byte, error) {
 	if err != nil {
 		return nil, err
 	}
-    baseURL := fmt.Sprintf("https://%s:%s@%s", app.Cfg.EPrintUser, app.Cfg.EPrintPassword, app.Cfg.EPrintHost)
-	rec, err := GetEPrint(baseURL, eprintid, app.Timeout, app.RetryCount)
+	timeout := time.Duration(timeoutSeconds)
+	rec, err := GetEPrint(app.Cfg, eprintid, timeout, 3)
 	if err != nil {
 		return nil, err
 	}

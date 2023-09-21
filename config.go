@@ -38,7 +38,6 @@ import (
 	"bytes"
 	"fmt"
 	"os"
-	"time"
 
 	// Caltech Library packages
 	"github.com/caltechlibrary/dataset/v2"
@@ -74,10 +73,6 @@ type Config struct {
 	EPrintPassword string `json:"eprint_password,omitempty"`
 	EPrintArchivesPath string `json:"eprint_archives_path,omitempty"` 
 
-	// timeout holds the time out value
-	timeout time.Duration
-	// retry holds the retry count
-	retry int
 	// rl holds rate limiter data for throttling API requests
 	rl *RateLimit
 }
@@ -139,10 +134,6 @@ func (cfg *Config) LoadEnv(prefix string) error {
 	if eprintArchivesPath := os.Getenv(prefixVar("EPRINT_ARCHIVES_PATH", prefix)); eprintArchivesPath != "" && cfg.EPrintArchivesPath == "" {
 		cfg.EPrintArchivesPath = eprintArchivesPath
 	}
-	// Set some default values for retry and timeout
-	timeoutSeconds := 10
-	cfg.retry = 3
-	cfg.timeout = time.Duration(timeoutSeconds)
 	return nil
 }
 
@@ -180,10 +171,6 @@ func (cfg *Config) LoadConfig(configFName string) error {
 	if err := JSONUnmarshal(src, &cfg); err != nil {
 		return err
 	}
-	// Set some default values for retry and timeout
-	timeoutSeconds := 10
-	cfg.retry = 3
-	cfg.timeout = time.Duration(timeoutSeconds)
 	return nil
 }
 
