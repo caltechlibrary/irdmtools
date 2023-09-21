@@ -37,7 +37,6 @@ package irdmtools
 import (
 	"fmt"
 	"io"
-	"os"
 	"strconv"
 	"strings"
 
@@ -111,16 +110,28 @@ var (
 // src, _ := irdmtools.JSONMarshalIndent(eprints)
 // fmt.Printf("%s\n", src)
 // ```
-func CrosswalkRdmToEPrint(rec *simplified.Record, eprint *eprinttools.EPrint) error {
+func CrosswalkRdmToEPrint(cfg *Config, rec *simplified.Record, eprint *eprinttools.EPrint) error {
 	// get EPrint ID from rec if set
 	if eprintid, ok := getMetadataIdentifier(rec, "eprintid"); ok {
 		if eprintid != "" {
 			eprint.EPrintID, _ = strconv.Atoi(eprintid)
 		}
-		eprint.ID = eprintid
+		eprint.ID = fmt.Sprintf("%s/records/%s", cfg.InvenioAPI, eprintid)
 	}
 	if doi, ok := getMetadataIdentifier(rec, "doi"); ok {
 		eprint.DOI = doi
+	}
+	if rec.Metadata != nil {
+		if rec.Metadata.PublicationDate != "" {
+			eprint.Date = rec.Metadata.PublicationDate
+			eprint.DateType = "published"
+		}
+		if rec.Metadata.Title != "" {
+			eprint.Title = rec.Metadata.Title
+		}
+		if rec.Metadata.Description != "" {
+			eprint.Abstract = rec.Metadata.Description
+		}
 	}
 	// We'll assume these are public records so we set eprint_status to "archive" if "open"
 	// otherwise we'll assume these would map to the inbox.
@@ -138,7 +149,6 @@ func CrosswalkRdmToEPrint(rec *simplified.Record, eprint *eprinttools.EPrint) er
 	eprint.Datestamp = rec.Created.Format(timestamp)
 	eprint.LastModified = rec.Updated.Format(timestamp)
 	if resourceType, ok := getMetadataResourceType(rec, resourceMap); ok {
-		fmt.Printf("DEBUG resourceType -> %T %+v\n", resourceType, resourceType)
 		eprint.Type = resourceType
 	}
 	return nil
@@ -160,7 +170,6 @@ func getMetadataIdentifier(rec *simplified.Record, scheme string) (string, bool)
 // getMetadataResourceType returns a metadata resource type if found.
 func getMetadataResourceType(rec *simplified.Record, resourceMap map[string]string) (string, bool) {
 	if rec.Metadata != nil && rec.Metadata.ResourceType != nil {
-		fmt.Fprintf(os.Stderr, "DEBUG rec.Metadata.ResourceType -> %T %+v\n", rec.Metadata.ResourceType, rec.Metadata.ResourceType)
 		if val, ok := rec.Metadata.ResourceType["id"]; ok {
 			resourceType := val.(string)
 			if val, ok := resourceMap[resourceType]; ok {
@@ -221,7 +230,7 @@ func (app *Rdm2EPrint) Run(in io.Reader, out io.Writer, eout io.Writer, rdmids [
 			return err
 		}
 		eprint := new(eprinttools.EPrint)
-		if err := CrosswalkRdmToEPrint(rec, eprint); err != nil {
+		if err := CrosswalkRdmToEPrint(app.Cfg, rec, eprint); err != nil {
 			return err
 		}
 		eprints.EPrint = append(eprints.EPrint, eprint)
