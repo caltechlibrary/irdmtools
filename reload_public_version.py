@@ -447,6 +447,18 @@ def process_document_and_eprintids(config, app_name, eprint_id, rdm_id):
         print(f'error processing {eprints_id}, rdm {rdm_id}, {err}', file = sys.stderr)
     return None
 
+
+def reload_public_version(eprint_id,rdm_id):
+    app_name = os.path.basename(sys.argv[0])
+    config, is_ok = check_environment()
+    if is_ok: 
+        err = process_document_and_eprintids(config, app_name, eprint_id, rdm_id)
+        if err is not None:
+            print(f'Aborting {app_name}, {err}', file = sys.stderr)
+            sys.exit(1)
+    else:
+        print(f'Aborting {app_name}, environment not setup', file = sys.stderr)
+
 #
 # Migrate a records using eprint2rdm, ./migrate_record.py and rdmutil.
 #
