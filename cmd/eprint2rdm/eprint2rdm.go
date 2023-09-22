@@ -171,7 +171,7 @@ func main() {
 
 	showHelp, showVersion, showLicense := false, false, false
 	allIds, debug := false, false
-	idList, cName := "", ""
+	idList, cName, configFName := "", "", ""
 	resourceTypesFName, contributorTypesFName := "", ""
 	flag.BoolVar(&showHelp, "help", false, "display help")
 	flag.BoolVar(&showVersion, "version", false, "display version")
@@ -182,6 +182,7 @@ func main() {
 	flag.StringVar(&cName, "harvest", cName, "harvest the record into a dataset collection")
 	flag.StringVar(&resourceTypesFName, "resource-map", resourceTypesFName, "use this file to map resource types from EPrints to Invenio RDM")
 	flag.StringVar(&contributorTypesFName, "contributor-map", contributorTypesFName, "use this file to map contributor types from EPrints to Invenio RDM")
+	flag.StringVar(&configFName, "config", configFName, "user config file")
 	flag.Parse()
 	args := flag.Args()
 
@@ -205,6 +206,10 @@ func main() {
 
 	// Create a appity object
 	app := new(irdmtools.EPrint2Rdm)
+	if err := app.Configure(configFName, "", debug); err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err)
+		os.Exit(1)
+	}
 	if (allIds || idList != "") && eprintHostname == "" {
 		if len(args) != 1 {
 			fmt.Fprintf(os.Stderr, "expected an EPrint hostname with either -all-ids or -ids-list and -harvest options")

@@ -82,6 +82,19 @@ in a pipe line so have minimal options.
 -config
 : provide a path to an alternate configuration file (e.g. "rdmtools.json")
 
+-harvest C_NAME
+: harvest JSON formated eprint records into the dataset collection 
+specified by C_NAME.
+
+-ids JSON_ID_FILE
+: read ids from a file.
+
+-xml
+: output as EPrint XML rather than JSON, does not work with -harvest.
+
+-pipeline
+: read from standard input and write crosswalk to standard out.
+
 # EXAMPLE
 
 Example generating a EPRINT JSON document from RDM would use the following
@@ -136,15 +149,16 @@ func main() {
 
 	showHelp, showVersion, showLicense := false, false, false
 	configFName, debug, asXML := "", false, false
-	idsFName, cName := "", ""
+	idsFName, cName, pipeline := "", "", false
 	flag.BoolVar(&showHelp, "help", false, "display help")
 	flag.BoolVar(&showVersion, "version", false, "display version")
 	flag.BoolVar(&showLicense, "license", false, "display license")
 	flag.StringVar(&configFName, "config", configFName, "use a config file")
-	flag.BoolVar(&asXML, "xml", asXML, "output as EPrint XML (does not work with harvest")
+	flag.BoolVar(&asXML, "xml", asXML, "output as EPrint XML, does not work with -harvest")
 	flag.BoolVar(&debug, "debug", debug, "display additional info to stderr")
 	flag.StringVar(&idsFName, "ids", idsFName, "read ids from a file")
 	flag.StringVar(&cName, "harvest", cName, "harvest JSON eprint records into the dataset collection.")
+	flag.BoolVar(&pipeline, "pipeline", pipeline, "read from standard input, crosswalk and write to standard out")
 	flag.Parse()
 	rdmids := flag.Args()
 
@@ -169,7 +183,7 @@ func main() {
 		rdmids = append(rdmids, ids...)
 	}
 
-	if len(rdmids) == 0 {
+	if len(rdmids) == 0 && ! pipeline {
 		fmt.Fprintf(os.Stderr, "%s\n", fmtHelp(helpText, appName, version, releaseDate, releaseHash))
 		os.Exit(1)
 	}
@@ -181,6 +195,13 @@ func main() {
 	}
 	if cName != "" {
 		if err := app.RunHarvest(os.Stdin, os.Stdout, os.Stderr, cName, rdmids); err != nil {
+			fmt.Fprintf(os.Stderr, "%s\n", err)
+			os.Exit(1)
+		}
+		os.Exit(0)
+	}
+	if pipeline {
+		if err := app.RunPipeline(os.Stdin, os.Stdout, os.Stderr, asXML); err != nil {
 			fmt.Fprintf(os.Stderr, "%s\n", err)
 			os.Exit(1)
 		}

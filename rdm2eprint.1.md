@@ -1,6 +1,6 @@
-%rdm2eprint(1) irdmtools user manual | version 0.0.53 e9c292f
+%rdm2eprint(1) irdmtools user manual | version 0.0.54 b97e5f6
 % R. S. Doiel and Tom Morrell
-% 2023-09-21
+% 2023-09-22
 
 # NAME
 
@@ -34,6 +34,19 @@ in a pipe line so have minimal options.
 
 -config
 : provide a path to an alternate configuration file (e.g. "rdmtools.json")
+
+-harvest C_NAME
+: harvest JSON formated eprint records into the dataset collection 
+specified by C_NAME.
+
+-ids JSON_ID_FILE
+: read ids from a file.
+
+-xml
+: output as EPrint XML rather than JSON, does not work with -harvest.
+
+-pipeline
+: read from standard input and write crosswalk to standard out.
 
 # EXAMPLE
 
