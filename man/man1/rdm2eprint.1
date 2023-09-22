@@ -14,7 +14,7 @@
 . ftr VB CB
 . ftr VBI CBI
 .\}
-.TH "rdm2eprint" "1" "2023-09-21" "irdmtools user manual" "version 0.0.53 fd2c73d"
+.TH "rdm2eprint" "1" "2023-09-21" "irdmtools user manual" "version 0.0.53 0acddc5"
 .hy
 .SH NAME
 .PP
@@ -47,6 +47,16 @@ display version
 -config
 provide a path to an alternate configuration file
 (e.g.\ \[lq]rdmtools.json\[rq])
+.TP
+-harvest C_NAME
+harvest JSON formated eprint records into the dataset collection
+specified by C_NAME.
+.TP
+-ids JSON_ID_FILE
+read ids from a file.
+.TP
+-xml
+output as EPrint XML rather than JSON, does not work with -harvest.
 .SH EXAMPLE
 .PP
 Example generating a EPRINT JSON document from RDM would use the

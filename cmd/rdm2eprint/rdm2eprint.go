@@ -82,6 +82,17 @@ in a pipe line so have minimal options.
 -config
 : provide a path to an alternate configuration file (e.g. "rdmtools.json")
 
+-harvest C_NAME
+: harvest JSON formated eprint records into the dataset collection 
+specified by C_NAME.
+
+-ids JSON_ID_FILE
+: read ids from a file.
+
+-xml
+: output as EPrint XML rather than JSON, does not work with -harvest.
+
+
 # EXAMPLE
 
 Example generating a EPRINT JSON document from RDM would use the following
@@ -141,7 +152,7 @@ func main() {
 	flag.BoolVar(&showVersion, "version", false, "display version")
 	flag.BoolVar(&showLicense, "license", false, "display license")
 	flag.StringVar(&configFName, "config", configFName, "use a config file")
-	flag.BoolVar(&asXML, "xml", asXML, "output as EPrint XML (does not work with harvest")
+	flag.BoolVar(&asXML, "xml", asXML, "output as EPrint XML, does not work with -harvest")
 	flag.BoolVar(&debug, "debug", debug, "display additional info to stderr")
 	flag.StringVar(&idsFName, "ids", idsFName, "read ids from a file")
 	flag.StringVar(&cName, "harvest", cName, "harvest JSON eprint records into the dataset collection.")
