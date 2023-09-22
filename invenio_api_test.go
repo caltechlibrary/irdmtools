@@ -35,7 +35,6 @@
 package irdmtools
 
 import (
-	"encoding/json"
 	"fmt"
 	//"math/rand"
 	"os"
@@ -61,7 +60,7 @@ func saveIdsFile(fName string, ids []string, maxLength int) error {
 		if len(s) == 0 {
 			return fmt.Errorf("no ids to save")
 		}
-		src, err := json.MarshalIndent(s, "", "    ")
+		src, err := JSONMarshalIndent(s, "", "    ")
 		if err != nil {
 			return err
 		}
@@ -178,7 +177,7 @@ func Test02GetRecord(t *testing.T) {
 		t.FailNow()
 	}
 	ids := []string{}
-	if err := json.Unmarshal(src, &ids); err != nil {
+	if err := JSONUnmarshal(src, &ids); err != nil {
 		t.Error(err)
 		t.FailNow()
 	}

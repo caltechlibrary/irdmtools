@@ -38,7 +38,6 @@ import (
 	"bufio"
 	"bytes"
 	"encoding/csv"
-	"encoding/json"
 	"encoding/xml"
 	"fmt"
 	"io"
@@ -1218,9 +1217,8 @@ func (app *EPrint2Rdm) Run(in io.Reader, out io.Writer, eout io.Writer, username
 		return fmt.Errorf("username or password missing")
 	}
 	timeout := time.Duration(timeoutSeconds)
-	baseURL := fmt.Sprintf("https://%s:%s@%s", username, password, host)
 	if allIds {
-		eprintids, err := GetKeys(baseURL, timeout, 3)
+		eprintids, err := GetKeys(app.Cfg, timeout, 3)
 		if err != nil {
 			return err
 		}
@@ -1294,7 +1292,7 @@ func (app *EPrint2Rdm) Run(in io.Reader, out io.Writer, eout io.Writer, username
 					log.Printf("line %d, concverting %q, %s", i+1, eprintId, err)
 					continue
 				}
-				eprints, err := GetEPrint(baseURL, id, timeout, 3)
+				eprints, err := GetEPrint(app.Cfg, id, timeout, 3)
 				if err != nil {
 					log.Printf("line %d, retrieving %q, %s", i+1, eprintId, err)
 					continue
@@ -1325,7 +1323,7 @@ func (app *EPrint2Rdm) Run(in io.Reader, out io.Writer, eout io.Writer, username
 		if err != nil {
 			return err
 		}
-		eprints, err := GetEPrint(baseURL, id, timeout, 3)
+		eprints, err := GetEPrint(app.Cfg, id, timeout, 3)
 		if err != nil {
 			return err
 		}
@@ -1345,7 +1343,7 @@ func (app *EPrint2Rdm) Run(in io.Reader, out io.Writer, eout io.Writer, username
 			}
 			return nil
 		}
-		src, err := json.MarshalIndent(record, "", "   ")
+		src, err := JSONMarshalIndent(record, "", "   ")
 		if err != nil {
 			return err
 		}

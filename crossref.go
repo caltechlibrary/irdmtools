@@ -1,7 +1,6 @@
 package irdmtools
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"path"
@@ -24,7 +23,7 @@ func QueryCrossRefWork(cfg *Config, doi string, mailTo string, dotInitials bool,
 		return nil, err
 	}
 	if cfg.Debug {
-		src, _ := json.MarshalIndent(works, "", "    ")
+		src, _ := JSONMarshalIndent(works, "", "    ")
 		fmt.Fprintf(os.Stderr, "works JSON:\n\n%s\n\n", src)
 	}
 	return works, nil

@@ -36,7 +36,6 @@ package irdmtools
 
 import (
 	"bytes"
-	"encoding/json"
 	"encoding/xml"
 	"fmt"
 	"io"
@@ -428,7 +427,7 @@ func CheckDOI(cfg *Config, doi string) ([]map[string]interface{}, error) {
 		cfg.rl.FromHeader(headers)
 		// NOTE: Need to unparse the response structure and
 		// then extract the IDs from the individual Hits results
-		if err := json.Unmarshal(src, &results); err != nil {
+		if err := JSONUnmarshal(src, &results); err != nil {
 			return nil, err
 		}
 		if results != nil && results.Hits != nil &&
@@ -497,7 +496,7 @@ func Query(cfg *Config, q string, sort string) ([]map[string]interface{}, error)
 		cfg.rl.FromHeader(headers)
 		// NOTE: Need to unparse the response structure and
 		// then extract the IDs from the individual Hits results
-		if err := json.Unmarshal(src, &results); err != nil {
+		if err := JSONUnmarshal(src, &results); err != nil {
 			return nil, err
 		}
 		if results != nil && results.Hits != nil &&
@@ -698,7 +697,7 @@ func GetRawRecord(cfg *Config, id string) (map[string]interface{}, error) {
 	}
 	cfg.rl.FromHeader(headers)
 	rec := map[string]interface{}{}
-	if err := json.Unmarshal(src, &rec); err != nil {
+	if err := JSONUnmarshal(src, &rec); err != nil {
 		return nil, err
 	}
 	return rec, nil
@@ -736,7 +735,7 @@ func GetRecord(cfg *Config, id string, draft bool) (*simplified.Record, error) {
 	}
 	cfg.rl.FromHeader(headers)
 	rec := new(simplified.Record)
-	if err := json.Unmarshal(src, &rec); err != nil {
+	if err := JSONUnmarshal(src, &rec); err != nil {
 		return nil, err
 	}
 	return rec, nil
@@ -776,7 +775,7 @@ func GetFile(cfg *Config, id string, fName string) (*simplified.Entry, error) {
 	}
 	cfg.rl.FromHeader(headers)
 	obj := new(simplified.Entry)
-	if err := json.Unmarshal(src, &obj); err != nil {
+	if err := JSONUnmarshal(src, &obj); err != nil {
 		return nil, err
 	}
 	return obj, nil
@@ -852,7 +851,7 @@ func GetVersions(cfg *Config, id string) (map[string]interface{}, error) {
 	}
 	cfg.rl.FromHeader(headers)
 	obj := map[string]interface{}{}
-	if err := json.Unmarshal(src, &obj); err != nil {
+	if err := JSONUnmarshal(src, &obj); err != nil {
 		return nil, err
 	}
 	return obj, nil
@@ -889,7 +888,7 @@ func GetVersionLatest(cfg *Config, id string) (map[string]interface{}, error) {
 	}
 	cfg.rl.FromHeader(headers)
 	obj := map[string]interface{}{}
-	if err := json.Unmarshal(src, &obj); err != nil {
+	if err := JSONUnmarshal(src, &obj); err != nil {
 		return nil, err
 	}
 	return obj, nil
@@ -928,7 +927,7 @@ func NewRecord(cfg *Config, src []byte) (map[string]interface{}, error) {
 	}
 	cfg.rl.FromHeader(headers)
 	obj := map[string]interface{}{}
-	if err := json.Unmarshal(src, &obj); err != nil {
+	if err := JSONUnmarshal(src, &obj); err != nil {
 		return nil, err
 	}
 	return obj, nil
@@ -966,7 +965,7 @@ func NewRecordVersion(cfg *Config, recordId string) (map[string]interface{}, err
 	cfg.rl.FromHeader(headers)
 	if len(src) > 0 {
 		obj := map[string]interface{}{}
-		if err := json.Unmarshal(src, &obj); err != nil {
+		if err := JSONUnmarshal(src, &obj); err != nil {
 			return nil, err
 		}
 		return obj, nil
@@ -1017,7 +1016,7 @@ func PublishRecordVersion(cfg *Config, recordId string, version string, pubDate 
 			metadata["publication_date"] = pubDate
 		}
 		m["metadata"] = metadata
-		payload, err := json.MarshalIndent(m, "", "     ")
+		payload, err := JSONMarshalIndent(m, "", "     ")
 		if err != nil {
 			return nil, err
 		}
@@ -1036,7 +1035,7 @@ func PublishRecordVersion(cfg *Config, recordId string, version string, pubDate 
 	cfg.rl.FromHeader(headers)
 	if len(src) > 0 {
 		obj := map[string]interface{}{}
-		if err := json.Unmarshal(src, &obj); err != nil {
+		if err := JSONUnmarshal(src, &obj); err != nil {
 			return nil, err
 		}
 		return obj, nil
@@ -1074,7 +1073,7 @@ func NewDraft(cfg *Config, recordId string) (map[string]interface{}, error) {
 	}
 	cfg.rl.FromHeader(headers)
 	obj := map[string]interface{}{}
-	if err := json.Unmarshal(src, &obj); err != nil {
+	if err := JSONUnmarshal(src, &obj); err != nil {
 		return nil, err
 	}
 	return obj, nil
@@ -1112,7 +1111,7 @@ func GetDraft(cfg *Config, id string) (map[string]interface{}, error) {
 	}
 	cfg.rl.FromHeader(headers)
 	obj := map[string]interface{}{}
-	if err := json.Unmarshal(src, &obj); err != nil {
+	if err := JSONUnmarshal(src, &obj); err != nil {
 		return nil, err
 	}
 	// Sometimes .pids.doi comes back with missing indentifier value
@@ -1162,7 +1161,7 @@ func UpdateDraft(cfg *Config, recordId string, payloadSrc []byte, debug bool) (m
 	}
 	cfg.rl.FromHeader(headers)
 	obj := map[string]interface{}{}
-	if err := json.Unmarshal(src, &obj); err != nil {
+	if err := JSONUnmarshal(src, &obj); err != nil {
 		return nil, err
 	}
 	return obj, nil
@@ -1240,7 +1239,7 @@ func SetFilesEnable(cfg *Config, recordId string, enable bool, debug bool) (map[
 		updateDraft = true	
 	}
 	if updateDraft {
-		src, err := json.MarshalIndent(m, "", "    ")
+		src, err := JSONMarshalIndent(m, "", "    ")
 		if err != nil {
 			return m, err
 		}
@@ -1273,7 +1272,7 @@ func SetVersion(cfg *Config, recordId string, version string, debug bool) (map[s
 		data := elem.(map[string]interface{})
 		data["version"] = version
 		m["metadata"] = data
-		src, err := json.MarshalIndent(m, "", "    ")
+		src, err := JSONMarshalIndent(m, "", "    ")
 		if err != nil {
 			return m, err
 		}
@@ -1306,7 +1305,7 @@ func SetPubDate(cfg *Config, recordId string, pubDate string, debug bool) (map[s
 		data := elem.(map[string]interface{})
 		data["publication_date"] = pubDate
 		m["metadata"] = data
-		src, err := json.MarshalIndent(m, "", "    ")
+		src, err := JSONMarshalIndent(m, "", "    ")
 		if err != nil {
 			return m, err
 		}
@@ -1344,7 +1343,7 @@ func GetDraftFiles(cfg *Config, recordId string, debug bool) (map[string]interfa
 	}
 	cfg.rl.FromHeader(headers)
 	m := map[string]interface{}{}
-	if err := json.Unmarshal(src, &m); err != nil {
+	if err := JSONUnmarshal(src, &m); err != nil {
 		return nil, err
 	}
 	return m, nil
@@ -1379,7 +1378,7 @@ func GetFiles(cfg *Config, recordId string, debug bool) (map[string]interface{},
 	}
 	cfg.rl.FromHeader(headers)
 	m := map[string]interface{}{}
-	if err := json.Unmarshal(src, &m); err != nil {
+	if err := JSONUnmarshal(src, &m); err != nil {
 		return nil, err
 	}
 	return m, nil
@@ -1416,7 +1415,7 @@ func UploadFiles(cfg *Config, recordId string, filenames []string, debug bool) (
 		uploadInfo = append(uploadInfo, map[string]string{ "key": key })
 	}
 	// Now turn uploadInfo into an array of objects and do POST
-	payloadSrc, err := json.MarshalIndent(uploadInfo, "", "    ")
+	payloadSrc, err := JSONMarshalIndent(uploadInfo, "", "    ")
 	if err != nil {
 		return nil, err
 	}
@@ -1428,7 +1427,7 @@ func UploadFiles(cfg *Config, recordId string, filenames []string, debug bool) (
 	}
 	cfg.rl.FromHeader(headers)
 	filesInfo := new(simplified.FileListing)
-	if err := json.Unmarshal(src, &filesInfo); err != nil {
+	if err := JSONUnmarshal(src, &filesInfo); err != nil {
 		return nil, err
 	}
 	if filesInfo == nil || filesInfo.Entries == nil {
@@ -1519,13 +1518,13 @@ func GetAccess(cfg *Config, recordId string, accessType string) ([]byte, error) 
 	}
 	switch accessType {
 	case "files":
-		src, err = json.MarshalIndent(rec.RecordAccess.Files, "", "    ")
+		src, err = JSONMarshalIndent(rec.RecordAccess.Files, "", "    ")
 	case "record":
-		src, err = json.MarshalIndent(rec.RecordAccess.Record, "", "    ")
+		src, err = JSONMarshalIndent(rec.RecordAccess.Record, "", "    ")
 	case "embargo":
-		src, err = json.MarshalIndent(rec.RecordAccess.Embargo, "", "    ")
+		src, err = JSONMarshalIndent(rec.RecordAccess.Embargo, "", "    ")
 	case "":
-		src, err = json.MarshalIndent(rec.RecordAccess, "", "    ")
+		src, err = JSONMarshalIndent(rec.RecordAccess, "", "    ")
 	default:
 		return nil, fmt.Errorf("%q is not a supported access type", accessType)
 	}
@@ -1592,7 +1591,7 @@ func SetAccess(cfg *Config, recordId string, accessType string, accessValue stri
 				return nil, fmt.Errorf("%q is not a supported access type", accessType)
 		}
 		draft["access"] = access
-		src, err := json.MarshalIndent(draft, "", "    ")
+		src, err := JSONMarshalIndent(draft, "", "    ")
 		if err != nil {
 			return nil, err
 		}
@@ -1600,7 +1599,7 @@ func SetAccess(cfg *Config, recordId string, accessType string, accessValue stri
 		if err != nil {
 			return nil, err
 		}
-		return json.MarshalIndent(draft, "", "    ")
+		return JSONMarshalIndent(draft, "", "    ")
 	} 
 
 	switch accessType {
@@ -1611,7 +1610,7 @@ func SetAccess(cfg *Config, recordId string, accessType string, accessValue stri
 	default:
 		return nil, fmt.Errorf("%q is not a supported access type", accessType)
 	}
-	src, err = json.MarshalIndent(rec, "", "    ")
+	src, err = JSONMarshalIndent(rec, "", "    ")
 	if err != nil {
 		return nil, err
 	}
@@ -1673,7 +1672,7 @@ func SendToCommunity(cfg *Config, recordId string, communityId string, debug boo
 	cfg.rl.FromHeader(headers)
 
 	data := map[string]interface{}{}
-	err = json.Unmarshal(src, &data)
+	err = JSONUnmarshal(src, &data)
 	
 	requestId, ok := data["id"]
 	if !ok {
@@ -1699,7 +1698,7 @@ func SendToCommunity(cfg *Config, recordId string, communityId string, debug boo
 	cfg.rl.FromHeader(headers)
 
 	data = map[string]interface{}{}
-	err = json.Unmarshal(src, &data)
+	err = JSONUnmarshal(src, &data)
 	if err != nil {
 		return nil, err
 	}
@@ -1751,7 +1750,7 @@ func GetReview(cfg *Config, recordId string, debug  bool) (map[string]interface{
 	cfg.rl.FromHeader(headers)
 
 	m := map[string]interface{}{}
-	err = json.Unmarshal(src, &m)
+	err = JSONUnmarshal(src, &m)
 	if err != nil {
 		return nil, err
 	}
@@ -1831,7 +1830,7 @@ func ReviewRequest(cfg *Config, recordId string, decision string, comment string
 	cfg.rl.FromHeader(headers)
 
 	obj := map[string]interface{}{}
-	if err := json.Unmarshal(src, &obj); err != nil {
+	if err := JSONUnmarshal(src, &obj); err != nil {
 		return nil, err
 	}
 	return obj, nil
