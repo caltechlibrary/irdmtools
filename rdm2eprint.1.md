@@ -1,6 +1,6 @@
-%rdm2eprint(1) irdmtools user manual | version 0.0.53 0acddc5
+%rdm2eprint(1) irdmtools user manual | version 0.0.53 35303ed
 % R. S. Doiel and Tom Morrell
-% 2023-09-21
+% 2023-09-22
 
 # NAME
 
@@ -45,6 +45,8 @@ specified by C_NAME.
 -xml
 : output as EPrint XML rather than JSON, does not work with -harvest.
 
+-pipeline
+: read from standard input and write crosswalk to standard out.
 
 # EXAMPLE
 

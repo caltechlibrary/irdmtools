@@ -162,7 +162,7 @@ func CrosswalkRdmToEPrint(cfg *Config, rec *simplified.Record, eprint *eprinttoo
 			if eprintid != "" {
 				eprint.EPrintID, _ = strconv.Atoi(eprintid)
 			}
-			eprint.ID = fmt.Sprintf("%s/records/%s", cfg.InvenioAPI, eprintid)
+			eprint.ID = fmt.Sprintf("%s/records/%s", cfg.InvenioAPI, rec.ID)
 		}
 		if doi, ok := getMetadataIdentifier(rec, "doi"); ok {
 			eprint.DOI = doi
@@ -187,13 +187,18 @@ func CrosswalkRdmToEPrint(cfg *Config, rec *simplified.Record, eprint *eprinttoo
 		if resourceType, ok := getMetadataResourceType(rec, resourceMap); ok {
 			eprint.Type = resourceType
 		}
+		editors := &eprinttools.EditorItemList{}
 		if rec.Metadata.Creators != nil && len(rec.Metadata.Creators) > 0 {
 			creators := &eprinttools.CreatorItemList{}
 			corpCreators := &eprinttools.CorpCreatorItemList{}
 			for _, creator := range rec.Metadata.Creators {
 				if creator.PersonOrOrg != nil {
 					if item, ok := creatorPersonToEPrintItem(creator); ok {
-						creators.Append(item)
+						if creatorHasRole(creator.Role, "editor") {
+							editors.Append(item)
+						} else {
+							creators.Append(item)
+						}
 					} else if item, ok := creatorCorpToEPrintItem(creator); ok {
 						corpCreators.Append(item)
 					}
@@ -211,7 +216,11 @@ func CrosswalkRdmToEPrint(cfg *Config, rec *simplified.Record, eprint *eprinttoo
 			for _, contributor := range rec.Metadata.Contributors {
 				if contributor.PersonOrOrg != nil {
 					if item, ok := creatorPersonToEPrintItem(contributor); ok {
-						contributors.Append(item)
+						if creatorHasRole(contributor.Role, "editor") {
+							editors.Append(item)
+						} else {
+							contributors.Append(item)
+						}
 					} else if item, ok := contributorCorpAsPersonToEPrintItem(contributor); ok {
 						contributors.Append(item)
 					}
@@ -219,6 +228,9 @@ func CrosswalkRdmToEPrint(cfg *Config, rec *simplified.Record, eprint *eprinttoo
 			}
 			if contributors.Length() > 0 {
 				eprint.Contributors = contributors
+			}
+			if editors.Length() > 0 {
+				eprint.Editors = editors
 			}
 		}
 		if rec.Metadata.PublicationDate != "" {
@@ -241,6 +253,7 @@ func CrosswalkRdmToEPrint(cfg *Config, rec *simplified.Record, eprint *eprinttoo
 		if rec.Metadata.Identifiers != nil {
 			if resolverID, ok := getIdentifier(rec.Metadata.Identifiers, "resolverid"); ok {
 				eprint.OfficialURL = fmt.Sprintf("https://resolver.caltech.edu/%s", resolverID)
+				eprint.IDNumber = resolverID
 			}
 		}
 		if rec.Metadata.Rights != nil && len(rec.Metadata.Rights) > 0 {
@@ -295,6 +308,23 @@ func CrosswalkRdmToEPrint(cfg *Config, rec *simplified.Record, eprint *eprinttoo
 		}
 	}
 	if len(rec.CustomFields) > 0 {
+		if imprintInfo, ok := rec.CustomFields["imprint:imprint"].(map[string]interface{}); ok {
+			if title, ok := imprintInfo["title"].(string); ok {
+				eprint.BookTitle = title
+			}
+			if isbn, ok := imprintInfo["isbn"].(string); ok {
+				eprint.ISBN = isbn
+			}
+			if pages, ok := imprintInfo["pages"].(string); ok {
+				eprint.PageRange = pages
+			}
+			if place, ok := imprintInfo["place"].(string); ok {
+				eprint.PlaceOfPub = place
+			}
+			if edition, ok := imprintInfo["edition"].(string); ok {
+				eprint.Edition = edition
+			}
+		}
 		if journalInfo, ok := rec.CustomFields["journal:journal"].(map[string]interface{}); ok {
 			if title, ok := journalInfo["title"].(string); ok {
 				eprint.Publication = title
@@ -310,6 +340,16 @@ func CrosswalkRdmToEPrint(cfg *Config, rec *simplified.Record, eprint *eprinttoo
 			}
 			if pages, ok := journalInfo["pages"].(string); ok {
 				eprint.PageRange = pages
+			}
+		}
+		if caltechPlaceOfPubs, ok := rec.CustomFields["caltech:place_of_publication"].(map[string]interface{}); ok {
+			if place, ok := caltechPlaceOfPubs["place"]; ok {
+				eprint.PlaceOfPub = place.(string)
+			}
+		}
+		if caltechSeries, ok := rec.CustomFields["caltech:series"].(map[string]interface{}); ok {
+			if series, ok := caltechSeries["series"]; ok {
+				eprint.Series = series.(string)
 			}
 		}
 		if caltechGroups, ok := rec.CustomFields["caltech:groups"].([]interface{}); ok {
@@ -330,6 +370,19 @@ func CrosswalkRdmToEPrint(cfg *Config, rec *simplified.Record, eprint *eprinttoo
 					eprint.LocalGroup = groupList
 				}
 			}
+		}
+		otherNumberSystemItem := &eprinttools.Item{}
+		if numName, ok := rec.CustomFields["caltech:other_num_name"].(string); ok {
+			otherNumberSystemItem.Name = &eprinttools.Name{
+				Value: numName,
+			}
+		}
+		if numID, ok := rec.CustomFields["caltech:other_num_id"].(string); ok {
+			otherNumberSystemItem.ID = numID
+		}
+		if otherNumberSystemItem.ID != "" || otherNumberSystemItem.Name != nil {
+			eprint.OtherNumberingSystem = &eprinttools.OtherNumberingSystemItemList{}
+			eprint.OtherNumberingSystem.Append(otherNumberSystemItem)
 		}
 	}
 	// Now that we have enough information the eprint structure we can answer some questions
@@ -353,6 +406,22 @@ func getIdentifier(identifiers []*simplified.Identifier, scheme string) (string,
 		}
 	}
 	return "", false
+}
+
+func creatorHasRole(role *simplified.Role, roleType string) bool {
+	if role != nil {
+		if role.ID == roleType {
+			return true
+		}
+		if role.Title != nil && len(role.Title) > 0 {
+			if en, ok := role.Title["en"]; ok {
+				if strings.Contains(strings.ToLower(en), roleType) {
+					return true
+				}
+			}
+		}
+	}
+	return false
 }
 
 // creatorPersonToEPrintItem takes a RDM .Metadata.Creators element and turns
@@ -561,5 +630,34 @@ func (app *Rdm2EPrint) RunHarvest(in io.Reader, out io.Writer, eout io.Writer, c
 		}
 	}
 	log.Printf("Finished, processed %d records in %s", tot, time.Since(t0).Round(time.Second))
+	return nil
+}
+
+// Run in pipline mode, e.g. `eprint2rdm XXXXX-XXXXX | rdm2eprint` should round trip the EPrint record
+// to RDM then back again. It reads from standard input and writes to standard out.
+func (app *Rdm2EPrint) RunPipeline(in io.Reader, out io.Writer, eout io.Writer, asXML bool) error {
+	eprint := new(eprinttools.EPrint)
+	eprints := new(eprinttools.EPrints)
+	rec := new(simplified.Record)
+	src, err := io.ReadAll(in)
+	if err != nil {
+		return err
+	}
+	if err := JSONUnmarshal(src, &rec); err != nil {
+		return err
+	}
+	if err := CrosswalkRdmToEPrint(app.Cfg, rec, eprint); err != nil {
+		return err
+	}
+	eprints.EPrint = append(eprints.EPrint, eprint)
+	if asXML {
+		src, err = xml.MarshalIndent(eprints, "", "  ")
+	} else {
+		src, err = JSONMarshalIndent(eprints, "", "    ")
+	}
+	if err != nil {
+		return err
+	}
+	fmt.Fprintf(out, "%s\n", src)
 	return nil
 }

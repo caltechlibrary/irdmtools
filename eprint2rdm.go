@@ -224,10 +224,9 @@ func listMapHasID(l []map[string]string, target string) bool {
 	return false
 }
 
-
 func normalizeThesisType(s string) string {
 	switch s {
-	case	"phd":
+	case "phd":
 		return "PhD"
 	default:
 		if len(s) > 1 {
@@ -238,6 +237,12 @@ func normalizeThesisType(s string) string {
 	return s
 }
 func customFieldsMetadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record) error {
+	if rec.Metadata == nil {
+		rec.Metadata = new(simplified.Metadata)
+	}
+	if rec.CustomFields == nil {
+		rec.CustomFields = map[string]interface{}{}
+	}
 	/*NOTE: Custom fields for Journal data
 		"custom_fields": {
 			"journal:journal": {
@@ -254,19 +259,16 @@ func customFieldsMetadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.
 			}
 		},
 	*/
-	if rec.Metadata == nil {
-		rec.Metadata = new(simplified.Metadata)
-	}
-	if rec.CustomFields == nil {
-		rec.CustomFields = map[string]interface{}{}
-	}
 	// NOTE: handle thesis type including capitalization of types.
 	if eprint.Type == "article" && eprint.Publication != "" {
 		if err := SetJournalField(rec, "title", eprint.Publication); err != nil {
 			return err
 		}
-		if err := SetJournalField(rec, "issue", eprint.Number); err != nil {
-			return err
+		// Per issue #55, eprint.Number is mapped to caltech:series_number for series, otherwise it's a issue number
+		if eprint.Series == "" {
+			if err := SetJournalField(rec, "issue", eprint.Number); err != nil {
+				return err
+			}
 		}
 		if err := SetJournalField(rec, "pages", eprint.PageRange); err != nil {
 			return err
@@ -276,11 +278,6 @@ func customFieldsMetadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.
 		}
 		if eprint.Publisher != "" {
 			rec.Metadata.Publisher = eprint.Publisher
-		}
-		if eprint.Series != "" {
-			if err := SetJournalField(rec, "series", eprint.Series); err != nil {
-				return err
-			}
 		}
 		if eprint.ISSN != "" {
 			if err := SetJournalField(rec, "issn", eprint.ISSN); err != nil {
@@ -299,17 +296,21 @@ func customFieldsMetadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.
 			}
 		}
 	}
-	if eprint.Series != "" && eprint.ISBN == "" {
+	if eprint.Series != "" {
 		SetCustomField(rec, "caltech:series", "series", eprint.Series)
+		// Per issue #55, eprint.Number is mapped to caltech:series_number for series, otherwise it's a issue number
+		if eprint.Number != "" {
+			SetCustomField(rec, "caltech:series", "series_number", eprint.Number)
+		}
 	}
-	if eprint.PlaceOfPub != "" && eprint.ISBN == "" {
+	if eprint.PlaceOfPub != "" {
 		SetCustomField(rec, "caltech:place_of_publication", "", eprint.PlaceOfPub)
 	}
 	// NOTE: handle thesis type including capitalization of types.
 	if eprint.Type == "thesis" {
 		val := map[string]interface{}{
-			"type": normalizeThesisType(eprint.ThesisType),
-			"unversity": eprint.Institution,
+			"type":       normalizeThesisType(eprint.ThesisType),
+			"unversity":  eprint.Institution,
 			"department": eprint.Department,
 		}
 		SetCustomField(rec, "thesis:thesis", "", val)
@@ -380,7 +381,7 @@ func customFieldsMetadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.
 		if len(subjectStrings) > 0 {
 			duplicates := map[string]bool{}
 			for _, subject := range subjectStrings {
-				if _, duplicate := duplicates[subject]; ! duplicate {
+				if _, duplicate := duplicates[subject]; !duplicate {
 					AddSubject(rec, subject)
 				}
 				duplicates[subject] = true
@@ -468,7 +469,7 @@ func itemToPersonOrOrg(item *eprinttools.Item) *simplified.PersonOrOrg {
 			} else {
 				orcid = item.Name.ORCID
 			}
-			
+
 		} else {
 			person.Type = "organizational"
 			person.Name = item.Name.Value
@@ -577,28 +578,34 @@ func simplifyContributors(eprint *eprinttools.EPrint, rec *simplified.Record, co
 	}
 	// Add Editors, Adivisors, Committee Members, Thesis Chair, Reviewers, Translators, etc.
 	if eprint.Editors != nil && eprint.Editors.Length() > 0 {
-		for i := 0; i < eprint.Editors.Length(); i++ {
-			if item := eprint.Editors.IndexOf(i); item != nil && item.Name != nil {
-				if person := itemToPersonOrOrg(item); person != nil {
-					contributors = append(contributors, &simplified.Creator{
-						PersonOrOrg: person,
-						Role: &simplified.Role{
-							Title: map[string]string{
-								"en": "editor",
+		// NORE: Editors may have already been mapped to creators when there are no creators in the record.
+		if eprint.Creators != nil && eprint.Creators.Length() > 0 {
+			for i := 0; i < eprint.Editors.Length(); i++ {
+				if item := eprint.Editors.IndexOf(i); item != nil && item.Name != nil {
+					if person := itemToPersonOrOrg(item); person != nil {
+						contributors = append(contributors, &simplified.Creator{
+							PersonOrOrg: person,
+							Role: &simplified.Role{
+								ID: "editor",
+								Title: map[string]string{
+									"en": "Editor",
+									"de": "EditorIn",
+								},
 							},
-						},
-					})
+						})
+					}
 				}
 			}
 		}
 	}
 	if eprint.ThesisAdvisor != nil && eprint.ThesisAdvisor.Length() > 0 {
 		for i := 0; i < eprint.ThesisAdvisor.Length(); i++ {
-			if item := eprint.ThesisAdvisor.IndexOf(i); item != nil  && item.Name != nil {
+			if item := eprint.ThesisAdvisor.IndexOf(i); item != nil && item.Name != nil {
 				if person := itemToPersonOrOrg(item); person != nil {
 					contributors = append(contributors, &simplified.Creator{
 						PersonOrOrg: person,
 						Role: &simplified.Role{
+							ID: "other",
 							Title: map[string]string{
 								"en": "thesis_advisor",
 							},
@@ -615,6 +622,7 @@ func simplifyContributors(eprint *eprinttools.EPrint, rec *simplified.Record, co
 					contributors = append(contributors, &simplified.Creator{
 						PersonOrOrg: person,
 						Role: &simplified.Role{
+							ID: "other",
 							Title: map[string]string{
 								"en": "thesis_committee",
 							},
@@ -885,15 +893,15 @@ func metadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record, cont
 	}
 	// Figure out if our copyright information is in the Note field.
 	/*
-	// NOTE: Removed this mapping based on issue 70 in 
-	// caltechlibrary/caltechauthors repo.
-	if (eprint.Note != "") && (strings.Contains(eprint.Note, "©") || strings.Contains(eprint.Note, "copyright") || strings.Contains(eprint.Note, "(c)")) {
-		addRights = true
-		m := map[string]string{
-			"en": fmt.Sprintf("%s", eprint.Note),
+		// NOTE: Removed this mapping based on issue 70 in
+		// caltechlibrary/caltechauthors repo.
+		if (eprint.Note != "") && (strings.Contains(eprint.Note, "©") || strings.Contains(eprint.Note, "copyright") || strings.Contains(eprint.Note, "(c)")) {
+			addRights = true
+			m := map[string]string{
+				"en": fmt.Sprintf("%s", eprint.Note),
+			}
+			rights.Description = m
 		}
-		rights.Description = m
-	}
 	*/
 	// FIXME: work with Tom to sort out how "Rights" and document level
 	// copyright info should work.
@@ -908,7 +916,6 @@ func metadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record, cont
 		rec.Metadata.Rights = append(rec.Metadata.Rights, rights)
 	}
 
-
 	// FIXME: Work with Tom to figure out correct mapping of rights from EPrints XML
 	// FIXME: Language appears to be at the "document" level, not record level
 
@@ -916,10 +923,10 @@ func metadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record, cont
 	// Default to the eprint.Datestamp and correct if DateType is "published"
 	rec.Metadata.PublicationDate = normalizeEPrintDate(eprint.Datestamp)
 
-	// NOTE: We have a few records that have NULL or empty string 
+	// NOTE: We have a few records that have NULL or empty string
 	// eprint.date_type fields. These all appear like they should have
 	// the value in eprint.date treated as the publication date if it is
-	// publicated. 
+	// publicated.
 	// See https://github.com/caltechlibrary/caltechauthors/issues/75
 	if (eprint.DateType == "published" || eprint.DateType == "") && (eprint.Date != "") {
 		rec.Metadata.Dates = append(rec.Metadata.Dates, dateTypeFromTimestamp("pub_date", eprint.Date, "EPrint's Publication Date"))
@@ -957,7 +964,7 @@ func metadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record, cont
 	}
 
 	// NOTE: I'm adding this in metadataFromEPrint due to cases where multiple
-	// records use the same DOI (something that publishers do at times). 
+	// records use the same DOI (something that publishers do at times).
 	if eprint.DOI != "" {
 		AddIdentifier(rec, "doi", eprint.DOI)
 	}
@@ -966,18 +973,18 @@ func metadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record, cont
 	}
 	if eprint.ISBN != "" {
 		SetImprintField(rec, "isbn", eprint.ISBN)
-		if eprint.BookTitle != "" {
-			SetImprintField(rec, "title", eprint.BookTitle)
-		}
-		if eprint.PageRange != "" {
-			SetImprintField(rec, "pages", eprint.PageRange)
-		}
-		if eprint.PlaceOfPub != "" {
-			SetImprintField(rec, "place", eprint.PlaceOfPub)
-		}
-		if eprint.Series != "" {
-			SetImprintField(rec, "series", eprint.Series)
-		}
+	}
+	if eprint.BookTitle != "" {
+		SetImprintField(rec, "title", eprint.BookTitle)
+	}
+	if eprint.PageRange != "" {
+		SetImprintField(rec, "pages", eprint.PageRange)
+	}
+	if eprint.PlaceOfPub != "" {
+		SetImprintField(rec, "place", eprint.PlaceOfPub)
+	}
+	if eprint.Edition != "" {
+		SetImprintField(rec, "edition", eprint.Edition)
 	}
 	if eprint.PMCID != "" {
 		if strings.Contains(eprint.PMCID, ",") {
@@ -1035,7 +1042,7 @@ func metadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record, cont
 			rec.Metadata.AdditionalDescriptions = []*simplified.Description{}
 		}
 		if eprint.Note != "" {
-			rec.Metadata.AdditionalDescriptions = append(rec.Metadata.AdditionalDescriptions , &simplified.Description{
+			rec.Metadata.AdditionalDescriptions = append(rec.Metadata.AdditionalDescriptions, &simplified.Description{
 				Type: &simplified.Type{
 					ID: "additional",
 				},
@@ -1043,7 +1050,7 @@ func metadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record, cont
 			})
 		}
 		if eprint.ErrataText != "" {
-			rec.Metadata.AdditionalDescriptions = append(rec.Metadata.AdditionalDescriptions , &simplified.Description{
+			rec.Metadata.AdditionalDescriptions = append(rec.Metadata.AdditionalDescriptions, &simplified.Description{
 				Type: &simplified.Type{
 					ID: "errata",
 				},
@@ -1056,7 +1063,7 @@ func metadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record, cont
 
 // Decide if to migrate filename based on name and format description
 func migrateFile(fName string, doc *eprinttools.Document) bool {
-	// Always explude indexcodes.txt and thumbnails. These are 
+	// Always explude indexcodes.txt and thumbnails. These are
 	// EPrints internal files not user submitted files.
 	if (fName == "indexcodes.txt") || (fName == "preview.png") ||
 		strings.HasPrefix(doc.FormatDesc, "Generate") ||
@@ -1087,38 +1094,38 @@ func filesFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record) error {
 			}
 			if len(doc.Files) > 0 {
 				for _, docFile := range doc.Files {
-					// Check to make sure we want to retain file 
+					// Check to make sure we want to retain file
 					// information.
 					if migrateFile(docFile.Filename, doc) {
-    					addFiles = true
-    					entry := new(simplified.Entry)
-    					entry.FileID = docFile.URL
-    					entry.Size = docFile.FileSize
-    					entry.MimeType = docFile.MimeType
+						addFiles = true
+						entry := new(simplified.Entry)
+						entry.FileID = docFile.URL
+						entry.Size = docFile.FileSize
+						entry.MimeType = docFile.MimeType
 						entry.Metadata = map[string]interface{}{
-							"security": doc.Security,
-							"format": doc.Format,
+							"security":    doc.Security,
+							"format":      doc.Format,
 							"format_desc": doc.FormatDesc,
-							"rev_number": doc.RevNumber,
-							"pos": doc.Pos,
-							"main": doc.Main,
-							"content": doc.Content,
-							"file_id": docFile.FileID,
-							"object_id": docFile.ObjectID,
-							"filename": docFile.Filename,
+							"rev_number":  doc.RevNumber,
+							"pos":         doc.Pos,
+							"main":        doc.Main,
+							"content":     doc.Content,
+							"file_id":     docFile.FileID,
+							"object_id":   docFile.ObjectID,
+							"filename":    docFile.Filename,
 						}
-    					if doc.Content == "submitted"  || 
-							doc.Content == "preprint" || 
+						if doc.Content == "submitted" ||
+							doc.Content == "preprint" ||
 							doc.Content == "published" {
-    						entry.VersionID = doc.Content
-    					}
-    					if docFile.Hash != "" {
-    						entry.CheckSum = fmt.Sprintf("%s:%s", strings.ToLower(docFile.HashType), docFile.Hash)
-    					}
-    					files.Entries[docFile.Filename] = entry
-    					if strings.HasPrefix(docFile.Filename, "preview") {
-    						files.DefaultPreview = docFile.Filename
-    					}
+							entry.VersionID = doc.Content
+						}
+						if docFile.Hash != "" {
+							entry.CheckSum = fmt.Sprintf("%s:%s", strings.ToLower(docFile.HashType), docFile.Hash)
+						}
+						files.Entries[docFile.Filename] = entry
+						if strings.HasPrefix(docFile.Filename, "preview") {
+							files.DefaultPreview = docFile.Filename
+						}
 					}
 				}
 			}
@@ -1182,6 +1189,47 @@ func createdUpdatedFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record
 	return nil
 }
 
+// Configure reads the configuration file and environment
+// initialing the Cfg attribute of a Eprint2Rdm object. It returns an error
+// if problem were encounter.
+//
+// ```
+//
+//	app := new(irdmtools.EPrint2Rdm)
+//	if err := app.Configure("irdmtools.json", "TEST_"); err != nil {
+//	   // ... handle error ...
+//	}
+//	fmt.Printf("Invenio RDM API UTL: %q\n", app.Cfg.IvenioAPI)
+//	fmt.Printf("Invenio RDM token: %q\n", app.Cfg.InvenioToken)
+//
+// ```
+func (app *EPrint2Rdm) Configure(configFName string, envPrefix string, debug bool) error {
+	if app == nil {
+		app = new(EPrint2Rdm)
+	}
+	cfg := NewConfig()
+	// Load the config file if name isn't an empty string
+	if configFName != "" {
+		err := cfg.LoadConfig(configFName)
+		if err != nil {
+			return err
+		}
+	}
+	// Merge settings from the environment
+	if err := cfg.LoadEnv(envPrefix); err != nil {
+		return err
+	}
+	// Make sure we have a minimal useful configuration
+	if cfg.EPrintHost == "" || cfg.EPrintUser == "" || cfg.EPrintPassword == "" {
+		return fmt.Errorf("EPRINT_HOST, EPRINT_USER or EPRINT_PASSWORD are not available")
+	}
+	app.Cfg = cfg
+	if debug {
+		app.Cfg.Debug = true
+	}
+	return nil
+}
+
 // Run implements the eprint2rdm cli behaviors.
 //
 // ```
@@ -1213,6 +1261,9 @@ func createdUpdatedFromEPrint(eprint *eprinttools.EPrint, rec *simplified.Record
 //
 // ```
 func (app *EPrint2Rdm) Run(in io.Reader, out io.Writer, eout io.Writer, username string, password string, host string, eprintId string, resourceTypesFName string, contributorTypesFName string, allIds bool, idList string, cName string, debug bool) error {
+	if app.Cfg == nil {
+		return fmt.Errorf("application has no configuration set")
+	}
 	if username == "" || password == "" {
 		return fmt.Errorf("username or password missing")
 	}

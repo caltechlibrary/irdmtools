@@ -130,6 +130,9 @@ func restClient(urlEndPoint string, timeout time.Duration, retryCount int) ([]by
 
 // GetEPrint fetches a single EPrint record via the EPrint REST API.
 func GetEPrint(cfg *Config, eprintID int, timeout time.Duration, retryCount int) (*eprinttools.EPrints, error) {
+	if cfg == nil {
+		return nil, fmt.Errorf("application is not configured to retrieve data from the EPrint REST API")
+	}
 	baseURL := fmt.Sprintf("https://%s:%s@%s", cfg.EPrintUser, cfg.EPrintPassword, cfg.EPrintHost)
 	endPoint := fmt.Sprintf("%s/rest/eprint/%d.xml", baseURL, eprintID)
 	src, err := restClient(endPoint, timeout, retryCount)
