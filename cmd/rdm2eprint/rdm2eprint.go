@@ -180,7 +180,6 @@ func main() {
 		os.Exit(1)
 	}
 	if cName != "" {
-		fmt.Fprintf(os.Stderr, "DEBUG app.RunHarvest(in, out, eout, %q, rdmids)", cName)
 		if err := app.RunHarvest(os.Stdin, os.Stdout, os.Stderr, cName, rdmids); err != nil {
 			fmt.Fprintf(os.Stderr, "%s\n", err)
 			os.Exit(1)

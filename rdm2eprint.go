@@ -188,22 +188,37 @@ func CrosswalkRdmToEPrint(cfg *Config, rec *simplified.Record, eprint *eprinttoo
 			eprint.Type = resourceType
 		}
 		if rec.Metadata.Creators != nil && len(rec.Metadata.Creators) > 0 {
-			eprint.Creators = &eprinttools.CreatorItemList{}
-			eprint.CorpCreators = &eprinttools.CorpCreatorItemList{}
+			creators := &eprinttools.CreatorItemList{}
+			corpCreators := &eprinttools.CorpCreatorItemList{}
 			for _, creator := range rec.Metadata.Creators {
 				if creator.PersonOrOrg != nil {
 					if item, ok := creatorPersonToEPrintItem(creator); ok {
-						eprint.Creators.Append(item)
+						creators.Append(item)
 					} else if item, ok := creatorCorpToEPrintItem(creator); ok {
-						eprint.CorpCreators.Append(item)
+						corpCreators.Append(item)
 					}
 				}
 			}
-			if eprint.Creators.Length() == 0 {
-				eprint.Creators = nil
+			if creators.Length() > 0 {
+				eprint.Creators = creators
 			}
-			if eprint.CorpContributors.Length() == 0 {
-				eprint.CorpCreators = nil
+			if corpCreators.Length() > 0 {
+				eprint.CorpCreators = corpCreators
+			}
+		}
+		if rec.Metadata.Contributors != nil && len(rec.Metadata.Contributors) > 0 {
+			contributors := &eprinttools.ContributorItemList{}
+			for _, contributor := range rec.Metadata.Contributors {
+				if contributor.PersonOrOrg != nil {
+					if item, ok := creatorPersonToEPrintItem(contributor); ok {
+						contributors.Append(item)
+					} else if item, ok := contributorCorpAsPersonToEPrintItem(contributor); ok {
+						contributors.Append(item)
+					}
+				}
+			}
+			if contributors.Length() > 0 {
+				eprint.Contributors = contributors
 			}
 		}
 		if rec.Metadata.PublicationDate != "" {
@@ -245,6 +260,32 @@ func CrosswalkRdmToEPrint(cfg *Config, rec *simplified.Record, eprint *eprinttoo
 		}
 		if rec.Metadata.Publisher != "" {
 			eprint.Publisher = rec.Metadata.Publisher
+		}
+		if rec.Metadata.Funding != nil && len(rec.Metadata.Funding) > 0 {
+			funders := &eprinttools.FunderItemList{}
+			for _, funder := range rec.Metadata.Funding {
+				var (
+					agency string
+					award  string
+				)
+				if funder.Funder != nil && funder.Funder.Name != "" {
+					agency = funder.Funder.Name
+				}
+				if funder.Award != nil && funder.Award.Number != "" {
+					award = funder.Award.Number
+				}
+				item := new(eprinttools.Item)
+				if agency != "" {
+					item.Agency = agency
+				}
+				if award != "" {
+					item.GrantNumber = award
+				}
+				funders.Append(item)
+			}
+			if funders.Length() > 0 {
+				eprint.Funders = funders
+			}
 		}
 	}
 	if rec.Parent != nil && rec.Parent.Communities != nil {
@@ -350,6 +391,22 @@ func creatorCorpToEPrintItem(creator *simplified.Creator) (*eprinttools.Item, bo
 	item.Value = creator.PersonOrOrg.Name
 	if ror, ok := getPersonOrOrgIdentifier(creator.PersonOrOrg, "ror"); ok {
 		item.ID = ror
+	}
+	return item, true
+}
+
+func contributorCorpAsPersonToEPrintItem(creator *simplified.Creator) (*eprinttools.Item, bool) {
+	if creator.PersonOrOrg == nil {
+		return nil, false
+	}
+	if creator.PersonOrOrg.FamilyName != "" && creator.PersonOrOrg.GivenName != "" {
+		return nil, false
+	}
+	item := new(eprinttools.Item)
+	item.Name = &eprinttools.Name{}
+	item.Name.Family = creator.PersonOrOrg.Name
+	if ror, ok := getPersonOrOrgIdentifier(creator.PersonOrOrg, "ror"); ok {
+		item.URI = ror
 	}
 	return item, true
 }
