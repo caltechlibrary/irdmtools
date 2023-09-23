@@ -409,7 +409,7 @@ to guide versioning.'''
         rdm_id, version_record, err = update_record(config, rec, rdmutil, obj, internal_note)
         if err is not None:
             print(f'{obj.eprintid}, {rdm_id}, failed ({obj.eprintid}): update_record(config, rec, rdmutil, {obj.display()})')
-            return err # sys.exit(1)
+            #return err # sys.exit(1)
         print(f'{obj.eprintid}, {rdm_id}, {restriction}')
     print(f'{obj.eprintid}, {root_rdm_id}, migrated')
     with open('migrated_records.csv','a') as outfile:
