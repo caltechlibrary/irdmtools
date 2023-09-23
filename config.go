@@ -48,8 +48,10 @@ type Config struct {
 	// Debug is set true then methods with access to the Config obect
 	// can use this flag to implement addition logging to standard err
 	Debug bool `json:"-"`
-	// Repository Name, e.g. caltechauthors, caltechthesis, caltechdata
+	// Repository Name, e.g. CaltechAUTHORS, CaltechTHESIS, CaltechDATA
 	RepoName string `json:"repo_name,omitempty"`
+	// Repository ID, e.g. caltechauthors, caltechthesis, caltechdata (usually the db name for repository)
+	RepoID string `json:"repo_id,omitempty"`
 	// InvenioAPI holds the URL to the InvenioAPI
 	InvenioAPI string `json:"rdm_url,omitempty"`
 	// InvenioToken is holds the token string to access the API
@@ -60,6 +62,13 @@ type Config struct {
 	InvenioStorage string `json:"rdm_storage,omitempty"`
 	// InvenioCommunityID holds the community id for use with the API.
 	InvenioCommunityID string `json:"rdm_community_id,omitempty"`
+	// InvenioDbHost holds the name of the machine for the Postgres server
+	InvenioDbHost string `json:"rdm_db_host,omitempty"`
+	// InvenioDbUser holds the database username of the machine for the Postgres server
+	InvenioDbUser string `json:"rdm_db_user,omitempty"`
+	// InvenioDbPassword holds the database password of the machine for the Postgres server
+	InvenioDbPassword string `json:"rdm_db_password,omitempty"`
+
 	// CName holds the dataset collection name used when harvesting content
 	CName string `json:"c_name,omitempty"`
 	// MailTo holds an email address to use when an email (e.g. CrossRef API access) is needed
@@ -72,6 +81,10 @@ type Config struct {
 	EPrintUser string `json:"eprint_user,omitempty"`
 	EPrintPassword string `json:"eprint_password,omitempty"`
 	EPrintArchivesPath string `json:"eprint_archives_path,omitempty"` 
+	EPrintDbHost string `json:"eprint_db_host,omitempty"`
+	EPrintDbUser string `json:"eprint_db_user,omitempty"`
+	EPrintDbPassword string `json:"eprint_db_password,omitempty"`
+
 
 	// rl holds rate limiter data for throttling API requests
 	rl *RateLimit
@@ -109,6 +122,9 @@ func (cfg *Config) LoadEnv(prefix string) error {
 	if cfg == nil {
 		cfg = NewConfig()
 	}
+	if repoID := os.Getenv(prefixVar("REPO_ID", prefix)); repoID != "" {
+		cfg.RepoID = repoID
+	}
 	// Read in the configuration from the environment
 	if api := os.Getenv(prefixVar("RDM_URL", prefix)); api != "" && cfg.InvenioAPI == "" {
 		cfg.InvenioAPI = api
@@ -133,6 +149,24 @@ func (cfg *Config) LoadEnv(prefix string) error {
 	}
 	if eprintArchivesPath := os.Getenv(prefixVar("EPRINT_ARCHIVES_PATH", prefix)); eprintArchivesPath != "" && cfg.EPrintArchivesPath == "" {
 		cfg.EPrintArchivesPath = eprintArchivesPath
+	}
+	if eprintDbHost := os.Getenv(prefixVar("EPRINT_DB_HOST", prefix)); eprintDbHost != "" {
+		cfg.EPrintDbHost = eprintDbHost
+	}
+	if eprintDbUser := os.Getenv(prefixVar("EPRINT_DB_USER", prefix)); eprintDbUser != "" {
+		cfg.EPrintDbUser = eprintDbUser
+	}
+	if eprintDbPassword := os.Getenv(prefixVar("EPRINT_DB_PASSWORD", prefix)); eprintDbPassword != "" {
+		cfg.EPrintDbPassword = eprintDbPassword
+	}
+	if rdmDbHost := os.Getenv(prefixVar("RDM_DB_HOST", prefix)); rdmDbHost != "" {
+		cfg.InvenioDbHost = rdmDbHost
+	}
+	if rdmDbUser := os.Getenv(prefixVar("RDM_DB_USER", prefix)); rdmDbUser != "" {
+		cfg.InvenioDbUser = rdmDbUser
+	}
+	if rdmDbPassword := os.Getenv(prefixVar("RDM_DB_PASSWORD", prefix)); rdmDbPassword != "" {
+		cfg.InvenioDbPassword = rdmDbPassword
 	}
 	return nil
 }
@@ -210,11 +244,23 @@ func SampleConfig(configFName string) ([]byte, error) {
 			return src, err
 		}
 	}
+	repoID := os.Getenv("REPO_ID")
+	if repoID == "" {
+		repoID = "__REPO_ID__GOES_HERE__"
+	}
 	invenioAPI := os.Getenv("RDM_URL")
 	if invenioAPI == "" {
 		invenioAPI = "http://localhost:5000"
 	}
-	//invenioToken := os.Getenv("RDMTOK")
+	invenioDbHost := os.Getenv("RDM_DB_HOST")
+	if invenioDbHost == "" {
+		invenioDbHost = "__RDM_DB_HOST__GOES_HERE__"
+	}
+	invenioDbUser := os.Getenv("RDM_DB_USER")
+	if invenioDbUser == "" {
+		invenioDbUser = "__RDM_DB_USER__GOES_HERE__"
+	}
+
 	cName := os.Getenv("C_NAME")
 	if cName == "" {
 		cName = "__DATASET_COLLECTION_NAME_GOES_HERE__"
@@ -222,31 +268,48 @@ func SampleConfig(configFName string) ([]byte, error) {
 
 	mailTo := os.Getenv("RDM_MAILTO")
 	if mailTo == "" {
-		mailTo = "__CROSSREF_API_MAILTO_GOES_HERE__"
+		mailTo = "__CROSSREF_API_MAILTO__GOES_HERE__"
 	}
+
 	eprintHost := os.Getenv("EPRINT_HOST")
 	if eprintHost == "" {
-		eprintHost = "__EPRINT_HOSTNAME_GOES_HERE__"
+		eprintHost = "__EPRINT_HOSTNAME__GOES_HERE__"
 	}
 	eprintUser := os.Getenv("EPRINT_USER")
 	if eprintUser == "" {
-		eprintUser = "__EPRINT_USER_GOES_HERE__"
+		eprintUser = "__EPRINT_USER__GOES_HERE__"
 	}
 	eprintArchivesPath := os.Getenv("EPRINT_ARCHIVES_PATH")
-	if eprintArchivesPath != "" {
-		eprintArchivesPath = "__EPRINT_ARCHIVES_PATH_GOES_HERE__"
+	if eprintArchivesPath == "" {
+		eprintArchivesPath = "__EPRINT_ARCHIVES_PATH__GOES_HERE__"
 	}
+	eprintDbHost := os.Getenv("EPRINT_DB_HOST")
+	if eprintDbHost == "" {
+		eprintDbHost = "__EPRINT_DB_HOST__GOES_HERE__"
+	}
+	eprintDbUser := os.Getenv("EPRINT_DB_USER")
+	if eprintDbUser == "" {
+		eprintDbUser = "__EPRINT_DB_USER__GOES_HERE__"
+	}
+
 	config := new(Config)
 	// By default we look for Invenio-RDM as installed with
 	// docker on localhost:5000
+	config.RepoID = repoID
 	config.InvenioAPI = invenioAPI
-	config.InvenioToken = `__RDM_TOKEN_GOES_HERE__`
+	config.InvenioToken = `__RDM_TOKEN__GOES_HERE__`
+	config.InvenioDbHost = invenioDbHost
+	config.InvenioDbUser = invenioDbUser
+	config.InvenioDbPassword = `__RDM_DB_PASSWORD__GOES_HERE__`
 	config.CName = cName
 	config.MailTo = mailTo
 	config.EPrintHost = eprintHost
 	config.EPrintUser = eprintUser
-	config.EPrintPassword = `__EPRINT_PASSWORD_GOES_HERE__`
+	config.EPrintPassword = `__EPRINT_PASSWORD__GOES_HERE__`
 	config.EPrintArchivesPath = eprintArchivesPath
+	config.EPrintDbHost = eprintDbHost
+	config.EPrintDbUser = eprintDbUser
+	config.EPrintDbPassword = `__EPRINT_DB_PASSWORD__GOES_HERE__`
 	src, err := JSONMarshalIndent(config, "", "    ")
 	return src, err
 }

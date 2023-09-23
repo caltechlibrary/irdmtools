@@ -36,6 +36,7 @@ package irdmtools
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/xml"
 	"fmt"
 	"io"
@@ -46,6 +47,9 @@ import (
 	"path"
 	"strings"
 	"time"
+
+	// 3rd Party packages
+	_ "github.com/lib/pq"
 
 	// Caltech Library Packages
 	"github.com/caltechlibrary/simplified"
@@ -520,15 +524,57 @@ func Query(cfg *Config, q string, sort string) ([]map[string]interface{}, error)
 	return records, nil
 }
 
+// getRecordIdsFromPg will return all record ids found by querying Invenio RDM's Postgres
+// database.
+func getRecordIdsFromPg(cfg *Config) ([]string, error) {
+	
+	sslmode := "?sslmode=require"
+	if strings.HasPrefix(cfg.InvenioDbHost, "localhost") {
+		sslmode = "?sslmode=disable"
+	}
+	connStr := fmt.Sprintf("postgres://%s@%s/%s%s", 
+		cfg.InvenioDbUser, cfg.InvenioDbHost, cfg.RepoID, sslmode)
+	if cfg.InvenioDbPassword != "" {
+		connStr = fmt.Sprintf("postgres://%s:%s@%s/%s%s", 
+			cfg.InvenioDbUser, cfg.InvenioDbPassword, cfg.InvenioDbHost, cfg.RepoID, sslmode)
+	}
+	db, err := sql.Open("postgres", connStr)
+	if err != nil {
+		return nil, err
+	}
+	keys := []string{}
+	stmt := `SELECT json->>'id' AS rdmid FROM rdm_records_metadata WHERE json->'access'->>'record' = 'public'`
+	rows, err := db.Query(stmt)
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		var rdmid string
+		if err := rows.Scan(&rdmid); err != nil {
+			return nil, err
+		}
+		keys = append(keys, rdmid)
+	}
+	err = rows.Err()
+	return keys, err
+}
+
 // GetRecordIds takes a configuration object, contacts am RDM
-// instance and returns a list of ids and error.
+// instance and returns a list of ids and error. If the RDM
+// database connection is included in the configuration the faster
+// method of querrying Postgres is used, otherwise OAI-PMH is used
+// to get the id list.
 //
 // The configuration object must have the InvenioAPI and
-// InvenioToken attributes set.
+// InvenioToken attributes set. It is highly recommended that the
+// InvenioDbUser, InvenioDbPassword and InvenioDbHost is configured.
 //
 // NOTE: This method relies on OAI-PMH, this is a rate limited process
 // so results can take quiet some time.
 func GetRecordIds(cfg *Config) ([]string, error) {
+	if cfg.InvenioDbHost != "" && cfg.InvenioDbUser != "" {
+		return getRecordIdsFromPg(cfg)
+	}
 	ids := []string{}
 	resumptionToken := "     "
 	t0 := time.Now()
