@@ -559,6 +559,50 @@ func getRecordIdsFromPg(cfg *Config) ([]string, error) {
 	return keys, err
 }
 
+// getModifiedRecordIdsFromPg will return of record ids found in date range by querying
+// Invenio RDM's Postgres database.
+func getModifiedRecordIdsFromPg(cfg *Config, startDate string, endDate string) ([]string, error) {
+	sslmode := "?sslmode=require"
+	if strings.HasPrefix(cfg.InvenioDbHost, "localhost") {
+		sslmode = "?sslmode=disable"
+	}
+	connStr := fmt.Sprintf("postgres://%s@%s/%s%s", 
+		cfg.InvenioDbUser, cfg.InvenioDbHost, cfg.RepoID, sslmode)
+	if cfg.InvenioDbPassword != "" {
+		connStr = fmt.Sprintf("postgres://%s:%s@%s/%s%s", 
+			cfg.InvenioDbUser, cfg.InvenioDbPassword, cfg.InvenioDbHost, cfg.RepoID, sslmode)
+	}
+	db, err := sql.Open("postgres", connStr)
+	if err != nil {
+		return nil, err
+	}
+	keys := []string{}
+	stmt := fmt.Sprintf(`with t as (
+    select json->>'id' as rdmid, 
+	       json->'access'->>'record' as status,
+	       jsonb_path_query(json->'metadata'->'dates', '$.type')::jsonb->>'id' as date_type,
+	       to_date(jsonb_path_query(json->'metadata'->'dates', '$.date') #>> '{}', 'YYYY-MM-DD') as dt
+    from rdm_records_metadata
+    where json->'access'->>'record' = 'public'
+) select rdmid
+from t 
+where date_type = 'updated'
+  and (dt between '%s' and '%s')
+order by dt;`, startDate, endDate)
+	rows, err := db.Query(stmt)
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		var rdmid string
+		if err := rows.Scan(&rdmid); err != nil {
+			return nil, err
+		}
+		keys = append(keys, rdmid)
+	}
+	err = rows.Err()
+	return keys, err
+}
 // GetRecordIds takes a configuration object, contacts am RDM
 // instance and returns a list of ids and error. If the RDM
 // database connection is included in the configuration the faster
@@ -649,6 +693,9 @@ func GetModifiedRecordIds(cfg *Config, start string, end string) ([]string, erro
 	}
 	if end == "" {
 		end = time.Now().Format("2006-01-02")
+	}
+	if cfg.InvenioDbHost != "" && cfg.InvenioDbUser != "" {
+		return getModifiedRecordIdsFromPg(cfg, start, end)
 	}
 	debug := cfg.Debug
 	ids := []string{}

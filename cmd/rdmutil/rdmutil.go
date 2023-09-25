@@ -76,10 +76,12 @@ The environment provides the default values for configuration. They
 maybe overwritten by using a JSON configuration file. The corresponding
 attributes are "invenio_api", "invenio_token" and "c_name".
 
-{app_name} uses the OAI-PMH service to retrieve record ids. This maybe
-slow due to rate limits. Also provided is a query service and record
-retrieval using Invenio RDM's REST API. These are faster but the query
-services limited the total number of results to 10K records.
+By default {app_name} uses the OAI-PMH service to retrieve record ids. 
+This will be slow, possibly too slow if reasonably sized repositories.
+If you have access to Postgres database and configure the environment
+with access credentials then {app_name} can get a list of ids much
+quicker.  The variables used to form a connection are RDM_DB_HOST,
+RDM_DB_HOST and if password is required RDM_DB_PASSWORD.
 
 # OPTIONS
 

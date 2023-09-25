@@ -1,6 +1,6 @@
-%rdmutil(1) irdmtools user manual | version 0.0.54 c581cd3
+%rdmutil(1) irdmtools user manual | version 0.0.54 23182fe
 % R. S. Doiel and Tom Morrell
-% 2023-09-22
+% 2023-09-25
 
 # NAME
 
@@ -29,10 +29,12 @@ The environment provides the default values for configuration. They
 maybe overwritten by using a JSON configuration file. The corresponding
 attributes are "invenio_api", "invenio_token" and "c_name".
 
-rdmutil uses the OAI-PMH service to retrieve record ids. This maybe
-slow due to rate limits. Also provided is a query service and record
-retrieval using Invenio RDM's REST API. These are faster but the query
-services limited the total number of results to 10K records.
+By default rdmutil uses the OAI-PMH service to retrieve record ids. 
+This will be slow, possibly too slow if reasonably sized repositories.
+If you have access to Postgres database and configure the environment
+with access credentials then rdmutil can get a list of ids much
+quicker.  The variables used to form a connection are RDM_DB_HOST,
+RDM_DB_HOST and if password is required RDM_DB_PASSWORD.
 
 # OPTIONS
 
