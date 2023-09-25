@@ -577,6 +577,8 @@ func getModifiedRecordIdsFromPg(cfg *Config, startDate string, endDate string) (
 		return nil, err
 	}
 	keys := []string{}
+	/*
+	// Filter records based on the .metadata.dates found in the JSON
 	stmt := fmt.Sprintf(`with t as (
     select json->>'id' as rdmid, 
 	       json->'access'->>'record' as status,
@@ -589,6 +591,9 @@ from t
 where date_type = 'updated'
   and (dt between '%s' and '%s')
 order by dt;`, startDate, endDate)
+	*/
+	stmt := fmt.Sprintf(`SELECT json->>'id' AS rdmid FROM rdm_records_metadata
+WHERE json->'access'->>'record' = 'public' AND (updated between '%s' AND '%s')`, startDate, endDate)
 	rows, err := db.Query(stmt)
 	if err != nil {
 		return nil, err
