@@ -121,6 +121,7 @@ def run_scp(cmd):
             if isinstance(err, bytes):
                 err = err.decode('utf-8').strip()
             print(f'exit code {exit_code}, {err}', file = sys.stderr)
+            exit()
             return err
         if isinstance(out, bytes):
             out = out.decode('utf-8').strip()
@@ -258,7 +259,7 @@ def update_record(config, rec, rdmutil, obj, internal_note):
                 if err is not None:
                     print(f'failed ({obj.eprintid}): upload_file' +
                             f' {obj.rdm_id} {filename}, {err}')
-                    continue # sys.exit(1)
+                    sys.exit(1)
                 # NOTE: We want to remove the copied file if successfully uploaded.
                 if os.path.exists(filename):
                     os.unlink(filename)
@@ -420,6 +421,15 @@ to guide versioning.'''
             print(f'{obj.eprintid}, {rdm_id}, failed ({obj.eprintid}): update_record(config, rec, rdmutil, {obj.display()})')
             return err # sys.exit(1)
         print(f'{obj.eprintid}, {rdm_id}, {restriction}')
+        if "doi" in rec["pids"]:
+            doi = rec["pids"]["doi"]["identifier"]
+            del rec["pids"]["doi"]
+            if "identifiers" not in rec["metadata"]:
+                rec["metadata"]["identifiers"] = []
+            rec["metadata"]["identifiers"].append(
+                    {"scheme": "doi", "identifier": f"{doi}"}
+            )
+
     print(f'{obj.eprintid}, {root_rdm_id}, migrated')
     with open('migrated_records.csv','a') as outfile:
         print(f"{obj.eprintid},{rdm_id},public",file=outfile)
