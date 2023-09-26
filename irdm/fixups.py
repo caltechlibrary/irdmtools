@@ -442,6 +442,8 @@ def fixup_record(record, reload=False, token=None, has_doi=None):
                 new.append({"id": "Koch-Laboratory"})
             elif group["id"] == 'Caltech-Tectonics-Observatory-':
                 new.append({"id": "Caltech-Tectonics-Observatory"})
+            elif group["id"] == 'Richard-N.-Merkin-Institute-for-Translational-Research':
+                new.append({"id": "Richard-Merkin-Institute"})
             else:
                 new.append(group)
         record["custom_fields"]["caltech:groups"] = new
