@@ -801,6 +801,59 @@ func GetRawRecord(cfg *Config, id string) (map[string]interface{}, error) {
 	return rec, nil
 }
 
+// getRecordFromPg will return all record ids found by querying Invenio RDM's Postgres
+// database.
+func getRecordFromPg(cfg *Config, rdmID string, draft bool) (*simplified.Record, error) {
+	var (
+		db *sql.DB
+		err error
+	)
+	if cfg.pgDB != nil {
+		db = cfg.pgDB
+	} else if cfg.pgDB == nil && cfg.InvenioDbHost != "" && cfg.InvenioDbUser != ""{
+		sslmode := "?sslmode=require"
+		if strings.HasPrefix(cfg.InvenioDbHost, "localhost") {
+			sslmode = "?sslmode=disable"
+		}
+		connStr := fmt.Sprintf("postgres://%s@%s/%s%s", 
+		cfg.InvenioDbUser, cfg.InvenioDbHost, cfg.RepoID, sslmode)
+		if cfg.InvenioDbPassword != "" {
+			connStr = fmt.Sprintf("postgres://%s:%s@%s/%s%s", 
+				cfg.InvenioDbUser, cfg.InvenioDbPassword, cfg.InvenioDbHost, cfg.RepoID, sslmode)
+		}
+		db, err = sql.Open("postgres", connStr)
+		if err != nil {
+			return nil, err
+		}
+		defer db.Close()
+	 }
+	stmt := fmt.Sprintf(`SELECT json
+FROM rdm_records_metadata
+WHERE json->>'id' = '%s'`, rdmID)
+	if draft {
+		stmt = fmt.Sprintf(`SELECT json
+FROM rdm_drafts_metadata
+WHERE json->>'id' = '%s'`, rdmID)
+	}
+	rows, err := db.Query(stmt)
+	if err != nil {
+		return nil, err
+	}
+	var src []byte
+	for rows.Next() {
+		if err := rows.Scan(&src); err != nil {
+			return nil, err
+		}
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+	rec := &simplified.Record{}
+	err = JSONUnmarshal(src, &rec)
+	return rec, err
+}
+
 // GetRecord takes a configuration object and record id,
 // contacts an RDM instance and returns a simplified record
 // and an error value.
@@ -817,6 +870,9 @@ func GetRawRecord(cfg *Config, id string) (map[string]interface{}, error) {
 // }
 // ```
 func GetRecord(cfg *Config, id string, draft bool) (*simplified.Record, error) {
+	if cfg.InvenioDbHost != "" && cfg.InvenioDbUser != "" {
+		return getRecordFromPg(cfg, id, draft)
+	}
 	// Make sure we have a valid URL
 	u, err := url.Parse(cfg.InvenioAPI)
 	if err != nil {

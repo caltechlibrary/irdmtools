@@ -159,8 +159,10 @@ func main() {
 	flag.StringVar(&idsFName, "ids", idsFName, "read ids from a file")
 	flag.StringVar(&cName, "harvest", cName, "harvest JSON eprint records into the dataset collection.")
 	flag.BoolVar(&pipeline, "pipeline", pipeline, "read from standard input, crosswalk and write to standard out")
+
 	flag.Parse()
 	rdmids := flag.Args()
+
 
 	if showHelp {
 		fmt.Fprintf(os.Stdout, "%s\n", fmtHelp(helpText, appName, version, releaseDate, releaseHash))

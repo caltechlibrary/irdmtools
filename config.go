@@ -38,6 +38,7 @@ import (
 	"bytes"
 	"fmt"
 	"os"
+	"database/sql"
 
 	// Caltech Library packages
 	"github.com/caltechlibrary/dataset/v2"
@@ -88,6 +89,9 @@ type Config struct {
 
 	// rl holds rate limiter data for throttling API requests
 	rl *RateLimit
+
+	// pgDb holds a Postgres connection
+	pgDB *sql.DB
 }
 
 // prefixVar applies returns an variable name apply

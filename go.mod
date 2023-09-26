@@ -9,6 +9,7 @@ require (
 	github.com/caltechlibrary/eprinttools v1.3.6
 	github.com/caltechlibrary/simplified v0.0.22-0.20230921175551-16b2e7b911dc
 	github.com/go-sql-driver/mysql v1.7.1
+	github.com/lib/pq v1.10.6
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -20,7 +21,6 @@ require (
 	github.com/caltechlibrary/semver v0.0.0-20220817184719-a504da2d5c6a // indirect
 	github.com/glebarez/go-sqlite v1.18.1 // indirect
 	github.com/google/uuid v1.3.0 // indirect
-	github.com/lib/pq v1.10.6 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20200410134404-eec4a21b6bb0 // indirect
 	golang.org/x/crypto v0.11.0 // indirect

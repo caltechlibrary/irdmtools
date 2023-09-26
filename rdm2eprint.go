@@ -35,6 +35,7 @@
 package irdmtools
 
 import (
+	"database/sql"
 	"encoding/xml"
 	"fmt"
 	"io"
@@ -166,6 +167,9 @@ func CrosswalkRdmToEPrint(cfg *Config, rec *simplified.Record, eprint *eprinttoo
 		}
 		if doi, ok := getMetadataIdentifier(rec, "doi"); ok {
 			eprint.DOI = doi
+		}
+		if pmcid, ok := getMetadataIdentifier(rec, "pmcid"); ok {
+			eprint.PMCID = pmcid
 		}
 		if rec.Metadata != nil {
 			if rec.Metadata.PublicationDate != "" {
@@ -558,8 +562,36 @@ func (app *Rdm2EPrint) Configure(configFName string, envPrefix string, debug boo
 	return nil
 }
 
+// CusePostgresDB, if RDM's Postgres DB setup in the environment use it to
+// handle record and key retrieval rather than the slower REST API.
+func usePostgresDB(cfg *Config) bool {
+	if (cfg != nil)  && (cfg.InvenioDbHost != "") && (cfg.InvenioDbUser != "") {
+		return true
+	}
+	return false
+}
+
 func (app *Rdm2EPrint) Run(in io.Reader, out io.Writer, eout io.Writer, rdmids []string, asXML bool) error {
 	eprints := new(eprinttools.EPrints)
+	if usePostgresDB(app.Cfg) {
+		cfg := app.Cfg
+		sslmode := "?sslmode=require"
+		if strings.HasPrefix(cfg.InvenioDbHost, "localhost") {
+			sslmode = "?sslmode=disable"
+		}
+		connStr := fmt.Sprintf("postgres://%s@%s/%s%s", 
+		cfg.InvenioDbUser, cfg.InvenioDbHost, cfg.RepoID, sslmode)
+		if cfg.InvenioDbPassword != "" {
+			connStr = fmt.Sprintf("postgres://%s:%s@%s/%s%s", 
+				cfg.InvenioDbUser, cfg.InvenioDbPassword, cfg.InvenioDbHost, cfg.RepoID, sslmode)
+		}
+		db, err := sql.Open("postgres", connStr)
+		if err != nil {
+			return err
+		}
+		defer db.Close()
+		app.Cfg.pgDB = db
+	}
 	for _, rdmid := range rdmids {
 		rec, err := GetRecord(app.Cfg, rdmid, false)
 		if err != nil {
@@ -593,6 +625,25 @@ func (app *Rdm2EPrint) RunHarvest(in io.Reader, out io.Writer, eout io.Writer, c
 		return err
 	}
 	defer ds.Close()
+	if usePostgresDB(app.Cfg) {
+		cfg := app.Cfg
+		sslmode := "?sslmode=require"
+		if strings.HasPrefix(cfg.InvenioDbHost, "localhost") {
+			sslmode = "?sslmode=disable"
+		}
+		connStr := fmt.Sprintf("postgres://%s@%s/%s%s", 
+		cfg.InvenioDbUser, cfg.InvenioDbHost, cfg.RepoID, sslmode)
+		if cfg.InvenioDbPassword != "" {
+			connStr = fmt.Sprintf("postgres://%s:%s@%s/%s%s", 
+				cfg.InvenioDbUser, cfg.InvenioDbPassword, cfg.InvenioDbHost, cfg.RepoID, sslmode)
+		}
+		db, err := sql.Open("postgres", connStr)
+		if err != nil {
+			return err
+		}
+		defer db.Close()
+		app.Cfg.pgDB = db
+	}
 
 	eprints := new(eprinttools.EPrints)
 	eCnt, cCnt, tot := 0, 0, len(rdmids)
