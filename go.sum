@@ -2,8 +2,12 @@ github.com/caltechlibrary/crossrefapi v1.0.6 h1:N/W9ugyza6FZvF8WbUIKnzAWe7ZvJWQ/
 github.com/caltechlibrary/crossrefapi v1.0.6/go.mod h1:TAUa0UzInUtw0Z155kWjSIU+ljvNVL6dCAInjC0C8Jc=
 github.com/caltechlibrary/dataciteapi v1.0.1 h1:qFkqdbEOT4trKcpqeLg08NUgDObMOgjAJhegP0sop8Q=
 github.com/caltechlibrary/dataciteapi v1.0.1/go.mod h1:T6oYVCoQyHRi/0qPI+K5PM//F7M5YkrHqzVMfrPlsn8=
+github.com/caltechlibrary/dataset v1.1.0 h1:eunb0XhQrq3Ho/PcCNbV6J5JROHtAnqUXI+hQPtD6a0=
+github.com/caltechlibrary/dataset v1.1.0/go.mod h1:3zskOOrgkVo/ul5GRnSvS8W9/Aj2D45j+lYbcIEMSao=
 github.com/caltechlibrary/dataset/v2 v2.1.1 h1:sjBX22tPKYxhb6++K5EHzQK+OLqJWcfOFnVVL4YWij4=
 github.com/caltechlibrary/dataset/v2 v2.1.1/go.mod h1:2m+INaWKriTLr9ZJXu5viKlGAxxfdVUvTLZUfgEzTlQ=
+github.com/caltechlibrary/dataset/v2 v2.1.3 h1:q4qHsDrv6y/Yv1z0tyNd8mNjlqZE85MTWo01Nu/alN0=
+github.com/caltechlibrary/dataset/v2 v2.1.3/go.mod h1:x5zjOk0PcHbm3a3Z4NyUB42Hf2/jTMAKFFV8dcTgnPY=
 github.com/caltechlibrary/doitools v0.0.1 h1:c6lvI5l9juo019GGUvuwbzeyv1c6VtSi8mkUv1drgwY=
 github.com/caltechlibrary/doitools v0.0.1/go.mod h1:1K36p/UIkIFM0JVaIVtFStKsFu5xjjYWMWAUExmFnP0=
 github.com/caltechlibrary/dotpath v0.0.4 h1:ghc3XZefLPDhQnUo9oXqvz8vfh52QOE0BjK5qOD9RQU=

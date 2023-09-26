@@ -827,13 +827,13 @@ func getRecordFromPg(cfg *Config, rdmID string, draft bool) (*simplified.Record,
 		}
 		defer db.Close()
 	 }
-	stmt := fmt.Sprintf(`SELECT json
-FROM rdm_records_metadata
-WHERE json->>'id' = '%s'`, rdmID)
+	stmt := fmt.Sprintf(`SELECT json AS record 
+ FROM rdm_records_metadata
+ WHERE json->>'id' = '%s' LIMIT 1;`, rdmID)
 	if draft {
-		stmt = fmt.Sprintf(`SELECT json
+		stmt = fmt.Sprintf(`SELECT json AS record 
 FROM rdm_drafts_metadata
-WHERE json->>'id' = '%s'`, rdmID)
+WHERE json->>'id' = '%s' LIMIT 1;`, rdmID)
 	}
 	rows, err := db.Query(stmt)
 	if err != nil {

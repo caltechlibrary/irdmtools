@@ -5,7 +5,7 @@ go 1.21.0
 require (
 	github.com/caltechlibrary/crossrefapi v1.0.6
 	github.com/caltechlibrary/dataciteapi v1.0.1
-	github.com/caltechlibrary/dataset/v2 v2.1.1
+	github.com/caltechlibrary/dataset/v2 v2.1.3
 	github.com/caltechlibrary/eprinttools v1.3.6
 	github.com/caltechlibrary/simplified v0.0.22-0.20230921175551-16b2e7b911dc
 	github.com/go-sql-driver/mysql v1.7.1
@@ -14,6 +14,7 @@ require (
 )
 
 require (
+	github.com/caltechlibrary/dataset v1.1.0 // indirect
 	github.com/caltechlibrary/doitools v0.0.1 // indirect
 	github.com/caltechlibrary/dotpath v0.0.4 // indirect
 	github.com/caltechlibrary/dsv1 v0.0.0-20220817192039-7c2741c5699d // indirect
