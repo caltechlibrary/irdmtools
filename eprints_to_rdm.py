@@ -421,14 +421,15 @@ to guide versioning.'''
             print(f'{obj.eprintid}, {rdm_id}, failed ({obj.eprintid}): update_record(config, rec, rdmutil, {obj.display()})')
             return err # sys.exit(1)
         print(f'{obj.eprintid}, {rdm_id}, {restriction}')
-        if "doi" in rec["pids"]:
-            doi = rec["pids"]["doi"]["identifier"]
-            del rec["pids"]["doi"]
-            if "identifiers" not in rec["metadata"]:
-                rec["metadata"]["identifiers"] = []
-            rec["metadata"]["identifiers"].append(
+        if "pids" in rec:
+            if "doi" in rec["pids"]:
+                doi = rec["pids"]["doi"]["identifier"]
+                del rec["pids"]["doi"]
+                if "identifiers" not in rec["metadata"]:
+                    rec["metadata"]["identifiers"] = []
+                rec["metadata"]["identifiers"].append(
                     {"scheme": "doi", "identifier": f"{doi}"}
-            )
+                )
 
     print(f'{obj.eprintid}, {root_rdm_id}, migrated')
     with open('migrated_records.csv','a') as outfile:
