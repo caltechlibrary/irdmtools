@@ -592,9 +592,9 @@ where date_type = 'updated'
   and (dt between '%s' and '%s')
 order by dt;`, startDate, endDate)
 	*/
-	stmt := fmt.Sprintf(`SELECT json->>'id' AS rdmid FROM rdm_records_metadata
-WHERE json->'access'->>'record' = 'public' AND (updated between '%s' AND '%s')`, startDate, endDate)
-	rows, err := db.Query(stmt)
+	stmt := `SELECT json->>'id' AS rdmid FROM rdm_records_metadata
+WHERE json->'access'->>'record' = 'public' AND (updated between $1 AND $2)`
+	rows, err := db.Query(stmt, startDate, endDate)
 	if err != nil {
 		return nil, err
 	}
@@ -827,15 +827,15 @@ func getRecordFromPg(cfg *Config, rdmID string, draft bool) (*simplified.Record,
 		}
 		defer db.Close()
 	 }
-	stmt := fmt.Sprintf(`SELECT json AS record 
+	stmt := `SELECT json AS record 
  FROM rdm_records_metadata
- WHERE json->>'id' = '%s' LIMIT 1;`, rdmID)
+ WHERE json->>'id' = $1 LIMIT 1;`
 	if draft {
-		stmt = fmt.Sprintf(`SELECT json AS record 
+		stmt = `SELECT json AS record 
 FROM rdm_drafts_metadata
-WHERE json->>'id' = '%s' LIMIT 1;`, rdmID)
+WHERE json->>'id' = $1 LIMIT 1;`
 	}
-	rows, err := db.Query(stmt)
+	rows, err := db.Query(stmt, rdmID)
 	if err != nil {
 		return nil, err
 	}

@@ -620,6 +620,9 @@ func (app *Rdm2EPrint) Run(in io.Reader, out io.Writer, eout io.Writer, rdmids [
 }
 
 func (app *Rdm2EPrint) RunHarvest(in io.Reader, out io.Writer, eout io.Writer, cName string, rdmids []string) error {
+	if len(rdmids) == 0 {
+		return fmt.Errorf("no RDM ids to process")
+	}
 	ds, err := dataset.Open(cName)
 	if err != nil {
 		return err
@@ -645,7 +648,6 @@ func (app *Rdm2EPrint) RunHarvest(in io.Reader, out io.Writer, eout io.Writer, c
 		app.Cfg.pgDB = db
 	}
 
-	eprints := new(eprinttools.EPrints)
 	eCnt, cCnt, tot := 0, 0, len(rdmids)
 	t0 := time.Now()
 	rptTime := time.Now()
@@ -660,16 +662,15 @@ func (app *Rdm2EPrint) RunHarvest(in io.Reader, out io.Writer, eout io.Writer, c
 		if err := CrosswalkRdmToEPrint(app.Cfg, rec, eprint); err != nil {
 			return err
 		}
-		eprints.EPrint = []*eprinttools.EPrint{eprint}
 		if ds.HasKey(rec.ID) {
-			if err := ds.UpdateObject(rec.ID, eprints); err != nil {
+			if err := ds.UpdateObject(rec.ID, eprint); err != nil {
 				log.Printf("error (update): %q, %s", rec.ID, err)
 				eCnt++
 			} else {
 				cCnt++
 			}
 		} else {
-			if err := ds.CreateObject(rec.ID, eprints); err != nil {
+			if err := ds.CreateObject(rec.ID, eprint); err != nil {
 				log.Printf("error (create): %q, %s", rec.ID, err)
 				eCnt++
 			} else {
