@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Institutional Repository Data Management</title>
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="https://caltechlibrary.github.io/css/site.css">
+</head>
+<body>
+<header>
+<a href="http://library.caltech.edu" title="link to Caltech Library Homepage"><img src="https://caltechlibrary.github.io/assets/liblogo.gif" alt="Caltech Library logo"></a>
+</header>
+<nav>
+<ul>
+    <li><a href="/">Home</a></li>
+    <li><a href="index.html">README</a></li>
+    <li><a href="LICENSE">LICENSE</a></li>
+    <li><a href="INSTALL.html">INSTALL</a></li>
+    <li><a href="user-manual.html">User Manual</a></li>
+    <li><a href="search.html">Search Docs</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="https://github.com/caltechlibrary/irdmtools">GitHub</a></li>
+</ul>
+</nav>
+
+<section>
+<h1 id="name">NAME</h1>
+<p>ep3util</p>
+<h1 id="synopsis">SYNOPSIS</h1>
+<p>ep3util <a href="#options">OPTIONS</a> ACTION [ACTION_PARAMETERS
+…]</p>
+<h1 id="description">DESCRIPTION</h1>
+<p><strong>ep3util</strong> provides a quick wrapper around EPrints 3.3
+REST API. By default ep3util looks for five environment variables.</p>
+<dl>
+<dt>REPO_ID</dt>
+<dd>
+the EPrints repository id (name of database and archive subdirectory).
+</dd>
+<dt>EPRINT_HOST</dt>
+<dd>
+the hostname for EPrint’s.
+</dd>
+<dt>EPRINT_USER</dt>
+<dd>
+the username having permissions to access the EPrint REST API.
+</dd>
+<dt>EPRINT_PASSWORD</dt>
+<dd>
+the password for the username with access to the EPrint REST API.
+</dd>
+<dt>C_NAME</dt>
+<dd>
+If harvesting the dataset collection name to harvest the records to.
+</dd>
+</dl>
+<p>The environment provides the default values for configuration. They
+maybe overwritten by using a JSON configuration file. The corresponding
+attributes are “repo_id”, “eprint_host” and “c_name”.</p>
+<h1 id="options">OPTIONS</h1>
+<dl>
+<dt>help</dt>
+<dd>
+display help
+</dd>
+<dt>license</dt>
+<dd>
+display license
+</dd>
+<dt>version</dt>
+<dd>
+display version
+</dd>
+<dt>config</dt>
+<dd>
+provide a path to an alternate configuration file (e.g. “rdmtools.json”)
+</dd>
+</dl>
+<h1 id="action">ACTION</h1>
+<p><strong>ep3util</strong> supports the following actions.</p>
+<dl>
+<dt>setup</dt>
+<dd>
+Display an example JSON setup configuration file, if it already exists
+then it will display the current configuration file. No optional or
+required parameters. When displaying the JSON configuration a
+placeholder will be used for the token value.
+</dd>
+<dt>get_all_ids</dt>
+<dd>
+Returns a list of all repository record ids. The method uses OAI-PMH for
+id retrieval. It is rate limited and will take come time to return all
+record ids. A test instance took 11 minutes to retrieve 24000 record
+ids.
+</dd>
+<dt>get_record RECORD_ID</dt>
+<dd>
+Returns a specific simplified record indicated by RECORD_ID, e.g. 23808.
+The REORCID_ID is a required parameter.
+</dd>
+<dt>harvest KEY_LIST_JSON</dt>
+<dd>
+harvest takes a JSON file containing a list of keys and harvests each
+record into the dataset collection.
+</dd>
+</dl>
+<h1 id="action_parameters">ACTION_PARAMETERS</h1>
+<p>Action parameters are the specific optional or required parameters
+need to complete an aciton.</p>
+<h1 id="examples">EXAMPLES</h1>
+<p>Setup for <strong>ep3util</strong> by writing an example JSON
+configuration file. “nano” is an example text editor program, you need
+to edit the sample configuration appropriately.</p>
+<pre><code>ep3util setup &gt;eprinttools.json
+nano eprinttools.json</code></pre>
+<p>Get a list of all EPrint record ids.</p>
+<pre><code>ep3util get_all_ids</code></pre>
+<p>Get a specific EPrint record. Record is validated against irdmtool
+EPrints data model.</p>
+<pre><code>ep3util get_record 23808</code></pre>
+</section>
+
+<footer>
+<span>&copy; 2023 <a href="https://www.library.caltech.edu/copyright">Caltech Library</a></span>
+<address>1200 E California Blvd, Mail Code 1-32, Pasadena, CA 91125-3200</address>
+<span><a href="mailto:library@caltech.edu">Email Us</a></span>
+<span>Phone: <a href="tel:+1-626-395-3405">(626)395-3405</a></span>
+</footer>
+</body>
+</html>

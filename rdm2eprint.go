@@ -146,15 +146,24 @@ func CrosswalkRdmToEPrint(cfg *Config, rec *simplified.Record, eprint *eprinttoo
 	if rec.RecordAccess != nil {
 		// We'll assume these are public records so we set eprint_status to "archive" if "open"
 		// otherwise we'll assume these would map to the inbox.
-		if rec.RecordAccess.Status == "open" && rec.RecordAccess.Record == "public" {
+		if rec.RecordAccess.Record == "public" {
 			eprint.MetadataVisibility = "show"
 			eprint.EPrintStatus = "archive"
-			eprint.FullTextStatus = "public"
+			if rec.RecordAccess.Files == "public" {
+				eprint.FullTextStatus = "public"
+			} else {
+				eprint.FullTextStatus = "restricted"
+			}
 		} else {
 			eprint.EPrintStatus = "inbox"
 			eprint.MetadataVisibility = "no_search"
 			eprint.FullTextStatus = "restricted"
 		}
+	}
+
+	// Default EPrint id is a URL, so we'll point at the RDM location.
+	if rec.ID != "" {
+		eprint.ID = fmt.Sprintf("%s/records/%s", cfg.InvenioAPI, rec.ID)
 	}
 
 	if rec.Metadata != nil {
@@ -163,7 +172,6 @@ func CrosswalkRdmToEPrint(cfg *Config, rec *simplified.Record, eprint *eprinttoo
 			if eprintid != "" {
 				eprint.EPrintID, _ = strconv.Atoi(eprintid)
 			}
-			eprint.ID = rec.ID // fmt.Sprintf("%s/records/%s", cfg.InvenioAPI, rec.ID)
 		}
 		if doi, ok := getMetadataIdentifier(rec, "doi"); ok {
 			eprint.DOI = doi

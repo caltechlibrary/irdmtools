@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Institutional Repository Data Management</title>
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="https://caltechlibrary.github.io/css/site.css">
+</head>
+<body>
+<header>
+<a href="http://library.caltech.edu" title="link to Caltech Library Homepage"><img src="https://caltechlibrary.github.io/assets/liblogo.gif" alt="Caltech Library logo"></a>
+</header>
+<nav>
+<ul>
+    <li><a href="/">Home</a></li>
+    <li><a href="index.html">README</a></li>
+    <li><a href="LICENSE">LICENSE</a></li>
+    <li><a href="INSTALL.html">INSTALL</a></li>
+    <li><a href="user-manual.html">User Manual</a></li>
+    <li><a href="search.html">Search Docs</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="https://github.com/caltechlibrary/irdmtools">GitHub</a></li>
+</ul>
+</nav>
+
+<section>
+<h1 id="name">NAME</h1>
+<p>rdm2eprint</p>
+<h1 id="synopsis">SYNOPSIS</h1>
+<p>rdm2eprint <a href="#options">OPTIONS</a> RDM_ID</p>
+<h1 id="description">DESCRIPTION</h1>
+<p>rdm2eprint is a Caltech Library centric command line application that
+takes an RDM record ID and returns a EPrint record JSON document. It was
+created to allow us migrate our EPrints repositories minimal change to
+our feeds system which works with EPrint structured data. It uses
+RDM_URL, RDMTOK, RDM_COMMUNITY_ID environment variables for
+configuration. It can read data from a parviously harvest RDM record or
+directly from RDM via the API url. The tool is intended to run in a pipe
+line so have minimal options.</p>
+<h1 id="options">OPTIONS</h1>
+<dl>
+<dt>-help</dt>
+<dd>
+display help
+</dd>
+<dt>-license</dt>
+<dd>
+display license
+</dd>
+<dt>-version</dt>
+<dd>
+display version
+</dd>
+<dt>-config</dt>
+<dd>
+provide a path to an alternate configuration file (e.g. “rdmtools.json”)
+</dd>
+<dt>-harvest C_NAME</dt>
+<dd>
+harvest JSON formated eprint records into the dataset collection
+specified by C_NAME.
+</dd>
+<dt>-ids JSON_ID_FILE</dt>
+<dd>
+read ids from a file.
+</dd>
+<dt>-xml</dt>
+<dd>
+output as EPrint XML rather than JSON, does not work with -harvest.
+</dd>
+<dt>-pipeline</dt>
+<dd>
+read from standard input and write crosswalk to standard out.
+</dd>
+</dl>
+<h1 id="example">EXAMPLE</h1>
+<p>Example generating a EPRINT JSON document from RDM would use the
+following variables.</p>
+<p>the EPrints repository hosted as “eprints.example.edu” for EPrint ID
+118621. Access to the EPrint REST API is configured in the environment.
+The result is saved in “article.json”. EPRINT_USER, EPRINT_PASSWORD and
+EPRINT_HOST (e.g. eprints.example.edu) via the shell environment.</p>
+<pre><code>RDM_URL=&quot;__URL_TO_RDM_INSTANCE_HERE__&quot;
+RDMTOK=&quot;__RDM_ACCESS_TOKEN_HERE__&quot;
+RDM_COMMUNITY_ID=&quot;rdm.example.edu&quot;
+rdm2eprint k3tpc-ga970 &gt;article.json</code></pre>
+</section>
+
+<footer>
+<span>&copy; 2023 <a href="https://www.library.caltech.edu/copyright">Caltech Library</a></span>
+<address>1200 E California Blvd, Mail Code 1-32, Pasadena, CA 91125-3200</address>
+<span><a href="mailto:library@caltech.edu">Email Us</a></span>
+<span>Phone: <a href="tel:+1-626-395-3405">(626)395-3405</a></span>
+</footer>
+</body>
+</html>
