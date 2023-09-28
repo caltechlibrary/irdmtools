@@ -25,8 +25,43 @@ as a the storage engine.
 
 The cloned copes of authors, data and thesis retain their old names in the htdocs tree, i.e. "CaltechAUTHORS.ds", "CaltechDATA.ds", and "CaltechTHESIS.ds".
 
+## Required software
 
+- dataset (latest release)
+- py_dataset (latest release)
+- irdmtools (latest release)
+- datatools (reldate is required)
+- Bash >= 3 (or equivalent POSIX shell)
+- python >= 3.10 (including pip for the version you have installed)
+- pandoc >= 3
+- Postgres >= 14
+- s5cmd >= 2.2 (see https://github.com/peak/s5cmd)
 
+## Installation and setup
+
+1. Clone github.com/caltechlibrary/irdmtools
+2. Copy the feeds demo directory to where you want to stage things on your system and change into it
+3. Install the latest tools
+    a. `curl -L https://caltechlibrary.github.io/dataset/installer.sh | sh`
+    b. `curl -L https://caltechlibrary.github.io/irdmtools/installer.sh | sh`
+    c. `curl -L https://caltechlibrary.github.io/datatools/installer.sh | sh`
+4. Install needed Python repositories
+    a. Change into the the feeds folder you copied
+    b. `python -m pip install -r requirements.txt`
+5. Make sure Postgres is installed (see https://postgres.org for details)
+6. Make sure Pandoc is installed (see https://pandoc.org for details)
+    a. Test to confirm it is running and installed
+    b. Create an appropriate account if neccessary with admin provilleges
+7. Run setup_database.bash 
+8. Create the needed environment files, e.g. authors.env, data.env and thesis.env
+    
+At this point you should be able to run the following scripts to harvest
+and build the feeds
+
+1. ./setup_databases.bash (only need to run this the first time)
+2. ./make_datasets.bash (this is run each to to refresh the data)
+3. ./make_site.bash (this is done to stage the website from current state of databases)
+4. Use the s5cmd to copy/sync to your S3 bucket
 
 The primise is to recreate feeds.library.caltech.edu (version 1) by first harvesting an RDM implementation of our EPrints 
 repositories into a dataset collection(s) using the EPrints datastruct crosswalked from RDM. This is done with rdmutil to
