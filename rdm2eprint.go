@@ -186,14 +186,8 @@ func CrosswalkRdmToEPrint(cfg *Config, rec *simplified.Record, eprint *eprinttoo
 				eprint.Abstract = rec.Metadata.Description
 			}
 		}
-		s := rec.Created.Format(timestamp)
-		if s != "0001-01-01 00:00:00" {
-			eprint.Datestamp = s
-		}
-		s = rec.Updated.Format(timestamp)
-		if s != "0001-01-01 00:00:00" {
-			eprint.LastModified = s
-		}
+		eprint.Datestamp = rec.Created.Format(timestamp)
+		eprint.LastModified = rec.Updated.Format(timestamp)
 		if resourceType, ok := getMetadataResourceType(rec, resourceMap); ok {
 			eprint.Type = resourceType
 		}

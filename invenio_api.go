@@ -827,9 +827,22 @@ func getRecordFromPg(cfg *Config, rdmID string, draft bool) (*simplified.Record,
 		}
 		defer db.Close()
 	 }
-	stmt := `SELECT json AS record 
- FROM rdm_records_metadata
- WHERE json->>'id' = $1 LIMIT 1;`
+	stmt := `SELECT jsonb_strip_nulls(jsonb_build_object(
+    'created', created::timestamp (0) with time zone, 
+    'updated', updated::timestamp (0) with time zone,
+    'is_published', json->'is_publshed',
+    'metadata', json->'metadata',
+    'access', json->'access',
+    'files', json->'files',
+    'parent', json->'parent',
+    'id', json->'id',
+    'custom_fields', json->'custom_fields',
+    'status', json->'status',
+    'revision_id', json->'revision_id',
+    'pids', json->'pids'
+))
+FROM rdm_records_metadata
+WHERE json->>'id' = $1 LIMIT 1;`
 	if draft {
 		stmt = `SELECT json AS record 
 FROM rdm_drafts_metadata
