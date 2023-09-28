@@ -8,7 +8,7 @@ eprintid,rdmid,record_status
 11,g2wyk-1s169,public
 11,wtc8g-atm11,restricted-duplicate
 11,3hy68-m1w60,restricted-duplicate
-19,yp8y2-gbg68,public
+19,yp8y2-gbg68,restricted-duplicate
 20,46y48-k6h60,restricted-duplicate
 20,tbbzh-t8v82,public
 21,c7tts-g0k33,restricted-duplicate
@@ -137556,4 +137556,5 @@ eprintid,rdmid,record_status
 76227,kx7ed-49b02,public
 76286,81wg9-qkv42,public
 76360,akpcm-nn624,public
+19,f8d3n-r8v05,public
 76364,40657-znb79,public
