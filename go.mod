@@ -5,9 +5,9 @@ go 1.21.0
 require (
 	github.com/caltechlibrary/crossrefapi v1.0.6
 	github.com/caltechlibrary/dataciteapi v1.0.1
-	github.com/caltechlibrary/dataset/v2 v2.1.3-0.20230926205837-6e51f3e08925
+	github.com/caltechlibrary/dataset/v2 v2.1.4
 	github.com/caltechlibrary/eprinttools v1.3.6
-	github.com/caltechlibrary/simplified v0.0.22-0.20230921175551-16b2e7b911dc
+	github.com/caltechlibrary/simplified v0.0.22-0.20230928002410-fb10675740b4
 	github.com/go-sql-driver/mysql v1.7.1
 	github.com/lib/pq v1.10.6
 	gopkg.in/yaml.v3 v3.0.1

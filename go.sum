@@ -10,6 +10,8 @@ github.com/caltechlibrary/dataset/v2 v2.1.3-0.20230926205837-6e51f3e08925 h1:ItD
 github.com/caltechlibrary/dataset/v2 v2.1.3-0.20230926205837-6e51f3e08925/go.mod h1:x5zjOk0PcHbm3a3Z4NyUB42Hf2/jTMAKFFV8dcTgnPY=
 github.com/caltechlibrary/dataset/v2 v2.1.3 h1:q4qHsDrv6y/Yv1z0tyNd8mNjlqZE85MTWo01Nu/alN0=
 github.com/caltechlibrary/dataset/v2 v2.1.3/go.mod h1:x5zjOk0PcHbm3a3Z4NyUB42Hf2/jTMAKFFV8dcTgnPY=
+github.com/caltechlibrary/dataset/v2 v2.1.4 h1:55EAqcHyacaCPG8SfmccYLA6p3Bf0+1/Xz+GZjU5yKU=
+github.com/caltechlibrary/dataset/v2 v2.1.4/go.mod h1:x5zjOk0PcHbm3a3Z4NyUB42Hf2/jTMAKFFV8dcTgnPY=
 github.com/caltechlibrary/doitools v0.0.1 h1:c6lvI5l9juo019GGUvuwbzeyv1c6VtSi8mkUv1drgwY=
 github.com/caltechlibrary/doitools v0.0.1/go.mod h1:1K36p/UIkIFM0JVaIVtFStKsFu5xjjYWMWAUExmFnP0=
 github.com/caltechlibrary/dotpath v0.0.4 h1:ghc3XZefLPDhQnUo9oXqvz8vfh52QOE0BjK5qOD9RQU=
@@ -24,6 +26,8 @@ github.com/caltechlibrary/semver v0.0.0-20220817184719-a504da2d5c6a h1:3q6ct6FfF
 github.com/caltechlibrary/semver v0.0.0-20220817184719-a504da2d5c6a/go.mod h1:LxzDpCilL3QqjL8qdirgmlo8riDkSFNsTALfIYYyQtE=
 github.com/caltechlibrary/simplified v0.0.22-0.20230921175551-16b2e7b911dc h1:W0jp5leHVrK2bEv9JRhyE8UR6u7See2DX6FIY8ZR3xg=
 github.com/caltechlibrary/simplified v0.0.22-0.20230921175551-16b2e7b911dc/go.mod h1:T36AVk2yLIhH/0zlM3wTeVEFgcsSn2zqdqFVanntSPc=
+github.com/caltechlibrary/simplified v0.0.22-0.20230928002410-fb10675740b4 h1:n2RT8DW3Jo92+2br4yn2NXNA/w6TZAoZ04pvnISOFa4=
+github.com/caltechlibrary/simplified v0.0.22-0.20230928002410-fb10675740b4/go.mod h1:T36AVk2yLIhH/0zlM3wTeVEFgcsSn2zqdqFVanntSPc=
 github.com/dustin/go-humanize v1.0.0/go.mod h1:HtrtbFcZ19U5GC7JDqmcUSB87Iq5E25KnS6fMYU6eOk=
 github.com/glebarez/go-sqlite v1.18.1 h1:w0xtxKWktqYsUsXg//SQK+l1IcpKb3rGOQHmMptvL2U=
 github.com/glebarez/go-sqlite v1.18.1/go.mod h1:ydXIGq2M4OzF4YyNhH129SPp7jWoVvgkEgb6pldmS0s=
