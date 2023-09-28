@@ -22,6 +22,7 @@ function make_repo_folder() {
 	# FIXME: Need to create a pairtree version of the repository as a Zip file here
 	dsquery -pretty -sql "${REPO}-updated.sql" "$REPO.ds" >"htdocs/${REPO}/updated.json"
 	# Convert updated.json to CSV
+	python jsonlist_to_csv.py "htdocs/${REPO}/updated.json" >"htdocs/${REPO}/updated.csv"
 }
 
 for CFG in authors thesis data; do
