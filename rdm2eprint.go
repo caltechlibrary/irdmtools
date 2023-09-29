@@ -364,17 +364,28 @@ func CrosswalkRdmToEPrint(cfg *Config, rec *simplified.Record, eprint *eprinttoo
 				eprint.Series = series.(string)
 			}
 		}
+		
 		if caltechGroups, ok := rec.CustomFields["caltech:groups"].([]interface{}); ok {
 			if len(caltechGroups) > 0 {
 				groupList := new(eprinttools.LocalGroupItemList)
 				for _, groups := range caltechGroups {
 					if group, ok := groups.(map[string]interface{}); ok {
+						addItem := false
+						item := new(eprinttools.Item)
+						if id, ok := group["id"]; ok {
+							addItem = true
+							item.ID = id.(string)
+						}
+						// FIXME: title is populated from translating the vocabuarly against
+						// and group id attribute so this is always empty.
 						if title, ok := group["title"].(map[string]interface{}); ok {
 							if en, ok := title["en"]; ok {
-								item := new(eprinttools.Item)
+								addItem = true
 								item.Value = en.(string)
-								groupList.Append(item)
 							}
+						}
+						if addItem {
+							groupList.Append(item)
 						}
 					}
 				}

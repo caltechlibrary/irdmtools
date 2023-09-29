@@ -53,11 +53,11 @@ function make_repo_folder() {
 		CWD=$(pwd)
 		cd "htdocs/${REPO}" || exit
 		if zip -r "${FEEDS_C_NAME}.zip" "${FEEDS_C_NAME}"; then
-			echo "Zipping completed waiting 30 seconds for disk to settle."
-			sleep 30
-			echo "Removing ${FEEDS_C_NAME} and ${FEEDS_KEY_LIST}"
-			rm -fR "${FEEDS_C_NAME}"
-			rm "${FEEDS_KEY_LIST}"
+			echo "Zipping complete."
+			#sleep 30
+			#echo "Removing ${FEEDS_C_NAME} and ${FEEDS_KEY_LIST}"
+			#rm -fR "${FEEDS_C_NAME}"
+			#rm "${FEEDS_KEY_LIST}"
 		fi
 		cd "${CWD}" || exit
 	fi
@@ -79,6 +79,7 @@ function check_for_required_programs() {
 
 function make_groups() {
 	mkdir -p htdocs/groups
+#FIXME: Need to generate these files
 # make index.json
 # index.keys
 # index.md
@@ -89,19 +90,37 @@ function make_groups() {
 
 function make_people() {
 	mkdir -p htdocs/people
+#FIXME: Need to determine the files to generate here.
+}
+
+function make_root_folder_grids() {
+	mkdir -p htdocs
+	for REPO in authors data thesis; do
+		if [ -f "${REPO}.env" ]; then
+			dsquery -pretty -grid='_Key,date,date_type,title,creators,local_group,type,url' \
+			        -sql "${REPO}-grid.sql" "${REPO}.ds" \
+					>"htdocs/caltech${REPO}-grid.json"
+		else
+			echo "missing ${REPO}.env, skipped making htdocs/caltech${REPO}-grid.json"
+		fi
+	done
 }
 
 #
 # Main processing loop to generate our website.
 #
 check_for_required_programs
+
+# Build root folder contents.
+make_root_folder_grids
+
 # Build the recent folder for each repository's content
 for REPO in authors thesis data; do
 	if [ -f "${REPO}.env" ]; then
 		# shellcheck disable=SC1090
 		. "${REPO}.env"
 		make_recent_folder
-		#make_repo_folder "${REPO}"
+		make_repo_folder "${REPO}"
 	else
 		echo "Missing ${REPO}.env, skipping"
 	fi

@@ -7,7 +7,7 @@ require (
 	github.com/caltechlibrary/dataciteapi v1.0.1
 	github.com/caltechlibrary/dataset/v2 v2.1.4
 	github.com/caltechlibrary/eprinttools v1.3.6
-	github.com/caltechlibrary/simplified v0.0.22-0.20230928005506-7b706e46c7a1
+	github.com/caltechlibrary/simplified v0.0.22-0.20230929210220-65b4539b53dd
 	github.com/go-sql-driver/mysql v1.7.1
 	github.com/lib/pq v1.10.6
 	gopkg.in/yaml.v3 v3.0.1
