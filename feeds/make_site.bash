@@ -10,18 +10,18 @@ function make_recent_folder() {
 		# shellcheck disable=SC1090
 		. authors.env
 		dsquery -pretty -sql recent-authors-object-types.sql authors.ds >htdocs/recent/object_types.json
-		dsquery -pretty -sql recent-combined.sql authors.ds >htdocs/recent/combined.json
+		dsquery -pretty -sql recent-authors-combined.sql authors.ds >htdocs/recent/combined.json
 		for T in article audiovisual book book_section collection combined_data conference_item data_object_types data_pub_types dataset image interactiveresource model monograph object_types patent pub_types software teaching_resource text thesis video workflow; do
-			dsquery -pretty -sql recent-for-type.sql authors.ds "${T}" >"htdocs/recent/$T.json"
+			dsquery -pretty -sql recent-authors-for-type.sql authors.ds "${T}" >"htdocs/recent/$T.json"
 		done
 	fi
 	if [ -f data.env ]; then
 		# shellcheck disable=SC1090
 		. data.env
 		dsquery -pretty -sql recent-data-object-types.sql data.ds >htdocs/recent/data_object_types.json
-		dsquery -pretty -sql recent-combined.sql data.ds >htdocs/recent/data_combined.json
+		dsquery -pretty -sql recent-data-combined.sql data.ds >htdocs/recent/data_combined.json
 		for T in collection dataset image image_map interactive_resource model other publication software video workflow; do
-			dsquery -pretty -sql recent-for-type.sql data.ds "${T}" >"htdocs/recent/$T.json"
+			dsquery -pretty -sql recent-data-for-type.sql data.ds "${T}" >"htdocs/recent/data_$T.json"
 		done
 	fi
 }
