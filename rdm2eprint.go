@@ -35,6 +35,7 @@
 package irdmtools
 
 import (
+	"database/sql"
 	"encoding/xml"
 	"fmt"
 	"io"
@@ -145,15 +146,24 @@ func CrosswalkRdmToEPrint(cfg *Config, rec *simplified.Record, eprint *eprinttoo
 	if rec.RecordAccess != nil {
 		// We'll assume these are public records so we set eprint_status to "archive" if "open"
 		// otherwise we'll assume these would map to the inbox.
-		if rec.RecordAccess.Status == "open" && rec.RecordAccess.Record == "public" {
+		if rec.RecordAccess.Record == "public" {
 			eprint.MetadataVisibility = "show"
 			eprint.EPrintStatus = "archive"
-			eprint.FullTextStatus = "public"
+			if rec.RecordAccess.Files == "public" {
+				eprint.FullTextStatus = "public"
+			} else {
+				eprint.FullTextStatus = "restricted"
+			}
 		} else {
 			eprint.EPrintStatus = "inbox"
 			eprint.MetadataVisibility = "no_search"
 			eprint.FullTextStatus = "restricted"
 		}
+	}
+
+	// Default EPrint id is a URL, so we'll point at the RDM location.
+	if rec.ID != "" {
+		eprint.ID = fmt.Sprintf("%s/records/%s", cfg.InvenioAPI, rec.ID)
 	}
 
 	if rec.Metadata != nil {
@@ -162,10 +172,12 @@ func CrosswalkRdmToEPrint(cfg *Config, rec *simplified.Record, eprint *eprinttoo
 			if eprintid != "" {
 				eprint.EPrintID, _ = strconv.Atoi(eprintid)
 			}
-			eprint.ID = fmt.Sprintf("%s/records/%s", cfg.InvenioAPI, rec.ID)
 		}
 		if doi, ok := getMetadataIdentifier(rec, "doi"); ok {
 			eprint.DOI = doi
+		}
+		if pmcid, ok := getMetadataIdentifier(rec, "pmcid"); ok {
+			eprint.PMCID = pmcid
 		}
 		if rec.Metadata != nil {
 			if rec.Metadata.PublicationDate != "" {
@@ -352,17 +364,28 @@ func CrosswalkRdmToEPrint(cfg *Config, rec *simplified.Record, eprint *eprinttoo
 				eprint.Series = series.(string)
 			}
 		}
+		
 		if caltechGroups, ok := rec.CustomFields["caltech:groups"].([]interface{}); ok {
 			if len(caltechGroups) > 0 {
 				groupList := new(eprinttools.LocalGroupItemList)
 				for _, groups := range caltechGroups {
 					if group, ok := groups.(map[string]interface{}); ok {
+						addItem := false
+						item := new(eprinttools.Item)
+						if id, ok := group["id"]; ok {
+							addItem = true
+							item.ID = id.(string)
+						}
+						// FIXME: title is populated from translating the vocabuarly against
+						// and group id attribute so this is always empty.
 						if title, ok := group["title"].(map[string]interface{}); ok {
 							if en, ok := title["en"]; ok {
-								item := new(eprinttools.Item)
+								addItem = true
 								item.Value = en.(string)
-								groupList.Append(item)
 							}
+						}
+						if addItem {
+							groupList.Append(item)
 						}
 					}
 				}
@@ -558,8 +581,36 @@ func (app *Rdm2EPrint) Configure(configFName string, envPrefix string, debug boo
 	return nil
 }
 
+// CusePostgresDB, if RDM's Postgres DB setup in the environment use it to
+// handle record and key retrieval rather than the slower REST API.
+func usePostgresDB(cfg *Config) bool {
+	if (cfg != nil)  && (cfg.InvenioDbHost != "") && (cfg.InvenioDbUser != "") {
+		return true
+	}
+	return false
+}
+
 func (app *Rdm2EPrint) Run(in io.Reader, out io.Writer, eout io.Writer, rdmids []string, asXML bool) error {
 	eprints := new(eprinttools.EPrints)
+	if usePostgresDB(app.Cfg) {
+		cfg := app.Cfg
+		sslmode := "?sslmode=require"
+		if strings.HasPrefix(cfg.InvenioDbHost, "localhost") {
+			sslmode = "?sslmode=disable"
+		}
+		connStr := fmt.Sprintf("postgres://%s@%s/%s%s", 
+		cfg.InvenioDbUser, cfg.InvenioDbHost, cfg.RepoID, sslmode)
+		if cfg.InvenioDbPassword != "" {
+			connStr = fmt.Sprintf("postgres://%s:%s@%s/%s%s", 
+				cfg.InvenioDbUser, cfg.InvenioDbPassword, cfg.InvenioDbHost, cfg.RepoID, sslmode)
+		}
+		db, err := sql.Open("postgres", connStr)
+		if err != nil {
+			return err
+		}
+		defer db.Close()
+		app.Cfg.pgDB = db
+	}
 	for _, rdmid := range rdmids {
 		rec, err := GetRecord(app.Cfg, rdmid, false)
 		if err != nil {
@@ -588,13 +639,34 @@ func (app *Rdm2EPrint) Run(in io.Reader, out io.Writer, eout io.Writer, rdmids [
 }
 
 func (app *Rdm2EPrint) RunHarvest(in io.Reader, out io.Writer, eout io.Writer, cName string, rdmids []string) error {
+	if len(rdmids) == 0 {
+		return fmt.Errorf("no RDM ids to process")
+	}
 	ds, err := dataset.Open(cName)
 	if err != nil {
 		return err
 	}
 	defer ds.Close()
+	if usePostgresDB(app.Cfg) {
+		cfg := app.Cfg
+		sslmode := "?sslmode=require"
+		if strings.HasPrefix(cfg.InvenioDbHost, "localhost") {
+			sslmode = "?sslmode=disable"
+		}
+		connStr := fmt.Sprintf("postgres://%s@%s/%s%s", 
+		cfg.InvenioDbUser, cfg.InvenioDbHost, cfg.RepoID, sslmode)
+		if cfg.InvenioDbPassword != "" {
+			connStr = fmt.Sprintf("postgres://%s:%s@%s/%s%s", 
+				cfg.InvenioDbUser, cfg.InvenioDbPassword, cfg.InvenioDbHost, cfg.RepoID, sslmode)
+		}
+		db, err := sql.Open("postgres", connStr)
+		if err != nil {
+			return err
+		}
+		defer db.Close()
+		app.Cfg.pgDB = db
+	}
 
-	eprints := new(eprinttools.EPrints)
 	eCnt, cCnt, tot := 0, 0, len(rdmids)
 	t0 := time.Now()
 	rptTime := time.Now()
@@ -609,16 +681,15 @@ func (app *Rdm2EPrint) RunHarvest(in io.Reader, out io.Writer, eout io.Writer, c
 		if err := CrosswalkRdmToEPrint(app.Cfg, rec, eprint); err != nil {
 			return err
 		}
-		eprints.EPrint = []*eprinttools.EPrint{eprint}
 		if ds.HasKey(rec.ID) {
-			if err := ds.UpdateObject(rec.ID, eprints); err != nil {
+			if err := ds.UpdateObject(rec.ID, eprint); err != nil {
 				log.Printf("error (update): %q, %s", rec.ID, err)
 				eCnt++
 			} else {
 				cCnt++
 			}
 		} else {
-			if err := ds.CreateObject(rec.ID, eprints); err != nil {
+			if err := ds.CreateObject(rec.ID, eprint); err != nil {
 				log.Printf("error (create): %q, %s", rec.ID, err)
 				eCnt++
 			} else {

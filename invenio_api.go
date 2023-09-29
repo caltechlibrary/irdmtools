@@ -36,6 +36,7 @@ package irdmtools
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/xml"
 	"fmt"
 	"io"
@@ -46,6 +47,9 @@ import (
 	"path"
 	"strings"
 	"time"
+
+	// 3rd Party packages
+	_ "github.com/lib/pq"
 
 	// Caltech Library Packages
 	"github.com/caltechlibrary/simplified"
@@ -520,15 +524,106 @@ func Query(cfg *Config, q string, sort string) ([]map[string]interface{}, error)
 	return records, nil
 }
 
+// getRecordIdsFromPg will return all record ids found by querying Invenio RDM's Postgres
+// database.
+func getRecordIdsFromPg(cfg *Config) ([]string, error) {
+	
+	sslmode := "?sslmode=require"
+	if strings.HasPrefix(cfg.InvenioDbHost, "localhost") {
+		sslmode = "?sslmode=disable"
+	}
+	connStr := fmt.Sprintf("postgres://%s@%s/%s%s", 
+		cfg.InvenioDbUser, cfg.InvenioDbHost, cfg.RepoID, sslmode)
+	if cfg.InvenioDbPassword != "" {
+		connStr = fmt.Sprintf("postgres://%s:%s@%s/%s%s", 
+			cfg.InvenioDbUser, cfg.InvenioDbPassword, cfg.InvenioDbHost, cfg.RepoID, sslmode)
+	}
+	db, err := sql.Open("postgres", connStr)
+	if err != nil {
+		return nil, err
+	}
+	keys := []string{}
+	stmt := `SELECT json->>'id' AS rdmid FROM rdm_records_metadata WHERE json->'access'->>'record' = 'public'`
+	rows, err := db.Query(stmt)
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		var rdmid string
+		if err := rows.Scan(&rdmid); err != nil {
+			return nil, err
+		}
+		keys = append(keys, rdmid)
+	}
+	err = rows.Err()
+	return keys, err
+}
+
+// getModifiedRecordIdsFromPg will return of record ids found in date range by querying
+// Invenio RDM's Postgres database.
+func getModifiedRecordIdsFromPg(cfg *Config, startDate string, endDate string) ([]string, error) {
+	sslmode := "?sslmode=require"
+	if strings.HasPrefix(cfg.InvenioDbHost, "localhost") {
+		sslmode = "?sslmode=disable"
+	}
+	connStr := fmt.Sprintf("postgres://%s@%s/%s%s", 
+		cfg.InvenioDbUser, cfg.InvenioDbHost, cfg.RepoID, sslmode)
+	if cfg.InvenioDbPassword != "" {
+		connStr = fmt.Sprintf("postgres://%s:%s@%s/%s%s", 
+			cfg.InvenioDbUser, cfg.InvenioDbPassword, cfg.InvenioDbHost, cfg.RepoID, sslmode)
+	}
+	db, err := sql.Open("postgres", connStr)
+	if err != nil {
+		return nil, err
+	}
+	keys := []string{}
+	/*
+	// Filter records based on the .metadata.dates found in the JSON
+	stmt := fmt.Sprintf(`with t as (
+    select json->>'id' as rdmid, 
+	       json->'access'->>'record' as status,
+	       jsonb_path_query(json->'metadata'->'dates', '$.type')::jsonb->>'id' as date_type,
+	       to_date(jsonb_path_query(json->'metadata'->'dates', '$.date') #>> '{}', 'YYYY-MM-DD') as dt
+    from rdm_records_metadata
+    where json->'access'->>'record' = 'public'
+) select rdmid
+from t 
+where date_type = 'updated'
+  and (dt between '%s' and '%s')
+order by dt;`, startDate, endDate)
+	*/
+	stmt := `SELECT json->>'id' AS rdmid FROM rdm_records_metadata
+WHERE json->'access'->>'record' = 'public' AND (updated between $1 AND $2)`
+	rows, err := db.Query(stmt, startDate, endDate)
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		var rdmid string
+		if err := rows.Scan(&rdmid); err != nil {
+			return nil, err
+		}
+		keys = append(keys, rdmid)
+	}
+	err = rows.Err()
+	return keys, err
+}
 // GetRecordIds takes a configuration object, contacts am RDM
-// instance and returns a list of ids and error.
+// instance and returns a list of ids and error. If the RDM
+// database connection is included in the configuration the faster
+// method of querrying Postgres is used, otherwise OAI-PMH is used
+// to get the id list.
 //
 // The configuration object must have the InvenioAPI and
-// InvenioToken attributes set.
+// InvenioToken attributes set. It is highly recommended that the
+// InvenioDbUser, InvenioDbPassword and InvenioDbHost is configured.
 //
 // NOTE: This method relies on OAI-PMH, this is a rate limited process
 // so results can take quiet some time.
 func GetRecordIds(cfg *Config) ([]string, error) {
+	if cfg.InvenioDbHost != "" && cfg.InvenioDbUser != "" {
+		return getRecordIdsFromPg(cfg)
+	}
 	ids := []string{}
 	resumptionToken := "     "
 	t0 := time.Now()
@@ -603,6 +698,9 @@ func GetModifiedRecordIds(cfg *Config, start string, end string) ([]string, erro
 	}
 	if end == "" {
 		end = time.Now().Format("2006-01-02")
+	}
+	if cfg.InvenioDbHost != "" && cfg.InvenioDbUser != "" {
+		return getModifiedRecordIdsFromPg(cfg, start, end)
 	}
 	debug := cfg.Debug
 	ids := []string{}
@@ -703,6 +801,72 @@ func GetRawRecord(cfg *Config, id string) (map[string]interface{}, error) {
 	return rec, nil
 }
 
+// getRecordFromPg will return all record ids found by querying Invenio RDM's Postgres
+// database.
+func getRecordFromPg(cfg *Config, rdmID string, draft bool) (*simplified.Record, error) {
+	var (
+		db *sql.DB
+		err error
+	)
+	if cfg.pgDB != nil {
+		db = cfg.pgDB
+	} else if cfg.pgDB == nil && cfg.InvenioDbHost != "" && cfg.InvenioDbUser != ""{
+		sslmode := "?sslmode=require"
+		if strings.HasPrefix(cfg.InvenioDbHost, "localhost") {
+			sslmode = "?sslmode=disable"
+		}
+		connStr := fmt.Sprintf("postgres://%s@%s/%s%s", 
+		cfg.InvenioDbUser, cfg.InvenioDbHost, cfg.RepoID, sslmode)
+		if cfg.InvenioDbPassword != "" {
+			connStr = fmt.Sprintf("postgres://%s:%s@%s/%s%s", 
+				cfg.InvenioDbUser, cfg.InvenioDbPassword, cfg.InvenioDbHost, cfg.RepoID, sslmode)
+		}
+		db, err = sql.Open("postgres", connStr)
+		if err != nil {
+			return nil, err
+		}
+		defer db.Close()
+	 }
+	stmt := `SELECT jsonb_strip_nulls(jsonb_build_object(
+    'created', created::timestamp (0) with time zone, 
+    'updated', updated::timestamp (0) with time zone,
+    'is_published', json->'is_publshed',
+    'metadata', json->'metadata',
+    'access', json->'access',
+    'files', json->'files',
+    'parent', json->'parent',
+    'id', json->'id',
+    'custom_fields', json->'custom_fields',
+    'status', json->'status',
+    'revision_id', json->'revision_id',
+    'pids', json->'pids'
+))
+FROM rdm_records_metadata
+WHERE json->>'id' = $1 LIMIT 1;`
+	if draft {
+		stmt = `SELECT json AS record 
+FROM rdm_drafts_metadata
+WHERE json->>'id' = $1 LIMIT 1;`
+	}
+	rows, err := db.Query(stmt, rdmID)
+	if err != nil {
+		return nil, err
+	}
+	var src []byte
+	for rows.Next() {
+		if err := rows.Scan(&src); err != nil {
+			return nil, err
+		}
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+	rec := &simplified.Record{}
+	err = JSONUnmarshal(src, &rec)
+	return rec, err
+}
+
 // GetRecord takes a configuration object and record id,
 // contacts an RDM instance and returns a simplified record
 // and an error value.
@@ -719,6 +883,9 @@ func GetRawRecord(cfg *Config, id string) (map[string]interface{}, error) {
 // }
 // ```
 func GetRecord(cfg *Config, id string, draft bool) (*simplified.Record, error) {
+	if cfg.InvenioDbHost != "" && cfg.InvenioDbUser != "" {
+		return getRecordFromPg(cfg, id, draft)
+	}
 	// Make sure we have a valid URL
 	u, err := url.Parse(cfg.InvenioAPI)
 	if err != nil {

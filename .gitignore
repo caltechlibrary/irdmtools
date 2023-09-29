@@ -110,3 +110,5 @@ migration/
 testdata
 *.bash
 problem_files/
+*.env
+htdocs

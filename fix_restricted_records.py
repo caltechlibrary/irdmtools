@@ -67,12 +67,7 @@ def main():
                         publish=True,
                         authors=True,
                         )
-""" 
-            elif rdm_id in migrated:
-                print(rdm_id)
-                print('Matches')
-                print(migrated[rdm_id])
-            elif "identifiers" in metadata:
+            if "identifiers" in metadata:
                 for identifier in metadata['identifiers']:
                     if identifier['scheme'] == 'eprintid':
                         idv = identifier['identifier']
@@ -82,12 +77,10 @@ def main():
                             identifiers[idv] = rdm_id
         for idv in identifiers:
             print(idv)
-            #reload_public_version(idv,identifiers[idv])
-            exit()
+            reload_public_version(idv,identifiers[idv])
     else:
         print(f"Aborting {app_name}, environment not setup", file=sys.stderr)
         sys.exit(1)
-"""
 
 if __name__ == "__main__":
     main()

@@ -14,7 +14,7 @@
 . ftr VB CB
 . ftr VBI CBI
 .\}
-.TH "rdmutil" "1" "2023-09-22" "irdmtools user manual" "version 0.0.54 b97e5f6"
+.TH "rdmutil" "1" "2023-09-29" "irdmtools user manual" "version 0.0.55 ac1daf9"
 .hy
 .SH NAME
 .PP
@@ -44,12 +44,12 @@ They maybe overwritten by using a JSON configuration file.
 The corresponding attributes are \[lq]invenio_api\[rq],
 \[lq]invenio_token\[rq] and \[lq]c_name\[rq].
 .PP
-rdmutil uses the OAI-PMH service to retrieve record ids.
-This maybe slow due to rate limits.
-Also provided is a query service and record retrieval using Invenio
-RDM\[cq]s REST API.
-These are faster but the query services limited the total number of
-results to 10K records.
+By default rdmutil uses the OAI-PMH service to retrieve record ids.
+This will be slow, possibly too slow if reasonably sized repositories.
+If you have access to Postgres database and configure the environment
+with access credentials then rdmutil can get a list of ids much quicker.
+The variables used to form a connection are RDM_DB_HOST, RDM_DB_HOST and
+if password is required RDM_DB_PASSWORD.
 .SH OPTIONS
 .TP
 help

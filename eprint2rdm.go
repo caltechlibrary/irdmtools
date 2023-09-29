@@ -814,7 +814,7 @@ func uriToContributorType(role_uri string, contributorTypes map[string]string) s
 	return "other"
 }
 
-func dateTypeFromTimestamp(dtType string, timestamp string, description string) *simplified.DateType {
+func dateTypeFromTimestamp(dtType string, tstamp string, description string) *simplified.DateType {
 	dt := new(simplified.DateType)
 	dt.Type = new(simplified.Type)
 	dt.Type.ID = dtType
@@ -823,9 +823,9 @@ func dateTypeFromTimestamp(dtType string, timestamp string, description string) 
 	}
 	dt.Description = description
 	if len(timestamp) > 9 {
-		dt.Date = timestamp[0:10]
+		dt.Date = tstamp[0:10]
 	} else {
-		dt.Date = timestamp
+		dt.Date = tstamp
 	}
 	return dt
 }
