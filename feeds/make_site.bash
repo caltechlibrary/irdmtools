@@ -6,11 +6,24 @@
 #
 function make_recent_folder() {
 	mkdir -p htdocs/recent
-	dsquery -pretty -sql recent-object-types.sql authors.ds >htdocs/recent/object_types.json
-	dsquery -pretty -sql recent-combined.sql authors.ds >htdocs/recent/combined.json
-	for T in article audiovisual book book_section collection combined_data conference_item data_object_types data_pub_types dataset image interactiveresource model monograph object_types patent pub_types software teaching_resource text thesis video workflow; do
-		dsquery -pretty -sql recent-for-type.sql authors.ds "${T}" >"htdocs/recent/$T.json"
-	done
+	if [ -f authors.env ]; then
+		# shellcheck disable=SC1090
+		. authors.env
+		dsquery -pretty -sql recent-authors-object-types.sql authors.ds >htdocs/recent/object_types.json
+		dsquery -pretty -sql recent-combined.sql authors.ds >htdocs/recent/combined.json
+		for T in article audiovisual book book_section collection combined_data conference_item data_object_types data_pub_types dataset image interactiveresource model monograph object_types patent pub_types software teaching_resource text thesis video workflow; do
+			dsquery -pretty -sql recent-for-type.sql authors.ds "${T}" >"htdocs/recent/$T.json"
+		done
+	fi
+	if [ -f data.env ]; then
+		# shellcheck disable=SC1090
+		. data.env
+		dsquery -pretty -sql recent-data-object-types.sql data.ds >htdocs/recent/data_object_types.json
+		dsquery -pretty -sql recent-combined.sql data.ds >htdocs/recent/data_combined.json
+		for T in collection dataset image image_map interactive_resource model other publication software video workflow; do
+			dsquery -pretty -sql recent-for-type.sql data.ds "${T}" >"htdocs/recent/$T.json"
+		done
+	fi
 }
 
 #
@@ -40,11 +53,13 @@ function make_repo_folder() {
 		CWD=$(pwd)
 		cd "htdocs/${REPO}" || exit
 		if zip -r "${FEEDS_C_NAME}.zip" "${FEEDS_C_NAME}"; then
+			echo "Zipping completed waiting 30 seconds for disk to settle."
+			sleep 30
+			echo "Removing ${FEEDS_C_NAME} and ${FEEDS_KEY_LIST}"
 			rm -fR "${FEEDS_C_NAME}"
 			rm "${FEEDS_KEY_LIST}"
 		fi
 		cd "${CWD}" || exit
-
 	fi
 }
 
@@ -80,12 +95,13 @@ function make_people() {
 # Main processing loop to generate our website.
 #
 check_for_required_programs
+# Build the recent folder for each repository's content
 for REPO in authors thesis data; do
 	if [ -f "${REPO}.env" ]; then
 		# shellcheck disable=SC1090
 		. "${REPO}.env"
-		make_repo_folder "${REPO}"
 		make_recent_folder
+		#make_repo_folder "${REPO}"
 	else
 		echo "Missing ${REPO}.env, skipping"
 	fi
@@ -95,3 +111,15 @@ done
 make_groups
 # Build out the people tree
 make_people
+
+# Build the repo folder for each repository
+## for REPO in authors thesis data; do
+## 	if [ -f "${REPO}.env" ]; then
+## 		# shellcheck disable=SC1090
+## 		. "${REPO}.env"
+## 		# make_repo_folder "${REPO}"
+## 	else
+## 		echo "Missing ${REPO}.env, skipping"
+## 	fi
+## done
+
