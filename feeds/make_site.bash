@@ -46,7 +46,7 @@ function make_repo_folder() {
 	# Clone the repository and zip it up.
 	FEEDS_C_NAME="Caltech$(printf '%s\n' "$REPO" | awk '{ print toupper($0) }').ds"
 	FEEDS_KEY_LIST="Caltech$(printf '%s\n' "$REPO" | awk '{ print toupper($0) }').keys"
-	dataset keys "${REPO}.ds" >"htdocs/${REPO}/${FEEDS_KEY_LIST}"
+	dsquery -pretty -sql "clone-${REPO}-keys.sql" "${REPO}.ds" | jsonrange -values | jq -r . >"htdocs/${REPO}/${FEEDS_KEY_LIST}"
 	dataset clone -i "htdocs/${REPO}/${FEEDS_KEY_LIST}" "${REPO}.ds" "htdocs/${REPO}/${FEEDS_C_NAME}"
 	# Make sure we have collection to Zip up
 	if [ -d "htdocs/${REPO}/${FEEDS_C_NAME}" ]; then
@@ -65,7 +65,7 @@ function make_repo_folder() {
 
 function check_for_required_programs() {
 	IS_MISSING=""
-	for CLI in dsquery python pandoc; do
+	for CLI in dataset dsquery python pandoc jsonrange jq; do
 		if ! command -v "${CLI}" &>/dev/null; then
 			IS_MISSING="true"
 			echo "Missing ${CLI}"

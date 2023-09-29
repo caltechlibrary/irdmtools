@@ -39,6 +39,6 @@ FROM (SELECT jsonb_strip_nulls(jsonb_build_object(
 		'subjects', src->'subjects'
 	)::jsonb) AS src
 	FROM data
-	WHERE src->>'type' = $1
+	WHERE src->>'type' = $1 AND src->>'eprint_status' = 'archive'
 	ORDER BY src->>'date' DESC LIMIT 25) AS t
 ORDER BY src->>'date' ASC;
