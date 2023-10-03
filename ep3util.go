@@ -36,6 +36,7 @@ package irdmtools
 
 import (
 	"bytes"
+	"flag"
 	"fmt"
 	"io"
 	"strconv"
@@ -83,7 +84,7 @@ func (app *Ep3Util) Configure(configFName string, envPrefix string, debug bool) 
 		app.Cfg.Debug = true
 	}
 	// Make sure we have a minimal useful configuration
-	if app.Cfg.EPrintHost == "" || app.Cfg.InvenioToken == "" {
+	if app.Cfg.EPrintHost == "" {
 		return fmt.Errorf("EPRINT_HOST, EPRINT_USER, EPRINT_PASSWORD are not available")
 	}
 	return nil
@@ -156,8 +157,21 @@ func (app *Ep3Util) GetRecord(id string) ([]byte, error) {
 // harvests them into a dataset v2 collection. The dataset collection
 // must exist and be configured in either the environment or
 // configuration file.
-func (app *Ep3Util) Harvest(fName string) error {
-	return HarvestEPrints(app.Cfg, fName, app.Cfg.Debug)
+func (app *Ep3Util) RunHarvest(in io.Reader, out io.Writer, eout io.Writer, all bool, modified bool, params []string) error {
+	switch {
+	case all:
+		timeout := time.Duration(timeoutSeconds)
+		ids, err := GetKeys(app.Cfg, timeout, 3)
+		if err != nil {
+			return err
+		}
+		return HarvestEPrintsRecordIds(app.Cfg, ids, app.Cfg.Debug)	
+	case modified:
+		// FIXME: need to harvest modified eprints ...
+		return fmt.Errorf("RunHarvest of modified records not implemented")
+	default:
+		return HarvestEPrints(app.Cfg, params[0], app.Cfg.Debug)
+	}
 }
 
 // Run implements the irdmapp cli behaviors. With the exception of the
@@ -199,10 +213,19 @@ func (app *Ep3Util) Run(in io.Reader, out io.Writer, eout io.Writer, action stri
 		}
 		src, err = app.GetRecord(recordId)
 	case "harvest":
-		if len(params) != 1 {
+		all, modified := false, false
+		flagSet := flag.NewFlagSet("harvest", flag.ContinueOnError)
+		flagSet.BoolVar(&all, "all", all, "harvest all records")
+		flagSet.BoolVar(&modified, "modified", modified, "harvest records between start and optional end date")
+		flagSet.Parse(params)
+		params = flagSet.Args()
+		if (! all) && len(params) < 1 {
+			if modified {
+				return fmt.Errorf("Missing a start and optional end date for harvest")
+			}
 			return fmt.Errorf("JSON Identifier file required")
 		}
-		return app.Harvest(params[0])
+		return app.RunHarvest(in, out, eout, all, modified, params)
 	default:
 		err = fmt.Errorf("%q action is not supported", action)
 	}

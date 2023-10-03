@@ -14,7 +14,7 @@
 . ftr VB CB
 . ftr VBI CBI
 .\}
-.TH "ep3util" "1" "2023-09-29" "irdmtools user manual" "version 0.0.55 ac1daf9"
+.TH "ep3util" "1" "2023-10-03" "irdmtools user manual" "version 0.0.55 d95a950"
 .hy
 .SH NAME
 .PP
@@ -82,9 +82,18 @@ Returns a specific simplified record indicated by RECORD_ID,
 e.g.\ 23808.
 The REORCID_ID is a required parameter.
 .TP
-harvest KEY_LIST_JSON
+harvest HARVEST_OPTIONS [KEY_LIST_JSON]
 harvest takes a JSON file containing a list of keys and harvests each
-record into the dataset collection.
+record into a dataset collection.
+If combined with one of the options, e.g.\ \f[V]-all\f[R], you can skip
+provideing the KEY_LIST_JSON file.
+.SH HARVEST_OPTIONS
+.TP
+-all
+Harvest all records
+.TP
+-modified START [END]
+Harvest records modified between start and end dates.
 .SH ACTION_PARAMETERS
 .PP
 Action parameters are the specific optional or required parameters need
@@ -117,6 +126,22 @@ Record is validated against irdmtool EPrints data model.
 .nf
 \f[C]
 ep3util get_record 23808
+\f[R]
+.fi
+.PP
+Harvest all records
+.IP
+.nf
+\f[C]
+ep3util harvest -all
+\f[R]
+.fi
+.PP
+Harvest records created or modified in the month of September, 2023.
+.IP
+.nf
+\f[C]
+ep3util harvest -modified 2023-09-01 2023-09-30
 \f[R]
 .fi
 .SH AUTHORS

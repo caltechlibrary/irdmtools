@@ -110,9 +110,17 @@ get_all_ids
 get_record RECORD_ID
 : Returns a specific simplified record indicated by RECORD_ID, e.g. 23808. The REORCID_ID is a required parameter.
 
-harvest KEY_LIST_JSON
-: harvest takes a JSON file containing a list of keys and harvests each record into the dataset collection.
+harvest [HARVEST_OPTIONS] [KEY_LIST_JSON]
+: harvest takes a JSON file containing a list of keys and harvests each record into a dataset collection. If combined
+with one of the options, e.g. `+"`"+`-all`+"`"+`, you can skip provideing the KEY_LIST_JSON file.
 
+# HARVEST_OPTIONS
+
+-all
+: Harvest all records
+
+-modified START [END]
+: Harvest records modified between start and end dates.
 
 # ACTION_PARAMETERS
 
@@ -143,6 +151,17 @@ against irdmtool EPrints data model.
 {app_name} get_record 23808
 ~~~
 
+Harvest all records
+
+~~~
+{app_name} harvest -all
+~~~
+
+Harvest records created or modified in the month of September, 2023.
+
+~~~
+{app_name} harvest -modified 2023-09-01 2023-09-30
+~~~
 `
 )
 
