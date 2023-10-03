@@ -64,10 +64,15 @@ function harvest_groups() {
 		if [ ! -d groups.ds ]; then
 			dataset init groups.ds "postgres://$USER@localhost/groups?sslmode=disable"
 	    fi	
-		python csv_to_dataset.py groups.ds groups.csv
+		dsimport -overwrite groups.ds groups.csv key
 	else
 		echo "failed to find groups.csv, skipping"
 	fi
+#FIXME: Now for each group record merge in a list of record ids in descending publication order from CaltechAUTHORS, CaltechDATA and CaltechTHESIS
+#
+# Build a list of publication types where there is one or more local groups
+# For each repo and each publication type retrieve a ordered by descending publication date list of record ids and merge into record.
+
 }
 
 function harvest_people() {
@@ -75,7 +80,7 @@ function harvest_people() {
 		if [ ! -d people.ds ]; then
 			dataset init people.ds "postgres://$USER@localhost/people?sslmode=disable"
 		fi
-		python csv_to_dataset.py people.ds people.csv
+		dsimport -overwrite people.ds people.csv cl_people_id
 	else
 		echo "failed to find people.csv, skipping"
 	fi

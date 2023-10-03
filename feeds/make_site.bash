@@ -5,6 +5,7 @@
 # populate the htdocs/recent folder with JSON content
 #
 function make_recent_folder() {
+	echo "Populating recent folder"
 	mkdir -p htdocs/recent
 	if [ -f authors.env ]; then
 		# shellcheck disable=SC1090
@@ -31,6 +32,7 @@ function make_recent_folder() {
 #
 function make_repo_folder() {
 	REPO="$1"
+	echo "Making ${REPO} folder"
 	# Cleanup stale stuff
 	if [ -d "htdocs/$REPO" ]; then
 		rm -fR "htdocs/$REPO"
@@ -38,16 +40,11 @@ function make_repo_folder() {
     # Setup clean repository directory	
 	mkdir -p "htdocs/$REPO"
 	# FIXME: Need to create a pairtree version of the repository as a Zip file here
-	dsquery -pretty -sql "${REPO}-updated.sql" "$REPO.ds" >"htdocs/${REPO}/updated.json"
-	# Convert updated.json to CSV
-	if python jsonlist_to_csv.py "htdocs/${REPO}/updated.json" >"htdocs/${REPO}/updated.csv"; then
-		rm "htdocs/${REPO}/updated.json"
-	fi
+	dsquery -csv "_Key,updated" -sql "${REPO}-updated.sql" "$REPO.ds" >"htdocs/${REPO}/updated.csv"
 	# Clone the repository and zip it up.
 	FEEDS_C_NAME="Caltech$(printf '%s\n' "$REPO" | awk '{ print toupper($0) }').ds"
 	FEEDS_KEY_LIST="Caltech$(printf '%s\n' "$REPO" | awk '{ print toupper($0) }').keys"
-	dsquery -pretty -sql "clone-${REPO}-keys.sql" "${REPO}.ds" | jsonrange -values | jq -r . >"htdocs/${REPO}/${FEEDS_KEY_LIST}"
-	dataset clone -i "htdocs/${REPO}/${FEEDS_KEY_LIST}" "${REPO}.ds" "htdocs/${REPO}/${FEEDS_C_NAME}"
+	dataset clone -all -i "htdocs/${REPO}/${FEEDS_KEY_LIST}" "${REPO}.ds" "htdocs/${REPO}/${FEEDS_C_NAME}"
 	# Make sure we have collection to Zip up
 	if [ -d "htdocs/${REPO}/${FEEDS_C_NAME}" ]; then
 		CWD=$(pwd)
@@ -77,23 +74,51 @@ function check_for_required_programs() {
 	fi
 }
 
+function make_groups_index_md() {
+	echo '---'
+	echo 'groups:'
+	dsquery -sql groups-index-md.sql groups.ds | json2yaml | sed -E 's/^/    /g'
+	echo '---'
+}
+
 function make_groups() {
+	echo "Populating groups folder"
 	mkdir -p htdocs/groups
+	dataset keys groups.ds >htdocs/groups/index.keys
+	dsquery -pretty -sql groups-index-json.sql groups.ds >htdocs/groups/index.json
+	# Now build index.md for groups
+	make_groups_index_md | pandoc -f markdown -t markdown \
+					  --template templates/groups-index-md.tmpl \
+					  >htdocs/groups/index.md
+	# Now build the old group_list.json (this get used by CL.js and the widget stuff)
+	
 #FIXME: Need to generate these files
-# make index.json
-# index.keys
-# index.md
-# group_list.json
 # groups.csv
 # updated.csv
+
+	# Clean and clone groups.ds collection to CaltechGROUPS.ds.zip
+	if [ -d htdocs/groups/CaltechGROUPS.ds ]; then
+		rm -fR htdocs/groups/CaltechGROUPS.ds
+	fi
+	dataset clone -all groups.ds htdocs/groups/CaltechGROUPS.ds
+	if [ -d "htdocs/groups/CaltechGROUPS.ds" ]; then
+		CWD=$(pwd)
+		cd "htdocs/groups" || exit
+		if zip -r "CaltechGROUPS.ds.zip" "CaltechGROUPS.ds"; then
+			echo "Zipping complete."
+		fi
+		cd "${CWD}" || exit
+	fi
 }
 
 function make_people() {
+	echo "Populating people folder"
 	mkdir -p htdocs/people
 #FIXME: Need to determine the files to generate here.
 }
 
 function make_root_folder_grids() {
+	echo "Populating root folder"
 	mkdir -p htdocs
 	for REPO in authors data thesis; do
 		if [ -f "${REPO}.env" ]; then
@@ -106,25 +131,38 @@ function make_root_folder_grids() {
 	done
 }
 
+function make_repo_folders() {
+	# Build the recent folder for each repository's content
+	for REPO in authors thesis data; do
+		if [ -f "${REPO}.env" ]; then
+			# shellcheck disable=SC1090
+			. "${REPO}.env"
+			make_recent_folder
+			make_repo_folder "${REPO}"
+		else
+			echo "Missing ${REPO}.env, skipping"
+		fi
+	done
+}
+
 #
 # Main processing loop to generate our website.
 #
 check_for_required_programs
 
+if [ "$1" != "" ]; then
+	for cmd in $@; do
+		echo "Running $cmd"
+		if ! $cmd; then
+			echo 'Something went wrong'
+			exit 10
+		fi
+	done
+	exit 0
+fi
+
 # Build root folder contents.
 make_root_folder_grids
-
-# Build the recent folder for each repository's content
-for REPO in authors thesis data; do
-	if [ -f "${REPO}.env" ]; then
-		# shellcheck disable=SC1090
-		. "${REPO}.env"
-		make_recent_folder
-		make_repo_folder "${REPO}"
-	else
-		echo "Missing ${REPO}.env, skipping"
-	fi
-done
 
 # Build out the groups tree
 make_groups
