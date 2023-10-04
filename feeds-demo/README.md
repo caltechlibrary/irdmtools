@@ -1,41 +1,124 @@
 
 # feeds demo
 
-This is a demonstration of generating a feeds like static website 
-based on https://feeds.library.caltech.edu using irdmtools, 
-dataset version v2.1.4 or better, datatools, Pandoc and s5cmd.
+This is a demonstration of generating a feeds.library.caltech.edu
+style static website. It uses irdmtools, dataset, datatools,
+and Pandoc orchestrated via Bash scripts.
 
-This is a demonstration of how direct database access can substantially
-decrease the build time if we leverage dataset collections using SQL
-(e.q. Postgres and SQLite3).  The general approach is to split the whole
-process in half. A process which populates or updates the dataset collections
-as performed by make_datasets.bash and a second process called make_site.bash
-which renders the htdocs directory tree based on the dataset collections being processed.
+The purpose of this demonstration was to establish a hybrid approach
+as we transition from EPrints to RDM repositories. The data structures
+used to build the website use an EPrints style record as opposed to RDM.
+This is true even when we are harvesting from an RDM repository. It
 
-Ideally you should run one step then the next but since we leverage Postgres as our
-SQL store we can actually run them concurrently since the database engines takes care of
-resolving writes and reads cleanly. 
+Dataset used for intermediate representation of the collections from
+which the website is generated.  By relying on dataset >= 2.1.6 I am
+taking advantage of Postgres database as a JSON store. This has proven
+to speed up opperations considerably. Rather than the harvesting process
+being the biggest time consumer it is now website rendering and copying
+to the S3 bucket that takes long. 
 
-This approach makes use of five dataset collections initialized using Postgres
-as a the storage engine.
+The goal of the demo is to show three things:
 
-- authors.ds holds EPrint shaped RDM record content
-- data.ds holds EPrint shaped RDM record content
-- thesis.ds holds actual EPrint content
-- groups.ds holds our groups metadata based on groups.csv
-- people.ds holds our people metadata based on people.sv
+1. These tools can replicate the existing feeds.library.caltech.edu
+2. The entire process completes takes less than four hours
+3. The process can be reduced to two phase, "harvesting" and "site rendering"
 
-We use dataset's clone feature to create pairtree collections downloadable from our
-demo feeds site.
+## dataset collections
+
+The start of the process begins with generating and updating five dataset
+collections using Postgres as their JSON storage engine.
+
+Setting up follows the following senario (Postgres is running on localhost
+and only has the current `$USER` to set with appropriate permissions in
+Postgres.
+
+~~~
+createdb authors
+dataset init authods.ds 'postgres://$USER@localhost/authors?sslmode=disable'
+createdb thesis
+dataset init thesis.ds 'postgres://$USER@localhost/thesis?sslmode=disable'
+createdb data
+dataset init data.ds 'postgres://$USER@localhost/data?sslmode=disable'
+createdb groups
+dataset init groups.ds 'postgres://$USER@localhost/groups?sslmode=disable'
+createdb people
+dataset init people.ds 'postgres://$USER@localhost/people?sslmode=disable'
+~~~
+
+Next you need to create shell environments for authors, thesis and data.
+These need to be available from the following files (they get sourced
+by `make_dataset.bash` and `make_sites.bash`): 
+
+- authors.env (RDM)
+- thesis.env (EPrints)
+- data.env (RDM)
+
+For the RDM based repositories you need to set the following environment variables
+
+REPO_ID
+: This is the repository database name, e.g. "caltechauthors", "caltechdata" at
+Caltech Library.
+
+C_NAME
+: This is the dataset collection name used, e.g. "authors.ds", "data.ds" in our
+example
+
+RDM_URL
+: This is the URL to the RDM instance
+
+RDMTOK
+: This is the application token granting access to RDM's API
+
+RDM_COMMUNITY_ID
+: This is the community id used to harvested records
+
+RDM_DB_USER
+: This is the Postgres database user for the RDM Postgres database
+
+RDM_DB_HOST
+: This is the host used to access the RDM Postgres database
+
+I recommend dumping your production RDM instance's Postgres database
+and loading it locally to isolate the demo from your production deployment.
+Dumping and reloading the Postgres database is realively fast. This is actually
+the approach I plan to take when we update our production feeds system. Like
+with our Postgres based repositories I recommend dumping and loading your
+EPrints database locally to avoid burden on your production system.
+
+I use a simular set of environment variables for harvesting our remaining EPrints
+repository.
+
+REPO_ID
+: This is the repository database, e.g. "caltechthesis" at Caltech Library.
+
+C_NAME
+: This is the dataset collection name used, e.g. "thesis.ds" in our example
+
+EPRINT_DB_HOST
+: The hostname for the MySQL database holding the EPrints database
+
+EPRINT_DB_USER
+: The MySQL user id allowed to access the EPrints database
+
+EPRINT_DB_PASSWORD
+: The MySQL password for the user allowed to access the EPrints database
+
+These environment variables are used per repository to harvest content.
+They are required for `make_datasets.bash` to function properly. They are
+used by ep3tuil, rdm2eprint and rdmutil in the content retrieval process.
+
 
 ## Required software
 
-- irdmtools (latest release)
-- dataset >= 2.1.6 
-- datatools (current stable release, reldate and jsonrange are required)
+- irdmtools >= 0.0.56 (use the latest release)
+- dataset >= 2.1.6 (use the latest release)
+- datatools >= 1.2.5 (use the latest release)
 - Bash >= 3 (or equivalent POSIX shell)
 - Pandoc >= 3
 - Postgres >= 14
+
+Recommended if you are deploying your site to an S3 bucket.
+
 - s5cmd >= 2.2 (see https://github.com/peak/s5cmd)
 
 ## Installation and setup
@@ -50,19 +133,14 @@ demo feeds site.
 5. Make sure Pandoc is installed (see https://pandoc.org for details)
     a. Test to confirm it is running and installed
     b. Create an appropriate account if neccessary with admin provilleges
-6. Create the needed environment files, e.g. authors.env, data.env and thesis.env
+6. Create the needed environment files as described above, e.g. authors.env, data.env and thesis.env
+7. Change into the feeds-demo directory
     
 At this point you should be able to run the following scripts to harvest
 and build the feeds
 
-1. ./setup_databases.bash (only need to run this the first time)
-2. ./make_datasets.bash (this is run each to to refresh the data)
+1. ./setup_datasets.bash (only need to run this the first time)
+2. ./make_datasets.bash (this is run each to to refresh our collections)
 3. ./make_site.bash (this is done to stage the website from current state of databases)
-4. Use the s5cmd to copy/sync to your S3 bucket
+4. If you are deploying to an S3 bucket use the s5cmd to copy/sync your site
 
-The premise is to recreate feeds.library.caltech.edu (version 1) by first harvesting an RDM implementation of our EPrints 
-repositories into a dataset collection(s) using the EPrints datastruct crosswalked from RDM. This is done with rdmutil to
-get a list of keys in the RDM repository, then uses rdm2eprints to harvest the contents into a dataset collection. Note the
-dataset collections are defined to use Postgres as the JSON store running on localhost.  The next step is to generate the 
-directory structure and populate all the JSON files used to build the site.  This is done by ysing dsquery taking advantage
-of Postgres's SQL dialect to create lists of JSON objects that make up feeds. 

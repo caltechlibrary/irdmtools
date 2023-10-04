@@ -129,10 +129,35 @@ func restClient(urlEndPoint string, timeout time.Duration, retryCount int) ([]by
 	return src, nil
 }
 
-// GetEPrint fetches a single EPrint record via the EPrint REST API.
+// getEPrintFromMySQL builds the EPrint record directly from the EPrint MySQL database.
+func getEPrintFromMySQL(cfg *Config, eprintID int) (*eprinttools.EPrints, error) {
+	var dsn string  
+    if cfg.EPrintDbHost == "localhost" {
+         dsn = fmt.Sprintf("%s:%s@/%s", cfg.EPrintDbUser, cfg.EPrintDbPassword, cfg.RepoID)
+    } else {
+         dsn = fmt.Sprintf("%s:%s@%s/%s", cfg.EPrintDbUser, cfg.EPrintDbPassword, cfg.EPrintDbHost, cfg.RepoID)
+    }
+    db, err := sql.Open("mysql", dsn)
+    if err != nil {
+         return nil, err
+    }
+    defer db.Close()
+	eprint, err := SQLReadEPrint(db, cfg.EPrintHost, eprintID)
+	if err != nil {
+		return nil, err
+	}
+	eprints := new(eprinttools.EPrints)
+	eprints.EPrint = append(eprints.EPrint, eprint)
+	return eprints, nil
+}
+
+// GetEPrint fetches a single EPrint record via the EPrint REST API or MySQL database if configured.
 func GetEPrint(cfg *Config, eprintID int, timeout time.Duration, retryCount int) (*eprinttools.EPrints, error) {
 	if cfg == nil {
-		return nil, fmt.Errorf("application is not configured to retrieve data from the EPrint REST API")
+		return nil, fmt.Errorf("application is not configured to retrieve data from the EPrint REST API or MySQL database")
+	}
+	if cfg.EPrintDbHost != "" && cfg.EPrintDbUser != "" && cfg.EPrintDbPassword != "" {
+		return getEPrintFromMySQL(cfg, eprintID)
 	}
 	baseURL := fmt.Sprintf("https://%s:%s@%s", cfg.EPrintUser, cfg.EPrintPassword, cfg.EPrintHost)
 	endPoint := fmt.Sprintf("%s/rest/eprint/%d.xml", baseURL, eprintID)

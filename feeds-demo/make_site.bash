@@ -91,7 +91,7 @@ function make_groups() {
 					  --template templates/groups-index-md.tmpl \
 					  >htdocs/groups/index.md
 	# Now build the old group_list.json (this get used by CL.js and the widget stuff)
-	
+
 #FIXME: Need to generate these files
 # groups.csv
 # updated.csv
@@ -115,6 +115,20 @@ function make_people() {
 	echo "Populating people folder"
 	mkdir -p htdocs/people
 #FIXME: Need to determine the files to generate here.
+ 
+	# Clean and clone people.ds collection to CaltechPEOPLE.ds.zip
+	if [ -d htdocs/people/CaltechPEOPLE.ds ]; then
+		rm -fR htdocs/people/CaltechPEOPLE.ds
+	fi
+	dataset clone -all people.ds htdocs/people/CaltechPEOPLE.ds
+	if [ -d "htdocs/people/CaltechPEOPLE.ds" ]; then
+		CWD=$(pwd)
+		cd "htdocs/people" || exit
+		if zip -r "CaltechPEOPLE.ds.zip" "CaltechPEOPLE.ds"; then
+			echo "Zipping complete."
+		fi
+		cd "${CWD}" || exit
+	fi
 }
 
 function make_root_folder_grids() {
@@ -145,15 +159,49 @@ function make_repo_folders() {
 	done
 }
 
+function make_thesis() {
+	REPO="thesis"
+	if [ ! -f "${REPO}.env" ]; then
+		echo "Missing ${REPO}.env, skipping"
+		return
+	fi
+	# shellcheck disable=SC1090
+	. "${REPO}.env"
+	make_repo_folder "${REPO}"
+}
+
+function make_data() {
+	REPO="data"
+	if [ ! -f "${REPO}.env" ]; then
+		echo "Missing ${REPO}.env, skipping"
+		return
+	fi
+	# shellcheck disable=SC1090
+	. "${REPO}.env"
+	make_repo_folder "${REPO}"
+}
+
+function make_authors() {
+	REPO="authors"
+	if [ ! -f "${REPO}.env" ]; then
+		echo "Missing ${REPO}.env, skipping"
+		return
+	fi
+	# shellcheck disable=SC1090
+	. "${REPO}.env"
+	make_repo_folder "${REPO}"
+}
+
 #
 # Main processing loop to generate our website.
 #
 check_for_required_programs
 
 if [ "$1" != "" ]; then
-	for cmd in $@; do
+	for arg in $@; do
+		cmd="make_${arg}"
 		echo "Running $cmd"
-		if ! $cmd; then
+		if ! "${cmd}"; then
 			echo 'Something went wrong'
 			exit 10
 		fi
@@ -163,20 +211,13 @@ fi
 
 # Build root folder contents.
 make_root_folder_grids
-
+# Build thesis folder
+make_thesis
+# Build data folder
+make_data
+# Build authors folder
+make_authors
 # Build out the groups tree
 make_groups
 # Build out the people tree
 make_people
-
-# Build the repo folder for each repository
-## for REPO in authors thesis data; do
-## 	if [ -f "${REPO}.env" ]; then
-## 		# shellcheck disable=SC1090
-## 		. "${REPO}.env"
-## 		# make_repo_folder "${REPO}"
-## 	else
-## 		echo "Missing ${REPO}.env, skipping"
-## 	fi
-## done
-
