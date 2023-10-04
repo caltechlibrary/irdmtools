@@ -91,7 +91,7 @@ func (app *Ep3Util) Configure(configFName string, envPrefix string, debug bool) 
 }
 
 // GetRecordIds returns a byte slice for a JSON encode list
-// of record ids or an error based on the records listed in the EPrint REST API.
+// of record ids or an error based on the records listed in the EPrints.
 //
 // ```
 //
@@ -118,6 +118,43 @@ func (app *Ep3Util) GetRecordIds() ([]byte, error) {
 	}
 	return src, nil
 }
+
+// GetModifiedRecordIds returns a byte slice for a JSON encode list
+// of record ids or an error based on the records listed in EPrints.
+//
+// ```
+//
+//	app := new(irdmtools.Ep3Util)
+//	if err := app.LoadConfig("irdmtools.json"); err != nil {
+//	   // ... handle error ...
+//	}
+//	src, err := app.GetModifiedRecordIds("2023-09-01", "2023-09-30")
+//	if err != nil {
+//	    // ... handle error ...
+//	}
+//	fmt.Printf("%s\n", src)
+//
+// ```
+func (app *Ep3Util) GetModifiedRecordIds(start string, end string) ([]byte, error) {
+	ids, err := GetModifiedKeys(app.Cfg, start, end)
+	if err != nil {
+		return nil, err
+	}
+	src, err := JSONMarshalIndent(ids, "", "    ")
+	if err != nil {
+		return nil, err
+	}
+	return src, nil
+}
+
+// GetRecord returns a byte slice for a JSON encoded record
+// or an error.
+//
+// ```
+//
+//	app := new(irdmtools.Ep3Util)
+//	if err := app.LoadConfig("irdmtools.json"); err != nil {
+//	   // ... handle error ...
 
 // GetRecord returns a byte slice for a JSON encoded record
 // or an error.
@@ -165,7 +202,7 @@ func (app *Ep3Util) RunHarvest(in io.Reader, out io.Writer, eout io.Writer, all 
 		if err != nil {
 			return err
 		}
-		return HarvestEPrintsRecordIds(app.Cfg, ids, app.Cfg.Debug)	
+		return HarvestEPrintRecords(app.Cfg, ids, app.Cfg.Debug)	
 	case modified:
 		// FIXME: need to harvest modified eprints ...
 		return fmt.Errorf("RunHarvest of modified records not implemented")
@@ -206,6 +243,19 @@ func (app *Ep3Util) Run(in io.Reader, out io.Writer, eout io.Writer, action stri
 		src, err = SampleConfig(params[0])
 	case "get_all_ids":
 		src, err = app.GetRecordIds()
+	case "get_modified_ids":
+		today := time.Now().Format("2006-01-02")
+		start, end := today, today
+		if len(params) < 1 {
+			return fmt.Errorf("missing a start and end date")
+		}
+		if len(params) > 0 {
+			start = params[0]
+		}
+		if len(params) > 1 {
+			end = params[1]
+		}
+		src, err = app.GetModifiedRecordIds(start, end)
 	case "get_record":
 		recordId, _, _, err = getRecordParams(params, true, false, false)
 		if err != nil {

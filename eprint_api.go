@@ -36,6 +36,7 @@ package irdmtools
 
 import (
 	"bytes"
+	"database/sql"
 	"encoding/xml"
 	"fmt"
 	"io/ioutil"
@@ -150,8 +151,27 @@ func GetEPrint(cfg *Config, eprintID int, timeout time.Duration, retryCount int)
 	return data, nil
 }
 
+func getKeysFromMySQL(cfg *Config) ([]int, error) {
+	var dsn string  
+    if cfg.EPrintDbHost == "localhost" {
+         dsn = fmt.Sprintf("%s:%s@/%s", cfg.EPrintDbUser, cfg.EPrintDbPassword, cfg.RepoID)
+    } else {
+         dsn = fmt.Sprintf("%s:%s@%s/%s", cfg.EPrintDbUser, cfg.EPrintDbPassword, cfg.EPrintDbHost, cfg.RepoID)
+    }
+    db, err := sql.Open("mysql", dsn)
+    if err != nil {
+         return nil, err
+    }
+    defer db.Close()
+	ids, err := GetAllEPrintIDs(db)
+	return ids, err
+}
+
 // GetKeys returns a list of eprint record ids from the EPrints REST API
 func GetKeys(cfg *Config, timeout time.Duration, retryCount int) ([]int, error) {
+	if cfg.EPrintDbHost != "" && cfg.EPrintDbUser != "" && cfg.EPrintDbPassword != "" {
+		return getKeysFromMySQL(cfg)
+	}
 	type eprintKeyPage struct {
 		XMLName xml.Name `xml:"html"`
 		Anchors []string `xml:"body>ul>li>a"`
@@ -181,4 +201,60 @@ func GetKeys(cfg *Config, timeout time.Duration, retryCount int) ([]int, error) 
 		}
 	}
 	return results, nil
+}
+
+// GetModifiedKeys returns a list of eprint record ids from the EPrints MySQL database.
+// The REST API is just too slow to process.
+func GetModifiedKeys(cfg *Config, start string, end string) ([]int, error) {
+	if cfg.EPrintDbHost == "" || cfg.EPrintDbUser == "" || cfg.EPrintDbPassword == "" {
+		return nil, fmt.Errorf("database connection not defined")
+	}
+	_, err := time.Parse("2006-01-02", start)
+	if err != nil {
+		return nil, err
+	}
+	_, err = time.Parse("2006-01-02", end)
+	if err != nil {
+		return nil, err
+	}
+	var dsn string  
+    if cfg.EPrintDbHost == "localhost" {
+         dsn = fmt.Sprintf("%s:%s@/%s", cfg.EPrintDbUser, cfg.EPrintDbPassword, cfg.RepoID)
+    } else {
+         dsn = fmt.Sprintf("%s:%s@%s/%s", cfg.EPrintDbUser, cfg.EPrintDbPassword, cfg.EPrintDbHost, cfg.RepoID)
+    }
+    db, err := sql.Open("mysql", dsn)
+    if err != nil {
+         return nil, err
+    }
+    defer db.Close()
+	stmt := `SELECT eprintid 
+FROM eprint
+WHERE (lastmod_year >= ? AND lastmod_month >= ? AND lastmod_day >= ?) AND
+      (lastmod_year <= ? AND lastmod_month <= ? AND lastmod_day <= ?)
+ORDER BY lastmod_year DESC, lastmod_month DESC, lastmod_day DESC;
+`
+	// Note we validated the format so we will have three elements if we split on "-"
+	p := strings.SplitN(start, "-", 3)
+	sYear, sMonth, sDay := p[0], p[1], p[2]
+	p = strings.SplitN(end, "-", 3)
+	eYear, eMonth, eDay :=  p[0], p[1], p[2]
+
+	rows, err := db.Query(stmt, sYear, sMonth, sDay, eYear, eMonth, eDay)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	ids := []int{}
+	for rows.Next() {
+		var eprintid int
+		if err := rows.Scan(&eprintid); err != nil {
+			return nil, err
+		}
+		ids = append(ids, eprintid)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return ids, nil
 }
