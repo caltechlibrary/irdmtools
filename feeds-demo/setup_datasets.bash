@@ -10,7 +10,7 @@ for DB_NAME in people groups authors data thesis; do
 	else
 		echo "creating ${DB_NAME}"
 		if createdb "$DB_NAME"; then
-			dataset init "${DB_NAME}.ds" "postgres://$USER@localhost/$DB_NAME?sslmode-disable"
+			dataset init "${DB_NAME}.ds" "postgres://$USER@localhost/$DB_NAME?sslmode=disable"
 		else
 			echo "Problem setting up for $DB_NAME, aborting setup"
 		fi
