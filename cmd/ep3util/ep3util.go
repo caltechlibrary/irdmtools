@@ -77,10 +77,22 @@ EPRINT_PASSWORD
 C_NAME
 : If harvesting the dataset collection name to harvest the records to.
 
+EPRINT_DB_HOST
+: The MySQL hostname holding the EPrints repository database
+
+EPRINT_DB_USER
+: The MySQL username used to access EPrints repository database 
+
+EPRINT_DB_PASSWORD
+: The MySQL password used to access EPrints repository database
 
 The environment provides the default values for configuration. They
 maybe overwritten by using a JSON configuration file. The corresponding
-attributes are "repo_id", "eprint_host" and "c_name".
+attributes are "repo_id", "eprint_host", "c_name", "eprint_db_host",
+"eprint_db_user", and "eprint_db_password".
+
+If the environment variables for MySQL access are set then the results
+reflect direct access to the database instead of the EPrint REST API.
 
 
 # OPTIONS
@@ -107,12 +119,23 @@ setup
 get_all_ids
 : Returns a list of all repository record ids. The method uses OAI-PMH for id retrieval. It is rate limited and will take come time to return all record ids. A test instance took 11 minutes to retrieve 24000 record ids.
 
+get_modified_ids START [END]
+: Return a list of records created or modified in the START and END date range. If END is not provided it is assume to be today.
+
 get_record RECORD_ID
 : Returns a specific simplified record indicated by RECORD_ID, e.g. 23808. The REORCID_ID is a required parameter.
 
-harvest KEY_LIST_JSON
-: harvest takes a JSON file containing a list of keys and harvests each record into the dataset collection.
+harvest [HARVEST_OPTIONS] [KEY_LIST_JSON]
+: harvest takes a JSON file containing a list of keys and harvests each record into a dataset collection. If combined
+with one of the options, e.g. `+"`"+`-all`+"`"+`, you can skip providing the KEY_LIST_JSON file.
 
+# HARVEST_OPTIONS
+
+-all
+: Harvest all records
+
+-modified START [END]
+: Harvest records modified between start and end dates.
 
 # ACTION_PARAMETERS
 
@@ -143,6 +166,17 @@ against irdmtool EPrints data model.
 {app_name} get_record 23808
 ~~~
 
+Harvest all records
+
+~~~
+{app_name} harvest -all
+~~~
+
+Harvest records created or modified in the month of September, 2023.
+
+~~~
+{app_name} harvest -modified 2023-09-01 2023-09-30
+~~~
 `
 )
 

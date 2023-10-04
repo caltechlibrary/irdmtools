@@ -1335,7 +1335,7 @@ func (app *EPrint2Rdm) Run(in io.Reader, out io.Writer, eout io.Writer, username
 			log.Printf("Start processing %d records", tot)
 			for i, eprintId := range eprintIds {
 				if rptTime, reportProgress = CheckWaitInterval(rptTime, (1 * time.Minute)); reportProgress || i == 0 {
-					log.Printf("processing id %s (%d/%d): %s", eprintId, i, tot, ProgressETR(t0, i, tot))
+					log.Printf("processing id %s (%d/%d): %s", eprintId, i, tot, ProgressETA(t0, i, tot))
 				}
 				// Handle the case when you're harvesting a single record id
 				id, err := strconv.Atoi(eprintId)

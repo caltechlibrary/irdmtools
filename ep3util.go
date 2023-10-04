@@ -36,6 +36,7 @@ package irdmtools
 
 import (
 	"bytes"
+	"flag"
 	"fmt"
 	"io"
 	"strconv"
@@ -83,14 +84,14 @@ func (app *Ep3Util) Configure(configFName string, envPrefix string, debug bool) 
 		app.Cfg.Debug = true
 	}
 	// Make sure we have a minimal useful configuration
-	if app.Cfg.EPrintHost == "" || app.Cfg.InvenioToken == "" {
+	if app.Cfg.EPrintHost == "" {
 		return fmt.Errorf("EPRINT_HOST, EPRINT_USER, EPRINT_PASSWORD are not available")
 	}
 	return nil
 }
 
 // GetRecordIds returns a byte slice for a JSON encode list
-// of record ids or an error based on the records listed in the EPrint REST API.
+// of record ids or an error based on the records listed in the EPrints.
 //
 // ```
 //
@@ -117,6 +118,43 @@ func (app *Ep3Util) GetRecordIds() ([]byte, error) {
 	}
 	return src, nil
 }
+
+// GetModifiedRecordIds returns a byte slice for a JSON encode list
+// of record ids or an error based on the records listed in EPrints.
+//
+// ```
+//
+//	app := new(irdmtools.Ep3Util)
+//	if err := app.LoadConfig("irdmtools.json"); err != nil {
+//	   // ... handle error ...
+//	}
+//	src, err := app.GetModifiedRecordIds("2023-09-01", "2023-09-30")
+//	if err != nil {
+//	    // ... handle error ...
+//	}
+//	fmt.Printf("%s\n", src)
+//
+// ```
+func (app *Ep3Util) GetModifiedRecordIds(start string, end string) ([]byte, error) {
+	ids, err := GetModifiedKeys(app.Cfg, start, end)
+	if err != nil {
+		return nil, err
+	}
+	src, err := JSONMarshalIndent(ids, "", "    ")
+	if err != nil {
+		return nil, err
+	}
+	return src, nil
+}
+
+// GetRecord returns a byte slice for a JSON encoded record
+// or an error.
+//
+// ```
+//
+//	app := new(irdmtools.Ep3Util)
+//	if err := app.LoadConfig("irdmtools.json"); err != nil {
+//	   // ... handle error ...
 
 // GetRecord returns a byte slice for a JSON encoded record
 // or an error.
@@ -156,8 +194,34 @@ func (app *Ep3Util) GetRecord(id string) ([]byte, error) {
 // harvests them into a dataset v2 collection. The dataset collection
 // must exist and be configured in either the environment or
 // configuration file.
-func (app *Ep3Util) Harvest(fName string) error {
-	return HarvestEPrints(app.Cfg, fName, app.Cfg.Debug)
+func (app *Ep3Util) RunHarvest(in io.Reader, out io.Writer, eout io.Writer, all bool, modified bool, params []string) error {
+	switch {
+	case all:
+		timeout := time.Duration(timeoutSeconds)
+		ids, err := GetKeys(app.Cfg, timeout, 3)
+		if err != nil {
+			return err
+		}
+		return HarvestEPrintRecords(app.Cfg, ids, app.Cfg.Debug)	
+	case modified:
+		// FIXME: need to harvest modified eprints ...
+		today := time.Now().Format("2006-01-02")
+		start, end := today, today
+		if len(params) < 1 {
+			return fmt.Errorf("missing start and end date")
+		}
+		start = params[0]
+		if len(params) > 1 {
+			end = params[1]
+		}
+		ids, err := GetModifiedKeys(app.Cfg, start, end)
+		if err != nil {
+			return err
+		}
+		return HarvestEPrintRecords(app.Cfg, ids, app.Cfg.Debug)	
+	default:
+		return HarvestEPrints(app.Cfg, params[0], app.Cfg.Debug)
+	}
 }
 
 // Run implements the irdmapp cli behaviors. With the exception of the
@@ -192,6 +256,19 @@ func (app *Ep3Util) Run(in io.Reader, out io.Writer, eout io.Writer, action stri
 		src, err = SampleConfig(params[0])
 	case "get_all_ids":
 		src, err = app.GetRecordIds()
+	case "get_modified_ids":
+		today := time.Now().Format("2006-01-02")
+		start, end := today, today
+		if len(params) < 1 {
+			return fmt.Errorf("missing a start and end date")
+		}
+		if len(params) > 0 {
+			start = params[0]
+		}
+		if len(params) > 1 {
+			end = params[1]
+		}
+		src, err = app.GetModifiedRecordIds(start, end)
 	case "get_record":
 		recordId, _, _, err = getRecordParams(params, true, false, false)
 		if err != nil {
@@ -199,10 +276,19 @@ func (app *Ep3Util) Run(in io.Reader, out io.Writer, eout io.Writer, action stri
 		}
 		src, err = app.GetRecord(recordId)
 	case "harvest":
-		if len(params) != 1 {
+		all, modified := false, false
+		flagSet := flag.NewFlagSet("harvest", flag.ContinueOnError)
+		flagSet.BoolVar(&all, "all", all, "harvest all records")
+		flagSet.BoolVar(&modified, "modified", modified, "harvest records between start and optional end date")
+		flagSet.Parse(params)
+		params = flagSet.Args()
+		if (! all) && len(params) < 1 {
+			if modified {
+				return fmt.Errorf("Missing a start and optional end date for harvest")
+			}
 			return fmt.Errorf("JSON Identifier file required")
 		}
-		return app.Harvest(params[0])
+		return app.RunHarvest(in, out, eout, all, modified, params)
 	default:
 		err = fmt.Errorf("%q action is not supported", action)
 	}

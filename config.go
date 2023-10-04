@@ -92,6 +92,7 @@ type Config struct {
 
 	// pgDb holds a Postgres connection
 	pgDB *sql.DB
+	myDB *sql.DB
 }
 
 // prefixVar applies returns an variable name apply

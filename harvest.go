@@ -35,6 +35,7 @@
 package irdmtools
 
 import (
+	"database/sql"
 	"fmt"
 	"log"
 	"os"
@@ -107,12 +108,146 @@ func Harvest(cfg *Config, fName string, debug bool) error {
 		}
 		// The rest API seems to have two rate limits, 5000 requests per hour and 500 requests per minute
 		if iTime, reportProgress = CheckWaitInterval(iTime, time.Minute); reportProgress || i == 0 {
-			log.Printf("last id %q (%d/%d) %s", id, i, tot, ProgressETR(t0, i, tot))
+			log.Printf("last id %q (%d/%d) %s", id, i, tot, ProgressETA(t0, i, tot))
 		}
 		// NOTE: We need to respect rate limits of RDM API
 		cfg.rl.Throttle(i, tot)
 	}
 	log.Printf("%d harvested, %d errors, running time %s", hCnt, eCnt, time.Since(t0).Round(time.Second))
+	return nil
+}
+
+func harvestEPrintRecordsFromMySQL(cfg *Config, recordIds []int, debug bool) error {
+	cName := cfg.CName
+	c, err := dataset.Open(cName)
+	if err != nil {
+		return err
+	}
+	defer c.Close()
+
+	var dsn string	
+	if cfg.EPrintDbHost == "localhost" {
+		dsn = fmt.Sprintf("%s:%s@/%s", cfg.EPrintDbUser, cfg.EPrintDbPassword, cfg.RepoID)
+	} else {
+		dsn = fmt.Sprintf("%s:%s@%s/%s", cfg.EPrintDbUser, cfg.EPrintDbPassword, cfg.EPrintDbHost, cfg.RepoID)
+	}
+	db, err := sql.Open("mysql", dsn)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+	l := log.New(os.Stderr, "", 1)
+	const maxErrors = 100
+	eCnt, hCnt, tot := 0, 0, len(recordIds)
+	if debug {
+		l.Printf("%d record ids", tot)
+	}
+	t0 := time.Now()
+	iTime, reportProgress := time.Now(), false
+	for i, eprintid := range recordIds {
+		id := fmt.Sprintf("%d", eprintid)
+		if err != nil {
+			l.Printf("failed to convert %d to string, %s", eprintid, err)
+			continue
+		}
+		eprint, err := SQLReadEPrint(db, cfg.EPrintHost, eprintid)
+		if err != nil {
+			l.Printf("failed to get (%d) %d, %s", i, eprintid, err)
+			eCnt++
+		} else {
+			if c.HasKey(id) {
+				if err := c.UpdateObject(id, eprint); err != nil {
+					l.Printf("failed to write %d to %s, %s", eprintid, cName, err)
+					eCnt++
+				} else {
+					hCnt++
+				}
+			} else {
+				if err := c.CreateObject(id, eprint); err != nil {
+					l.Printf("failed to write %d to %s, %s", eprintid, cName, err)
+					eCnt++
+				} else {
+					hCnt++
+				}
+			}
+		}
+		if eCnt > maxErrors {
+			return fmt.Errorf("Stopped, %d errors encountered", eCnt)
+		}
+		// The rest API seems to have two rate limits, 5000 requests per hour and 500 requests per minute
+		if iTime, reportProgress = CheckWaitInterval(iTime, time.Minute); reportProgress || i == 0 {
+			l.Printf("last id %d (%d/%d) %s", eprintid, i, tot, ProgressETA(t0, i, tot))
+		}
+	}
+	l.Printf("%d harvested, %d errors, running time %s", hCnt, eCnt, time.Since(t0).Round(time.Second))
+	return nil
+}
+
+func HarvestEPrintRecords(cfg *Config, recordIds []int, debug bool) error {
+	// Check if we can harvest directly from EPrnits MySQL database.
+	if cfg.EPrintDbHost != "" && cfg.EPrintDbUser != "" && cfg.EPrintDbPassword != "" {
+		return harvestEPrintRecordsFromMySQL(cfg, recordIds, debug)
+	}
+	cName := cfg.CName
+	if cName == "" {
+		return fmt.Errorf("dataset collection not configured")
+	}
+	if len(recordIds) == 0 {
+		return fmt.Errorf("no record ids to harvest")
+	}
+	c, err := dataset.Open(cName)
+	if err != nil {
+		return err
+	}
+	defer c.Close()
+	l := log.New(os.Stderr, "", 1)
+	const maxErrors = 100
+	eCnt, hCnt, tot := 0, 0, len(recordIds)
+	if debug {
+		l.Printf("%d record ids", tot)
+	}
+	t0 := time.Now()
+	iTime, reportProgress := time.Now(), false
+	cfg.rl = new(RateLimit)
+	timeout := time.Duration(timeoutSeconds)
+	for i, eprintid := range recordIds {
+		id := strconv.Itoa(eprintid)
+		rec, err := GetEPrint(cfg, eprintid, timeout, 3)
+		if err != nil {
+			msg := fmt.Sprintf("%s", err)
+			if strings.HasPrefix(msg, "429 ") {
+				cfg.rl.Fprintf(os.Stderr)
+			}
+			l.Printf("failed to get (%d) %q, %s", i, id, err)
+			eCnt++
+		} else {
+			if c.HasKey(id) {
+				if err := c.UpdateObject(id, rec); err != nil {
+					l.Printf("failed to write %q to %s, %s", id, cName, err)
+					eCnt++
+				} else {
+					hCnt++
+				}
+			} else {
+				if err := c.CreateObject(id, rec); err != nil {
+					l.Printf("failed to write %q to %s, %s", id, cName, err)
+					eCnt++
+				} else {
+					hCnt++
+				}
+			}
+		}
+		if eCnt > maxErrors {
+			return fmt.Errorf("Stopped, %d errors encountered", eCnt)
+		}
+		// The rest API seems to have two rate limits, 5000 requests per hour and 500 requests per minute
+		if iTime, reportProgress = CheckWaitInterval(iTime, time.Minute); reportProgress || i == 0 {
+			l.Printf("last id %q (%d/%d) %s", id, i, tot, ProgressETA(t0, i, tot))
+		}
+		// NOTE: We need to respect rate limits of RDM API
+		//cfg.rl.Throttle(i, tot)
+	}
+	l.Printf("%d harvested, %d errors, running time %s", hCnt, eCnt, time.Since(t0).Round(time.Second))
 	return nil
 }
 
@@ -179,7 +314,7 @@ func HarvestEPrints(cfg *Config, fName string, debug bool) error {
 		}
 		// The rest API seems to have two rate limits, 5000 requests per hour and 500 requests per minute
 		if iTime, reportProgress = CheckWaitInterval(iTime, time.Minute); reportProgress || i == 0 {
-			log.Printf("last id %q (%d/%d) %s", id, i, tot, ProgressETR(t0, i, tot))
+			log.Printf("last id %q (%d/%d) %s", id, i, tot, ProgressETA(t0, i, tot))
 		}
 		// NOTE: We need to respect rate limits of RDM API
 		//cfg.rl.Throttle(i, tot)
