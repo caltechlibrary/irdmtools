@@ -111,35 +111,56 @@ done
 
 
 # Check if we're doing a limited run
+LIMITED=""
 for ARG in "$@"; do
 	case "${ARG}" in
 	  	"authors")
+		LIMITED="true"
 		echo "Harvesting authors ${FULL_HARVEST}"
-	 	harvest_rdm authors "${FULL_HARVEST}"
-		exit 0
+	 	if ! harvest_rdm authors "${FULL_HARVEST}"; then
+			echo "something went wrong"
+			exit 64
+		fi
 		;;
 		"thesis")
+		LIMITED="true"
 		echo "Harvesting thesis ${FULL_HARVEST}"
-		harvest_eprints thesis "${FULL_HARVEST}"
-		exit 0
+		if ! harvest_eprints thesis "${FULL_HARVEST}"; then
+			echo "something went wrong"
+			exit 64
+		fi
 		;;
 		"data")
+		LIMITED="true"
 		echo "Harvesting data ${FULL_HARVEST}"
-		harvest_rdm data "${FULL_HARVEST}"
-		exit 0
+		if ! harvest_rdm data "${FULL_HARVEST}"; then
+			echo "something went wrong"
+			exit 64
+		fi
 		;;
 		"groups")
+		LIMITED="true"
 		echo "Harvesting groups ${FULL_HARVEST}"
-		harvest_groups
-		exit 0
+		if ! harvest_groups; then
+			echo "something went wrong"
+			exit 64
+		fi
 		;;
 		"people")
+		LIMITED="true"
 		echo "Harvesting people ${FULL_HARVEST}"
-		harvest_people
-		exit 0
+		if ! harvest_people; then
+			echo "something went wrong"
+			exit 64
+		fi
 		;;
 	esac
 done
+
+if [ "$LIMITED" != "" ]; then
+	echo "limited run completed"
+	exit 0
+fi
 
 # We're doing a standard run, build the following in sequence
 echo "Harvesting EPrint repositories"
