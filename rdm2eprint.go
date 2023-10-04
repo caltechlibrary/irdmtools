@@ -654,7 +654,7 @@ func (app *Rdm2EPrint) RunHarvest(in io.Reader, out io.Writer, eout io.Writer, c
 			sslmode = "?sslmode=disable"
 		}
 		connStr := fmt.Sprintf("postgres://%s@%s/%s%s", 
-		cfg.InvenioDbUser, cfg.InvenioDbHost, cfg.RepoID, sslmode)
+				cfg.InvenioDbUser, cfg.InvenioDbHost, cfg.RepoID, sslmode)
 		if cfg.InvenioDbPassword != "" {
 			connStr = fmt.Sprintf("postgres://%s:%s@%s/%s%s", 
 				cfg.InvenioDbUser, cfg.InvenioDbPassword, cfg.InvenioDbHost, cfg.RepoID, sslmode)

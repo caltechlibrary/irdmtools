@@ -34,15 +34,15 @@ Postgres.
 
 ~~~
 createdb authors
-dataset init authods.ds 'postgres://$USER@localhost/authors?sslmode=disable'
+dataset init authods.ds "postgres://$USER@localhost/authors?sslmode=disable"
 createdb thesis
-dataset init thesis.ds 'postgres://$USER@localhost/thesis?sslmode=disable'
+dataset init thesis.ds "postgres://$USER@localhost/thesis?sslmode=disable"
 createdb data
-dataset init data.ds 'postgres://$USER@localhost/data?sslmode=disable'
+dataset init data.ds "postgres://$USER@localhost/data?sslmode=disable"
 createdb groups
-dataset init groups.ds 'postgres://$USER@localhost/groups?sslmode=disable'
+dataset init groups.ds "postgres://$USER@localhost/groups?sslmode=disable"
 createdb people
-dataset init people.ds 'postgres://$USER@localhost/people?sslmode=disable'
+dataset init people.ds "postgres://$USER@localhost/people?sslmode=disable"
 ~~~
 
 Next you need to create shell environments for authors, thesis and data.
