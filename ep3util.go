@@ -205,7 +205,20 @@ func (app *Ep3Util) RunHarvest(in io.Reader, out io.Writer, eout io.Writer, all 
 		return HarvestEPrintRecords(app.Cfg, ids, app.Cfg.Debug)	
 	case modified:
 		// FIXME: need to harvest modified eprints ...
-		return fmt.Errorf("RunHarvest of modified records not implemented")
+		today := time.Now().Format("2006-01-02")
+		start, end := today, today
+		if len(params) < 1 {
+			return fmt.Errorf("missing start and end date")
+		}
+		start = params[0]
+		if len(params) > 1 {
+			end = params[1]
+		}
+		ids, err := GetModifiedKeys(app.Cfg, start, end)
+		if err != nil {
+			return err
+		}
+		return HarvestEPrintRecords(app.Cfg, ids, app.Cfg.Debug)	
 	default:
 		return HarvestEPrints(app.Cfg, params[0], app.Cfg.Debug)
 	}
