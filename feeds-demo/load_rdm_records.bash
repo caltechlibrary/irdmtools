@@ -21,6 +21,16 @@ Load a snapshot of an RDM database replacing the existing database
 if necessary. It assume your logged in user id has permissions to
 load the database and the database name is the same as the REPO_ID.
 
+NOTE: when you load the database a role needs to exist for that database.
+This can be done before your run this script using
+
+~~~
+psql -c "CREATE ROLE <REPO_ID>"
+~~~
+
+Where <REPO_ID> is the name of the database (e.g. caltechdata in the
+examples).
+
 # EXAMPLE
 
 ~~~
