@@ -39,12 +39,11 @@ function restore_postgres_from() {
 	if command -v gzcat &>/dev/null; then
 		ZCAT=gzcat
 	fi
+	PG_VERSION=$(psql --version | cut -d\  -f 3)
 	echo "Dropping stale ${DB_NAME} if it exists"
 	dropdb --if-exists "${DB_NAME}"
 	echo "Creating fresh ${DB_NAME}"
 	createdb "${DB_NAME}"
-	echo "Creating ${DB_NAME} role (this is to handle older Postgres, e.g. 12"
-	psql "${DB_NAME}" -c "DROP ROLE IF EXISTS ${DB_NAME};CREATE ROLE ${DB_NAME}"
 	echo "Loading ${BACKUP_FILE}, this can take a while"
 	if "$ZCAT" "${BACKUP_FILE}" | psql "${DB_NAME}" >/dev/null; then 
 		echo "Success!"
