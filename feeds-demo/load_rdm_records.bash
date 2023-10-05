@@ -96,12 +96,12 @@ case "$#" in
 	"1")
 	REPO_ID="$1"
 	SNAPSHOT="$(date +%Y-%m-%d)"
-	SQL_FILE="sql-dumps/${REPO_ID}-dump_${SNAPSHOT}.sql.gz"
+	SQL_FILE="rdm-sql-dumps/${REPO_ID}-dump_${SNAPSHOT}.sql.gz"
 	;;
 	*)
 	REPO_ID="$1"
 	SNAPSHOT="$2"
-	SQL_FILE="sql-dumps/${REPO_ID}-dump_${SNAPSHOT}.sql.gz"
+	SQL_FILE="rdm-sql-dumps/${REPO_ID}-dump_${SNAPSHOT}.sql.gz"
 	;;
 esac
 if [ "${REPO_ID}" = "" ]; then
