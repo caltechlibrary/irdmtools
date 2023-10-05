@@ -54,6 +54,8 @@ by `make_dataset.bash` and `make_sites.bash`):
 - data.env (RDM)
 
 For the RDM based repositories you need to set the following environment variables
+(NOTE: I am relying on Postgres access for this demo, it's faster than making requests
+through the REST API).
 
 REPO_ID
 : This is the repository database name, e.g. "caltechauthors", "caltechdata" at
@@ -62,15 +64,6 @@ Caltech Library.
 C_NAME
 : This is the dataset collection name used, e.g. "authors.ds", "data.ds" in our
 example
-
-RDM_URL
-: This is the URL to the RDM instance
-
-RDMTOK
-: This is the application token granting access to RDM's API
-
-RDM_COMMUNITY_ID
-: This is the community id used to harvested records
 
 RDM_DB_USER
 : This is the Postgres database user for the RDM Postgres database
@@ -110,7 +103,7 @@ used by ep3tuil, rdm2eprint and rdmutil in the content retrieval process.
 
 ## Required software
 
-- irdmtools >= 0.0.56 (use the latest release)
+- irdmtools >= 0.0.57 (use the latest release)
 - dataset >= 2.1.6 (use the latest release)
 - datatools >= 1.2.5 (use the latest release)
 - Bash >= 3 (or equivalent POSIX shell)
