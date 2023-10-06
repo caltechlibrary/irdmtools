@@ -62,7 +62,7 @@ function make_repo_folder() {
 
 function check_for_required_programs() {
 	IS_MISSING=""
-	for CLI in dataset dsquery python pandoc jsonrange jq; do
+	for CLI in dataset dsquery pandoc jsonrange jq; do
 		if ! command -v "${CLI}" &>/dev/null; then
 			IS_MISSING="true"
 			echo "Missing ${CLI}"
