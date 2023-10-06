@@ -293,9 +293,9 @@ def fixup_record(record, reload=False, token=None, has_doi=None):
                 )
                 doi = None
         # Mark system DOIs
-        # if doi.startswith('10.7907'):
-        #    record['pids']['doi']['provider'] = 'datacite'
-        #    record['pids']['doi']['client'] = 'datacite'
+        if doi.startswith('10.7907'):
+           record['pids']['doi']['provider'] = 'datacite'
+           record['pids']['doi']['client'] = 'datacite'
 
     # Make sure records DOI isn't in related identifiers
     identifiers = get_dict_path(record, ["metadata", "related_identifiers"])
