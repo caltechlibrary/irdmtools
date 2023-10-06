@@ -81,6 +81,29 @@ function make_groups_index_md() {
 	echo '---'
 }
 
+function make_group_folders() {
+	GROUP_C_NAME="groups.ds"
+	for REPO_ID in authors thesis data; do
+		C_NAME="${REPO_ID}.ds"
+		echo "Processing ${C_NAME} and adding to ${GROUP_C_NAME}"
+		PUB_TYPES=$(dsquery -sql "${REPO_ID}-pub-types.sql" "$C_NAME" | jsonrange -values | jq -r)
+		for GROUP_ID in $(jsonrange -values -i htdocs/groups/index.json | jq -r); do
+			GROUP_DIR="htdocs/groups/$GROUP_ID"
+			if [ ! -d "${GROUP_DIR}" ]; then
+				mkdir -p "$GROUP_DIR"
+			fi
+			# Write out htdocs/groups/<GROUP_ID>/combined.json
+			if [ -f "${REPO_ID}-group-combined_types.sql" ]; then
+				GROUP_JSON=$(printf '[%s]' "\"${GROUP_ID}\"")
+				dsquery -pretty -sql "${REPO_ID}-group-combined_types.sql" \
+				    "$C_NAME" \
+					$GROUP_JSON \
+					>"htdocs/groups/$GROUP_ID/combined.json"
+			fi
+		done
+	done
+}
+
 function make_groups() {
 	echo "Populating groups folder"
 	mkdir -p htdocs/groups
@@ -90,6 +113,7 @@ function make_groups() {
 	make_groups_index_md | pandoc -f markdown -t markdown \
 					  --template templates/groups-index-md.tmpl \
 					  >htdocs/groups/index.md
+	make_group_folders
 	# Now build the old group_list.json (this get used by CL.js and the widget stuff)
 
 #FIXME: Need to generate these files
