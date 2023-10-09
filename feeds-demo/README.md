@@ -13,7 +13,7 @@ This is true even when we are harvesting from an RDM repository. It
 Dataset used for intermediate representation of the collections from
 which the website is generated.  By relying on dataset >= 2.1.6 I am
 taking advantage of Postgres database as a JSON store. This has proven
-to speed up opperations considerably. Rather than the harvesting process
+to speed up operations considerably. Rather than the harvesting process
 being the biggest time consumer it is now website rendering and copying
 to the S3 bucket that takes long. 
 
@@ -28,7 +28,7 @@ The goal of the demo is to show three things:
 The start of the process begins with generating and updating five dataset
 collections using Postgres as their JSON storage engine.
 
-Setting up follows the following senario (Postgres is running on localhost
+Setting up follows the following scenario (Postgres is running on localhost
 and only has the current `$USER` to set with appropriate permissions in
 Postgres.
 
@@ -73,12 +73,12 @@ RDM_DB_HOST
 
 I recommend dumping your production RDM instance's Postgres database
 and loading it locally to isolate the demo from your production deployment.
-Dumping and reloading the Postgres database is realively fast. This is actually
+Dumping and reloading the Postgres database is relatively fast. This is actually
 the approach I plan to take when we update our production feeds system. Like
 with our Postgres based repositories I recommend dumping and loading your
 EPrints database locally to avoid burden on your production system.
 
-I use a simular set of environment variables for harvesting our remaining EPrints
+I use a similar set of environment variables for harvesting our remaining EPrints
 repository.
 
 REPO_ID
@@ -109,6 +109,7 @@ used by ep3tuil, rdm2eprint and rdmutil in the content retrieval process.
 - Bash >= 3 (or equivalent POSIX shell)
 - Pandoc >= 3
 - Postgres >= 14
+- Python >= 3.10
 
 Recommended if you are deploying your site to an S3 bucket.
 
@@ -125,7 +126,7 @@ Recommended if you are deploying your site to an S3 bucket.
 4. Make sure Postgres is installed (see https://postgres.org for details)
 5. Make sure Pandoc is installed (see https://pandoc.org for details)
     a. Test to confirm it is running and installed
-    b. Create an appropriate account if neccessary with admin provilleges
+    b. Create an appropriate account if necessary with admin privileges
 6. Create the needed environment files as described above, e.g. authors.env, data.env and thesis.env
 7. Change into the feeds-demo directory
     

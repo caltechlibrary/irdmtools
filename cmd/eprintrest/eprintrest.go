@@ -60,8 +60,8 @@ var (
 
 # DESCRIPTION
 
-{app_name} is a Caltech Library centric localhost web service
-that creates a funcionally similar replica of the EPrints REST API 
+{app_name} is a Caltech Library oriented localhost web service
+that creates a functionally similar replica of the EPrints REST API 
 for EPrints 3.3.x based repositories. It uses the path to the 
 "archives" directory and a MySQL Database for the repository. 
 It only supports "archive" eprint.eprint_status records and

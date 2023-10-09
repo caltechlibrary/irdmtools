@@ -1,4 +1,4 @@
-%doi2rdm(1) irdmtools user manual | version 0.0.57-dev ef32231
+%doi2rdm(1) irdmtools user manual | version 0.0.57-dev 5da4c84
 % R. S. Doiel and Tom Morrell
 % 2023-10-09
 
@@ -12,7 +12,7 @@ doi2rdm [OPTIONS] DOI
 
 # DESCRIPTION
 
-doi2rdm is a Caltech Library centric command line application
+doi2rdm is a Caltech Library oriented command line application
 that takes a DOI, queries the CrossRef API then returns a JSON document
 suitable for import into Invenio RDM. The DOI can be in either their
 canonical form or URL form (e.g. "10.1021/acsami.7b15651" or

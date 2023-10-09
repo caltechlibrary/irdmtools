@@ -12,8 +12,8 @@ The proof of concept is being developed around RDM's web services
 services (e.g. CrossRef, DataCite). 
 
 Caltech Library is using irdmtools to migrate content from our legacy
-EPrints 3.3 repositories (heavely customized) to RDM. Post migration the
-core Go tools will remain useful for curration at the collection level
+EPrints 3.3 repositories (heavily customized) to RDM. Post migration the
+core Go tools will remain useful for curation at the collection level
 (e.g. [rdmutil](rdmutil.1.md))
 
 ## Tools
@@ -23,11 +23,11 @@ core Go tools will remain useful for curration at the collection level
 This tool is for interacting with an Invenio RDM repository via RDM's
 REST and OAI-PMH API. It covers most the JSON API documented at <https://inveniordm.docs.cern.ch/>. This includes listing, submitting and managing records and draft records.
 
-`rdmutil` configuration is read either from the envinronment or a JSON formated configuration file.  See the [man page](rdmutil.1.md) for details.
+`rdmutil` configuration is read either from the environment or a JSON formatted configuration file.  See the [man page](rdmutil.1.md) for details.
 
 ### `eprint2rdm`
 
-This tool is migrating content from an EPrints repository via the EPrint REST API.  It will retrieve an EPrint XML representation of the EPrint record  and transform it into a JSON encded simplified record nearly compatible with Invenio RDM.  See the [man page](eprint2rdm.1.md) for details.
+This tool is migrating content from an EPrints repository via the EPrint REST API.  It will retrieve an EPrint XML representation of the EPrint record  and transform it into a JSON encoded simplified record nearly compatible with Invenio RDM.  See the [man page](eprint2rdm.1.md) for details.
 
 ### `doi2rdm`
 

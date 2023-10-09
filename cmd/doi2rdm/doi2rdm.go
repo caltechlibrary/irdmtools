@@ -58,7 +58,7 @@ var (
 
 # DESCRIPTION
 
-{app_name} is a Caltech Library centric command line application
+{app_name} is a Caltech Library oriented command line application
 that takes a DOI, queries the CrossRef API then returns a JSON document
 suitable for import into Invenio RDM. The DOI can be in either their
 canonical form or URL form (e.g. "10.1021/acsami.7b15651" or

@@ -1,4 +1,4 @@
-%people2vocabulary(1) irdmtools user manual | version 0.0.57-dev ef32231
+%people2vocabulary(1) irdmtools user manual | version 0.0.57-dev 5da4c84
 % R. S. Doiel
 % 2023-10-09
 
@@ -6,7 +6,7 @@
 
 people2vocabulary
 
-# SYSNOPSIS
+# SYNOPSIS
 
 people2vocabulary [OPTIONS] < INPUT_JSON_FILE > OUTPUT_VOC_YAML_FILE
 

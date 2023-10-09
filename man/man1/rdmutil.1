@@ -14,7 +14,7 @@
 . ftr VB CB
 . ftr VBI CBI
 .\}
-.TH "rdmutil" "1" "2023-10-09" "irdmtools user manual" "version 0.0.57-dev ef32231"
+.TH "rdmutil" "1" "2023-10-09" "irdmtools user manual" "version 0.0.57-dev 5da4c84"
 .hy
 .SH NAME
 .PP
@@ -63,7 +63,7 @@ display version
 .TP
 config
 provide a path to an alternate configuration file
-(e.g.\ \[lq]rdmtools.json\[rq])
+(e.g.\ \[lq]irdmtools.json\[rq])
 .SH ACTION
 .PP
 \f[B]rdmutil\f[R] supports the following actions.
@@ -106,12 +106,12 @@ Query takes one required parameter and two option.
 get_record RECORD_ID
 Returns a specific simplified record indicated by RECORD_ID,
 e.g.\ bq3se-47g50.
-The REORCID_ID is a required parameter.
+The RECORD_ID is a required parameter.
 .TP
 get_raw_record RECORD_ID
 Returns a specific map/dictionary record indicated by RECORD_ID,
 e.g.\ bq3se-47g50.
-The REORCID_ID is a required parameter.
+The RECORD_ID is a required parameter.
 .TP
 get_files RECORD_ID
 Return a list of files for record with RECORD_ID.
@@ -134,8 +134,8 @@ Retrieve metadata about versions for RECORD_ID.
 RECORD_ID is required.
 .TP
 get_latest_version
-Retreive the latest version metadata for a RECORD_ID.
-RECORD_ID is requireed.
+Retrieve the latest version metadata for a RECORD_ID.
+RECORD_ID is required.
 .TP
 set_version RECORD_ID VERSION_STRING
 This sets the version string in .metadata.version of a draft.
@@ -216,10 +216,10 @@ read from standard input.
 .TP
 send_to_community RECORD_ID COMMUNITY_ID
 Submit a draft record to a community for review.
-RECORD_ID and COMMUMITY_ID are required.
+RECORD_ID and COMMUNITY_ID are required.
 .TP
 get_review
-Get review requests assocaited with RECORD_ID.
+Get review requests associated with RECORD_ID.
 RECORD_ID is required.
 .TP
 review_request RECORD_ID accept|decline|cancel|\[lq]\[rq] [COMMENT]
@@ -269,7 +269,7 @@ it is read from standard input.
 .SH ACTION_PARAMETERS
 .PP
 Action parameters are the specific optional or required parameters need
-to complete an aciton.
+to complete an action.
 .SH EXAMPLES
 .PP
 Setup for \f[B]rdmutil\f[R] by writing an example JSON configuration

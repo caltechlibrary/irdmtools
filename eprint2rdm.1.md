@@ -1,4 +1,4 @@
-%eprint2rdm(1) irdmtools user manual | version 0.0.57-dev ef32231
+%eprint2rdm(1) irdmtools user manual | version 0.0.57-dev 5da4c84
 % R. S. Doiel and Tom Morrell
 % 2023-10-09
 
@@ -12,7 +12,7 @@ eprint2rdm [OPTIONS] [EPRINT_HOST] EPRINT_ID
 
 # DESCRIPTION
 
-eprint2rdm is a Caltech Library centric command line application
+eprint2rdm is a Caltech Library oriented command line application
 that takes an EPrint hostname and EPrint ID and returns a JSON
 document suitable to import into Invenio RDM. It relies on
 access to EPrint's REST API. It uses EPRINT_USER, EPRINT_PASSWORD
@@ -20,7 +20,7 @@ and EPRINT_HOST environment variables to access the API. Using
 the "-all-ids" options you can get a list of keys available from
 the EPrints REST API.
 
-eprint2rdm can havest a set of eprint ids into a dataset collection
+eprint2rdm can harvest a set of eprint ids into a dataset collection
 using the "-id-list" and "-harvest" options. You map also provide
 customized resource type and person role mapping for the content
 you harvest. This will allow you to be substantially closer to the

@@ -14,7 +14,7 @@
 . ftr VB CB
 . ftr VBI CBI
 .\}
-.TH "ep3util" "1" "2023-10-09" "irdmtools user manual" "version 0.0.57-dev ef32231"
+.TH "ep3util" "1" "2023-10-09" "irdmtools user manual" "version 0.0.57-dev 5da4c84"
 .hy
 .SH NAME
 .PP
@@ -72,7 +72,7 @@ display version
 .TP
 config
 provide a path to an alternate configuration file
-(e.g.\ \[lq]rdmtools.json\[rq])
+(e.g.\ \[lq]irdmtools.json\[rq])
 .SH ACTION
 .PP
 \f[B]ep3util\f[R] supports the following actions.
@@ -98,7 +98,7 @@ If END is not provided it is assume to be today.
 get_record RECORD_ID
 Returns a specific simplified record indicated by RECORD_ID,
 e.g.\ 23808.
-The REORCID_ID is a required parameter.
+The RECORD_ID is a required parameter.
 .TP
 harvest HARVEST_OPTIONS [KEY_LIST_JSON]
 harvest takes a JSON file containing a list of keys and harvests each

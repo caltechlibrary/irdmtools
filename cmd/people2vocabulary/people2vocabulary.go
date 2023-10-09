@@ -29,7 +29,7 @@ const (
 
 {app_name}
 
-# SYSNOPSIS
+# SYNOPSIS
 
 {app_name} [OPTIONS] < INPUT_JSON_FILE > OUTPUT_VOC_YAML_FILE
 
