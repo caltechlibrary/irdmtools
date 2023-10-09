@@ -2,8 +2,8 @@ github.com/caltechlibrary/crossrefapi v1.0.6 h1:N/W9ugyza6FZvF8WbUIKnzAWe7ZvJWQ/
 github.com/caltechlibrary/crossrefapi v1.0.6/go.mod h1:TAUa0UzInUtw0Z155kWjSIU+ljvNVL6dCAInjC0C8Jc=
 github.com/caltechlibrary/dataciteapi v1.0.1 h1:qFkqdbEOT4trKcpqeLg08NUgDObMOgjAJhegP0sop8Q=
 github.com/caltechlibrary/dataciteapi v1.0.1/go.mod h1:T6oYVCoQyHRi/0qPI+K5PM//F7M5YkrHqzVMfrPlsn8=
-github.com/caltechlibrary/dataset/v2 v2.1.6 h1:E0HPxfpWkvT8W3m8r3pGijghaTijtwKU0DKaLoQeDyk=
-github.com/caltechlibrary/dataset/v2 v2.1.6/go.mod h1:x5zjOk0PcHbm3a3Z4NyUB42Hf2/jTMAKFFV8dcTgnPY=
+github.com/caltechlibrary/dataset/v2 v2.1.8 h1:K3M7eOR73xS3tttbjkEp/YDencRV0Yc4IUBwp9Wt+tA=
+github.com/caltechlibrary/dataset/v2 v2.1.8/go.mod h1:x5zjOk0PcHbm3a3Z4NyUB42Hf2/jTMAKFFV8dcTgnPY=
 github.com/caltechlibrary/doitools v0.0.0-20190910184449-c524f84bb2b3 h1:CPVAtgb3KfFDvN/LA6lk3JGT76tVC+PohQWynTkS52s=
 github.com/caltechlibrary/doitools v0.0.0-20190910184449-c524f84bb2b3/go.mod h1:dBtDM+sEd5W27XSuPTcYGUNmkO9PWJ4JMh5bW1EO8L0=
 github.com/caltechlibrary/doitools v0.0.1 h1:c6lvI5l9juo019GGUvuwbzeyv1c6VtSi8mkUv1drgwY=
@@ -78,7 +78,6 @@ golang.org/x/xerrors v0.0.0-20190717185122-a985d3407aa7/go.mod h1:I/5z698sn9Ka8T
 golang.org/x/xerrors v0.0.0-20191011141410-1b5146add898/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
 golang.org/x/xerrors v0.0.0-20191204190536-9bdfabe68543/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
 golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1/go.mod h1:I/5z698sn9Ka8TeJc9MKroUUfqBBauWjQqLJ2OPfmY0=
-gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
 gopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=
 gopkg.in/yaml.v3 v3.0.1/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
 lukechampine.com/uint128 v1.1.1/go.mod h1:c4eWIwlEGaxC/+H1VguhU4PHXNWDCDMUlWdIWl2j1gk=
