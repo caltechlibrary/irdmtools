@@ -81,6 +81,20 @@ function make_groups_index_md() {
 	echo '---'
 }
 
+function make_group_list_json() {
+		dsquery -csv 'id,type,pub_date,local_group,collection' \
+		        -sql get_authors_pubs_by_group.sql authors.ds \
+				>htdocs/groups/group_pubs.csv
+		if [ -f groups.csv ] && [ -f htdocs/groups/group_pubs.csv ]; then
+			echo "merging content from groups.csv and group_pubs.csv into group_pubs.ds"
+		else
+			echo "failed to find groups.csv or group_pubs.csv, skipping"
+			return
+		fi
+		python3 aggregate_pubs.py groups.csv htdocs/groups/group_pubs.csv \
+			>htdocs/groups/group_list.json
+}
+
 function make_group_folders() {
 	GROUP_C_NAME="groups.ds"
 	for REPO_ID in authors thesis data; do
@@ -113,6 +127,7 @@ function make_groups() {
 	make_groups_index_md | pandoc -f markdown -t markdown \
 					  --template templates/groups-index-md.tmpl \
 					  >htdocs/groups/index.md
+	make_group_list_json 
 	make_group_folders
 	# Now build the old group_list.json (this get used by CL.js and the widget stuff)
 

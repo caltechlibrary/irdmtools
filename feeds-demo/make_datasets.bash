@@ -70,15 +70,26 @@ function harvest_groups() {
 		if [ ! -d groups.ds ]; then
 			dataset init groups.ds "postgres://$USER@localhost/groups?sslmode=disable"
 	    fi	
-		dsimport -overwrite groups.ds groups.csv key
+		dsimporter -overwrite groups.ds groups.csv key
 	else
 		echo "failed to find groups.csv, skipping"
+		return
 	fi
-#FIXME: Now for each group record merge in a list of record ids in descending publication order from CaltechAUTHORS, CaltechDATA and CaltechTHESIS
-#
-# Build a list of publication types where there is one or more local groups
-# For each repo and each publication type retrieve a ordered by descending publication date list of record ids and merge into record.
-
+    dsquery -csv 'id,type,pub_date,local_group' \
+                -sql get_authors_pubs_by_group.sql authors.ds \
+                >group_pubs.csv
+	if [ ! -f group_pubs.csv ]; then
+		echo "failed to create group_pubs.csv, skipping"
+		return
+	fi
+	if [ ! -f group_pubs.ds ]; then
+		dropdb --if-exists group_pubs
+		createdb group_pubs
+		dataset init group_pubs.ds "postgres://$USER@localhost/group_pubs?sslmode=disable"
+	fi
+	dsimporter -overwrite group_pubs.ds group_pubs.csv
+	# Make group list
+	dsquery authors.ds "SELECT src->>'local_group' AS local_group FROM authors GROUP BY src->>'local_group'"/
 }
 
 function harvest_people() {
@@ -86,7 +97,7 @@ function harvest_people() {
 		if [ ! -d people.ds ]; then
 			dataset init people.ds "postgres://$USER@localhost/people?sslmode=disable"
 		fi
-		dsimport -overwrite people.ds people.csv cl_people_id
+		dsimporter -overwrite people.ds people.csv cl_people_id
 	else
 		echo "failed to find people.csv, skipping"
 	fi
