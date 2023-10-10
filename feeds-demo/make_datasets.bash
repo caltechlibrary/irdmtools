@@ -75,21 +75,6 @@ function harvest_groups() {
 		echo "failed to find groups.csv, skipping"
 		return
 	fi
-    dsquery -csv 'id,type,pub_date,local_group' \
-                -sql get_authors_pubs_by_group.sql authors.ds \
-                >group_pubs.csv
-	if [ ! -f group_pubs.csv ]; then
-		echo "failed to create group_pubs.csv, skipping"
-		return
-	fi
-	if [ ! -f group_pubs.ds ]; then
-		dropdb --if-exists group_pubs
-		createdb group_pubs
-		dataset init group_pubs.ds "postgres://$USER@localhost/group_pubs?sslmode=disable"
-	fi
-	dsimporter -overwrite group_pubs.ds group_pubs.csv
-	# Make group list
-	dsquery authors.ds "SELECT src->>'local_group' AS local_group FROM authors GROUP BY src->>'local_group'"/
 }
 
 function harvest_people() {

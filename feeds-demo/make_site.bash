@@ -86,7 +86,7 @@ function make_group_list_json() {
 		        -sql get_authors_pubs_by_group.sql authors.ds \
 				>htdocs/groups/group_pubs.csv
 		if [ -f groups.csv ] && [ -f htdocs/groups/group_pubs.csv ]; then
-			echo "merging content from groups.csv and group_pubs.csv into group_pubs.ds"
+			echo "merging content from groups.csv and group_pubs.csv into group_list.json"
 		else
 			echo "failed to find groups.csv or group_pubs.csv, skipping"
 			return
@@ -99,7 +99,7 @@ function make_group_folders() {
 	GROUP_C_NAME="groups.ds"
 	for REPO_ID in authors thesis data; do
 		C_NAME="${REPO_ID}.ds"
-		echo "Processing ${C_NAME} and adding to ${GROUP_C_NAME}"
+		echo "Processing ${C_NAME} and ${GROUP_C_NAME}"
 		PUB_TYPES=$(dsquery -sql "${REPO_ID}-pub-types.sql" "$C_NAME" | jsonrange -values | jq -r)
 		for GROUP_ID in $(jsonrange -values -i htdocs/groups/index.json | jq -r); do
 			GROUP_DIR="htdocs/groups/$GROUP_ID"
@@ -184,20 +184,6 @@ function make_root_folder_grids() {
 	done
 }
 
-function make_repo_folders() {
-	# Build the recent folder for each repository's content
-	for REPO in authors thesis data; do
-		if [ -f "${REPO}.env" ]; then
-			# shellcheck disable=SC1090
-			. "${REPO}.env"
-			make_recent_folder
-			make_repo_folder "${REPO}"
-		else
-			echo "Missing ${REPO}.env, skipping"
-		fi
-	done
-}
-
 function make_thesis() {
 	REPO="thesis"
 	if [ ! -f "${REPO}.env" ]; then
@@ -248,15 +234,18 @@ if [ "$1" != "" ]; then
 	exit 0
 fi
 
+START_TIME=$(date)
 # Build root folder contents.
 make_root_folder_grids
+# Build out the groups tree
+make_groups
+# Build out the people tree
+make_people
 # Build thesis folder
 make_thesis
 # Build data folder
 make_data
 # Build authors folder
 make_authors
-# Build out the groups tree
-make_groups
-# Build out the people tree
-make_people
+END_TIME=$(date)
+echo "Completed, start ${START_TIME}, finished ${END_TIME}"
