@@ -276,6 +276,10 @@ def fixup_record(record, reload=False, token=None, has_doi=None):
     # Normalize DOI, issue #39
     doi = normalize_doi(get_dict_path(record, ["pids", "doi", "identifier"]))
     if doi is not None:
+        # Mark system DOIs
+        if doi.startswith('10.7907'):
+           record['pids']['doi']['provider'] = 'datacite'
+           record['pids']['doi']['client'] = 'datacite'
         if not reload:
             # See if DOI already exists in CaltechAUTHORS, if so move it to metadata identifiers.
             if not has_doi:
@@ -292,10 +296,6 @@ def fixup_record(record, reload=False, token=None, has_doi=None):
                     {"scheme": "doi", "identifier": f"{doi}"}
                 )
                 doi = None
-        # Mark system DOIs
-        if doi.startswith('10.7907'):
-           record['pids']['doi']['provider'] = 'datacite'
-           record['pids']['doi']['client'] = 'datacite'
 
     # Make sure records DOI isn't in related identifiers
     identifiers = get_dict_path(record, ["metadata", "related_identifiers"])
@@ -446,6 +446,8 @@ def fixup_record(record, reload=False, token=None, has_doi=None):
                 new.append({"id": "Richard-Merkin-Institute"})
             elif group["id"] == "Center-for-Sensing-to-Intelligence-(S2I)":
                 new.append({"id": "Caltech-Center-for-Sensing-to-Intelligence-(S2I)"})
+            elif group["id"] == "Owens-Valley-Radio-Observatory-(OVRO).-OVRO-LWA-Memos":
+                new.append({"id": "Owens-Valley-Radio-Observatory-Memos"})
             else:
                 new.append(group)
         record["custom_fields"]["caltech:groups"] = new
