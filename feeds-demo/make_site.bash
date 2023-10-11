@@ -167,7 +167,7 @@ function make_group_folders() {
 			dsquery -pretty -sql "${REPO_ID}-group-combined_types.sql" \
 			    "$C_NAME" \
 				$GROUP_JSON \
-				>"htdocs/groups/$GROUP_ID/thesis-combined.json"
+				>"htdocs/groups/$GROUP_ID/combined_thesis.json"
 		fi
 		echo "Wrote htdocs/groups/${GROUP_ID} content for ${REPO_ID}"
 	done
@@ -188,7 +188,7 @@ function make_group_folders() {
 			dsquery -pretty -sql "${REPO_ID}-group-combined_types.sql" \
 			    "$C_NAME" \
 				$GROUP_JSON \
-				>"htdocs/groups/$GROUP_ID/data-combined.json"
+				>"htdocs/groups/$GROUP_ID/combined_data.json"
 		fi
 		echo "Wrote htdocs/groups/${GROUP_ID} content for ${REPO_ID}"
 	done
