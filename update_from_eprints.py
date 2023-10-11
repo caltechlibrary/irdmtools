@@ -13,6 +13,7 @@ from datetime import datetime
 from urllib.parse import urlparse, unquote_plus
 from subprocess import Popen, PIPE
 from irdm import RdmUtil, eprint2rdm, fixup_record
+from eprints_to_rdm import get_file_list
 
 
 class WorkObject:
@@ -115,26 +116,20 @@ def update_record(config, rec, rdmutil, rdm_id):
     caltechdata_edit(
         rdm_id,
         metadata=rec,
-        token=config['RDMTOK'],
+        token=config["RDMTOK"],
         production=True,
         publish=True,
         authors=True,
     )
 
 
-def fix_record(config, eprintid, rdm_id,reload=False):
+def fix_record(config, eprintid, rdm_id, restriction, reload=False):
     """Migrate a single record from EPrints to RDM using the document security model
     to guide versioning."""
     rdmutil = RdmUtil(config)
     eprint_host = config.get("EPRINT_HOST", None)
     community_id = config.get("RDM_COMMUNITY_ID", None)
-    if community_id is None or eprint_host is None:
-        print(
-            f"failed ({eprintid}): missing configuration, "
-            + "eprint host or rdm community id, aborting",
-            file=sys.stderr,
-        )
-        sys.exit(1)
+
     rec, err = eprint2rdm(eprintid)
     if err is not None:
         print(f"{eprintid}, None, failed ({eprintid}): eprint2rdm {eprintid}")
@@ -143,14 +138,50 @@ def fix_record(config, eprintid, rdm_id,reload=False):
     # Let's save our .custom_fields["caltech:internal_note"] value if it exists, per issue #16
     custom_fields = rec.get("custom_fields", {})
     internal_note = custom_fields.get("caltech:internal_note", "").strip("\n")
-    
+
     # NOTE: fixup_record is destructive. This is the rare case of where we want to work
     # on a copy of the rec rather than modify rec!!!
-    rec_copy, err = fixup_record(dict(rec),reload,token=config['RDMTOK'])
+    rec_copy, err = fixup_record(dict(rec), reload, token=config["RDMTOK"])
     if err is not None:
         print(
             f"{eprintid}, {rdm_id}, failed ({eprintid}): rdmutil new_record, fixup_record failed {err}"
         )
+
+    file_list = get_file_list(config, eprintid, rec, restriction)
+    file_description = ""
+    file_types = set()
+    campusonly_description = "The files for this record are restricted to users on the Caltech campus network:<p><ul>\n"
+    campusonly_files = False
+    if len(file_list) > 0:
+        for file in file_list:
+            filename = file.get("filename", None)
+            content = file["content"]
+            if content:
+                file_description += f'<p>{content} - <a href="/records/{rdm_id}/files/{filename}?download=1">{filename}</a></p>'
+                file_types.add(content)
+            if restriction == "validuser":
+                # NOTE: We want to put the files in place first, then update the draft.
+                campusonly_description += f'     <li><a href="https://campus-restricted.library.caltech.edu/{rdm_id}/{filename}">{filename}</a></li>\n'
+                campusonly_files = True
+                file_types.add("campus only")
+    if file_description != "" or campusonly_files:
+        additional_descriptions = rec["metadata"].get("additional_descriptions", [])
+        if file_description != "" and restriction == "public":
+            # Add file descriptions and version string
+            additional_descriptions.append(
+                {"type": {"id": "attached-files"}, "description": file_description}
+            )
+        # Add campusonly descriptions
+        if campusonly_files:
+            additional_descriptions.append(
+                {"type": {"id": "files"}, "description": campusonly_description}
+            )
+        rec["metadata"]["additional_descriptions"] = additional_descriptions
+        rec["metadata"]["version"] = " + ".join(file_types)
+
+    # We want to use the access currently in RDM
+    rec.pop("access")
+
     update_record(config, rec, rdmutil, rdm_id)
     return None
 
@@ -221,10 +252,11 @@ def get_eprint_ids():
                 eprint_ids.append(eprint_id.strip())
     return eprint_ids
 
-def update_from_eprints(eprintid,rdm_id,reload=False):
+
+def update_from_eprints(eprintid, rdm_id, reload=False):
     config, is_ok = check_environment()
     if is_ok:
-        err = fix_record(config, eprintid, rdm_id,reload)
+        err = fix_record(config, eprintid, rdm_id, reload)
         if err is not None:
             print(f"Aborting update_from_eprints, {err}", file=sys.stderr)
             sys.exit(1)
@@ -240,12 +272,11 @@ def main():
     if is_ok:
         eprintid = sys.argv[1]
         rdm_id = sys.argv[2]
-        err = fix_record(config, eprintid, rdm_id)
+        restriction = sys.argv[3]
+        err = fix_record(config, eprintid, rdm_id, restriction)
         if err is not None:
             print(f"Aborting {app_name}, {err}", file=sys.stderr)
             sys.exit(1)
-        with open('migrated_records.csv','a') as outfile:
-                print(f"{eprintid},{rdm_id},public",file=outfile)
     else:
         print(f"Aborting {app_name}, environment not setup", file=sys.stderr)
         sys.exit(1)
