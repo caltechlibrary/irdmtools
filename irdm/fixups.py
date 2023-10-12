@@ -165,7 +165,7 @@ def normalize_pub(pub_url=None, doi=None):
 # Where possible these adjustments should be ported back
 # into eprinttools' simple.go and crosswalk.go.
 #
-def fixup_record(record, reload=False, token=None, has_doi=None):
+def fixup_record(record, reload=False, token=None, existing_doi=None):
     """fixup_record accepts a dict of simple record and files returns a
     normlzied record dict that is a for migration into Invenio-RDM."""
     record_id = get_dict_path(record, ["pid", "id"])
@@ -277,12 +277,13 @@ def fixup_record(record, reload=False, token=None, has_doi=None):
     doi = normalize_doi(get_dict_path(record, ["pids", "doi", "identifier"]))
     if doi is not None:
         # Mark system DOIs
-        if doi.startswith('10.7907'):
-           record['pids']['doi']['provider'] = 'datacite'
-           record['pids']['doi']['client'] = 'datacite'
+        if doi.startswith("10.7907"):
+            record["pids"]["doi"]["provider"] = "datacite"
+            record["pids"]["doi"]["client"] = "datacite"
         if not reload:
             # See if DOI already exists in CaltechAUTHORS, if so move it to metadata identifiers.
-            if not has_doi:
+            has_doi = None
+            if not existing_doi:
                 has_doi, err = check_for_doi(doi, in_production, token)
                 if err is not None:
                     return rec, err
@@ -438,11 +439,13 @@ def fixup_record(record, reload=False, token=None, has_doi=None):
                 new.append({"id": "Owens-Valley-Radio-Observatory"})
             elif group["id"] == "Library-System-Papers-and-Publications":
                 new.append({"id": "Caltech-Library"})
-            elif group["id"] == 'Koch-Laboratory-(KLAB)':
+            elif group["id"] == "Koch-Laboratory-(KLAB)":
                 new.append({"id": "Koch-Laboratory"})
-            elif group["id"] == 'Caltech-Tectonics-Observatory-':
+            elif group["id"] == "Caltech-Tectonics-Observatory-":
                 new.append({"id": "Caltech-Tectonics-Observatory"})
-            elif group["id"] == 'Richard-N.-Merkin-Institute-for-Translational-Research':
+            elif (
+                group["id"] == "Richard-N.-Merkin-Institute-for-Translational-Research"
+            ):
                 new.append({"id": "Richard-Merkin-Institute"})
             elif group["id"] == "Center-for-Sensing-to-Intelligence-(S2I)":
                 new.append({"id": "Caltech-Center-for-Sensing-to-Intelligence-(S2I)"})
@@ -453,33 +456,39 @@ def fixup_record(record, reload=False, token=None, has_doi=None):
         record["custom_fields"]["caltech:groups"] = new
 
     # Cleanup caltech person identifiers
-    people = get_dict_path(record, ["metadata","creators"])
+    people = get_dict_path(record, ["metadata", "creators"])
     for person in people:
-        if 'family_name' in  person['person_or_org']:
-            if person['person_or_org']['family_name'] == "Earthquake Engineering Research Laboratory":
-                person['person_or_org'] = {'type': "organizational", 'name': "Earthquake Engineering Research Laboratory,"}
-        if 'identifiers' in person['person_or_org']:
-            for idv in person['person_or_org']['identifiers']:
-                if idv['scheme'] == 'clpid':
-                    if '-' not in idv['identifier']:
-                        idv['identifier'] = idv['identifier']+'-'
-    if 'contributors' in record['metadata']:
-        people = get_dict_path(record, ["metadata","contributors"])
+        if "family_name" in person["person_or_org"]:
+            if (
+                person["person_or_org"]["family_name"]
+                == "Earthquake Engineering Research Laboratory"
+            ):
+                person["person_or_org"] = {
+                    "type": "organizational",
+                    "name": "Earthquake Engineering Research Laboratory,",
+                }
+        if "identifiers" in person["person_or_org"]:
+            for idv in person["person_or_org"]["identifiers"]:
+                if idv["scheme"] == "clpid":
+                    if "-" not in idv["identifier"]:
+                        idv["identifier"] = idv["identifier"] + "-"
+    if "contributors" in record["metadata"]:
+        people = get_dict_path(record, ["metadata", "contributors"])
         for person in people:
-            if 'identifiers' in person['person_or_org']:
-                for idv in person['person_or_org']['identifiers']:
-                    if idv['scheme'] == 'clpid':
-                        if '-' not in idv['identifier']:
-                            idv['identifier'] = idv['identifier']+'-'
+            if "identifiers" in person["person_or_org"]:
+                for idv in person["person_or_org"]["identifiers"]:
+                    if idv["scheme"] == "clpid":
+                        if "-" not in idv["identifier"]:
+                            idv["identifier"] = idv["identifier"] + "-"
 
     # Remove blank descriptions
-    if 'additional_descriptions' in record["metadata"]:
-        descriptions = get_dict_path(record, ["metadata","additional_descriptions"])
+    if "additional_descriptions" in record["metadata"]:
+        descriptions = get_dict_path(record, ["metadata", "additional_descriptions"])
         cleaned = []
         for d in descriptions:
-            if d['description'] != '\n\n':
+            if d["description"] != "\n\n":
                 cleaned.append(d)
-        record['metadata']['additional_descriptions'] = cleaned
+        record["metadata"]["additional_descriptions"] = cleaned
 
     # Remove .custom_fields["caltech:internal_note"] if it exist.
     if "custom_fields" in record and "caltech:internal_note" in record["custom_fields"]:

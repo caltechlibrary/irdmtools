@@ -123,7 +123,7 @@ def caltechdata_write(
     file_links=[],
     s3=None,
     community=None,
-    authors=False
+    authors=False,
 ):
     """
     File links are links to files existing in external systems that will

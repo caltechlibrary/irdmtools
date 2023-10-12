@@ -112,4 +112,3 @@ def send_to_community(review_link, data, headers, publish, community):
         if result.status_code != 200:
             raise Exception(result.text)
     return result
-
