@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
 #
-"""eprints_to_rdm.py implements our Migration workflow for CaltechAUTHORS
-from EPrints 3.3 to RDM 11."""
+"""Update RDM records based on eprinte metadata"""
 
-from distutils.file_util import move_file
 import sys
 import os
-import json
+import json, csv
 import requests
 from caltechdata_api import caltechdata_edit
 from datetime import datetime
@@ -130,6 +128,17 @@ def fix_record(config, eprintid, rdm_id, restriction, reload=False):
     eprint_host = config.get("EPRINT_HOST", None)
     community_id = config.get("RDM_COMMUNITY_ID", None)
 
+    token = config["RDMTOK"]
+    headers = {"Authorization": f"Bearer {token}"}
+    existing = requests.get(
+        "https://authors.library.caltech.edu/api/records/" + rdm_id, headers=headers
+    ).json()
+
+    existing_doi = None
+    pids = existing["pids"]
+    if "doi" in pids:
+        existing_doi = pids["doi"]["identifier"]
+
     rec, err = eprint2rdm(eprintid)
     if err is not None:
         print(f"{eprintid}, None, failed ({eprintid}): eprint2rdm {eprintid}")
@@ -141,7 +150,9 @@ def fix_record(config, eprintid, rdm_id, restriction, reload=False):
 
     # NOTE: fixup_record is destructive. This is the rare case of where we want to work
     # on a copy of the rec rather than modify rec!!!
-    rec_copy, err = fixup_record(dict(rec), reload, token=config["RDMTOK"])
+    rec_copy, err = fixup_record(
+        dict(rec), reload, token=config["RDMTOK"], existing_doi=existing_doi
+    )
     if err is not None:
         print(
             f"{eprintid}, {rdm_id}, failed ({eprintid}): rdmutil new_record, fixup_record failed {err}"
@@ -152,6 +163,21 @@ def fix_record(config, eprintid, rdm_id, restriction, reload=False):
     file_types = set()
     campusonly_description = "The files for this record are restricted to users on the Caltech campus network:<p><ul>\n"
     campusonly_files = False
+
+    def return_order(file_item):
+        content = file_item["content"]
+        if content == "Published":
+            return 0
+        if content == "Accepted Version":
+            return 1
+        if content == "Submitted":
+            return 2
+        if content == "Supplemental Material":
+            return 3
+        return 4
+
+    file_list.sort(key=lambda val: return_order(val))
+
     if len(file_list) > 0:
         for file in file_list:
             filename = file.get("filename", None)
@@ -164,6 +190,7 @@ def fix_record(config, eprintid, rdm_id, restriction, reload=False):
                 campusonly_description += f'     <li><a href="https://campus-restricted.library.caltech.edu/{rdm_id}/{filename}">{filename}</a></li>\n'
                 campusonly_files = True
                 file_types.add("campus only")
+    rec["metadata"]["version"] = restriction
     if file_description != "" or campusonly_files:
         additional_descriptions = rec["metadata"].get("additional_descriptions", [])
         if file_description != "" and restriction == "public":
@@ -270,13 +297,32 @@ def main():
     app_name = os.path.basename(sys.argv[0])
     config, is_ok = check_environment()
     if is_ok:
-        eprintid = sys.argv[1]
-        rdm_id = sys.argv[2]
-        restriction = sys.argv[3]
-        err = fix_record(config, eprintid, rdm_id, restriction)
-        if err is not None:
-            print(f"Aborting {app_name}, {err}", file=sys.stderr)
-            sys.exit(1)
+        with open("records_to_update.csv") as infile:
+            reader = csv.DictReader(infile)
+            for row in reader:
+                eprintid = row["eprintid"]
+                rdm_id = row["rdmid"]
+                restriction = row["record_status"]
+                if restriction == "restricted":
+                    restriction = "internal"
+                    err = fix_record(config, eprintid, rdm_id, restriction)
+                    if err is not None:
+                        print(f"Aborting {app_name}, {err}", file=sys.stderr)
+                        sys.exit(1)
+                    print(f"Updated {rdm_id}")
+                elif restriction == "public":
+                    err = fix_record(config, eprintid, rdm_id, restriction)
+                    if err is not None:
+                        print(f"Aborting {app_name}, {err}", file=sys.stderr)
+                        sys.exit(1)
+                    print(f"Updated {rdm_id}")
+        # eprintid = sys.argv[1]
+        # rdm_id = sys.argv[2]
+        # restriction = sys.argv[3]
+        # err = fix_record(config, eprintid, rdm_id, restriction)
+        # if err is not None:
+        #    print(f"Aborting {app_name}, {err}", file=sys.stderr)
+        #    sys.exit(1)
     else:
         print(f"Aborting {app_name}, environment not setup", file=sys.stderr)
         sys.exit(1)
