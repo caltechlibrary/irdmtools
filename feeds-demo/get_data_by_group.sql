@@ -6,7 +6,7 @@ WITH q AS (
 		SELECT _key AS rdmid, 
 			src->>'type' AS resource_type,
 			src->>'date' AS pub_date,
-			src::jsonb->'local_group'->'items' AS group_items
+			src::jsonb->'contributors'->'items' AS group_items
 		FROM  data
 		WHERE 
   			json_array_length(src->'local_group'->'items') > 0

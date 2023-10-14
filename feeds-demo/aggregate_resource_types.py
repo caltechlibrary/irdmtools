@@ -87,7 +87,8 @@ def main():
     '''main processing method'''
     app_name = os.path.basename(sys.argv[0])
     if len(sys.argv) != 5:
-        print(f'{app_name} expected group.csv and CSV files for authors, thesis and data resources', file = sys.stderr)
+        print(f'{app_name} expected group.csv and CSV files for authors, thesis and data resources',
+            file = sys.stderr)
         sys.exit(1)
     err = aggregate(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
     if err is not None:

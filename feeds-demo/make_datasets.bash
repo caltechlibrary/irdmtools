@@ -88,6 +88,12 @@ function harvest_people() {
 	fi
 }
 
+function harvest_rdm_fixup_data() {
+	# generate a CSV file of RDM id and local_group values
+	psql caltechdata -f fixup_data_local_group.sql >fixup_data_local_group.csv
+	fixup_data_local_groups.py data.ds groups.csv fixup_data_local_group.csv
+}
+
 #
 # Main processing steps
 #
@@ -173,3 +179,7 @@ echo "Harvesting from groups.csv"
 harvest_groups
 echo "Harvesting from people.csv"
 harvest_people
+
+# Fixups can require use of the groups and people data harvested.
+echo "Doing fix up for local groups (e.g. CaltechDATA)"
+harvest_rdm_fixup_data

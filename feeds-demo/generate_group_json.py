@@ -45,7 +45,7 @@ def render_authors_json_files(d_name, group_id, obj):
                 f_name = os.path.join(d_name, 'recent', f'{resource_type}.json')
                 with open(f_name, 'w', encoding = 'utf-8') as w:
                     w.write(src)
-    
+
 def render_thesis_json_files(d_name, group_id, obj):
     '''render the resource JSON files for group_id'''
     # build out the resource type JSON file
@@ -74,7 +74,7 @@ def render_thesis_json_files(d_name, group_id, obj):
                 f_name = os.path.join(d_name, 'recent', f'{resource_type}.json')
                 with open(f_name, 'w', encoding = 'utf-8') as w:
                     w.write(src)
-    
+
 
 def render_json_files(group_list):
     '''take our agents_csv and agent_pubs_csv filenames and aggregate them'''
