@@ -7,10 +7,10 @@ WITH t (_key, pub_date, obj, local_group) AS (
 		src->>'date' AS pub_date,
 		jsonb_strip_nulls(src::jsonb) as obj,
     	jsonb_build_array(
-        	jsonb_path_query(src::jsonb, '$.local_group.items[*].id')
+        	jsonb_path_query(src::jsonb, '$.local_group')
     	) AS local_group
     FROM data
 ) SELECT obj
 FROM t
-WHERE local_group @> $1
+-- WHERE local_group @> $1
 ORDER BY pub_date DESC;

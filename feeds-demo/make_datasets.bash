@@ -91,7 +91,7 @@ function harvest_people() {
 function harvest_rdm_fixup_data() {
 	# generate a CSV file of RDM id and local_group values
 	psql caltechdata -f fixup_data_local_group.sql >fixup_data_local_group.csv
-	fixup_data_local_groups.py data.ds groups.csv fixup_data_local_group.csv
+	./fixup_data_local_group.py data.ds groups.csv fixup_data_local_group.csv
 }
 
 #

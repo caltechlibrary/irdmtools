@@ -4,6 +4,8 @@
 ## bugs
 
 - [ ] Both thesis and data are not setting up write in group_list.json (this is blocking building json file in individual groups)
+- [ ] The combined_data.json is be written by an authors routine, this is wrong
+- [ ] The combined_data.json written by data combined via local_groups leaves an empty array and his is wrong. If there are no CaltechDATA items then there should probably be no combined_data.json at all, if there are then it should not be an empty array.
 
 ## make_datasets.bash
 
