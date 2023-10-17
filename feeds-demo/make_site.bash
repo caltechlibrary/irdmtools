@@ -10,10 +10,10 @@ function make_recent_folder() {
 	if [ -f authors.env ]; then
 		# shellcheck disable=SC1090
 		. authors.env
-		dsquery -pretty -sql recent-authors-object-types.sql authors.ds >htdocs/recent/object_types.json
-		dsquery -pretty -sql recent-authors-combined.sql authors.ds >htdocs/recent/combined.json
+		dsquery -pretty -sql recent_authors_object_types.sql authors.ds >htdocs/recent/object_types.json
+		dsquery -pretty -sql recent_authors_combined.sql authors.ds >htdocs/recent/combined.json
 		for T in article audiovisual book book_section collection combined_data conference_item data_object_types data_pub_types dataset image interactiveresource model monograph object_types patent pub_types software teaching_resource text thesis video workflow; do
-			dsquery -pretty -sql recent-authors-for-type.sql authors.ds "${T}" >"htdocs/recent/$T.json"
+			dsquery -pretty -sql recent_authors_for_type.sql authors.ds "${T}" >"htdocs/recent/$T.json"
 		done
 	fi
 
@@ -22,10 +22,10 @@ function make_recent_folder() {
 ##  	if [ -f thesis.env ]; then
 ##  		# shellcheck disable=SC1090
 ##  		. thesis.env
-##  		dsquery -pretty -sql recent-thesis-thesis-types.sql thesis.ds >htdocs/recent/thesis_object_types.json
-##  		dsquery -pretty -sql recent-thesis-combined.sql thesis.ds >htdocs/recent/thesis_combined.json
+##  		dsquery -pretty -sql recent_thesis_thesis_types.sql thesis.ds >htdocs/recent/thesis_object_types.json
+##  		dsquery -pretty -sql recent_thesis_combined.sql thesis.ds >htdocs/recent/thesis_combined.json
 ##  		for T in bachelors engd masters other phd senior_major senior_minor; do
-##  			dsquery -pretty -sql recent-thesis-for-type.sql authors.ds "${T}" >"htdocs/recent/$T.json"
+##  			dsquery -pretty -sql recent_thesis_for_type.sql authors.ds "${T}" >"htdocs/recent/$T.json"
 ##  		done
 ##  	fi
 ##  
@@ -33,10 +33,10 @@ function make_recent_folder() {
 	if [ -f data.env ]; then
 		# shellcheck disable=SC1090
 		. data.env
-		dsquery -pretty -sql recent-data-object-types.sql data.ds >htdocs/recent/data_object_types.json
-		dsquery -pretty -sql recent-data-combined.sql data.ds >htdocs/recent/data_combined.json
+		dsquery -pretty -sql recent_data_object_types.sql data.ds >htdocs/recent/data_object_types.json
+		dsquery -pretty -sql recent_data_combined.sql data.ds >htdocs/recent/data_combined.json
 		for T in collection dataset image image_map interactive_resource model other publication software video workflow; do
-			dsquery -pretty -sql recent-data-for-type.sql data.ds "${T}" >"htdocs/recent/data_$T.json"
+			dsquery -pretty -sql recent_data_for_type.sql data.ds "${T}" >"htdocs/recent/data_$T.json"
 		done
 	fi
 }
@@ -91,7 +91,7 @@ function check_for_required_programs() {
 function make_groups_index_md() {
 	echo '---'
 	echo 'groups:'
-	dsquery -sql groups-index-md.sql groups.ds | json2yaml | sed -E 's/^/    /g'
+	dsquery -sql groups_index_md.sql groups.ds | json2yaml | sed -E 's/^/    /g'
 	echo '---'
 }
 
@@ -134,16 +134,16 @@ function make_group_folders() {
 	REPO_ID="authors"
 	C_NAME="${REPO_ID}.ds"
 	echo "Processing ${C_NAME} and ${GROUP_C_NAME}"
-	PUB_TYPES=$(dsquery -sql "${REPO_ID}-pub-types.sql" "$C_NAME" | jsonrange -values | jq -r)
+	PUB_TYPES=$(dsquery -sql "${REPO_ID}_pub_types.sql" "$C_NAME" | jsonrange -values | jq -r)
 	for GROUP_ID in $(jsonrange -values -i htdocs/groups/index.json | jq -r); do
 		GROUP_DIR="htdocs/groups/$GROUP_ID"
 		if [ ! -d "${GROUP_DIR}" ]; then
 			mkdir -p "$GROUP_DIR"
 		fi
 		# Write out htdocs/groups/<GROUP_ID>/combined.json
-		if [ -f "${REPO_ID}-group-combined_types.sql" ]; then
+		if [ -f "${REPO_ID}_group_combined_types.sql" ]; then
 			GROUP_JSON=$(printf '[%s]' "\"${GROUP_ID}\"")
-			dsquery -pretty -sql "${REPO_ID}-group-combined_types.sql" \
+			dsquery -pretty -sql "${REPO_ID}_group_combined_types.sql" \
 			    "$C_NAME" \
 				$GROUP_JSON \
 				>"htdocs/groups/$GROUP_ID/combined.json"
@@ -155,16 +155,16 @@ function make_group_folders() {
 	REPO_ID="thesis"
 	C_NAME="${REPO_ID}.ds"
 	echo "Processing ${C_NAME} and ${GROUP_C_NAME}"
-	PUB_TYPES=$(dsquery -sql "${REPO_ID}-thesis-types.sql" "$C_NAME" | jsonrange -values | jq -r)
+	PUB_TYPES=$(dsquery -sql "${REPO_ID}_thesis_types.sql" "$C_NAME" | jsonrange -values | jq -r)
 	for GROUP_ID in $(jsonrange -values -i htdocs/groups/index.json | jq -r); do
 		GROUP_DIR="htdocs/groups/$GROUP_ID"
 		if [ ! -d "${GROUP_DIR}" ]; then
 			mkdir -p "$GROUP_DIR"
 		fi
 		# Write out htdocs/groups/<GROUP_ID>/combined.json
-		if [ -f "${REPO_ID}-group-combined_types.sql" ]; then
+		if [ -f "${REPO_ID}_group_combined_types.sql" ]; then
 			GROUP_JSON=$(printf '[%s]' "\"${GROUP_ID}\"")
-			dsquery -pretty -sql "${REPO_ID}-group-combined_types.sql" \
+			dsquery -pretty -sql "${REPO_ID}_group_combined_types.sql" \
 			    "$C_NAME" \
 				$GROUP_JSON \
 				>"htdocs/groups/$GROUP_ID/combined_thesis.json"
@@ -176,16 +176,16 @@ function make_group_folders() {
 	REPO_ID="data"
 	C_NAME="${REPO_ID}.ds"
 	echo "Processing ${C_NAME} and ${GROUP_C_NAME}"
-	PUB_TYPES=$(dsquery -sql "${REPO_ID}-pub-types.sql" "$C_NAME" | jsonrange -values | jq -r)
+	PUB_TYPES=$(dsquery -sql "${REPO_ID}_pub_types.sql" "$C_NAME" | jsonrange -values | jq -r)
 	for GROUP_ID in $(jsonrange -values -i htdocs/groups/index.json | jq -r); do
 		GROUP_DIR="htdocs/groups/$GROUP_ID"
 		if [ ! -d "${GROUP_DIR}" ]; then
 			mkdir -p "$GROUP_DIR"
 		fi
-		# Write out htdocs/groups/<GROUP_ID>/data-combined.json
-		if [ -f "${REPO_ID}-group-combined_types.sql" ]; then
+		# Write out htdocs/groups/<GROUP_ID>/data_combined.json
+		if [ -f "${REPO_ID}_group_combined_types.sql" ]; then
 			GROUP_JSON=$(printf '[%s]' "\"${GROUP_ID}\"")
-			dsquery -pretty -sql "${REPO_ID}-group-combined_types.sql" \
+			dsquery -pretty -sql "${REPO_ID}_group_combined_types.sql" \
 			    "$C_NAME" \
 				$GROUP_JSON \
 				>"htdocs/groups/$GROUP_ID/combined_data.json"
@@ -198,10 +198,10 @@ function make_groups() {
 	echo "Populating groups folder"
 	mkdir -p htdocs/groups
 	dataset keys groups.ds >htdocs/groups/index.keys
-	dsquery -pretty -sql groups-index-json.sql groups.ds >htdocs/groups/index.json
+	dsquery -pretty -sql groups_index_json.sql groups.ds >htdocs/groups/index.json
 	# Now build index.md for groups
 	make_groups_index_md | pandoc -f markdown -t markdown \
-					  --template templates/groups-index-md.tmpl \
+					  --template templates/groups_index_md.tmpl \
 					  >htdocs/groups/index.md
 	make_group_list_json 
 	python3 generate_group_json.py htdocs/groups/group_list.json
@@ -257,10 +257,10 @@ function make_root_folder_grids() {
 	for REPO in authors data thesis; do
 		if [ -f "${REPO}.env" ]; then
 			dsquery -pretty -grid='_Key,date,date_type,title,creators,local_group,type,url' \
-			        -sql "${REPO}-grid.sql" "${REPO}.ds" \
+			        -sql "${REPO}_grid.sql" "${REPO}.ds" \
 					>"htdocs/caltech${REPO}-grid.json"
 		else
-			echo "missing ${REPO}.env, skipped making htdocs/caltech${REPO}-grid.json"
+			echo "missing ${REPO}.env, skipped making htdocs/caltech${REPO}_grid.json"
 		fi
 	done
 }

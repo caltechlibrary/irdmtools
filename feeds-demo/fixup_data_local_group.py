@@ -6,6 +6,7 @@ import sys
 import csv
 
 from py_dataset import dataset
+import progressbar
 
 def get_groups_csv(groups_csv):
     '''process the groups_csv file returning a list of objects with the preferred group id 
@@ -35,9 +36,17 @@ def get_fixup_csv(fixup_csv, object_map):
                 object_map[group_id]['record_ids'].append(record_id)
     return object_map
 
-def merge_local_group_data(c_name, object_map):
+def merge_local_group_data(app_name, pid, c_name, object_map):
     '''now that we've build up our object map we can update our 
     dataset collection's objects with local group information'''
+    tot = len(object_map)
+    widgets=[
+         f'{app_name} {c_name} (pid:{pid})',
+         ' ', progressbar.Counter(), f'/{tot}',
+         ' ', progressbar.Percentage(),
+         ' ', progressbar.AdaptiveETA(),
+    ]
+    bar = progressbar.ProgressBar(max_value = tot, widgets=widgets)
     for group_id in object_map:
         grp_obj = object_map[group_id]
         normalized_id = grp_obj['group_id']
@@ -50,14 +59,16 @@ def merge_local_group_data(c_name, object_map):
                     obj['local_group'] = {}
                 if 'items' not in obj['local_group']:
                     obj['local_group']['items'] = []
-                obj['local_group']['items'].append(normalized_id)
+                if normalized_id not in obj['local_group']['items']:
+                    obj['local_group']['items'].append({'id': normalized_id})
                 err = dataset.update(c_name, record_id, obj)
                 if err != '':
                     err = f'could not update {record_id} in {c_name}, {err}'
                     return err
+    bar.finish()
     return None
 
-def fixup_local_groups(c_name, groups_csv, fixup_csv):
+def fixup_local_groups(app_name, pid, c_name, groups_csv, fixup_csv):
     '''this is the routine that does the lifting, first builds the list of ids and group
     names using the two CSV files then it runs through the dataset collection updating the
     local_groups attribute.'''
@@ -72,12 +83,13 @@ def fixup_local_groups(c_name, groups_csv, fixup_csv):
         return f'something went wrong reading {fixup_csv}'
 
     # Now we're ready to update our dataset collection records.
-    return merge_local_group_data(c_name, object_map)
+    return merge_local_group_data(app_name, pid, c_name, object_map)
 
 # Main process routine
 def main():
     '''main processing routine'''
     app_name = os.path.basename(sys.argv[0])
+    pid = os.getpid()
     # data.ds, groups.csv, fixup_data_local_groups.csv
     if len(sys.argv) != 4:
         print(f'usage: {app_name} data.ds groups.csv fixup_data_local_groups.csv',
@@ -96,7 +108,7 @@ def main():
         print(f'A valid fixup for local groups CSV file is required, got "{fixup_csv}"',
               file = sys.stderr)
         sys.exit(1)
-    err = fixup_local_groups(c_name, groups_csv, fixup_csv)
+    err = fixup_local_groups(app_name, pid, c_name, groups_csv, fixup_csv)
     if err is not None:
         print(f'error: {err}', file = sys.stderr)
         sys.exit(1)

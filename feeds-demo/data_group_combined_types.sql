@@ -12,5 +12,5 @@ WITH t (_key, pub_date, obj, local_group) AS (
     FROM data
 ) SELECT obj
 FROM t
--- WHERE local_group @> $1
+WHERE local_group @> $1
 ORDER BY pub_date DESC;
