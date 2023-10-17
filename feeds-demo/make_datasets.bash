@@ -166,6 +166,7 @@ fi
 
 # We're doing a standard run, build the following in sequence
 echo "Harvesting EPrint repositories"
+# shellcheck disable=SC2043
 for REPO in thesis; do
 	harvest_eprints "${REPO}" "$FULL_HARVEST"
 done

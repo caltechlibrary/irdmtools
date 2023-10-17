@@ -7,7 +7,7 @@ WITH t (_key, pub_date, obj, local_group) AS (
 		src->>'date' AS pub_date,
 		jsonb_strip_nulls(src::jsonb) as obj,
     	jsonb_build_array(
-        	jsonb_path_query(src::jsonb, '$.local_group')
+        	jsonb_path_query(src::jsonb, '$.local_group[*].items[*].id')
     	) AS local_group
     FROM data
 ) SELECT obj

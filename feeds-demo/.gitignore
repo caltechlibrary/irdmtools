@@ -3,3 +3,5 @@
 *.tmp
 *.swp
 *.env
+# Project specific
+fixup_data_local_group.csv

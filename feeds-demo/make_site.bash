@@ -4,11 +4,12 @@
 #
 # populate the htdocs/recent folder with JSON content
 #
-function make_recent_folder() {
+function make_recent() {
 	echo "Populating recent folder"
 	mkdir -p htdocs/recent
+	# Populate recent folder for CaltechAUTHORS
 	if [ -f authors.env ]; then
-		# shellcheck disable=SC1090
+		# shellcheck disable=SC1090,SC1091
 		. authors.env
 		dsquery -pretty -sql recent_authors_object_types.sql authors.ds >htdocs/recent/object_types.json
 		dsquery -pretty -sql recent_authors_combined.sql authors.ds >htdocs/recent/combined.json
@@ -17,21 +18,11 @@ function make_recent_folder() {
 		done
 	fi
 
-# NOTE: We don't do recent lists for CaltechTHESIS, doesn't really make sense.
-##  	# Thesis
-##  	if [ -f thesis.env ]; then
-##  		# shellcheck disable=SC1090
-##  		. thesis.env
-##  		dsquery -pretty -sql recent_thesis_thesis_types.sql thesis.ds >htdocs/recent/thesis_object_types.json
-##  		dsquery -pretty -sql recent_thesis_combined.sql thesis.ds >htdocs/recent/thesis_combined.json
-##  		for T in bachelors engd masters other phd senior_major senior_minor; do
-##  			dsquery -pretty -sql recent_thesis_for_type.sql authors.ds "${T}" >"htdocs/recent/$T.json"
-##  		done
-##  	fi
-##  
+	# NOTE: We don't do recent lists for CaltechTHESIS, doesn't really make sense.
 
+	# Populate recent folder for CaltechDATA
 	if [ -f data.env ]; then
-		# shellcheck disable=SC1090
+		# shellcheck disable=SC1090,SC1091
 		. data.env
 		dsquery -pretty -sql recent_data_object_types.sql data.ds >htdocs/recent/data_object_types.json
 		dsquery -pretty -sql recent_data_combined.sql data.ds >htdocs/recent/data_combined.json
@@ -44,7 +35,7 @@ function make_recent_folder() {
 #
 # Populate the repository folder (e.g. authors, thesis, data)
 #
-function make_repo_folder() {
+function make_repo() {
 	REPO="$1"
 	echo "Making ${REPO} folder"
 	# Cleanup stale stuff
@@ -128,69 +119,95 @@ function make_group_list_json() {
 			>htdocs/groups/group_list.json
 }
 
+function make_group_authors() {
+	GROUP_ID="$1"
+	if [ "$GROUP_ID" = "" ]; then
+		echo "Missing GROUP_ID aborting"
+		exit 11
+	fi
+	echo "Processing combined authors.ds and groups.ds for $GROUP_ID"
+	# Write out htdocs/groups/<GROUP_ID>/combined.json
+	if [ -f "authors_group_combined_types.sql" ]; then
+		GROUP_JSON=$(printf '[%s]' "\"${GROUP_ID}\"")
+		GROUP_FILE="htdocs/groups/$GROU_ID/combined.json"
+		dsquery -pretty -sql "authors_group_combined_types.sql" \
+		    authors.ds \
+			"$GROUP_JSON" \
+			>"$GROUP_FILE"
+		L=$(jq '. | length' "$GROUP_FILE")
+		if [ "$L" = "0" ]; then
+			rm "$GROUP_FILE"
+		else
+			echo "Wrote ($L) $GROUP_FILE"
+		fi
+	fi
+}
+
+function make_group_thesis() {
+	GROUP_ID="$1"
+	if [ "$GROUP_ID" = "" ]; then
+		echo "Missing GROUP_ID aborting"
+		exit 11
+	fi
+	echo "Processing combined thesis.ds and groups.ds for $GROUP_ID"
+	# Write out htdocs/groups/<GROUP_ID>/combined_thesis.json
+	if [ -f "thesis_group_combined_types.sql" ]; then
+		GROUP_JSON=$(printf '[%s]' "\"${GROUP_ID}\"")
+		GROUP_FILE="htdocs/groups/$GROUP_ID/combined_thesis.json"
+		dsquery -pretty -sql "thesis_group_combined_types.sql" \
+		    thesis.ds \
+			"$GROUP_JSON" \
+			>"$GROUP_FILE"
+		L=$(jq '. | length' "$GROUP_FILE")
+		if [ "${L}" = "0" ]; then
+			rm "$GROUP_FILE"
+		else
+			echo "Wrote ($L) $GROUP_FILE"
+		fi
+	fi
+}
+
+function make_group_data() {
+	GROUP_ID="$1"
+	if [ "$GROUP_ID" = "" ]; then
+		echo "Missing GROUP_ID aborting"
+		exit 11
+	fi
+	echo "Processing combined data.ds and groups.ds for $GROUP_ID"
+	# Write out htdocs/groups/<GROUP_ID>/combined_data.json
+	if [ -f "data_group_combined_types.sql" ]; then
+		GROUP_JSON=$(printf '[%s]' "\"${GROUP_ID}\"")
+		GROUP_FILE="htdocs/groups/$GROUP_ID/combined_data.json"
+		dsquery -pretty -sql "data_group_combined_types.sql" \
+		    data.ds \
+			"$GROUP_JSON" \
+			>"$GROUP_FILE"
+		L=$(jq '. | length' "$GROUP_FILE")
+		if [ "$L" = "0" ]; then
+			rm "$GROUP_FILE"
+		else
+			echo "Wrote ($L) $GROUP_FILE"
+		fi
+	fi
+}
+
 function make_group_folders() {
-	GROUP_C_NAME="groups.ds"
-	# Process CaltechAUTHORS
-	REPO_ID="authors"
-	C_NAME="${REPO_ID}.ds"
-	echo "Processing ${C_NAME} and ${GROUP_C_NAME}"
-	PUB_TYPES=$(dsquery -sql "${REPO_ID}_pub_types.sql" "$C_NAME" | jsonrange -values | jq -r)
 	for GROUP_ID in $(jsonrange -values -i htdocs/groups/index.json | jq -r); do
+		if [ "$GROUP_ID" = "" ]; then
+			echo "error: GROUP_ID is not set from htdocs/groups/index.json"
+			exit 11
+		fi
+		# Create the group directory if neccessary
 		GROUP_DIR="htdocs/groups/$GROUP_ID"
 		if [ ! -d "${GROUP_DIR}" ]; then
 			mkdir -p "$GROUP_DIR"
 		fi
-		# Write out htdocs/groups/<GROUP_ID>/combined.json
-		if [ -f "${REPO_ID}_group_combined_types.sql" ]; then
-			GROUP_JSON=$(printf '[%s]' "\"${GROUP_ID}\"")
-			dsquery -pretty -sql "${REPO_ID}_group_combined_types.sql" \
-			    "$C_NAME" \
-				$GROUP_JSON \
-				>"htdocs/groups/$GROUP_ID/combined.json"
-		fi
-		echo "Wrote htdocs/groups/${GROUP_ID} content for ${REPO_ID}"
-	done
-
-	# Process CaltechTHESIS
-	REPO_ID="thesis"
-	C_NAME="${REPO_ID}.ds"
-	echo "Processing ${C_NAME} and ${GROUP_C_NAME}"
-	PUB_TYPES=$(dsquery -sql "${REPO_ID}_thesis_types.sql" "$C_NAME" | jsonrange -values | jq -r)
-	for GROUP_ID in $(jsonrange -values -i htdocs/groups/index.json | jq -r); do
-		GROUP_DIR="htdocs/groups/$GROUP_ID"
-		if [ ! -d "${GROUP_DIR}" ]; then
-			mkdir -p "$GROUP_DIR"
-		fi
-		# Write out htdocs/groups/<GROUP_ID>/combined.json
-		if [ -f "${REPO_ID}_group_combined_types.sql" ]; then
-			GROUP_JSON=$(printf '[%s]' "\"${GROUP_ID}\"")
-			dsquery -pretty -sql "${REPO_ID}_group_combined_types.sql" \
-			    "$C_NAME" \
-				$GROUP_JSON \
-				>"htdocs/groups/$GROUP_ID/combined_thesis.json"
-		fi
-		echo "Wrote htdocs/groups/${GROUP_ID} content for ${REPO_ID}"
-	done
-
-	# Process CaltechDATA
-	REPO_ID="data"
-	C_NAME="${REPO_ID}.ds"
-	echo "Processing ${C_NAME} and ${GROUP_C_NAME}"
-	PUB_TYPES=$(dsquery -sql "${REPO_ID}_pub_types.sql" "$C_NAME" | jsonrange -values | jq -r)
-	for GROUP_ID in $(jsonrange -values -i htdocs/groups/index.json | jq -r); do
-		GROUP_DIR="htdocs/groups/$GROUP_ID"
-		if [ ! -d "${GROUP_DIR}" ]; then
-			mkdir -p "$GROUP_DIR"
-		fi
-		# Write out htdocs/groups/<GROUP_ID>/data_combined.json
-		if [ -f "${REPO_ID}_group_combined_types.sql" ]; then
-			GROUP_JSON=$(printf '[%s]' "\"${GROUP_ID}\"")
-			dsquery -pretty -sql "${REPO_ID}_group_combined_types.sql" \
-			    "$C_NAME" \
-				$GROUP_JSON \
-				>"htdocs/groups/$GROUP_ID/combined_data.json"
-		fi
-		echo "Wrote htdocs/groups/${GROUP_ID} content for ${REPO_ID}"
+		# Process CaltechAUTHORS
+		make_group_authors "$GROUP_ID"
+		# Process CaltechTHESIS
+		make_group_thesis "$GROUP_ID"
+		# Process CaltechDATA
+		make_group_data "$GROUP_ID"
 	done
 }
 
@@ -205,12 +222,6 @@ function make_groups() {
 					  >htdocs/groups/index.md
 	make_group_list_json 
 	python3 generate_group_json.py htdocs/groups/group_list.json
-	make_group_folders
-	# Now build the old group_list.json (this get used by CL.js and the widget stuff)
-
-	#FIXME: Need to generate these files
-	# groups.csv
-	# updated.csv
 }
 
 function clone_groups_ds() {
@@ -251,7 +262,7 @@ function clone_people_ds() {
 	fi
 }
 
-function make_root_folder_grids() {
+function make_root() {
 	echo "Populating root folder"
 	mkdir -p htdocs
 	for REPO in authors data thesis; do
@@ -273,7 +284,7 @@ function clone_thesis() {
 	fi
 	# shellcheck disable=SC1090
 	. "${REPO}.env"
-	make_repo_folder "${REPO}"
+	make_repo "${REPO}"
 }
 
 function clone_data() {
@@ -284,7 +295,7 @@ function clone_data() {
 	fi
 	# shellcheck disable=SC1090
 	. "${REPO}.env"
-	make_repo_folder "${REPO}"
+	make_repo "${REPO}"
 }
 
 function clone_authors() {
@@ -295,7 +306,7 @@ function clone_authors() {
 	fi
 	# shellcheck disable=SC1090
 	. "${REPO}.env"
-	make_repo_folder "${REPO}"
+	make_repo "${REPO}"
 }
 
 #
@@ -304,29 +315,49 @@ function clone_authors() {
 check_for_required_programs
 
 if [ "$1" != "" ]; then
-	for arg in $@; do
-		case $arg in
-		clone*)
+	param=""
+	cmd=""
+	for arg in "$@"; do
+		case "$arg" in
+		clone_*)
 			cmd="${arg}"
 			;;
-		*)
+		root|recent|groups|people|group_folders|group_authors|group_thesis|group_data)
 			cmd="make_${arg}"
 			;;
+		groups_*)
+			echo "did you mean group_authors, group_thesis or group_data?"
+			exit 1
+			;;
+		*)
+			param="$arg"
+			;;
 		esac
-		echo "Running $cmd"
+	done
+	if [ "$param" != "" ]; then
+		echo "Running -> '$cmd' '$param'"
+		if ! "$cmd" "$param"; then
+			echo 'Something went wrong'
+			exit 10
+		fi
+	else
+		echo "Running -> $cmd"
 		if ! "${cmd}"; then
 			echo 'Something went wrong'
 			exit 10
 		fi
-	done
+	fi
 	exit 0
 fi
 
-START_TIME=$(date)
+##   START_TIME=$(date)
 # Build root folder contents.
-make_root_folder_grids
+make_root
+# Build  recent folder
+make_recent
 # Build out the groups tree
 make_groups
+make_group_folders
 # Build out the people tree
 make_people
 
