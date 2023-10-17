@@ -119,98 +119,6 @@ function make_group_list_json() {
 			>htdocs/groups/group_list.json
 }
 
-function make_group_authors() {
-	GROUP_ID="$1"
-	if [ "$GROUP_ID" = "" ]; then
-		echo "Missing GROUP_ID aborting"
-		exit 11
-	fi
-	echo "Processing combined authors.ds and groups.ds for $GROUP_ID"
-	# Write out htdocs/groups/<GROUP_ID>/combined.json
-	if [ -f "authors_group_combined_types.sql" ]; then
-		GROUP_JSON=$(printf '[%s]' "\"${GROUP_ID}\"")
-		GROUP_FILE="htdocs/groups/$GROU_ID/combined.json"
-		dsquery -pretty -sql "authors_group_combined_types.sql" \
-		    authors.ds \
-			"$GROUP_JSON" \
-			>"$GROUP_FILE"
-		L=$(jq '. | length' "$GROUP_FILE")
-		if [ "$L" = "0" ]; then
-			rm "$GROUP_FILE"
-		else
-			echo "Wrote ($L) $GROUP_FILE"
-		fi
-	fi
-}
-
-function make_group_thesis() {
-	GROUP_ID="$1"
-	if [ "$GROUP_ID" = "" ]; then
-		echo "Missing GROUP_ID aborting"
-		exit 11
-	fi
-	echo "Processing combined thesis.ds and groups.ds for $GROUP_ID"
-	# Write out htdocs/groups/<GROUP_ID>/combined_thesis.json
-	if [ -f "thesis_group_combined_types.sql" ]; then
-		GROUP_JSON=$(printf '[%s]' "\"${GROUP_ID}\"")
-		GROUP_FILE="htdocs/groups/$GROUP_ID/combined_thesis.json"
-		dsquery -pretty -sql "thesis_group_combined_types.sql" \
-		    thesis.ds \
-			"$GROUP_JSON" \
-			>"$GROUP_FILE"
-		L=$(jq '. | length' "$GROUP_FILE")
-		if [ "${L}" = "0" ]; then
-			rm "$GROUP_FILE"
-		else
-			echo "Wrote ($L) $GROUP_FILE"
-		fi
-	fi
-}
-
-function make_group_data() {
-	GROUP_ID="$1"
-	if [ "$GROUP_ID" = "" ]; then
-		echo "Missing GROUP_ID aborting"
-		exit 11
-	fi
-	echo "Processing combined data.ds and groups.ds for $GROUP_ID"
-	# Write out htdocs/groups/<GROUP_ID>/combined_data.json
-	if [ -f "data_group_combined_types.sql" ]; then
-		GROUP_JSON=$(printf '[%s]' "\"${GROUP_ID}\"")
-		GROUP_FILE="htdocs/groups/$GROUP_ID/combined_data.json"
-		dsquery -pretty -sql "data_group_combined_types.sql" \
-		    data.ds \
-			"$GROUP_JSON" \
-			>"$GROUP_FILE"
-		L=$(jq '. | length' "$GROUP_FILE")
-		if [ "$L" = "0" ]; then
-			rm "$GROUP_FILE"
-		else
-			echo "Wrote ($L) $GROUP_FILE"
-		fi
-	fi
-}
-
-function make_group_folders() {
-	for GROUP_ID in $(jsonrange -values -i htdocs/groups/index.json | jq -r); do
-		if [ "$GROUP_ID" = "" ]; then
-			echo "error: GROUP_ID is not set from htdocs/groups/index.json"
-			exit 11
-		fi
-		# Create the group directory if neccessary
-		GROUP_DIR="htdocs/groups/$GROUP_ID"
-		if [ ! -d "${GROUP_DIR}" ]; then
-			mkdir -p "$GROUP_DIR"
-		fi
-		# Process CaltechAUTHORS
-		make_group_authors "$GROUP_ID"
-		# Process CaltechTHESIS
-		make_group_thesis "$GROUP_ID"
-		# Process CaltechDATA
-		make_group_data "$GROUP_ID"
-	done
-}
-
 function make_groups() {
 	echo "Populating groups folder"
 	mkdir -p htdocs/groups
@@ -322,12 +230,8 @@ if [ "$1" != "" ]; then
 		clone_*)
 			cmd="${arg}"
 			;;
-		root|recent|groups|people|group_folders|group_authors|group_thesis|group_data)
+		root|recent|groups|people)
 			cmd="make_${arg}"
-			;;
-		groups_*)
-			echo "did you mean group_authors, group_thesis or group_data?"
-			exit 1
 			;;
 		*)
 			param="$arg"
@@ -357,7 +261,6 @@ make_root
 make_recent
 # Build out the groups tree
 make_groups
-make_group_folders
 # Build out the people tree
 make_people
 

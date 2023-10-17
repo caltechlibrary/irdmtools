@@ -5,10 +5,12 @@ import os
 import sys
 import json
 import csv
+import operator
 
 from py_dataset import dataset
 def get_group_list(group_list_json):
     '''Get the group_list.json file and return a useful data structure.'''
+    print(f'writing {group_list_json}', file = sys.stderr)
     with open(group_list_json, encoding = 'utf-8') as f:
         src = f.read()
         if isinstance(src, bytes):
@@ -17,7 +19,38 @@ def get_group_list(group_list_json):
         return group_list
     return None
 
-def render_combined_json_file(d_name, group_id, obj):
+def render_combined_json_files(repo, d_name, group_id):
+    c_name = f'{repo}.ds'
+    csv_name = os.path.join('htdocs', 'groups', f'group_{repo}.csv')
+    keys = []
+    with open(csv_name, 'r', encoding = 'utf-8', newline = '') as csvfile:
+        r = csv.DictReader(csvfile)
+        for row in r:
+            if ('local_group' in row) and (group_id == row['local_group']):
+                keys.append(row['id'])
+    objects = []
+    for key in keys:
+        rec, err = dataset.read(c_name, key)
+        if err is not None and err != '':
+            return f'error access {key} in {c_name}.ds, {err}'
+        else:
+            objects.append(rec)
+    if len(objects) == 0:
+        #print(f'DEBUG no objects found for {group_id} in {d_name}, {repo}', file = sys.stderr)
+        return None
+    # sort the list of objects
+    objects.sort(key=operator.itemgetter('date', 'title'))
+    src = json.dumps(objects)
+    o_name = 'combined.json'
+    if repo == 'thesis':
+        o_name = 'combined_thesis.json'
+    elif repo == 'data':
+        o_name = 'combined_data.json'
+    f_name = os.path.join(d_name, o_name)
+    print(f'Writing {f_name}', file = sys.stderr)
+    with open(f_name, 'w', encoding = 'utf-8') as f:
+        f.write(src)
+    return None
 
 def render_authors_json_files(d_name, group_id, obj):
     '''render the resource JSON files for group_id'''
@@ -37,6 +70,7 @@ def render_authors_json_files(d_name, group_id, obj):
                     objects.append(obj)
             if len(objects) > 0:
                 src = json.dumps(objects, indent = 4)
+                print(f'writing {f_name}', file = sys.stderr)
                 with open(f_name, 'w', encoding = 'utf-8') as w:
                     w.write(src)
                 # Handle the recent sub folder
@@ -45,6 +79,7 @@ def render_authors_json_files(d_name, group_id, obj):
                     os.makedirs(recent_d_name, mode=0o777, exist_ok =True)
                 src = json.dumps(objects[0:25], indent = 4)
                 f_name = os.path.join(d_name, 'recent', f'{resource_type}.json')
+                print(f'writing {f_name}', file = sys.stderr)
                 with open(f_name, 'w', encoding = 'utf-8') as w:
                     w.write(src)
 
@@ -66,6 +101,7 @@ def render_thesis_json_files(d_name, group_id, obj):
                     objects.append(obj)
             if len(objects) > 0:
                 src = json.dumps(objects, indent = 4)
+                print(f'writing {f_name}', file = sys.stderr)
                 with open(f_name, 'w', encoding = 'utf-8') as w:
                     w.write(src)
                 # Handle the recent sub folder
@@ -74,6 +110,7 @@ def render_thesis_json_files(d_name, group_id, obj):
                     os.makedirs(recent_d_name, mode=0o777, exist_ok =True)
                 src = json.dumps(objects[0:25], indent = 4)
                 f_name = os.path.join(d_name, 'recent', f'{resource_type}.json')
+                print(f'writing {f_name}', file = sys.stderr)
                 with open(f_name, 'w', encoding = 'utf-8') as w:
                     w.write(src)
 
@@ -95,6 +132,7 @@ def render_data_json_files(d_name, group_id, obj):
                     objects.append(obj)
             if len(objects) > 0:
                 src = json.dumps(objects, indent = 4)
+                print(f'writing {f_name}', file = sys.stderr)
                 with open(f_name, 'w', encoding = 'utf-8') as w:
                     w.write(src)
                 # Handle the recent sub folder
@@ -103,6 +141,7 @@ def render_data_json_files(d_name, group_id, obj):
                     os.makedirs(recent_d_name, mode=0o777, exist_ok =True)
                 src = json.dumps(objects[0:25], indent = 4)
                 f_name = os.path.join(d_name, 'recent', f'{resource_type}.json')
+                print(f'writing {f_name}', file = sys.stderr)
                 with open(f_name, 'w', encoding = 'utf-8') as w:
                     w.write(src)
 
@@ -117,11 +156,18 @@ def render_json_files(group_list):
             f_name = os.path.join(d_name, 'group.json')
             if not os.path.exists(d_name):
                 os.makedirs(d_name, mode=0o777, exist_ok=True)
+            print(f'writing {f_name}', file = sys.stderr)
             with open(f_name, 'w', encoding = 'utf-8') as w:
                 w.write(src)
             render_authors_json_files(d_name, group_id, obj)
+            render_combined_json_files("authors", d_name, group_id)
             render_thesis_json_files(d_name, group_id, obj)
+            render_combined_json_files("thesis", d_name, group_id)
             render_data_json_files(d_name, group_id, obj)
+            for repo in [ "authors", "thesis", "data" ]:
+                err = render_combined_json_files(repo, d_name, group_id)
+                if err is not None:
+                    print(f'error: render_combined_json_files({repo}, {d_name}, {group_id}) -> {err}')
         else:
             print(f'error: "{group_id}" should not have a space', file = sys.stderr)
     return None
