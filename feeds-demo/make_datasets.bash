@@ -22,14 +22,23 @@ function harvest_rdm() {
 		if [ "${FULL}" = "full" ]; then
 			echo "Harvesting $REPO all ids with rdmutil"
 			KEY_LIST="${REPO}_all_ids.json"
-			rdmutil get_all_ids >"${KEY_LIST}"
+			if ! rdmutil get_all_ids >"${KEY_LIST}"; then
+				echo "Configuration ${REPO}.env may have problems"
+				exit 11
+			fi
 		else
 			echo "Harvesting last seven days ids with rdmutil"
 			KEY_LIST="${REPO}_modified.json"
-			rdmutil get_modified_ids "$(reldate -- -1 week)" >"${KEY_LIST}"
+			if ! rdmutil get_modified_ids "$(reldate -- -1 week)" >"${KEY_LIST}"; then
+				echo "Configuration ${REPO}.env may have problems"
+				exit 11
+			fi
 		fi
 		echo "Harvesting records with rdm2eprint"
-		rdm2eprint -harvest "${C_NAME}" -ids "${KEY_LIST}"
+		if ! rdm2eprint -harvest "${C_NAME}" -ids "${KEY_LIST}"; then
+			echo "Configuration ${REPO}.env may have problems"
+			exit 11
+		fi
 	else
 		echo "Skipping harvest for ${REPO}, no ${REPO}.env found"
 	fi
