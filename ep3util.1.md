@@ -1,4 +1,4 @@
-%ep3util(1) irdmtools user manual | version 0.0.57-dev b924e57
+%ep3util(1) irdmtools user manual | version 0.0.57-dev 6ff9890
 % R. S. Doiel and Tom Morrell
 % 2023-10-17
 

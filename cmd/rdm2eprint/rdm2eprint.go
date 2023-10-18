@@ -186,7 +186,7 @@ func main() {
 	}
 
 	if len(rdmids) == 0 && ! pipeline {
-		fmt.Fprintf(os.Stderr, "%s\n", fmtHelp(helpText, appName, version, releaseDate, releaseHash))
+		fmt.Fprintf(os.Stderr, "%s, requires ids unless running as a pipeline\n", appName)
 		os.Exit(1)
 	}
 
