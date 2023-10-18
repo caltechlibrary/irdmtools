@@ -110,22 +110,14 @@ check_for_required_programs
 
 # Harvest our RDM based repositories
 FULL_HARVEST=""
-for ARG in "$@"; do
-	case "${ARG}" in
-	   "full")
-	   FULL_HARVEST="full"
-	   ;;
-	   *)
-	   ;;
-	esac
-done
-
-
 # Check if we're doing a limited run
 LIMITED=""
 for ARG in "$@"; do
 	case "${ARG}" in
-	  	"authors")
+	    full)
+	   	FULL_HARVEST="full"
+	   	;;
+	  	authors)
 		LIMITED="true"
 		echo "Harvesting authors ${FULL_HARVEST}"
 	 	if ! harvest_rdm authors "${FULL_HARVEST}"; then
@@ -133,7 +125,7 @@ for ARG in "$@"; do
 			exit 64
 		fi
 		;;
-		"thesis")
+		thesis)
 		LIMITED="true"
 		echo "Harvesting thesis ${FULL_HARVEST}"
 		if ! harvest_eprints thesis "${FULL_HARVEST}"; then
@@ -141,7 +133,7 @@ for ARG in "$@"; do
 			exit 64
 		fi
 		;;
-		"data")
+		data)
 		LIMITED="true"
 		echo "Harvesting data ${FULL_HARVEST}"
 		if ! harvest_rdm data "${FULL_HARVEST}"; then
@@ -149,7 +141,7 @@ for ARG in "$@"; do
 			exit 64
 		fi
 		;;
-		"groups")
+		groups)
 		LIMITED="true"
 		echo "Harvesting groups ${FULL_HARVEST}"
 		if ! harvest_groups; then
@@ -157,7 +149,7 @@ for ARG in "$@"; do
 			exit 64
 		fi
 		;;
-		"people")
+		people)
 		LIMITED="true"
 		echo "Harvesting people ${FULL_HARVEST}"
 		if ! harvest_people; then
@@ -177,12 +169,14 @@ fi
 echo "Harvesting EPrint repositories"
 # shellcheck disable=SC2043
 for REPO in thesis; do
-	harvest_eprints "${REPO}" "$FULL_HARVEST"
+	echo "Harvesting ${REPO} repository"
+	harvest_eprints "${REPO}" "${FULL_HARVEST}"
 done
 
 echo "Harvesting RDM repositories"
 for REPO in data authors; do
-	harvest_rdm "${REPO}" "$FULL_HARVEST"
+	echo "Harvesting ${REPO} repository"
+	harvest_rdm "${REPO}" "${FULL_HARVEST}"
 done
 
 echo "Harvesting from groups.csv"
