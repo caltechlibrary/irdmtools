@@ -30,8 +30,8 @@ function harvest_rdm() {
 			echo "Harvesting last seven days ids with rdmutil"
 			KEY_LIST="${REPO}_modified.json"
 			if ! rdmutil get_modified_ids "$(reldate -- -1 week)" >"${KEY_LIST}"; then
-				echo "Configuration ${REPO}.env may have problems"
-				exit 11
+				echo "Configuration ${REPO}.env may have problems or no new records were available"
+				return
 			fi
 		fi
 		echo "Harvesting records with rdm2eprint"
