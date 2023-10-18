@@ -166,16 +166,14 @@ if [ "$LIMITED" != "" ]; then
 fi
 
 # We're doing a standard run, build the following in sequence
-echo "Harvesting EPrint repositories"
 # shellcheck disable=SC2043
 for REPO in thesis; do
-	echo "Harvesting ${REPO} repository"
+	echo "Harvesting ${REPO} EPrint repository"
 	harvest_eprints "${REPO}" "${FULL_HARVEST}"
 done
 
-echo "Harvesting RDM repositories"
 for REPO in data authors; do
-	echo "Harvesting ${REPO} repository"
+	echo "Harvesting ${REPO} RDM repository"
 	harvest_rdm "${REPO}" "${FULL_HARVEST}"
 done
 
