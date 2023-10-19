@@ -5,7 +5,7 @@
 # populate the htdocs/recent folder with JSON content
 #
 function make_recent() {
-	echo "Populating recent folder"
+	echo "Populating recent folder json"
 	mkdir -p htdocs/recent
 	# Populate recent folder for CaltechAUTHORS
 	if [ -f authors.env ]; then
@@ -13,8 +13,9 @@ function make_recent() {
 		. authors.env
 		dsquery -pretty -sql recent_authors_object_types.sql authors.ds >htdocs/recent/object_types.json
 		dsquery -pretty -sql recent_authors_combined.sql authors.ds >htdocs/recent/combined.json
-		for T in article audiovisual book book_section collection combined_data conference_item data_object_types data_pub_types dataset image interactiveresource model monograph object_types patent pub_types software teaching_resource text thesis video workflow; do
-			dsquery -pretty -sql recent_authors_for_type.sql authors.ds "${T}" >"htdocs/recent/$T.json"
+		jsonrange -values <htdocs/recent/object_types.json | while read -r src; do
+			field_name=$(echo "${src}" | jq -r .name)
+			dsquery -pretty -sql recent_authors_for_type.sql authors.ds "${field_name}" >"htdocs/recent/${field_name}.json"
 		done
 	fi
 
@@ -25,11 +26,19 @@ function make_recent() {
 		# shellcheck disable=SC1090,SC1091
 		. data.env
 		dsquery -pretty -sql recent_data_object_types.sql data.ds >htdocs/recent/data_object_types.json
-		dsquery -pretty -sql recent_data_combined.sql data.ds >htdocs/recent/data_combined.json
-		for T in collection dataset image image_map interactive_resource model other publication software video workflow; do
-			dsquery -pretty -sql recent_data_for_type.sql data.ds "${T}" >"htdocs/recent/data_$T.json"
+		dsquery -pretty -sql recent_data_combined.sql data.ds >htdocs/recent/combined_data.json
+		jsonrange -values <htdocs/recent/data_object_types.json | while read -r src; do
+			field_name=$(echo "${src}" | jq -r .name)
+			dsquery -pretty -sql recent_data_for_type.sql data.ds "${field_name}" >"htdocs/recent/${field_name}.json"
 		done
 	fi
+	echo "Populating recent folder markdown"
+	echo "" >htdocs/recent/index.md
+	./wrap_array.py htdocs/recent/object_types.json '{"repository": "CaltechAUTHORS", "combined": "combined"}' |\
+		pandoc -f markdown -t markdown --template=templates/recent-index.md >>htdocs/recent/index.md
+	./wrap_array.py htdocs/recent/data_object_types.json '{"repository": "CaltechDATA", "combined": "combined_data"}' |\
+		pandoc -f markdown -t markdown --template=templates/recent-index.md >>htdocs/recent/index.md
+	
 }
 
 #
@@ -79,13 +88,6 @@ function check_for_required_programs() {
 	fi
 }
 
-function make_groups_index_md() {
-	echo '---'
-	echo 'groups:'
-	dsquery -sql groups_index_md.sql groups.ds | json2yaml | sed -E 's/^/    /g'
-	echo '---'
-}
-
 function make_group_list_json() {
 		if [ ! -f groups.csv ]; then
 			echo "failed to find groups.csv, skipping making groups"
@@ -120,13 +122,13 @@ function make_group_list_json() {
 }
 
 function make_groups() {
-	echo "Populating groups folder"
+	echo "Populating groups folder json"
 	mkdir -p htdocs/groups
 	dataset keys groups.ds >htdocs/groups/index.keys
 	dsquery -pretty -sql groups_index_json.sql groups.ds >htdocs/groups/index.json
 	# Now build index.md for groups
-	make_groups_index_md | pandoc -f markdown -t markdown \
-					  --template templates/groups_index_md.tmpl \
+	./wrap_a_to_z_array.py htdocs/groups/index.json | pandoc -f markdown -t markdown \
+					  --template templates/groups-index.md \
 					  >htdocs/groups/index.md
 	make_group_list_json 
 	python3 generate_group_json.py htdocs/groups/group_list.json
@@ -149,7 +151,7 @@ function clone_groups_ds() {
 }
 
 function make_people() {
-	echo "Populating people folder"
+	echo "Populating people folder json"
 	mkdir -p htdocs/people
 #FIXME: Need to determine the files to generate here.
 }
@@ -171,7 +173,8 @@ function clone_people_ds() {
 }
 
 function make_root() {
-	echo "Populating root folder"
+	# generate JSON docs
+	echo "Populating root folder json"
 	mkdir -p htdocs
 	for REPO in authors data thesis; do
 		if [ -f "${REPO}.env" ]; then
@@ -181,6 +184,17 @@ function make_root() {
 		else
 			echo "missing ${REPO}.env, skipped making htdocs/caltech${REPO}_grid.json"
 		fi
+	done
+	# generate Markdown docs
+	# generate HTML docs
+	echo "Rendering HTML docs"
+	for FNAME in index.md about.md error.md formats-and-extensions.md; do
+		BNAME=$(basename "${FNAME}" ".md")
+		echo "rendering ${FNAME} as ${BNAME}.html"
+		pandoc --metadata title="$BNAME" \
+			-s --template=templates/page.html \
+			"htdocs/${FNAME}" \
+			>"htdocs/${BNAME}.html"
 	done
 }
 
@@ -217,6 +231,23 @@ function clone_authors() {
 	make_repo "${REPO}"
 }
 
+function make_static() {
+	# Copy in static content
+	cp -vR static/* htdocs/
+}
+
+function make_html() {
+	find htdocs -type f | grep -E '\.md$' | while read -r FNAME; do
+		DNAME=$(dirname "$FNAME")
+		HNAME="$DNAME/$(basename "$FNAME" ".md").html"
+		echo "Writing $HNAME"
+		pandoc --metadata title="Caltech Library Feeds" \
+				-s --template=templates/page.html \
+				$FNAME \
+				-o $HNAME
+	done
+}
+
 #
 # Main processing loop to generate our website.
 #
@@ -230,7 +261,7 @@ if [ "$1" != "" ]; then
 		clone_*)
 			cmd="${arg}"
 			;;
-		root|recent|groups|people)
+		html|static|root|recent|groups|people)
 			cmd="make_${arg}"
 			;;
 		*)
@@ -255,6 +286,7 @@ if [ "$1" != "" ]; then
 fi
 
 ##   START_TIME=$(date)
+make_static
 # Build root folder contents.
 make_root
 # Build  recent folder
@@ -263,6 +295,9 @@ make_recent
 make_groups
 # Build out the people tree
 make_people
+
+# Find all the markdown files and render .html pages.
+make_html
 
 ##   echo "Starting to clone dataset collections (takes a while)"
 ##   # Clone groups.ds
