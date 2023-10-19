@@ -11,7 +11,7 @@ function make_recent() {
 	if [ -f authors.env ]; then
 		# shellcheck disable=SC1090,SC1091
 		. authors.env
-		dsquery -pretty -sql recent_authors_object_types.sql authors.ds >htdocs/recent/object_types.json
+		dsquery -pretty -sql authors_object_types.sql authors.ds >htdocs/recent/object_types.json
 		dsquery -pretty -sql recent_authors_combined.sql authors.ds >htdocs/recent/combined.json
 		jsonrange -values <htdocs/recent/object_types.json | while read -r src; do
 			field_name=$(echo "${src}" | jq -r .name)
@@ -25,7 +25,7 @@ function make_recent() {
 	if [ -f data.env ]; then
 		# shellcheck disable=SC1090,SC1091
 		. data.env
-		dsquery -pretty -sql recent_data_object_types.sql data.ds >htdocs/recent/data_object_types.json
+		dsquery -pretty -sql data_object_types.sql data.ds >htdocs/recent/data_object_types.json
 		dsquery -pretty -sql recent_data_combined.sql data.ds >htdocs/recent/combined_data.json
 		jsonrange -values <htdocs/recent/data_object_types.json | while read -r src; do
 			field_name=$(echo "${src}" | jq -r .name)
@@ -88,6 +88,18 @@ function check_for_required_programs() {
 	fi
 }
 
+function make_group_pages() {
+	GROUP_ID="$1"
+	GROUP_NAME=$(jq -r .name htdocs/groups/$GROUP_ID/group.json)
+	# Build up the index.md for group.
+	FNAME="htdocs/groups/${GROUP_ID}/index.md"
+	# build up resource type lists for CaltechAUTHORS, CaltechTHESIS and CaltechDATA lists
+	./wrap_group_info.py "htdocs/groups/$GROUP_ID/group.json" |\
+		pandoc -f markdown -t markdown \
+		--template templates/groups-group-index.md \
+		>"${FNAME}"
+}
+
 function make_group_list_json() {
 		if [ ! -f groups.csv ]; then
 			echo "failed to find groups.csv, skipping making groups"
@@ -126,12 +138,18 @@ function make_groups() {
 	mkdir -p htdocs/groups
 	dataset keys groups.ds >htdocs/groups/index.keys
 	dsquery -pretty -sql groups_index_json.sql groups.ds >htdocs/groups/index.json
+	dsquery -pretty -sql authors_object_types.sql authors.ds >htdocs/groups/authors_object_types.json
+	dsquery -pretty -sql thesis_thesis_types.sql thesis.ds >htdocs/groups/thesis_thesis_types.json
+	dsquery -pretty -sql data_object_types.sql data.ds >htdocs/groups/data_object_types.json
 	# Now build index.md for groups
 	./wrap_a_to_z_array.py htdocs/groups/index.json | pandoc -f markdown -t markdown \
 					  --template templates/groups-index.md \
 					  >htdocs/groups/index.md
 	make_group_list_json 
 	python3 generate_group_json.py htdocs/groups/group_list.json
+	for GROUP in $(jsonrange -values -i htdocs/groups/index.json | jq -r .); do
+		make_group_pages "$GROUP"
+	done
 }
 
 function clone_groups_ds() {
@@ -261,7 +279,7 @@ if [ "$1" != "" ]; then
 		clone_*)
 			cmd="${arg}"
 			;;
-		html|static|root|recent|groups|people)
+		html|static|root|recent|groups|people|group_pages)
 			cmd="make_${arg}"
 			;;
 		*)

@@ -22,7 +22,7 @@ def build_json_object(src):
         if letter != last_letter:
             a_to_z.append({'href': f'#{letter}', 'label': f' {letter} '})
             last_letter = letter
-            objects.append({"id": key, "name": name, "letter": letter})
+            objects.append({"id": key, "name": name, "letter": f' {letter} '})
         else:
             objects.append({"id": key, "name": name})
     return {
