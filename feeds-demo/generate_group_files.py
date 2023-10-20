@@ -115,6 +115,7 @@ def pandoc_enhance_item(repository = None, href = None, resource_type = None, re
         resource['href'] = href
     if resource_type is not None:
         resource['resource_type'] = resource_type
+        resource['resource_label'] = mk_label(resource_type) + 's'
     return resource
 
 
@@ -138,7 +139,7 @@ def pandoc_build_resource(base_object, resource_list):
     for i, item in enumerate(resource_list):
         if i == 0:
             objects['content'].append(pandoc_enhance_item(
-                repository, href, resource_type.title(), item))
+                repository, href, mk_label(resource_type), item))
         else:
             objects['content'].append(pandoc_enhance_item(None, None, None, item))
     return objects
@@ -265,14 +266,28 @@ def render_combined_files(repo, d_name, group_id):
     return None
 
 
-def render_authors_files(d_name, obj):
+def render_authors_files(d_name, obj, group_id = None, people_id = None):
     '''render the resource JSON files for group_id'''
     # build out the resource type JSON file
     c_name = 'authors'
     repo_id = f'Caltech{c_name.upper()}'
+    resource_info =  {
+        "repository": repo_id,
+        "href":"https://authors.library.caltech.edu"
+    }
     if repo_id in obj:
         repo_resources = obj[repo_id]
+        merge_fields = [ "name", "description", "activity", "updated", 
+                        "start", "end", "date", "updated", "alternative", 
+                        "approx_start", "approx_end", "pi" ]
+        for val in merge_fields:
+            if val in obj:
+                resource_info[val] = obj[val]
+            elif val in resource_info:
+                del resource_info[val]
         for resource_type in repo_resources:
+            resource_info["resource_type"] = resource_type
+            resource_info["resource_label"] = mk_label(resource_type)
             objects = []
             for key in repo_resources[resource_type]:
                 obj, err = dataset.read(f'{c_name}.ds', key)
@@ -284,12 +299,15 @@ def render_authors_files(d_name, obj):
                 # Write the group resource files out
                 f_name = os.path.join(d_name, f'{resource_type}.json')
                 write_json_file(f_name, objects)
+                # Setup to write Markdown files
+                if group_id is not None:
+                    resource_info["group_id"] = group_id
+                    resource_info["group_label"] = mk_label(group_id)
+                if people_id is not None:
+                    resource_info["people_id"] = people_id
+                    resource_info["people_label"] = mk_label(people_id)
+                # Write out Markdown files via Pandoc
                 f_name = os.path.join(d_name, f'{resource_type}.md')
-                resource_info =  {
-                        "repository": "CaltechAUTHORS", 
-                        "href":"https://authors.library.caltech.edu",
-                        "resource_type": resource_type
-                    }
                 write_markdown_resource_file(f_name, resource_info, objects)
                 # Handle the recent sub folder
                 recent_objects = objects[0:25]
@@ -298,10 +316,11 @@ def render_authors_files(d_name, obj):
                     os.makedirs(recent_d_name, mode=0o777, exist_ok =True)
                 f_name = os.path.join(d_name, 'recent', f'{resource_type}.json')
                 write_json_file(f_name, recent_objects)
+                # Write out Markdown files via Pandoc
                 f_name = os.path.join(d_name, 'recent', f'{resource_type}.md')
                 write_markdown_resource_file(f_name, resource_info, recent_objects)
 
-def render_thesis_files(d_name, obj):
+def render_thesis_files(d_name, obj, group_id = None, people_id = None):
     '''render the resource JSON files for group_id'''
     # build out the resource type JSON file
     c_name = 'thesis'
@@ -320,6 +339,22 @@ def render_thesis_files(d_name, obj):
             if len(objects) > 0:
                 # Handle writing files
                 write_json_file(f_name, objects)
+                # setup for Markdown files
+                resource_info =  {
+                        "repository": "CaltechTHESIS", 
+                        "href":"https://thesis.library.caltech.edu",
+                        "resource_type": resource_type,
+                        "resource_label": mk_label(resource_type)
+                    }
+                if group_id is not None:
+                    resource_info["group_id"] = group_id
+                    resource_info["group_label"] = mk_label(group_id)
+                if people_id is not None:
+                    resource_info["people_id"] = people_id
+                    resource_info["people_label"] = mk_label(people_id)
+                # Write out Markdown files via Pandoc
+                f_name = os.path.join(d_name, f'{resource_type}.md')
+                write_markdown_resource_file(f_name, resource_info, objects)
 # CUT NOTE: recent thesis 25 doesn't make sense since degrees are clusterred by class year
 ##                  # Handle the recent sub folder
 ##                  recent_d_name = os.path.join(d_name, 'recent')
@@ -328,7 +363,7 @@ def render_thesis_files(d_name, obj):
 ##                  f_name = os.path.join(d_name, 'recent', f'{resource_type}.json')
 ##                  write_json_file(f_name, objects[0:25])
 
-def render_data_files(d_name, obj):
+def render_data_files(d_name, obj, group_id = None, people_id = None):
     '''render the resource JSON files for group_id'''
     # build out the resource type JSON file
     c_name = 'data'
@@ -351,8 +386,22 @@ def render_data_files(d_name, obj):
                 recent_d_name = os.path.join(d_name, 'recent')
                 if not os.path.exists(recent_d_name):
                     os.makedirs(recent_d_name, mode=0o777, exist_ok =True)
-                f_name = os.path.join(d_name, 'recent', f'{resource_type}.json')
                 write_json_file(f_name, objects[0:25])
+                resource_info =  {
+                        "repository": "CaltechDATA", 
+                        "href":"https://data.library.caltech.edu",
+                        "resource_type": resource_type,
+                        "resource_label": mk_label(resource_type)
+                    }
+                if group_id is not None:
+                    resource_info["group_id"] = group_id
+                    resource_info["group_label"] = mk_label(group_id)
+                if people_id is not None:
+                    resource_info["people_id"] = people_id
+                    resource_info["people_label"] = mk_label(people_id)
+                # Write out Markdown files via Pandoc
+                f_name = os.path.join(d_name, 'recent', f'{resource_type}.json')
+                write_markdown_resource_file(f_name, resource_info, objects)
 
 
 def render_files(group_list):
@@ -368,9 +417,9 @@ def render_files(group_list):
             print(f'Writing {f_name}', file = sys.stderr)
             with open(f_name, 'w', encoding = 'utf-8') as _w:
                 _w.write(src)
-            render_authors_files(d_name, obj)
-            render_thesis_files(d_name, obj)
-            render_data_files(d_name, obj)
+            render_authors_files(d_name, obj, group_id = group_id)
+            render_thesis_files(d_name, obj, group_id = group_id)
+            render_data_files(d_name, obj, group_id = group_id)
             for repo in [ "authors", "thesis", "data" ]:
                 err = render_combined_files(repo, d_name, group_id)
                 if err is not None:

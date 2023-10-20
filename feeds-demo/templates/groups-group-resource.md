@@ -22,7 +22,7 @@ ${if(website)}<${website}>${endif}
 ${for(content)}
 ${if(it.repository)}
 
-## ${it.resource_type} from [${it.repository}](${it.href})
+## ${if(it.resource_type)}${it.resource_type}s${endif} from [${it.repository}](${it.href})
 
 - ${if(it.author_list)}${it.author_list}${endif} ${it.pub_year} [${it.title}](${it.official_url}) ${if(it.issn)} ISSN ${it.issn}${endif} ${if(it.doi)}[${it.doi}](https://doi.org/${it.doi})${endif}
 ${endif}
