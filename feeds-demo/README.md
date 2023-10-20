@@ -110,6 +110,7 @@ used by ep3tuil, rdm2eprint and rdmutil in the content retrieval process.
 - Pandoc >= 3
 - Postgres >= 14
 - Python >= 3.10
+- PageFind >= v1.0.3
 
 Recommended if you are deploying your site to an S3 bucket.
 

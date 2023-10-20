@@ -25,7 +25,7 @@ def get_group_list(group_list_json):
     return None
 
 def _retrieve_keys(csv_name, group_id):
-    '''used by render_combined_json_files(), return a list of keys'''
+    '''used by render_combined_files(), return a list of keys'''
     keys = []
     with open(csv_name, 'r', encoding = 'utf-8', newline = '') as csvfile:
         _r = csv.DictReader(csvfile)
@@ -76,44 +76,6 @@ def write_json_file(f_name, objects):
     with open(f_name, 'w', encoding = 'utf-8') as _w:
         _w.write(src)
 
-def pandoc_enhance_item(repository = None, href = None, resource_type = None, resource = None):
-    '''given a resource, enhance it to make it friendly to tempalte in Pandoc'''
-    if resource is None:
-        return None
-    if repository is not None:
-        resource['repository'] = repository
-    if href is not None:
-        resource['href'] = href
-    if resource_type is not None:
-        resource['resource_type'] = resource_type
-    return resource
-
-def pandoc_build_resource(base_object, resource_list):
-    '''build a object structure suitable for processing with a pandoc template from
-    a base object and a list of object resources'''
-    objects = base_object
-    if 'repository' not in objects:
-        print('missing repository value in object expression', file = sys.stderr)
-        return None
-    repository = objects['repository']
-    if 'href' not in objects:
-        print('missing href value in object expression', file = sys.stderr)
-        return None
-    href = objects['href']
-    if 'resource_type' in objects:
-        resource_type = objects['resource_type']
-    else:
-        resource_type = None
-    objects['content'] = []
-    for i, item in enumerate(resource_list):
-        if i == 0:
-            objects['content'].append(pandoc_enhance_item(repository, href, resource_type, item))
-        else:
-            objects['content'].append(pandoc_enhance_item(None, None, None, item))
-    return objects
-
-
-
 def pandoc_write_file(f_name, objects, template, title = None, from_fmt = None, to_fmt = None):
     '''render the objects to a markdown file using template'''
     if len(objects) == 0:
@@ -143,6 +105,45 @@ def pandoc_write_file(f_name, objects, template, title = None, from_fmt = None, 
         sys.exit(20)
     return None
 
+def pandoc_enhance_item(repository = None, href = None, resource_type = None, resource = None):
+    '''given a resource, enhance it to make it friendly to tempalte in Pandoc'''
+    if resource is None:
+        return None
+    if repository is not None:
+        resource['repository'] = repository
+    if href is not None:
+        resource['href'] = href
+    if resource_type is not None:
+        resource['resource_type'] = resource_type
+    return resource
+
+
+def pandoc_build_resource(base_object, resource_list):
+    '''build a object structure suitable for processing with a pandoc template from
+    a base object and a list of object resources'''
+    objects = base_object
+    if 'repository' not in objects:
+        print('missing repository value in object expression', file = sys.stderr)
+        return None
+    repository = objects['repository']
+    if 'href' not in objects:
+        print('missing href value in object expression', file = sys.stderr)
+        return None
+    href = objects['href']
+    if 'resource_type' in objects:
+        resource_type = objects['resource_type']
+    else:
+        resource_type = None
+    objects['content'] = []
+    for i, item in enumerate(resource_list):
+        if i == 0:
+            objects['content'].append(pandoc_enhance_item(
+                repository, href, resource_type.title(), item))
+        else:
+            objects['content'].append(pandoc_enhance_item(None, None, None, item))
+    return objects
+
+
 def write_markdown_resource_file(f_name, base_object, resource):
     '''write a group resource page by transform our list of objects'''
     p_objects = pandoc_build_resource(base_object, resource)
@@ -150,8 +151,76 @@ def write_markdown_resource_file(f_name, base_object, resource):
     if err is not None:
         print(f'pandoc error: {err}', file = sys.stderr)
 
+def mk_label(val):
+    '''make a label from an id string'''
+    if '_' in val:
+        val = val.replace('_', ' ', -1)
+    return val.title()
 
-def render_combined_json_files(repo, d_name, group_id):
+def flatten_combined_resource_types(repository, href, combined, resource_object):
+    '''flatten takes a dictionary pointing at an array and flattens it into an
+    array suitable for processing with Pandoc templates'''
+    objects = []
+    for i, resource_type in enumerate(resource_object):
+        if i == 0:
+            objects.append({'repository': repository,
+                'href': href, 
+                'combined': combined, 
+                'label': mk_label(resource_type), 
+                'resource_type': resource_type})
+        else:
+            objects.append({'label': mk_label(resource_type), 'resource_type': resource_type})
+    return objects
+
+def build_combined_object(group_id, group):
+    '''build an object form the decoded array'''
+    # Merge the two objects into a Pandoc friendly structure
+    obj = {}
+    resources = []
+    u_map = {
+        "CaltechAUTHORS": "https://authors.library.caltech.edu",
+        "CaltechDATA": "https://data.caltech.edu",
+        "CaltechTHESIS": "https://thesis.library.caltech.edu"
+    }
+    c_map = {
+        "CaltechAUTHORS": "combined",
+        "CaltechDATA": "combined_data",
+        "CaltechTHESIS": "combined_thesis"
+    }
+    for k in group:
+        if k in [ 'CaltechAUTHORS', 'CaltechTHESIS', 'CaltechDATA' ]:
+            # flatten nested dict
+            for resource in flatten_combined_resource_types(k, u_map[k], c_map[k], group[k]):
+                resources.append(resource)
+        else:
+            obj[k] = group[k]
+    obj['content'] = resources
+    return obj
+
+def read_json_file(src_name):
+    '''read a JSON file and return a JSON object'''
+    print(f'Reading {src_name}', file = sys.stderr)
+    src = ''
+    with open(src_name, 'r', encoding = 'utf-8') as _f:
+        src = _f.read()
+        if isinstance(src, bytes):
+            src= src.decode('utf-8')
+    if src == '':
+        print(f'failed to read {f_name}', file = sys.stderr)
+        sys.exit(1)
+    return json.loads(src)
+
+def write_markdown_index_file(f_name, group_id, group):
+    '''coorodiante the write of a combined markdown file'''
+    obj = build_combined_object(group_id, group)
+    err = pandoc_write_file(f_name, obj,
+        "templates/groups-group-index.md", 
+        from_fmt = 'markdown',
+        to_fmt = 'markdown')
+    if err is not None:
+        print(f'pandoc error: {err}', file = sys.stderr)
+
+def render_combined_files(repo, d_name, group_id):
     '''render a combined json file'''
     c_name = f'{repo}.ds'
     csv_name = os.path.join('htdocs', 'groups', f'group_{repo}.csv')
@@ -175,18 +244,26 @@ def render_combined_json_files(repo, d_name, group_id):
     f_name = os.path.join(d_name, o_name + '.json')
     # Write the combined JSON file for the repository
     write_json_file(f_name, objects)
-    # Write the combined Markdown file for the repository
-    ##  f_name = os.path.join(d_name, o_name + '.md')
-    ##  write_markdown_combined_file(f_name, objects)
+    # Write the group index Markdown file for the repository
+    src_name = os.path.join(d_name, "group.json")
+    group = read_json_file(src_name)
+    f_name = os.path.join(d_name, 'index.md')
+    write_markdown_index_file(f_name, group_id, group)
 
-    # Handle the recent subfolder
-    recent_d_name = os.path.join(d_name, 'recent')
-    if not os.path.exists(recent_d_name):
-        os.makedirs(recent_d_name, mode=0o777, exist_ok =True)
-    f_name = os.path.join(recent_d_name, o_name + '.json')
-    # Write the recent combined JSON file for the repository
-    write_json_file(f_name, objects[0:25])
+    # We don't created a combined thesis for recent, doesn't make sense.
+    if repo in [ 'authors', 'data' ]:
+        # Handle the recent subfolder
+        recent_d_name = os.path.join(d_name, 'recent')
+        if not os.path.exists(recent_d_name):
+            os.makedirs(recent_d_name, mode=0o777, exist_ok =True)
+        f_name = os.path.join(recent_d_name, o_name + '.json')
+        # Write the recent combined JSON file for the repository
+        write_json_file(f_name, objects[0:25])
+        # Write the combined Markdown file for the repository
+        f_name = os.path.join(recent_d_name, 'index.md')
+        write_markdown_index_file(f_name, group_id, group)
     return None
+
 
 def render_authors_files(d_name, obj):
     '''render the resource JSON files for group_id'''
@@ -295,10 +372,10 @@ def render_files(group_list):
             render_thesis_files(d_name, obj)
             render_data_files(d_name, obj)
             for repo in [ "authors", "thesis", "data" ]:
-                err = render_combined_json_files(repo, d_name, group_id)
+                err = render_combined_files(repo, d_name, group_id)
                 if err is not None:
                     print(
-                    f'error: render_combined_json_files({repo}' +
+                    f'error: render_combined_files({repo}' +
                     f', {d_name}, {group_id}) -> {err}', file = sys.stderr)
         else:
             print(f'error: "{group_id}" should not have a space', file = sys.stderr)

@@ -98,49 +98,7 @@ function make_group_pages() {
 		pandoc -f markdown -t markdown \
 		--template templates/groups-group-index.md \
 		>"${FNAME}"
-	# Generate the resource files for CaltechAUTHORS at https://authors.library.caltech.edu
-	OBJ_EXPR=$(printf '{"repository": "%s", "href": "%s" }' "CaltechAUTHORS" "https://authors.library.caltech.edu")
-	jsonrange -values -i htdocs/groups/authors_object_types.json | jq -r .name | while read -r RESOURCE; do
-		SRC_NAME="htdocs/groups/${GROUP_ID}/${RESOURCE}.json"
-		FNAME="htdocs/groups/${GROUP_ID}/${RESOURCE}.md"
-		if [ -f "${SRC_NAME}" ]; then
-			echo "Generating $FNAME"
-			./wrap_group_resource.py "${SRC_NAME}" "${OBJ_EXPR}" |\
-				pandoc -f markdown -t markdown \
-						--template templates/groups-group-resource.md \
-						>"${FNAME}"
-		fi
-	done
-
 	#FIXME: Need to generate combined pages in Markdown
-
-	# Generate the resource files for CaltechTHESIS at https://thesis.library.caltech.edu
-	OBJ_EXPR=$(printf '{"repository": "%s", "href": "%s" }' "CaltechTHESIS" "https://thesis.library.caltech.edu")
-	jsonrange -values -i htdocs/groups/thesis_thesis_types.json | jq -r .name | while read -r RESOURCE; do
-		SRC_NAME="htdocs/groups/${GROUP_ID}/${RESOURCE}.json"
-		FNAME="htdocs/groups/${GROUP_ID}/${RESOURCE}.md"
-		if [ -f "${SRC_NAME}" ]; then
-			echo "Generating $FNAME"
-			./wrap_group_resource.py "${SRC_NAME}" "${OBJ_EXPR}" |\
-				pandoc -f markdown -t markdown \
-						--template templates/groups-group-resource.md \
-						>"${FNAME}"
-		fi
-	done
-
-	# Generate the resource files for CaltechDATA at https://data.caltech.edu
-	OBJ_EXPR=$(printf '{"repository": "%s", "href": "%s" }' "CaltechDATA" "https://data.caltech.edu")
-	jsonrange -values -i htdocs/groups/data_object_types.json | jq -r .name | while read -r RESOURCE; do
-		SRC_NAME="htdocs/groups/${GROUP_ID}/${RESOURCE}.json"
-		FNAME="htdocs/groups/${GROUP_ID}/${RESOURCE}.md"
-		if [ -f "${SRC_NAME}" ]; then
-			echo "Generating $FNAME"
-			./wrap_group_resource.py "${SRC_NAME}" "${OBJ_EXPR}" |\
-				pandoc -f markdown -t markdown \
-						--template templates/groups-group-resource.md \
-						>"${FNAME}"
-		fi
-	done
 	#FIXME: from markdown resource documents we can use Pandoc to generate HTML and HTML include
 	#FIXME: Need to render BibTeX and RSS from templates
 }
@@ -192,9 +150,6 @@ function make_groups() {
 					  >htdocs/groups/index.md
 	make_group_list_json 
 	python3 generate_group_files.py htdocs/groups/group_list.json
-##  	for GROUP in $(jsonrange -values -i htdocs/groups/index.json | jq -r .); do
-##  		make_group_pages "$GROUP"
-##  	done
 }
 
 function clone_groups_ds() {
@@ -299,18 +254,33 @@ function make_static() {
 	cp -vR static/* htdocs/
 }
 
+function page_title_from_path() {
+	NAME="${1/htdocs/}"
+	DNAME="$(dirname "$NAME")"
+	# Strip off the .md extension
+	FNAME="$(basename "$NAME" ".md")"
+	if [ "$FNAME" =  "" ] || [[ "$FNAME" = "index" && "$DNAME" = "" ]]; then
+			echo "Caltech Library Feeds"
+	else
+		string englishtitle "$(echo "$DNAME $FNAME" | tr '/' ' ')" | sed -E 's/ / > /g;s/-/ /g'
+	fi
+}
+
 function make_html() {
 	find htdocs -type f | grep -E '\.md$' | while read -r FNAME; do
 		DNAME=$(dirname "$FNAME")
 		HNAME="$DNAME/$(basename "$FNAME" ".md").html"
 		INAME="$DNAME/$(basename "$FNAME" ".md").include"
+		# NOTE: Need to bread crum the title for better search results ...
+		TITLE=$(page_title_from_path "$FNAME")
+		#echo "DEBUG title: $TITLE"; 
 		echo "Writing $HNAME"
-		pandoc --metadata title="Caltech Library Feeds" \
+		pandoc --metadata title="${TITLE}" \
 				-s --template=templates/page.html \
 				$FNAME \
 				-o $HNAME
 		echo "Writing $INAME"
-		pandoc --metadata title="Caltech Library Feeds" \
+		pandoc --metadata title="${TITLE}" \
 				-f markdown -t html5 \
 				$FNAME \
 				-o $INAME
@@ -319,7 +289,7 @@ function make_html() {
 
 function make_pagefind() {
 	CWD=$(pwd)
-	cd htdocs && pagefind --verbose --exclude-selectors="nav,menu,header,footer" --bundle-dir ./pagefind --source .
+	cd htdocs && pagefind --verbose --exclude-selectors="nav,menu,header,footer" --output-path ./pagefind --site .
 	cd "$CMD"
 }
 
