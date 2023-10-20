@@ -1,6 +1,8 @@
 
 # Feeds Search
 
+NOTE: This page targets searching in our feeds content not in repository records.
+
 <link href="./pagefind/pagefind-ui.css" rel="stylesheet">
 <script src="./pagefind/pagefind-ui.js" type="text/javascript"></script>
 <div id="search"></div>

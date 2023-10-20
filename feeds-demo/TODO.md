@@ -3,10 +3,13 @@
 
 ## bugs
 
+- [ ] group resource pages isn't including resource type in the H2 heading above the UL list of citations
+- [ ] ciations in resource pages and recent pages aren't complate, look at using a partial template for this to make this consistent across renderings
 - [x] Both thesis and data are not setting up correctly in group_list.json (this is blocking building json file in individual groups)
 - [x] The combined_data.json is be written by an authors function, this is wrong
 - [x] The combined_data.json written by processing data via local_groups leaves an empty array and his is wrong. If there are no CaltechDATA items then there should probably be no combined_data.json at all, if there are then it should not be an empty array.
 - [x] `combined*.json` should move into generate_local_group.py since we are generating the individual resource type JSON files for authors, thesis and data
+- [ ] page.tmpl needs to be enhance so the page title is meaningful and will improve the useful for pagefind search results for the site.
 
 ## make_datasets.bash
 

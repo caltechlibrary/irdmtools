@@ -303,12 +303,24 @@ function make_html() {
 	find htdocs -type f | grep -E '\.md$' | while read -r FNAME; do
 		DNAME=$(dirname "$FNAME")
 		HNAME="$DNAME/$(basename "$FNAME" ".md").html"
+		INAME="$DNAME/$(basename "$FNAME" ".md").include"
 		echo "Writing $HNAME"
 		pandoc --metadata title="Caltech Library Feeds" \
 				-s --template=templates/page.html \
 				$FNAME \
 				-o $HNAME
+		echo "Writing $INAME"
+		pandoc --metadata title="Caltech Library Feeds" \
+				-f markdown -t html5 \
+				$FNAME \
+				-o $INAME
 	done
+}
+
+function make_pagefind() {
+	CWD=$(pwd)
+	cd htdocs && pagefind --verbose --exclude-selectors="nav,menu,header,footer" --bundle-dir ./pagefind --source .
+	cd "$CMD"
 }
 
 #
@@ -324,7 +336,7 @@ if [ "$1" != "" ]; then
 		clone_*)
 			cmd="${arg}"
 			;;
-		html|static|root|recent|groups|people|group_pages)
+		html|static|root|recent|groups|people|group_pages|pagefind)
 			cmd="make_${arg}"
 			;;
 		*)
@@ -361,6 +373,9 @@ make_people
 
 # Find all the markdown files and render .html pages.
 make_html
+
+# Setup and run Pagefind
+make_pagefind
 
 ##   echo "Starting to clone dataset collections (takes a while)"
 ##   # Clone groups.ds
