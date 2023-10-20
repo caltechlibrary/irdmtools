@@ -191,10 +191,10 @@ function make_groups() {
 					  --template templates/groups-index.md \
 					  >htdocs/groups/index.md
 	make_group_list_json 
-	python3 generate_group_json.py htdocs/groups/group_list.json
-	for GROUP in $(jsonrange -values -i htdocs/groups/index.json | jq -r .); do
-		make_group_pages "$GROUP"
-	done
+	python3 generate_group_files.py htdocs/groups/group_list.json
+##  	for GROUP in $(jsonrange -values -i htdocs/groups/index.json | jq -r .); do
+##  		make_group_pages "$GROUP"
+##  	done
 }
 
 function clone_groups_ds() {
