@@ -201,9 +201,7 @@ def render_json_files(group_list):
             with open(f_name, 'w', encoding = 'utf-8') as _w:
                 _w.write(src)
             render_authors_json_files(d_name, obj)
-            render_combined_json_files("authors", d_name, group_id)
             render_thesis_json_files(d_name, obj)
-            render_combined_json_files("thesis", d_name, group_id)
             render_data_json_files(d_name, obj)
             for repo in [ "authors", "thesis", "data" ]:
                 err = render_combined_json_files(repo, d_name, group_id)
