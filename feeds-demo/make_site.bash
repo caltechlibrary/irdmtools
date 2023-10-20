@@ -34,9 +34,9 @@ function make_recent() {
 	fi
 	echo "Populating recent folder markdown"
 	echo "" >htdocs/recent/index.md
-	./wrap_array.py htdocs/recent/object_types.json '{"repository": "CaltechAUTHORS", "combined": "combined"}' |\
+	./wrap_recent.py htdocs/recent/object_types.json '{"repository": "CaltechAUTHORS", "combined": "combined"}' |\
 		pandoc -f markdown -t markdown --template=templates/recent-index.md >>htdocs/recent/index.md
-	./wrap_array.py htdocs/recent/data_object_types.json '{"repository": "CaltechDATA", "combined": "combined_data"}' |\
+	./wrap_recent.py htdocs/recent/data_object_types.json '{"repository": "CaltechDATA", "combined": "combined_data"}' |\
 		pandoc -f markdown -t markdown --template=templates/recent-index.md >>htdocs/recent/index.md
 	
 }
@@ -98,6 +98,51 @@ function make_group_pages() {
 		pandoc -f markdown -t markdown \
 		--template templates/groups-group-index.md \
 		>"${FNAME}"
+	# Generate the resource files for CaltechAUTHORS at https://authors.library.caltech.edu
+	OBJ_EXPR=$(printf '{"repository": "%s", "href": "%s" }' "CaltechAUTHORS" "https://authors.library.caltech.edu")
+	jsonrange -values -i htdocs/groups/authors_object_types.json | jq -r .name | while read -r RESOURCE; do
+		SRC_NAME="htdocs/groups/${GROUP_ID}/${RESOURCE}.json"
+		FNAME="htdocs/groups/${GROUP_ID}/${RESOURCE}.md"
+		if [ -f "${SRC_NAME}" ]; then
+			echo "Generating $FNAME"
+			./wrap_group_resource.py "${SRC_NAME}" "${OBJ_EXPR}" |\
+				pandoc -f markdown -t markdown \
+						--template templates/groups-group-resource.md \
+						>"${FNAME}"
+		fi
+	done
+
+	#FIXME: Need to generate combined pages in Markdown
+
+	# Generate the resource files for CaltechTHESIS at https://thesis.library.caltech.edu
+	OBJ_EXPR=$(printf '{"repository": "%s", "href": "%s" }' "CaltechTHESIS" "https://thesis.library.caltech.edu")
+	jsonrange -values -i htdocs/groups/thesis_thesis_types.json | jq -r .name | while read -r RESOURCE; do
+		SRC_NAME="htdocs/groups/${GROUP_ID}/${RESOURCE}.json"
+		FNAME="htdocs/groups/${GROUP_ID}/${RESOURCE}.md"
+		if [ -f "${SRC_NAME}" ]; then
+			echo "Generating $FNAME"
+			./wrap_group_resource.py "${SRC_NAME}" "${OBJ_EXPR}" |\
+				pandoc -f markdown -t markdown \
+						--template templates/groups-group-resource.md \
+						>"${FNAME}"
+		fi
+	done
+
+	# Generate the resource files for CaltechDATA at https://data.caltech.edu
+	OBJ_EXPR=$(printf '{"repository": "%s", "href": "%s" }' "CaltechDATA" "https://data.caltech.edu")
+	jsonrange -values -i htdocs/groups/data_object_types.json | jq -r .name | while read -r RESOURCE; do
+		SRC_NAME="htdocs/groups/${GROUP_ID}/${RESOURCE}.json"
+		FNAME="htdocs/groups/${GROUP_ID}/${RESOURCE}.md"
+		if [ -f "${SRC_NAME}" ]; then
+			echo "Generating $FNAME"
+			./wrap_group_resource.py "${SRC_NAME}" "${OBJ_EXPR}" |\
+				pandoc -f markdown -t markdown \
+						--template templates/groups-group-resource.md \
+						>"${FNAME}"
+		fi
+	done
+	#FIXME: from markdown resource documents we can use Pandoc to generate HTML and HTML include
+	#FIXME: Need to render BibTeX and RSS from templates
 }
 
 function make_group_list_json() {
@@ -142,7 +187,7 @@ function make_groups() {
 	dsquery -pretty -sql thesis_thesis_types.sql thesis.ds >htdocs/groups/thesis_thesis_types.json
 	dsquery -pretty -sql data_object_types.sql data.ds >htdocs/groups/data_object_types.json
 	# Now build index.md for groups
-	./wrap_a_to_z_array.py htdocs/groups/index.json | pandoc -f markdown -t markdown \
+	./wrap_groups_a_to_z.py htdocs/groups/index.json | pandoc -f markdown -t markdown \
 					  --template templates/groups-index.md \
 					  >htdocs/groups/index.md
 	make_group_list_json 
