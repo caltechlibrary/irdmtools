@@ -15,7 +15,7 @@ import yaml
 
 def get_group_list(group_list_json):
     '''Get the group_list.json file and return a useful data structure.'''
-    print(f'Writing {group_list_json}', file = sys.stderr)
+    print(f'Reading {group_list_json}', file = sys.stderr)
     with open(group_list_json, encoding = 'utf-8') as _f:
         src = _f.read()
         if isinstance(src, bytes):
@@ -76,10 +76,16 @@ def write_json_file(f_name, objects):
     with open(f_name, 'w', encoding = 'utf-8') as _w:
         _w.write(src)
 
-def pandoc_write_file(f_name, objects, template, title = None, from_fmt = None, to_fmt = None):
+def pandoc_write_file(f_name, objects, template, params = None):
     '''render the objects to a markdown file using template'''
+    if params is None:
+        title, from_fmt, to_fmt = None, None, None
+    else:
+        title = params.get('title', None)
+        from_fmt = params.get('from_fmt', None)
+        to_fmt = params.get('to_fmt', None)
     if len(objects) == 0:
-        return f'pandoc_write_file({f_name}, objects, {template}): no objects to write'
+        return f'pandoc_write_file({f_name}, objects, {template}, {params}): no objects to write'
     cmd = [ "pandoc", '--template', template, '-o', f_name ]
     if title is not None:
         cmd.append('--metadata')
@@ -115,7 +121,10 @@ def pandoc_enhance_item(repository = None, href = None, resource_type = None, re
         resource['href'] = href
     if resource_type is not None:
         resource['resource_type'] = resource_type
-        resource['resource_label'] = mk_label(resource_type) + 's'
+        if resource_type.endswith('s'):
+            resource['resource_label'] = mk_label(resource_type)
+        else:
+            resource['resource_label'] = mk_label(resource_type) + 's'
     return resource
 
 
@@ -173,7 +182,7 @@ def flatten_combined_resource_types(repository, href, combined, resource_object)
             objects.append({'label': mk_label(resource_type), 'resource_type': resource_type})
     return objects
 
-def build_combined_object(group_id, group):
+def build_combined_object(group):
     '''build an object form the decoded array'''
     # Merge the two objects into a Pandoc friendly structure
     obj = {}
@@ -207,17 +216,16 @@ def read_json_file(src_name):
         if isinstance(src, bytes):
             src= src.decode('utf-8')
     if src == '':
-        print(f'failed to read {f_name}', file = sys.stderr)
+        print(f'failed to read {src_name}', file = sys.stderr)
         sys.exit(1)
     return json.loads(src)
 
-def write_markdown_index_file(f_name, group_id, group):
+def write_markdown_index_file(f_name, group):
     '''coorodiante the write of a combined markdown file'''
-    obj = build_combined_object(group_id, group)
+    obj = build_combined_object(group)
     err = pandoc_write_file(f_name, obj,
         "templates/groups-group-index.md", 
-        from_fmt = 'markdown',
-        to_fmt = 'markdown')
+        { 'from_fmt': 'markdown', 'to_fmt': 'markdown' })
     if err is not None:
         print(f'pandoc error: {err}', file = sys.stderr)
 
@@ -249,22 +257,48 @@ def render_combined_files(repo, d_name, group_id):
     src_name = os.path.join(d_name, "group.json")
     group = read_json_file(src_name)
     f_name = os.path.join(d_name, 'index.md')
-    write_markdown_index_file(f_name, group_id, group)
+    write_markdown_index_file(f_name, group)
 
     # We don't created a combined thesis for recent, doesn't make sense.
-    if repo in [ 'authors', 'data' ]:
-        # Handle the recent subfolder
-        recent_d_name = os.path.join(d_name, 'recent')
-        if not os.path.exists(recent_d_name):
-            os.makedirs(recent_d_name, mode=0o777, exist_ok =True)
-        f_name = os.path.join(recent_d_name, o_name + '.json')
-        # Write the recent combined JSON file for the repository
-        write_json_file(f_name, objects[0:25])
-        # Write the combined Markdown file for the repository
-        f_name = os.path.join(recent_d_name, 'index.md')
-        write_markdown_index_file(f_name, group_id, group)
+###    if repo in [ 'authors', 'data' ]:
+###        # Handle the recent subfolder
+###        recent_d_name = os.path.join(d_name, 'recent')
+###        if not os.path.exists(recent_d_name):
+###            os.makedirs(recent_d_name, mode=0o777, exist_ok =True)
+###        f_name = os.path.join(recent_d_name, o_name + '.json')
+###        # Write the recent combined JSON file for the repository
+###        write_json_file(f_name, objects[0:25])
+###        # Write the combined Markdown file for the repository
+###        f_name = os.path.join(recent_d_name, 'index.md')
+###        write_markdown_index_file(f_name, group)
     return None
 
+
+def merge_resource_info(resource_info, obj, resource_type):
+    '''update the resource info based on obj attributes, resource_type'''
+    merge_fields = [
+        "name", "description", "activity", "updated",
+        "start", "end", "date", "updated", "alternative",
+        "approx_start", "approx_end", "pi" ]
+    for val in merge_fields:
+        if val in obj:
+            resource_info[val] = obj[val]
+        elif val in resource_info:
+            del resource_info[val]
+    resource_info["resource_type"] = resource_type
+    resource_info["resource_label"] = mk_label(resource_type)
+    return resource_info
+
+def build_repo_resource_objects(c_name, resource_type, repo_resources):
+    '''generates a list of objects from resource type and repository resources'''
+    objects = []
+    for key in repo_resources[resource_type]:
+        obj, err = dataset.read(f'{c_name}.ds', key)
+        if err is not None and err != '':
+            print(f'error access {key} in {c_name}.ds, {err}', file = sys.stderr)
+        else:
+            objects.append(enhance_object(obj))
+    return objects
 
 def render_authors_files(d_name, obj, group_id = None, people_id = None):
     '''render the resource JSON files for group_id'''
@@ -277,24 +311,9 @@ def render_authors_files(d_name, obj, group_id = None, people_id = None):
     }
     if repo_id in obj:
         repo_resources = obj[repo_id]
-        merge_fields = [ "name", "description", "activity", "updated", 
-                        "start", "end", "date", "updated", "alternative", 
-                        "approx_start", "approx_end", "pi" ]
-        for val in merge_fields:
-            if val in obj:
-                resource_info[val] = obj[val]
-            elif val in resource_info:
-                del resource_info[val]
         for resource_type in repo_resources:
-            resource_info["resource_type"] = resource_type
-            resource_info["resource_label"] = mk_label(resource_type)
-            objects = []
-            for key in repo_resources[resource_type]:
-                obj, err = dataset.read(f'{c_name}.ds', key)
-                if err is not None and err != '':
-                    print(f'error access {key} in {c_name}.ds, {err}', file = sys.stderr)
-                else:
-                    objects.append(enhance_object(obj))
+            resource_info = merge_resource_info(resource_info, obj, resource_type)
+            objects = build_repo_resource_objects(c_name, resource_type, repo_resources)
             if len(objects) > 0:
                 # Write the group resource files out
                 f_name = os.path.join(d_name, f'{resource_type}.json')
@@ -309,16 +328,16 @@ def render_authors_files(d_name, obj, group_id = None, people_id = None):
                 # Write out Markdown files via Pandoc
                 f_name = os.path.join(d_name, f'{resource_type}.md')
                 write_markdown_resource_file(f_name, resource_info, objects)
-                # Handle the recent sub folder
-                recent_objects = objects[0:25]
-                recent_d_name = os.path.join(d_name, 'recent')
-                if not os.path.exists(recent_d_name):
-                    os.makedirs(recent_d_name, mode=0o777, exist_ok =True)
-                f_name = os.path.join(d_name, 'recent', f'{resource_type}.json')
-                write_json_file(f_name, recent_objects)
-                # Write out Markdown files via Pandoc
-                f_name = os.path.join(d_name, 'recent', f'{resource_type}.md')
-                write_markdown_resource_file(f_name, resource_info, recent_objects)
+###                 # Handle the recent sub folder
+###                 recent_objects = objects[0:25]
+###                 recent_d_name = os.path.join(d_name, 'recent')
+###                 if not os.path.exists(recent_d_name):
+###                     os.makedirs(recent_d_name, mode=0o777, exist_ok =True)
+###                 f_name = os.path.join(d_name, 'recent', f'{resource_type}.json')
+###                 write_json_file(f_name, recent_objects)
+###                 # Write out Markdown files via Pandoc
+###                 f_name = os.path.join(d_name, 'recent', f'{resource_type}.md')
+###                 write_markdown_resource_file(f_name, resource_info, recent_objects)
 
 def render_thesis_files(d_name, obj, group_id = None, people_id = None):
     '''render the resource JSON files for group_id'''
@@ -355,13 +374,13 @@ def render_thesis_files(d_name, obj, group_id = None, people_id = None):
                 # Write out Markdown files via Pandoc
                 f_name = os.path.join(d_name, f'{resource_type}.md')
                 write_markdown_resource_file(f_name, resource_info, objects)
-# CUT NOTE: recent thesis 25 doesn't make sense since degrees are clusterred by class year
-##                  # Handle the recent sub folder
-##                  recent_d_name = os.path.join(d_name, 'recent')
-##                  if not os.path.exists(recent_d_name):
-##                      os.makedirs(recent_d_name, mode=0o777, exist_ok =True)
-##                  f_name = os.path.join(d_name, 'recent', f'{resource_type}.json')
-##                  write_json_file(f_name, objects[0:25])
+#### CUT NOTE: recent thesis 25 doesn't make sense since degrees are clusterred by class year
+###                  # Handle the recent sub folder
+###                  recent_d_name = os.path.join(d_name, 'recent')
+###                  if not os.path.exists(recent_d_name):
+###                     os.makedirs(recent_d_name, mode=0o777, exist_ok =True)
+###                  f_name = os.path.join(d_name, 'recent', f'{resource_type}.json')
+###                 write_json_file(f_name, objects[0:25])
 
 def render_data_files(d_name, obj, group_id = None, people_id = None):
     '''render the resource JSON files for group_id'''
@@ -403,12 +422,26 @@ def render_data_files(d_name, obj, group_id = None, people_id = None):
                 f_name = os.path.join(d_name, 'recent', f'{resource_type}.json')
                 write_markdown_resource_file(f_name, resource_info, objects)
 
+def group_has_content(group):
+    '''check to make sure it makes sense to render the group. There should
+    be some type of records available to populate feeds'''
+    if 'CaltechAUTHORS' in group:
+        return True
+    if 'CaltechTHESIS' in group:
+        return True
+    if 'CaltechDATA' in group:
+        return True
+    if ('description' in group) and (group['description'] != ''):
+        return True
+    return False
 
-def render_files(group_list):
-    '''take our agents_csv and agent_pubs_csv filenames and aggregate them'''
-    for group_id in group_list:
-        if (group_id != '') and (not ' ' in group_id):
-            obj = group_list[group_id]
+def render_a_group(group_list, group_id):
+    '''render a specific group's content if valid'''
+    if (group_id == '') and (' ' in group_id):
+        print(f'error: "{group_id}" is not valid', file = sys.stderr)
+    elif group_id in group_list:
+        obj = group_list[group_id]
+        if group_has_content(obj):
             src = json.dumps(obj, indent=4)
             d_name = os.path.join('htdocs', 'groups', group_id)
             f_name = os.path.join(d_name, 'group.json')
@@ -427,20 +460,34 @@ def render_files(group_list):
                     f'error: render_combined_files({repo}' +
                     f', {d_name}, {group_id}) -> {err}', file = sys.stderr)
         else:
-            print(f'error: "{group_id}" should not have a space', file = sys.stderr)
+            print(f'{group_id} has no content, skipping', file = sys.stderr)
+    else:
+        print(f'error: "could not find {group_id}" in group list', file = sys.stderr)
+
+def render_groups(group_list, group_id = None):
+    '''take our agents_csv and agent_pubs_csv filenames and aggregate them'''
+    if group_id is not None:
+        render_a_group(group_list, group_id)
+    else:
+        for grp_id in group_list:
+            render_a_group(group_list, grp_id)
 
 
 def main():
     '''main processing method'''
     app_name = os.path.basename(sys.argv[0])
-    if len(sys.argv) != 2:
+    argc = len(sys.argv)
+    if (argc < 2) or (argc > 3):
         print(f'{app_name} expected path to group_list.json file', file = sys.stderr)
         sys.exit(1)
     group_list = get_group_list(sys.argv[1])
     if group_list is None:
         print(f'could not populate group_list from {sys.argv[1]}')
         sys.exit(1)
-    render_files(group_list)
+    group_id = None
+    if argc == 3:
+        group_id = sys.argv[2]
+    render_groups(group_list, group_id)
 
 if __name__ == '__main__':
     main()

@@ -1,5 +1,17 @@
 
-# Version 1.5 changes
+# v1.5
+
+This is a major rewrite of our feeds system predicated by the migration of CaltechAUTHORS
+from EPrints 3.3 to Invenio-RDM.
+
+It is based on dataset v2.1 leveraging Postgres 15 as well as recent releases of datatools
+and the new irdmtools that replaces the old eprinttools cli collection.
+
+General process orchestration is done with Bash scripts delegating low level data flow
+to the irdmtools collection and data shaping in the website rendering phase to python and
+Pandoc.
+
+## Explicit changes
 
 Our feeds system has been updated as a result of the CaltechAUTHORS repository migrating from EPrints to Invenio RDM. As a result some things on feeds.library.caltech.edu had to be changed. This is a list of intended changes.
 
@@ -23,8 +35,8 @@ Our feeds system has been updated as a result of the CaltechAUTHORS repository m
     - BibTeX and RSS are generated where approapriate
     - All Markdown files are rendered as HTML and HTML Includes
     - Pagefind indexes the site and generates our static search support
-- Dataset collections are no longer being published and the `*.keys` file are no longer generated
-- The `recent` directories and their content under groups and people are no longer being generated
+- Dataset collections are no longer be published in feeds
+- The `recent` directories under people and groups are no longer being generated in favor of using JavaScript or our Widget to present shorter lists
 
 ## System requirements
 

@@ -13,6 +13,8 @@
 # create a feeds v1 compatible website.
 #
 
+FROM_DATE=$(reldate -- -2 day)
+
 function harvest_rdm() {
 	REPO="$1"
 	FULL="$2"
@@ -27,16 +29,16 @@ function harvest_rdm() {
 				exit 11
 			fi
 		else
-			echo "Harvesting last seven days ids with rdmutil"
+			echo "Harvesting updated since ${FROM_DATE} with rdmutil"
 			KEY_LIST="${REPO}_modified.json"
-			if ! rdmutil get_modified_ids "$(reldate -- -1 week)" >"${KEY_LIST}"; then
+			if ! rdmutil get_modified_ids "${FROM_DATE}" >"${KEY_LIST}"; then
 				echo "Configuration ${REPO}.env may have problems or no new records were available"
 				return
 			fi
 		fi
 		echo "Harvesting records with rdm2eprint"
 		if ! rdm2eprint -harvest "${C_NAME}" -ids "${KEY_LIST}"; then
-			echo "Configuration ${REPO}.env may have problems"
+			echo "Configuration ${REPO}.env may have problems if records are available to harvest"
 			exit 11
 		fi
 	else
@@ -56,7 +58,7 @@ function harvest_eprints() {
 	if [ "${FULL}" = "full" ]; then
 		ep3util harvest -all
 	else
-		ep3util harvest -modified "$(reldate -- -1 week)"
+		ep3util harvest -modified "${FROM_DATE}"
 	fi
 }
 
@@ -78,7 +80,7 @@ function harvest_groups() {
 	if [ -f groups.csv ]; then
 		if [ ! -d groups.ds ]; then
 			dataset init groups.ds "postgres://$USER@localhost/groups?sslmode=disable"
-	    fi	
+		fi	
 		dsimporter -overwrite groups.ds groups.csv key
 	else
 		echo "failed to find groups.csv, skipping"
@@ -114,13 +116,17 @@ FULL_HARVEST=""
 LIMITED=""
 for ARG in "$@"; do
 	case "${ARG}" in
-	    full)
-	   	FULL_HARVEST="full"
-	   	;;
-	  	authors)
+		full)
+		FULL_HARVEST="full"
+		;;
+		????-??-??)
+		FROM_DATE="${ARG}"
+		echo "Harvest will be from $FROM_DATE"
+		;;
+		authors)
 		LIMITED="true"
 		echo "Harvesting authors ${FULL_HARVEST}"
-	 	if ! harvest_rdm authors "${FULL_HARVEST}"; then
+		 if ! harvest_rdm authors "${FULL_HARVEST}"; then
 			echo "something went wrong"
 			exit 64
 		fi

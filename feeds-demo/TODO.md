@@ -3,6 +3,8 @@
 
 ## bugs
 
+- [ ] `htdocs/groups/<GROUP_ID>/<COMBINED>.md` is not getting rendered from `htdocs/groups/<GROUP_ID>/<COMBINED>.json`
+- [ ] `htdocs/recent/<RESOURCE_TYPE>.md` is not getting rendered from `htdocs/recent/<RESOURCE_TYPE>.json`
 - [ ] group resource pages isn't including resource type in the H2 heading above the UL list of citations
 - [ ] ciations in resource pages and recent pages aren't complate, look at using a partial template for this to make this consistent across renderings
 - [x] Both thesis and data are not setting up correctly in group_list.json (this is blocking building json file in individual groups)

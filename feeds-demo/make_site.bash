@@ -88,20 +88,6 @@ function check_for_required_programs() {
 	fi
 }
 
-function make_group_pages() {
-	GROUP_ID="$1"
-	GROUP_NAME=$(jq -r .name htdocs/groups/$GROUP_ID/group.json)
-	# Build up the index.md for group.
-	FNAME="htdocs/groups/${GROUP_ID}/index.md"
-	# build up resource type lists for CaltechAUTHORS, CaltechTHESIS and CaltechDATA lists
-	./wrap_group_info.py "htdocs/groups/$GROUP_ID/group.json" |\
-		pandoc -f markdown -t markdown \
-		--template templates/groups-group-index.md \
-		>"${FNAME}"
-	#FIXME: Need to generate combined pages in Markdown
-	#FIXME: from markdown resource documents we can use Pandoc to generate HTML and HTML include
-	#FIXME: Need to render BibTeX and RSS from templates
-}
 
 function make_group_list_json() {
 		if [ ! -f groups.csv ]; then
@@ -139,17 +125,19 @@ function make_group_list_json() {
 function make_groups() {
 	echo "Populating groups folder json"
 	mkdir -p htdocs/groups
-	dataset keys groups.ds >htdocs/groups/index.keys
-	dsquery -pretty -sql groups_index_json.sql groups.ds >htdocs/groups/index.json
+	dsquery -pretty -sql groups_index_json.sql groups.ds >htdocs/groups/group_ids.json
 	dsquery -pretty -sql authors_object_types.sql authors.ds >htdocs/groups/authors_object_types.json
 	dsquery -pretty -sql thesis_thesis_types.sql thesis.ds >htdocs/groups/thesis_thesis_types.json
 	dsquery -pretty -sql data_object_types.sql data.ds >htdocs/groups/data_object_types.json
-	# Now build index.md for groups
-	./wrap_groups_a_to_z.py htdocs/groups/index.json | pandoc -f markdown -t markdown \
-					  --template templates/groups-index.md \
-					  >htdocs/groups/index.md
 	make_group_list_json 
-	python3 generate_group_files.py htdocs/groups/group_list.json
+	# Now build index.keys, index.json and index.md for groups
+	./generate_groups_index.py htdocs/groups/group_list.json
+	GROUP_ID="$1"
+	if [ "$GROUP_ID" != "" ]; then
+		python3 generate_group_files.py htdocs/groups/group_list.json "$GROUP_ID"
+	else
+		python3 generate_group_files.py htdocs/groups/group_list.json
+	fi
 }
 
 function clone_groups_ds() {
@@ -267,7 +255,12 @@ function page_title_from_path() {
 }
 
 function make_html() {
-	find htdocs -type f | grep -E '\.md$' | while read -r FNAME; do
+	START="$1"
+	if [ "$START" = "" ]; then
+		START=htdocs
+	fi
+	echo "Building HTML and HTML includes starting from $START"
+	find "${START}" -type f | grep -E '\.md$' | while read -r FNAME; do
 		DNAME=$(dirname "$FNAME")
 		HNAME="$DNAME/$(basename "$FNAME" ".md").html"
 		INAME="$DNAME/$(basename "$FNAME" ".md").include"
