@@ -111,6 +111,7 @@ used by ep3tuil, rdm2eprint and rdmutil in the content retrieval process.
 - Postgres >= 14
 - Python >= 3.10
 - PageFind >= v1.0.3
+- jq >= 1.7
 
 Recommended if you are deploying your site to an S3 bucket.
 

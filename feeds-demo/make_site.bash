@@ -189,17 +189,6 @@ function make_root() {
 			echo "missing ${REPO}.env, skipped making htdocs/caltech${REPO}_grid.json"
 		fi
 	done
-	# generate Markdown docs
-	# generate HTML docs
-	echo "Rendering HTML docs"
-	for FNAME in index.md about.md error.md formats-and-extensions.md; do
-		BNAME=$(basename "${FNAME}" ".md")
-		echo "rendering ${FNAME} as ${BNAME}.html"
-		pandoc --metadata title="$BNAME" \
-			-s --template=templates/page.html \
-			"htdocs/${FNAME}" \
-			>"htdocs/${BNAME}.html"
-	done
 }
 
 function clone_thesis() {
