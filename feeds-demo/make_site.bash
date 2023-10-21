@@ -33,12 +33,13 @@ function make_recent() {
 		done
 	fi
 	echo "Populating recent folder markdown"
-	echo "" >htdocs/recent/index.md
-	./wrap_recent.py htdocs/recent/object_types.json '{"repository": "CaltechAUTHORS", "combined": "combined"}' |\
-		pandoc -f markdown -t markdown --template=templates/recent-index.md >>htdocs/recent/index.md
-	./wrap_recent.py htdocs/recent/data_object_types.json '{"repository": "CaltechDATA", "combined": "combined_data"}' |\
-		pandoc -f markdown -t markdown --template=templates/recent-index.md >>htdocs/recent/index.md
-	
+	./generate_recent_index.py
+### 	echo "" >htdocs/recent/index.md
+### 	./wrap_recent.py htdocs/recent/object_types.json '{"repository": "CaltechAUTHORS", "combined": "combined"}' |\
+### 		pandoc -f markdown -t markdown --template=templates/recent-index.md >>htdocs/recent/index.md
+### 	./wrap_recent.py htdocs/recent/data_object_types.json '{"repository": "CaltechDATA", "combined": "combined_data"}' |\
+### 		pandoc -f markdown -t markdown --template=templates/recent-index.md >>htdocs/recent/index.md
+### 
 }
 
 #
