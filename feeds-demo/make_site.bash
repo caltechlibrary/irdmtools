@@ -34,12 +34,6 @@ function make_recent() {
 	fi
 	echo "Populating recent folder markdown"
 	./generate_recent_index.py
-### 	echo "" >htdocs/recent/index.md
-### 	./wrap_recent.py htdocs/recent/object_types.json '{"repository": "CaltechAUTHORS", "combined": "combined"}' |\
-### 		pandoc -f markdown -t markdown --template=templates/recent-index.md >>htdocs/recent/index.md
-### 	./wrap_recent.py htdocs/recent/data_object_types.json '{"repository": "CaltechDATA", "combined": "combined_data"}' |\
-### 		pandoc -f markdown -t markdown --template=templates/recent-index.md >>htdocs/recent/index.md
-### 
 }
 
 #
@@ -123,7 +117,11 @@ function make_group_list_json() {
 			>htdocs/groups/group_list.json
 }
 
+
+# make_groups takes an optional arg of GROUP_ID
+# shellcheck disable=SC2120
 function make_groups() {
+	local GROUP_ID="$1"
 	echo "Populating groups folder json"
 	mkdir -p htdocs/groups
 	dsquery -pretty -sql groups_index_json.sql groups.ds >htdocs/groups/group_ids.json
@@ -133,7 +131,6 @@ function make_groups() {
 	make_group_list_json 
 	# Now build index.keys, index.json and index.md for groups
 	./generate_groups_index.py htdocs/groups/group_list.json
-	GROUP_ID="$1"
 	if [ "$GROUP_ID" != "" ]; then
 		python3 generate_group_files.py htdocs/groups/group_list.json "$GROUP_ID"
 	else
@@ -255,8 +252,10 @@ function page_title_from_path() {
 	fi
 }
 
+# make_html takes an optional arg of a start directory
+# shellcheck disable=SC2120
 function make_html() {
-	START="$1"
+	local START="$1"
 	if [ "$START" = "" ]; then
 		START=htdocs
 	fi
@@ -271,20 +270,20 @@ function make_html() {
 		echo "Writing $HNAME"
 		pandoc --metadata title="${TITLE}" \
 				-s --template=templates/page.html \
-				$FNAME \
-				-o $HNAME
+				"$FNAME" \
+				-o "$HNAME"
 		echo "Writing $INAME"
 		pandoc --metadata title="${TITLE}" \
 				-f markdown -t html5 \
-				$FNAME \
-				-o $INAME
+				"$FNAME" \
+				-o "$INAME"
 	done
 }
 
 function make_pagefind() {
 	CWD=$(pwd)
 	cd htdocs && pagefind --verbose --exclude-selectors="nav,menu,header,footer" --output-path ./pagefind --site .
-	cd "$CMD"
+	cd "$CMD" || exit
 }
 
 #
@@ -330,12 +329,14 @@ make_static
 make_root
 # Build  recent folder
 make_recent
-# Build out the groups tree
+# Build out the groups tree (called without args)
+# shellcheck disable=SC2119
 make_groups
 # Build out the people tree
 make_people
 
-# Find all the markdown files and render .html pages.
+# Find all the markdown files and render .html pages. (called without args)
+# shellcheck disable=SC2119
 make_html
 
 # Setup and run Pagefind
