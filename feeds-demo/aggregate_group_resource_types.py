@@ -26,7 +26,7 @@ def get_agents(agents_csv):
     return None
 
 def aggregate(agents_csv, authors_csv, thesis_csv, data_csv):
-    '''take our agents_csv and agent_pubs_csv filenames and aggregate them'''
+    '''take our agents_csv, authors_csv, thesis_csv, and data_csv files and aggregate them'''
     agents = get_agents(agents_csv)
     if agents is None:
         return f'expected to find people or groups in {agents_csv}'

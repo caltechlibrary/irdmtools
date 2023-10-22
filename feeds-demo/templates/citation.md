@@ -1,1 +1,1 @@
--${if(it.author_list)} ${it.author_list}${endif}${if(it.pub_year)} (${it.pub_year})${endif}${if(it.title)} [${it.title}](${it.official_url})${endif}${if(it.issn)} ISSN ${it.issn}${endif} ${if(it.isbn)} ISBN ${it.isbn}${endif}${if(it.doi)} [${it.doi}](https://doi.org/${it.doi})${endif}
+-${if(it.author_list)} ${it.author_list}${endif}${if(it.pub_year)} (${it.pub_year})${endif}${if(it.title)} [${it.title}](${it.official_url})${endif}${if(it.issn)} ISSN: ${it.issn}${endif} ${if(it.isbn)} ISBN: ${it.isbn}${endif}${if(it.doi)} DOI: [${it.doi}](https://doi.org/${it.doi})${endif}
