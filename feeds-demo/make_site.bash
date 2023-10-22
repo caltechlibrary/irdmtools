@@ -225,6 +225,9 @@ function clone_authors() {
 }
 
 function make_static() {
+	if [ ! -d htdocs ]; then
+		mkdir htdocs
+	fi
 	# Copy in static content
 	cp -vR static/* htdocs/
 }
@@ -249,7 +252,7 @@ function make_html() {
 		START=htdocs
 	fi
 	echo "Building HTML and HTML includes starting from $START"
-	find "${START}" -type f | grep -E '\.md$' | while read -r FNAME; do
+	find "${START}" -d -type f | grep -E '\.md$' | while read -r FNAME; do
 		DNAME=$(dirname "$FNAME")
 		HNAME="$DNAME/$(basename "$FNAME" ".md").html"
 		INAME="$DNAME/$(basename "$FNAME" ".md").include"
@@ -259,6 +262,7 @@ function make_html() {
 		echo "Writing $HNAME"
 		pandoc --metadata title="${TITLE}" \
 				-s --template=templates/page.html \
+				-f markdown -t html5 \
 				"$FNAME" \
 				-o "$HNAME"
 		echo "Writing $INAME"

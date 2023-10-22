@@ -3,6 +3,7 @@
 
 ## bugs
 
+- [ ] The title in Markdown generated via Pandoc seem to wrap at a specific column, might be happening as a result of PyYAML wrapping strings, need to sort out as it is causing a problem in linking as implememented in citation.md
 - [ ] `htdocs/groups/<GROUP_ID>/<COMBINED>.md` is not getting rendered from `htdocs/groups/<GROUP_ID>/<COMBINED>.json`
 - [ ] `htdocs/recent/<RESOURCE_TYPE>.md` is not getting rendered from `htdocs/recent/<RESOURCE_TYPE>.json`
 - [ ] group resource pages isn't including resource type in the H2 heading above the UL list of citations

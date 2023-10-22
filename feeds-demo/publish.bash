@@ -14,4 +14,4 @@ if [ "$BUCKET" = "" ]; then
 	exit 1
 fi
 echo "Copying htdocs to $BUCKET"
-time s5cmd cp --acl "public-read" htdocs/ "$BUCKET"
+time s5cmd --dry-run --numworkers 12 sync --acl "public-read" htdocs/ "$BUCKET"
