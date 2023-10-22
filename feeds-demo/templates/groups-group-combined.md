@@ -25,7 +25,7 @@ ${if(repository)}
 
 ${endif}
 ${for(content)}
-- ${it:citation.md()}
+${it:citation.md()}
 ${endfor}
 
 

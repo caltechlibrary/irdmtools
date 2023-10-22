@@ -87,7 +87,7 @@ def pandoc_write_file(f_name, objects, template, params = None):
     if len(objects) == 0:
         return f'pandoc_write_file({f_name}, objects, {template}, {params}): no objects to write'
     # We'll assume YAML to feed to Pandoc, we set default flow style to false to avoid wrapping titles
-    src = ('\n'.join(['---', yaml.dump(objects, default_flow_style=False), '---'])).encode('utf-8')
+    src = ('\n'.join(['---', yaml.dump(objects), '---'])).encode('utf-8')
     cmd = [ "pandoc", '--template', template, '-o', f_name ]
     if title is not None:
         cmd.append('--metadata')
