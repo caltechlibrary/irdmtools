@@ -10,13 +10,15 @@ from py_dataset import dataset
 import progressbar
 
 
-def update_record(c_name, cl_people_id, authors_count, thesis_count, data_count):
+def update_record(c_name, cl_people_id, authors_count, editor_count, thesis_count, advisor_count, data_count):
     '''update the people record with counts'''
     rec, err = dataset.read(c_name, cl_people_id)
     if not (err is None or err == ''):
         print(f'read reading {cl_people_id} from {c_name}, {err}', file = sys.stderr)
     rec['authors_count'] = authors_count
+    rec['editor_count'] = editor_count
     rec['thesis_count'] = thesis_count
+    rec['advisor_count'] = advisor_count
     rec['data_count'] = data_count
     err = dataset.update(c_name, cl_people_id, rec)
     if not (err is None or err == ''):
@@ -78,6 +80,10 @@ def update_counts(app_name, pid, people_ids,
     thesis_count = load_json_count('thesis', thesis_json, id_map)
     print(f'loading {data_json}', file = sys.stderr)
     data_count = load_json_count('data', data_json, id_map)
+    print(f'loading {editor_json}', file = sys.stderr)
+    editor_count = load_json_count('editor', editor_json, id_map)
+    print(f'loading {advisor_json}', file = sys.stderr)
+    advisor_count = load_json_count('advisor', advisor_json, id_map)
     tot = len(people_ids)
     c_name = 'people.ds'
     print(f'process {c_name}', file = sys.stderr)
@@ -91,7 +97,9 @@ def update_counts(app_name, pid, people_ids,
     for i, cl_people_id in enumerate(people_ids):
         update_record(c_name, cl_people_id,
             authors_count.get(cl_people_id, 0),
+            editor_count.get(cl_people_id, 0),
             thesis_count.get(cl_people_id, 0),
+            advisor_count.get(cl_people_id, 0),
             data_count.get(cl_people_id, 0))
         _bar.update(i)
     _bar.finish()

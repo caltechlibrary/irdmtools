@@ -113,7 +113,7 @@ function harvest_people() {
 	>thesis_count.json
 	echo "Retrieving advisor_count from thesis.ds"
 	dsquery -pretty -sql advisor_count.sql thesis.ds \
-	>thesis_count.json
+	>advisor_count.json
 	echo "Retrieving data_count from data.ds"
 	dsquery -pretty -sql data_count.sql data.ds \
 	>data_count.json
