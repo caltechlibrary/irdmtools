@@ -25,23 +25,23 @@ function harvest_rdm() {
 			echo "Harvesting $REPO all ids with rdmutil"
 			KEY_LIST="${REPO}_all_ids.json"
 			if ! rdmutil get_all_ids >"${KEY_LIST}"; then
-				echo "   configuration ${REPO}.env may have problems"
+				echo "   configuration ${REPO}.env isue or ${REPO_ID} has no records available for harvest"
 				exit 11
 			fi
 		else
 			echo "Harvesting updated since ${FROM_DATE} with rdmutil"
 			KEY_LIST="${REPO}_modified.json"
 			if ! rdmutil get_modified_ids "${FROM_DATE}" >"${KEY_LIST}"; then
-				echo "    configuration ${REPO}.env may have problems or no new records were available"
+				echo "   configuration ${REPO}.env isue or ${REPO_ID} has no records available for harvest"
 				return
 			fi
 		fi
 		echo "Harvesting records with rdm2eprint"
 		if ! rdm2eprint -harvest "${C_NAME}" -ids "${KEY_LIST}"; then
-			echo "   configuration ${REPO}.env may have problems or no records avaialble to harvest"
+			echo "   configuration ${REPO}.env isue or ${REPO_ID} has no records available for harvest"
 		fi
 	else
-		echo "Skipping harvest for ${REPO}, no ${REPO}.env found"
+		echo "Skipping harvest for ${REPO_ID}, no ${REPO}.env found"
 	fi
 }
 
