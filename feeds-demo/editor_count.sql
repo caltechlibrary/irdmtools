@@ -3,7 +3,7 @@ WITH q AS (
 	SELECT
 		jsonb_build_object(
 			'rdmid', _key, 
-			'clpid', jsonb_path_query(src::jsonb->'creators'->'items', '$[*].id')
+			'clpid', jsonb_path_query(src::jsonb->'editors'->'items', '$[*].id')
 		) AS obj
 	FROM authors
 	ORDER BY _key
@@ -17,7 +17,7 @@ WITH q AS (
 SELECT
 	jsonb_build_object(
 		'clpid', clpid,
-		'authors_count', COUNT(*) 
+		'editor_count', COUNT(*) 
 	) AS obj
 FROM q
 GROUP BY clpid

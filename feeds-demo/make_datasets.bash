@@ -13,7 +13,7 @@
 # create a feeds v1 compatible website.
 #
 
-FROM_DATE=$(reldate -- -2 day)
+FROM_DATE=$(reldate -- -4 day)
 
 function harvest_rdm() {
 	REPO="$1"
@@ -76,6 +76,8 @@ function check_for_required_programs() {
 }
 
 function harvest_groups() {
+	# NOTE: creating groups.ds from groups.csv is temporary, groups.ds should
+	# originate and be managed from cold
 	if [ -f groups.csv ]; then
 		if [ ! -d groups.ds ]; then
 			dataset init groups.ds "postgres://$USER@localhost/groups?sslmode=disable"
@@ -89,6 +91,8 @@ function harvest_groups() {
 
 
 function harvest_people() {
+	# NOTE: creating people.ds from people.csv is temporary, people.ds should
+	# originate and be managed from cold
 	if [ -f people.csv ]; then
 		if [ ! -d people.ds ]; then
 			dataset init people.ds "postgres://$USER@localhost/people?sslmode=disable"
@@ -97,10 +101,11 @@ function harvest_people() {
 	else
 		echo "failed to find people.csv, skipping"
 	fi
+
 	echo "Retrieving authors_count from authors.ds"
 	dsquery -pretty -sql authors_count.sql authors.ds \
 	>authors_count.json
-	echo "Retrieve editor_count from authors.ds"
+	echo "Retrieving editor_count from authors.ds"
 	dsquery -pretty -sql editor_count.sql authors.ds \
 	>editor_count.json
 	echo "Retrieving thesis_count from thesis.ds"

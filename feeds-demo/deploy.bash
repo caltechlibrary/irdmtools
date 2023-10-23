@@ -27,7 +27,7 @@ else
 fi
 
 # Find the files to copy to target root
-ls -1 *.py *.sql *.bash *.md README.md |\
+ls -1 *.py *.sql *.bash *.md README.md *.md |\
 while read -r FNAME; do
 	cp $FNAME $TARGET_DIR/
 done
