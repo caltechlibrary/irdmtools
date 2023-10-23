@@ -25,21 +25,20 @@ function harvest_rdm() {
 			echo "Harvesting $REPO all ids with rdmutil"
 			KEY_LIST="${REPO}_all_ids.json"
 			if ! rdmutil get_all_ids >"${KEY_LIST}"; then
-				echo "Configuration ${REPO}.env may have problems"
+				echo "   configuration ${REPO}.env may have problems"
 				exit 11
 			fi
 		else
 			echo "Harvesting updated since ${FROM_DATE} with rdmutil"
 			KEY_LIST="${REPO}_modified.json"
 			if ! rdmutil get_modified_ids "${FROM_DATE}" >"${KEY_LIST}"; then
-				echo "Configuration ${REPO}.env may have problems or no new records were available"
+				echo "    configuration ${REPO}.env may have problems or no new records were available"
 				return
 			fi
 		fi
 		echo "Harvesting records with rdm2eprint"
 		if ! rdm2eprint -harvest "${C_NAME}" -ids "${KEY_LIST}"; then
-			echo "Configuration ${REPO}.env may have problems if records are available to harvest"
-			exit 11
+			echo "   configuration ${REPO}.env may have problems or no records avaialble to harvest"
 		fi
 	else
 		echo "Skipping harvest for ${REPO}, no ${REPO}.env found"
@@ -98,19 +97,21 @@ function harvest_people() {
 	else
 		echo "failed to find people.csv, skipping"
 	fi
-	echo "Retrieving counts from authors.ds"
-	dsquery -pretty -sql authors_creator_count.sql authors.ds \
-	>authors_creator_count.json
-	dsquery -pretty -sql authors_editor_count.sql authors.ds \
-	>authors_editor_count.json
-	echo "Retrieving counts from thesis.ds"
-	dsquery -pretty -sql thesis_creator_count.sql thesis.ds \
-	>thesis_clpid_count.json
-	dsquery -pretty -sql thesis_advisor_count.sql thesis.ds \
-	>thesis_advisor_count.json
-	echo "Retrieving counts from data.ds"
-	dsquery -pretty -sql data_creator_count.sql data.ds \
-	>data_creator_count.json
+	echo "Retrieving authors_count from authors.ds"
+	dsquery -pretty -sql authors_count.sql authors.ds \
+	>authors_count.json
+	echo "Retrieve editor_count from authors.ds"
+	dsquery -pretty -sql editor_count.sql authors.ds \
+	>editor_count.json
+	echo "Retrieving thesis_count from thesis.ds"
+	dsquery -pretty -sql thesis_count.sql thesis.ds \
+	>thesis_count.json
+	echo "Retrieving advisor_count from thesis.ds"
+	dsquery -pretty -sql advisor_count.sql thesis.ds \
+	>thesis_count.json
+	echo "Retrieving data_count from data.ds"
+	dsquery -pretty -sql data_count.sql data.ds \
+	>data_count.json
 	echo "Mapping orcid to clpid for data.ds"
 	dsquery -pretty -sql orcid_to_clpid.sql people.ds \
 	>orcid_to_clpid.json

@@ -47,7 +47,7 @@ def merge_local_group_data(app_name, pid, c_name, object_map):
          ' ', progressbar.AdaptiveETA(),
     ]
     bar = progressbar.ProgressBar(max_value = tot, widgets=widgets)
-    for i, group_id in enumorate(object_map):
+    for i, group_id in enumerate(object_map):
         grp_obj = object_map[group_id]
         normalized_id = grp_obj['group_id']
         if len(grp_obj['record_ids']) > 0:

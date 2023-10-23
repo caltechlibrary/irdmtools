@@ -64,8 +64,10 @@ def load_json_count(repo, f_name, id_map):
         return obj
     return None
 
-def update_counts(app_name, pid, people_ids, authors_json,
-                  thesis_json, data_json, orcid_to_clpid_json):
+def update_counts(app_name, pid, people_ids, 
+                authors_json, editor_json,
+                thesis_json, advisor_json, 
+                data_json, orcid_to_clpid_json):
     '''update the counds for repository for each person'''
     # for each person run the statements using dsquery for the counts
     print(f'loading {orcid_to_clpid_json}', file = sys.stderr)
@@ -101,12 +103,17 @@ def main():
     pid = os.getpid()
     c_name = 'people.ds'
     people_ids = dataset.keys(c_name)
-    authors_json = 'authors_clpid_count.json'
-    thesis_json = 'thesis_clpid_count.json'
-    data_json = 'data_orcid_count.json'
+    authors_json = 'authors_count.json'
+    editor_json = 'editor_count.json'
+    thesis_json = 'thesis_count.json'
+    advisor_json = 'advisor_count.json'
+    data_json = 'data_count.json'
     orcid_to_clpid_json = 'orcid_to_clpid.json'
-    update_counts(app_name, pid, people_ids, authors_json,
-            thesis_json, data_json, orcid_to_clpid_json)
+    update_counts(app_name, pid, people_ids, 
+            authors_json, editor_json,
+            thesis_json, advisor_json,
+            data_json, orcid_to_clpid_json
+    )
 
 if __name__ == '__main__':
     main()
