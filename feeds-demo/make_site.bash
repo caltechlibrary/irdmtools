@@ -154,57 +154,14 @@ function clone_groups_ds() {
 	fi
 }
 
-function make_people_list_json() {
-	if [ ! -f people.csv ]; then
-		echo "failed to find people.csv, skipping making people"
-		return
-	fi
-	dsquery -csv 'id,type,pub_date,cl_people_id,collection' \
-	        -sql get_authors_by_people.sql authors.ds \
-			>htdocs/people/people_authors.csv
-	if [ ! -f "htdocs/people/people_authors.csv" ]; then
-		echo "failed to find people_authors.csv, skipping making people"
-		return
-	fi
-### 	dsquery -csv 'id,thesis_type,pub_date,cl_people_id,collection' \
-### 	        -sql get_thesis_by_people.sql thesis.ds \
-### 			>htdocs/people/people_thesis.csv
-### 	if [ ! -f "htdocs/people/people_thesis.csv" ]; then
-### 		echo "failed to find people_thesis.csv, skipping making people"
-### 		return
-### 	fi
-### 	dsquery -csv 'id,type,pub_date,cl_people_id,collection' \
-### 	        -sql get_data_by_people.sql data.ds \
-### 			>htdocs/people/people_data.csv
-### 	if [ ! -f "htdocs/people/people_data.csv" ]; then
-### 		echo "failed to find people_data.csv, skipping making people"
-### 		return
-### 	fi
-### 	python3 aggregate_people_resource_types.py people.csv \
-### 	    htdocs/people/people_authors.csv \
-### 	    htdocs/people/people_thesis.csv \
-### 	    htdocs/people/people_data.csv \
-### 		>htdocs/people/people_list.json
-}
 
-
+# shellcheck disable=SC2120
 function make_people() {
-	local PEOPLE_ID="$1"
 	echo "Populating people folder json"
 	mkdir -p htdocs/people
 #FIXME: Need to generate the JSON files then process those.
-	dsquery -pretty -sql people_index_json.sql people.ds >htdocs/people/people_ids.json
-	dsquery -pretty -sql authors_object_types.sql authors.ds >htdocs/people/authors_object_types.json
-	dsquery -pretty -sql thesis_thesis_types.sql thesis.ds >htdocs/people/thesis_thesis_types.json
-	dsquery -pretty -sql data_object_types.sql data.ds >htdocs/people/data_object_types.json
-	make_people_list_json 
-### 	# Now build index.keys, index.json and index.md for groups
-### 	./generate_people_index.py htdocs/people/people_list.json
-### 	if [ "$PEOPLE_ID" != "" ]; then
-### 		python3 generate_people_files.py htdocs/people/people_list.json "$PEOPLE_ID"
-### 	else
-### 		python3 generate_people_files.py htdocs/people/people_list.json
-### 	fi
+	dsquery -pretty -sql get_people_list.sql people.ds \
+			>htdocs/people/people_list.json
 }
 
 function clone_people_ds() {

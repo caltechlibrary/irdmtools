@@ -16,6 +16,7 @@
 
 ## make_datasets.bash
 
+- [ ] figure out how to update people.ds accounts, this is probable faster to be done via an export of counts and cl_people_id from authors.ds, data.ds and thesis.ds then merge the the result into people.ds
 - [x] groups.ds and people.ds work towards building group_list.json and people_list.json
     - By combing groups.csv and people.csv along with a CSV files with record group/person from authors, thesis and data we can derive all the other JSON files we need to create
     - cleanup fixup_data_local_groups.py, make sure the structure is `.local_groups.items[*].id` and that I can get the strings out without quoting

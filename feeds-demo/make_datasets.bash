@@ -88,6 +88,7 @@ function harvest_groups() {
 	fi
 }
 
+
 function harvest_people() {
 	if [ -f people.csv ]; then
 		if [ ! -d people.ds ]; then
@@ -97,6 +98,23 @@ function harvest_people() {
 	else
 		echo "failed to find people.csv, skipping"
 	fi
+	echo "Retrieving counts from authors.ds"
+	dsquery -pretty -sql authors_creator_count.sql authors.ds \
+	>authors_creator_count.json
+	dsquery -pretty -sql authors_editor_count.sql authors.ds \
+	>authors_editor_count.json
+	echo "Retrieving counts from thesis.ds"
+	dsquery -pretty -sql thesis_creator_count.sql thesis.ds \
+	>thesis_clpid_count.json
+	dsquery -pretty -sql thesis_advisor_count.sql thesis.ds \
+	>thesis_advisor_count.json
+	echo "Retrieving counts from data.ds"
+	dsquery -pretty -sql data_creator_count.sql data.ds \
+	>data_creator_count.json
+	echo "Mapping orcid to clpid for data.ds"
+	dsquery -pretty -sql orcid_to_clpid.sql people.ds \
+	>orcid_to_clpid.json
+ 	./update_people_counts.py
 }
 
 function harvest_rdm_fixup_data() {
