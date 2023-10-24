@@ -72,7 +72,8 @@ display version
 </dd>
 <dt>config</dt>
 <dd>
-provide a path to an alternate configuration file (e.g. “rdmtools.json”)
+provide a path to an alternate configuration file
+(e.g. “irdmtools.json”)
 </dd>
 </dl>
 <h1 id="action">ACTION</h1>
@@ -120,12 +121,12 @@ Query takes one required parameter and two option.
 <dt>get_record RECORD_ID</dt>
 <dd>
 Returns a specific simplified record indicated by RECORD_ID,
-e.g. bq3se-47g50. The REORCID_ID is a required parameter.
+e.g. bq3se-47g50. The RECORD_ID is a required parameter.
 </dd>
 <dt>get_raw_record RECORD_ID</dt>
 <dd>
 Returns a specific map/dictionary record indicated by RECORD_ID,
-e.g. bq3se-47g50. The REORCID_ID is a required parameter.
+e.g. bq3se-47g50. The RECORD_ID is a required parameter.
 </dd>
 <dt>get_files RECORD_ID</dt>
 <dd>
@@ -150,8 +151,8 @@ Retrieve metadata about versions for RECORD_ID. RECORD_ID is required.
 </dd>
 <dt>get_latest_version</dt>
 <dd>
-Retreive the latest version metadata for a RECORD_ID. RECORD_ID is
-requireed.
+Retrieve the latest version metadata for a RECORD_ID. RECORD_ID is
+required.
 </dd>
 <dt>set_version RECORD_ID VERSION_STRING</dt>
 <dd>
@@ -235,11 +236,11 @@ standard input.
 <dt>send_to_community RECORD_ID COMMUNITY_ID</dt>
 <dd>
 Submit a draft record to a community for review. RECORD_ID and
-COMMUMITY_ID are required.
+COMMUNITY_ID are required.
 </dd>
 <dt>get_review</dt>
 <dd>
-Get review requests assocaited with RECORD_ID. RECORD_ID is required.
+Get review requests associated with RECORD_ID. RECORD_ID is required.
 </dd>
 <dt>review_request RECORD_ID accept|decline|cancel|“” [COMMENT]</dt>
 <dd>
@@ -288,7 +289,7 @@ is read from standard input.
 </dl>
 <h1 id="action_parameters">ACTION_PARAMETERS</h1>
 <p>Action parameters are the specific optional or required parameters
-need to complete an aciton.</p>
+need to complete an action.</p>
 <h1 id="examples">EXAMPLES</h1>
 <p>Setup for <strong>rdmutil</strong> by writing an example JSON
 configuration file. “nano” is an example text editor program, you need

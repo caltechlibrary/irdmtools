@@ -1,6 +1,6 @@
-%rdmutil(1) irdmtools user manual | version 0.0.56 e69d346
+%rdmutil(1) irdmtools user manual | version 0.0.58 c59fcda
 % R. S. Doiel and Tom Morrell
-% 2023-10-04
+% 2023-10-24
 
 # NAME
 
@@ -48,7 +48,7 @@ version
 : display version
 
 config
-: provide a path to an alternate configuration file (e.g. "rdmtools.json")
+: provide a path to an alternate configuration file (e.g. "irdmtools.json")
 
 # ACTION
 
@@ -70,10 +70,10 @@ query QUERY_STRING [size | size sort]
 : Returns a result using RDM's search engine. It is limited to about 10K total results. You can use the see RDM's documentation for query construction.  See <https://inveniordm.docs.cern.ch/customize/search/>, <https://inveniordm.docs.cern.ch/reference/rest_api_requests/> and https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-query-string-query.html#query-string-syntax. Query takes one required parameter and two option.
 
 get_record RECORD_ID
-: Returns a specific simplified record indicated by RECORD_ID, e.g. bq3se-47g50. The REORCID_ID is a required parameter.
+: Returns a specific simplified record indicated by RECORD_ID, e.g. bq3se-47g50. The RECORD_ID is a required parameter.
 
 get_raw_record RECORD_ID
-: Returns a specific map/dictionary record indicated by RECORD_ID, e.g. bq3se-47g50. The REORCID_ID is a required parameter.
+: Returns a specific map/dictionary record indicated by RECORD_ID, e.g. bq3se-47g50. The RECORD_ID is a required parameter.
 
 get_files RECORD_ID
 : Return a list of files for record with RECORD_ID.  RECORD_ID is required.
@@ -88,7 +88,7 @@ get_versions
 : Retrieve metadata about versions for RECORD_ID. RECORD_ID is required.
 
 get_latest_version
-: Retreive the latest version metadata for a RECORD_ID. RECORD_ID is requireed.
+: Retrieve the latest version metadata for a RECORD_ID. RECORD_ID is required.
 
 set_version RECORD_ID VERSION_STRING
 : This sets the version string in .metadata.version of a draft. RECORD_ID and VERSION_STRING are required.
@@ -136,10 +136,10 @@ review_comment RECORD_ID [FILENAME]
 : Submit a comment to a review. RECORD_ID is required. If FILENAME is provided the comment is read from a file otherwise it is read from standard input.
 
 send_to_community RECORD_ID COMMUNITY_ID
-: Submit a draft record to a community for review. RECORD_ID and COMMUMITY_ID are required.
+: Submit a draft record to a community for review. RECORD_ID and COMMUNITY_ID are required.
 
 get_review
-: Get review requests assocaited with RECORD_ID. RECORD_ID is required.
+: Get review requests associated with RECORD_ID. RECORD_ID is required.
 
 review_request RECORD_ID accept|decline|cancel|"" [COMMENT]
 : Review a submitted draft record. the values "accept", "decline" or "" and an optional COMMENT.
@@ -168,7 +168,7 @@ patch_endpoint PATH [FILENAME]
 
 # ACTION_PARAMETERS
 
-Action parameters are the specific optional or required parameters need to complete an aciton.
+Action parameters are the specific optional or required parameters need to complete an action.
 
 
 # EXAMPLES

@@ -11,13 +11,23 @@ from .files import write_files_rdm, send_to_community
 from .customize_schema import customize_schema
 from .utils import humanbytes
 from .fixups import fixup_record
-#from .get_metadata import get_metadata
-#from .download_file import download_file, download_url
 
+# from .get_metadata import get_metadata
+# from .download_file import download_file, download_url
 
 
 class IRDM_Client:
-    def __init__(self, api_url = None, token = None, schema ="43", s3 = None, repo = None, community = None, production = False, publish = False):
+    def __init__(
+        self,
+        api_url=None,
+        token=None,
+        schema="43",
+        s3=None,
+        repo=None,
+        community=None,
+        production=False,
+        publish=False,
+    ):
         """
         __init__ configures the client for working with the Invenio-RDM
         API for Caltech Library's Invenio-RDM repositories. The object's
@@ -45,28 +55,30 @@ class IRDM_Client:
 
         if not self.url:
             if not self.repo:
-                raise Exception(f'repository not set in environment (i.e. RDM_REPO) or client initialization')
-            if self.repo == 'data':
+                raise Exception(
+                    f"repository not set in environment (i.e. RDM_REPO) or client initialization"
+                )
+            if self.repo == "data":
                 if self.production == True:
                     self.url = "https://data.caltech.edu/"
                 else:
                     self.url = "https://data.caltechlibrary.dev/"
-            elif self.repo == 'authors':
+            elif self.repo == "authors":
                 if production == True:
                     self.url = "https://authors.caltech.edu/"
                 else:
                     self.url = "https://authors.caltechlibrary.dev/"
         if not self.url:
-           raise Exception(f'Unable to determine IRDM API URL')
+            raise Exception(f"Unable to determine IRDM API URL")
 
-    def query(self, query_string, sort = None, size = None, page = None, allversions = False):
+    def query(self, query_string, sort=None, size=None, page=None, allversions=False):
         """
         Send a record query to Invenio-RDM's Elasticsearch
         """
         token = self.token
         repo = self.repo
         url = self.url
-        params = { "q": query_string }
+        params = {"q": query_string}
         if sort != None:
             params["sort"] = sort
         if size != None:
@@ -84,22 +96,23 @@ class IRDM_Client:
             "Authorization": "Bearer %s" % token,
             "Content-type": "application/octet-stream",
         }
-    
+
         # Check status
         result = requests.get(
             url + "/api/records",
-            headers = headers,
-            params = params,
+            headers=headers,
+            params=params,
         )
         if result.status_code != 200:
             raise Exception(result.text)
         if not result.text:
-            raise Exception(f'expected result.text for result.status_code {result.status_code}')
+            raise Exception(
+                f"expected result.text for result.status_code {result.status_code}"
+            )
         obj = json.loads(result.text)
-        return obj 
-        
+        return obj
 
-    def create(self, metadata, files = [], file_links = [], doi = None):
+    def create(self, metadata, files=[], file_links=[], doi=None):
         """
         File links are links to files existing in external systems that
         will be added directly in a CaltechDATA record, instead of
@@ -107,7 +120,7 @@ class IRDM_Client:
 
         S3 is a s3sf object for directly opening files
         """
-        #community = self.community # DEBUG May want to skip community for debugging migration
+        # community = self.community # DEBUG May want to skip community for debugging migration
         community = None
         repo = self.repo
         token = self.token
@@ -134,17 +147,17 @@ class IRDM_Client:
             prefix = doi.split("/")[0]
             if prefix == repo_prefix:
                 pids["doi"] = {
-                        "identifier": doi,
-                        "provider": "datacite",
-                        "client": "datacite",
-                    }
+                    "identifier": doi,
+                    "provider": "datacite",
+                    "client": "datacite",
+                }
             else:
                 pids["doi"] = {
-                        "identifier": doi,
-                        "provider": "external",
-                    }
-    
-        metadata["pids"] = pids 
+                    "identifier": doi,
+                    "provider": "external",
+                }
+
+        metadata["pids"] = pids
 
         # See if we're working with a schema like DataCite 43 or
         # raw Invenio records.
@@ -152,7 +165,7 @@ class IRDM_Client:
             data = metadata
         else:
             data = customize_schema(copy.deepcopy(metadata), schema=self.schema)
-    
+
         headers = {
             "Authorization": "Bearer %s" % token,
             "Content-type": "application/json",
@@ -164,7 +177,7 @@ class IRDM_Client:
 
         # NOTE: fixup_record takes the simple record making final changes
         # suitable for importing into Invenio-RDM.  This include things
-        # like crosswalking vocabularies to map from an existing 
+        # like crosswalking vocabularies to map from an existing
         # Caltech Library EPrints repository to Invenio-RDM.
         data = fixup_record(data, files)
 
@@ -174,11 +187,11 @@ class IRDM_Client:
             raise Exception(result.text)
         idv = result.json()["id"]
         publish_link = result.json()["links"]["publish"]
-    
+
         if files:
             file_link = result.json()["links"]["files"]
             write_files_rdm(files, file_link, headers, f_headers, s3)
-    
+
         if community:
             review_link = result.json()["links"]["review"]
             send_to_community(review_link, data, headers, publish, community)
@@ -188,13 +201,12 @@ class IRDM_Client:
                 if result.status_code != 202:
                     raise Exception(result.text)
         return idv
-    
 
     def read(self, idv):
         token = self.token
         repo = self.repo
         url = self.url
-    
+
         headers = {
             "Authorization": "Bearer %s" % token,
             "Content-type": "application/json",
@@ -203,7 +215,7 @@ class IRDM_Client:
             "Authorization": "Bearer %s" % token,
             "Content-type": "application/octet-stream",
         }
-    
+
         # Check status
         result = requests.get(
             url + "/api/records/" + idv,
@@ -218,7 +230,8 @@ class IRDM_Client:
             if result.status_code != 200:
                 raise Exception(result.text)
         if not result.text:
-            raise Exception(f'expected result.text for result.status_code {result.status_code}')
+            raise Exception(
+                f"expected result.text for result.status_code {result.status_code}"
+            )
         obj = json.loads(result.text)
-        return obj 
-    
+        return obj

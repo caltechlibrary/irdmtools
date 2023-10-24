@@ -575,8 +575,8 @@ func (app *Rdm2EPrint) Configure(configFName string, envPrefix string, debug boo
 		app.Cfg.Debug = true
 	}
 	// Make sure we have a minimal useful configuration
-	if app.Cfg.InvenioAPI == "" || app.Cfg.InvenioToken == "" {
-		return fmt.Errorf("RDM_URL or RDMTOK not available")
+	if (app.Cfg.InvenioAPI == "" || app.Cfg.InvenioToken == "") && app.Cfg.InvenioDbHost == "" {
+		return fmt.Errorf("RDM_URL and RDMTOK are not set, RDM_DB_HOST is not set.")
 	}
 	return nil
 }
@@ -654,7 +654,7 @@ func (app *Rdm2EPrint) RunHarvest(in io.Reader, out io.Writer, eout io.Writer, c
 			sslmode = "?sslmode=disable"
 		}
 		connStr := fmt.Sprintf("postgres://%s@%s/%s%s", 
-		cfg.InvenioDbUser, cfg.InvenioDbHost, cfg.RepoID, sslmode)
+				cfg.InvenioDbUser, cfg.InvenioDbHost, cfg.RepoID, sslmode)
 		if cfg.InvenioDbPassword != "" {
 			connStr = fmt.Sprintf("postgres://%s:%s@%s/%s%s", 
 				cfg.InvenioDbUser, cfg.InvenioDbPassword, cfg.InvenioDbHost, cfg.RepoID, sslmode)

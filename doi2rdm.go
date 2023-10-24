@@ -182,6 +182,7 @@ func (app *Doi2Rdm) Run(in io.Reader, out io.Writer, eout io.Writer, options map
 	)
 	resourceType := map[string]string{
 		"journal-article": "publication-article",
+		"proceedings-article": "conference-paper",
 	}
 	if resourceTypeFName != "" {
 		if err := LoadTypesMap(resourceTypeFName, resourceType); err != nil {

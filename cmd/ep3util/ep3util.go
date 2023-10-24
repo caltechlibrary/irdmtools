@@ -107,7 +107,7 @@ version
 : display version
 
 config
-: provide a path to an alternate configuration file (e.g. "rdmtools.json")
+: provide a path to an alternate configuration file (e.g. "irdmtools.json")
 
 # ACTION
 
@@ -123,7 +123,7 @@ get_modified_ids START [END]
 : Return a list of records created or modified in the START and END date range. If END is not provided it is assume to be today.
 
 get_record RECORD_ID
-: Returns a specific simplified record indicated by RECORD_ID, e.g. 23808. The REORCID_ID is a required parameter.
+: Returns a specific simplified record indicated by RECORD_ID, e.g. 23808. The RECORD_ID is a required parameter.
 
 harvest [HARVEST_OPTIONS] [KEY_LIST_JSON]
 : harvest takes a JSON file containing a list of keys and harvests each record into a dataset collection. If combined

@@ -8,11 +8,11 @@ EPrints is running version 3.3. RDM is running version 11.
 ## Requirements
 
 1. A POSIX compatible shell (e.g. Bash)
-2. Python 3 and packages in requirments.txt
-3. The lastest irdmtools
+2. Python 3 and packages in requirements.txt
+3. The latest irdmtools
 4. Latest jq for working with JSON and extracting interesting bits
 
-To install the depenedent packages found in the requirements.txt
+To install the dependent packages found in the requirements.txt
 file you can use the following command.
 
 ~~~

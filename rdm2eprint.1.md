@@ -1,6 +1,6 @@
-%rdm2eprint(1) irdmtools user manual | version 0.0.56 e69d346
+%rdm2eprint(1) irdmtools user manual | version 0.0.58 c59fcda
 % R. S. Doiel and Tom Morrell
-% 2023-10-04
+% 2023-10-24
 
 # NAME
 
@@ -12,12 +12,12 @@ rdm2eprint [OPTIONS] RDM_ID
 
 # DESCRIPTION
 
-rdm2eprint is a Caltech Library centric command line application
+rdm2eprint is a Caltech Library oriented command line application
 that takes an RDM record ID and returns a EPrint record JSON document.
 It was created to allow us migrate our EPrints repositories minimal change
 to our feeds system which works with EPrint structured data.
 It uses RDM_URL, RDMTOK, RDM_COMMUNITY_ID environment variables for
-configuration.  It can read data from a parviously harvest RDM record
+configuration.  It can read data from a previously harvest RDM record
 or directly from RDM via the API url. The tool is intended to run
 in a pipe line so have minimal options.
 
@@ -33,10 +33,10 @@ in a pipe line so have minimal options.
 : display version
 
 -config
-: provide a path to an alternate configuration file (e.g. "rdmtools.json")
+: provide a path to an alternate configuration file (e.g. "irdmtools.json")
 
 -harvest C_NAME
-: harvest JSON formated eprint records into the dataset collection 
+: harvest JSON formatted eprint records into the dataset collection 
 specified by C_NAME.
 
 -ids JSON_ID_FILE

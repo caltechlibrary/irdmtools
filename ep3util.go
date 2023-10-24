@@ -84,8 +84,8 @@ func (app *Ep3Util) Configure(configFName string, envPrefix string, debug bool) 
 		app.Cfg.Debug = true
 	}
 	// Make sure we have a minimal useful configuration
-	if app.Cfg.EPrintHost == "" {
-		return fmt.Errorf("EPRINT_HOST, EPRINT_USER, EPRINT_PASSWORD are not available")
+	if app.Cfg.EPrintHost == "" && app.Cfg.EPrintDbHost == "" {
+		return fmt.Errorf("EPRINT_HOST and EPRINT_DB_HOST are not available.")
 	}
 	return nil
 }

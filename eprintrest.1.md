@@ -1,6 +1,6 @@
-%eprintrest(1) irdmtools user manual | version 0.0.56 e69d346
+%eprintrest(1) irdmtools user manual | version 0.0.58 c59fcda
 % R. S. Doiel and Tom Morrell
-% 2023-10-04
+% 2023-10-24
 
 # NAME
 
@@ -12,8 +12,8 @@ eprintrest [OPTIONS]
 
 # DESCRIPTION
 
-eprintrest is a Caltech Library centric localhost web service
-that creates a funcionally similar replica of the EPrints REST API 
+eprintrest is a Caltech Library oriented localhost web service
+that creates a functionally similar replica of the EPrints REST API 
 for EPrints 3.3.x based repositories. It uses the path to the 
 "archives" directory and a MySQL Database for the repository. 
 It only supports "archive" eprint.eprint_status records and
