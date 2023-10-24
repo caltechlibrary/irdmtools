@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-'''Use the htdocs/groups/group_list.json to build out each of the publication JSON lists'''
+'''Use the htdocs/people/people_list.json to build out each of the publication JSON lists'''
 
 import os
 import sys
@@ -13,24 +13,24 @@ from py_dataset import dataset
 import yaml
 
 
-def get_group_list(group_list_json):
-    '''Get the group_list.json file and return a useful data structure.'''
-    print(f'Reading {group_list_json}', file = sys.stderr)
-    with open(group_list_json, encoding = 'utf-8') as _f:
+def get_people_list(people_list_json):
+    '''Get the people_list.json file and return a useful data structure.'''
+    print(f'Reading {people_list_json}', file = sys.stderr)
+    with open(people_list_json, encoding = 'utf-8') as _f:
         src = _f.read()
         if isinstance(src, bytes):
             src = src.decode('utf-8')
-        group_list = json.loads(src)
-        return group_list
+        people_list = json.loads(src)
+        return people_list
     return None
 
-def _retrieve_keys(csv_name, group_id):
+def _retrieve_keys(csv_name, people_id):
     '''used by render_combined_files(), return a list of keys'''
     keys = []
     with open(csv_name, 'r', encoding = 'utf-8', newline = '') as csvfile:
         _r = csv.DictReader(csvfile)
         for row in _r:
-            if ('local_group' in row) and (group_id == row['local_group']):
+            if ('cl_people_id' in row) and (people_id == row['cl_people_id']):
                 keys.append(row['id'])
     return keys
 
@@ -158,9 +158,9 @@ def pandoc_build_resource(base_object, resource_list):
 
 
 def write_markdown_resource_file(f_name, base_object, resource):
-    '''write a group resource page by transform our list of objects'''
+    '''write a people resource page by transform our list of objects'''
     p_objects = pandoc_build_resource(base_object, resource)
-    err = pandoc_write_file(f_name, p_objects, 'templates/groups-group-resource.md')
+    err = pandoc_write_file(f_name, p_objects, 'templates/peoples-people-resource.md')
     if err is not None:
         print(f'pandoc error: {err}', file = sys.stderr)
 
@@ -198,7 +198,7 @@ def read_json_file(src_name):
         sys.exit(1)
     return json.loads(src)
 
-def build_index_object(group):
+def build_index_object(people):
     '''build an object form the decoded array'''
     # Merge the two objects into a Pandoc friendly structure
     obj = {}
@@ -213,33 +213,33 @@ def build_index_object(group):
         "CaltechDATA": "combined_data",
         "CaltechTHESIS": "combined_thesis"
     }
-    for k in group:
+    for k in people:
         if k in [ 'CaltechAUTHORS', 'CaltechTHESIS', 'CaltechDATA' ]:
             # flatten nested dict
-            for resource in flatten_index_resource_types(k, u_map[k], c_map[k], group[k]):
+            for resource in flatten_index_resource_types(k, u_map[k], c_map[k], people[k]):
                 resources.append(resource)
         else:
-            obj[k] = group[k]
+            obj[k] = people[k]
     obj['content'] = resources
     return obj
 
-def write_markdown_index_file(f_name, group):
+def write_markdown_index_file(f_name, people):
     '''coorodiante the write of a index markdown file'''
-    obj = build_index_object(group)
+    obj = build_index_object(people)
     err = pandoc_write_file(f_name, obj,
-        "templates/groups-group-index.md", 
+        "templates/peoples-people-index.md", 
         { 'from_fmt': 'markdown', 'to_fmt': 'markdown' })
     if err is not None:
         print(f'pandoc error: {err}', file = sys.stderr)
 
-def build_combined_object(repo, group, objects):
+def build_combined_object(repo, people, objects):
     '''build an object form the decoded array'''
     #print(f'DEBUG repo -> {repo}', file = sys.stderr)
     # Merge the two objects into a Pandoc friendly structure
     obj = {}
-    for k in group:
+    for k in people:
         if k not in [ 'CaltechAUTHORS', 'CaltechDATA', 'CaltechTHESIS' ]:
-            obj[k] = group[k]
+            obj[k] = people[k]
     # flatten nested dict
     u_map = {
         "CaltechAUTHORS": "https://authors.library.caltech.edu",
@@ -254,20 +254,20 @@ def build_combined_object(repo, group, objects):
     obj['content'] = objects
     return obj
 
-def write_markdown_combined_file(f_name, repo, group, objects):
+def write_markdown_combined_file(f_name, repo, people, objects):
     '''coorodiante the write of a combined markdown file'''
-    obj = build_combined_object(repo, group, objects)
+    obj = build_combined_object(repo, people, objects)
     err = pandoc_write_file(f_name, obj,
-        "templates/groups-group-combined.md", 
+        "templates/peoples-people-combined.md", 
         { 'from_fmt': 'markdown', 'to_fmt': 'markdown' })
     if err is not None:
         print(f'pandoc error: {err}', file = sys.stderr)
 
-def render_combined_files(repo, d_name, group_id, group):
+def render_combined_files(repo, d_name, people_id, people):
     '''render a combined json file'''
     c_name = f'{repo}.ds'
-    csv_name = os.path.join('htdocs', 'groups', f'group_{repo}.csv')
-    keys = _retrieve_keys(csv_name, group_id)
+    csv_name = os.path.join('htdocs', 'peoples', f'people_{repo}.csv')
+    keys = _retrieve_keys(csv_name, people_id)
     objects = []
     for key in keys:
         obj, err = dataset.read(c_name, key)
@@ -275,7 +275,7 @@ def render_combined_files(repo, d_name, group_id, group):
             return f'error access {key} in {c_name}.ds, {err}'
         objects.append(enhance_object(obj))
     if len(objects) == 0:
-        #print(f'DEBUG no objects found for {group_id} in {d_name}, {repo}', file = sys.stderr)
+        #print(f'DEBUG no objects found for {people_id} in {d_name}, {repo}', file = sys.stderr)
         return None
     # sort the list of objects
     objects.sort(key=operator.itemgetter('date', 'title'))
@@ -290,24 +290,9 @@ def render_combined_files(repo, d_name, group_id, group):
 
     # Write  the combined Markdown filefile
     f_name = os.path.join(d_name, o_name + '.md')
-    write_markdown_combined_file(f_name, repo, group, objects)
+    write_markdown_combined_file(f_name, repo, people, objects)
     return None
 
-
-def merge_resource_info(resource_info, obj, resource_type):
-    '''update the resource info based on obj attributes, resource_type'''
-    merge_fields = [
-        "name", "description", "activity", "updated",
-        "start", "end", "date", "updated", "alternative",
-        "approx_start", "approx_end", "pi" ]
-    for val in merge_fields:
-        if val in obj:
-            resource_info[val] = obj[val]
-        elif val in resource_info:
-            del resource_info[val]
-    resource_info["resource_type"] = resource_type
-    resource_info["resource_label"] = mk_label(resource_type)
-    return resource_info
 
 def build_repo_resource_objects(c_name, resource_type, repo_resources):
     '''generates a list of objects from resource type and repository resources'''
@@ -320,8 +305,8 @@ def build_repo_resource_objects(c_name, resource_type, repo_resources):
             objects.append(enhance_object(obj))
     return objects
 
-def render_authors_files(d_name, obj, group_id = None, people_id = None):
-    '''render the resource JSON files for group_id'''
+def render_authors_files(d_name, obj, people_id = None):
+    '''render the resource JSON files for people_id'''
     # build out the resource type JSON file
     c_name = 'authors'
     repo_id = f'Caltech{c_name.upper()}'
@@ -332,16 +317,15 @@ def render_authors_files(d_name, obj, group_id = None, people_id = None):
     if repo_id in obj:
         repo_resources = obj[repo_id]
         for resource_type in repo_resources:
-            resource_info = merge_resource_info(resource_info, obj, resource_type)
             objects = build_repo_resource_objects(c_name, resource_type, repo_resources)
             if len(objects) > 0:
-                # Write the group resource files out
+                # Write the people resource files out
                 f_name = os.path.join(d_name, f'{resource_type}.json')
                 write_json_file(f_name, objects)
                 # Setup to write Markdown files
-                if group_id is not None:
-                    resource_info["group_id"] = group_id
-                    resource_info["group_label"] = mk_label(group_id)
+                if people_id is not None:
+                    resource_info["people_id"] = people_id
+                    resource_info["people_label"] = mk_label(people_id)
                 if people_id is not None:
                     resource_info["people_id"] = people_id
                     resource_info["people_label"] = mk_label(people_id)
@@ -349,8 +333,8 @@ def render_authors_files(d_name, obj, group_id = None, people_id = None):
                 f_name = os.path.join(d_name, f'{resource_type}.md')
                 write_markdown_resource_file(f_name, resource_info, objects)
 
-def render_thesis_files(d_name, obj, group_id = None, people_id = None):
-    '''render the resource JSON files for group_id'''
+def render_thesis_files(d_name, obj, people_id = None):
+    '''render the resource JSON files for people_id'''
     # build out the resource type JSON file
     c_name = 'thesis'
     repo_id = f'Caltech{c_name.upper()}'
@@ -375,9 +359,9 @@ def render_thesis_files(d_name, obj, group_id = None, people_id = None):
                         "resource_type": resource_type,
                         "resource_label": mk_label(resource_type)
                     }
-                if group_id is not None:
-                    resource_info["group_id"] = group_id
-                    resource_info["group_label"] = mk_label(group_id)
+                if people_id is not None:
+                    resource_info["people_id"] = people_id
+                    resource_info["people_label"] = mk_label(people_id)
                 if people_id is not None:
                     resource_info["people_id"] = people_id
                     resource_info["people_label"] = mk_label(people_id)
@@ -386,8 +370,8 @@ def render_thesis_files(d_name, obj, group_id = None, people_id = None):
                 write_markdown_resource_file(f_name, resource_info, objects)
 
 
-def render_data_files(d_name, obj, group_id = None, people_id = None):
-    '''render the resource JSON files for group_id'''
+def render_data_files(d_name, obj, people_id = None):
+    '''render the resource JSON files for people_id'''
     # build out the resource type JSON file
     c_name = 'data'
     repo_id = f'Caltech{c_name.upper()}'
@@ -416,9 +400,9 @@ def render_data_files(d_name, obj, group_id = None, people_id = None):
                         "resource_type": resource_type,
                         "resource_label": mk_label(resource_type)
                     }
-                if group_id is not None:
-                    resource_info["group_id"] = group_id
-                    resource_info["group_label"] = mk_label(group_id)
+                if people_id is not None:
+                    resource_info["people_id"] = people_id
+                    resource_info["people_label"] = mk_label(people_id)
                 if people_id is not None:
                     resource_info["people_id"] = people_id
                     resource_info["people_label"] = mk_label(people_id)
@@ -426,83 +410,99 @@ def render_data_files(d_name, obj, group_id = None, people_id = None):
                 f_name = os.path.join(d_name, 'recent', f'{resource_type}.json')
                 write_markdown_resource_file(f_name, resource_info, objects)
 
-def group_has_content(group):
-    '''check to make sure it makes sense to render the group. There should
+def people_has_content(people):
+    '''check to make sure it makes sense to render the people. There should
     be some type of records available to populate feeds'''
-    if 'CaltechAUTHORS' in group:
+    if 'CaltechAUTHORS' in people:
         return True
-    if 'CaltechTHESIS' in group:
+    if 'CaltechTHESIS' in people:
         return True
-    if 'CaltechDATA' in group:
+    if 'CaltechDATA' in people:
         return True
-    if ('description' in group) and (group['description'] != ''):
+    if ('description' in people) and (people['description'] != ''):
         return True
     return False
 
 
-def render_a_group(group_list, group_id):
-    '''render a specific group's content if valid'''
-    if (group_id == '') and (' ' in group_id):
-        print(f'error: "{group_id}" is not valid', file = sys.stderr)
+def map_people_list(people_list):
+    '''map_people_list takes the JSON array and turns it into a dict'''
+    m = {}
+    for person in people_list:
+        cl_people_id = person.get('cl_people_id', None)
+        m[cl_people_id] = person
+    return m
+
+def render_a_person(people_list, people_id):
+    '''render a specific people's content if valid'''
+    if (people_id == '') and (' ' in people_id):
+        print(f'error: "{people_id}" is not valid', file = sys.stderr)
         return
-    if group_id not in group_list:
-        print(f'error: "could not find {group_id}" in group list', file = sys.stderr)
+    people_map = map_people_list(people_list)
+    if people_id not in people_map:
+        # Most people in the list will nap be mapped so 
+        print(f'error: "could not find {people_id}" in people list', file = sys.stderr)
         return
-    obj = group_list[group_id]
-    if group_has_content(obj):
-        src = json.dumps(obj, indent=4)
-        d_name = os.path.join('htdocs', 'groups', group_id)
-        if not os.path.exists(d_name):
-            os.makedirs(d_name, mode=0o777, exist_ok=True)
+    obj = people_map[people_id]
+    src = json.dumps(obj, indent=4)
+    # We make the directory since we have a Caltech Person
+    d_name = os.path.join('htdocs', 'peoples', people_id)
+    if not os.path.exists(d_name):
+        os.makedirs(d_name, mode=0o777, exist_ok=True)
+    #FIXME: people.json inherict from people_list.json but adds record lists for each repository.
+    pint(f'FIXME: Need to enhance people.json to include repository record info''', file = sys.stder)
+    # Write out the people json file
+    f_name = os.path.join(d_name, 'people.json')
+    write_json_file(f_name, obj)
 
-        # Write out the group json file
-        f_name = os.path.join(d_name, 'group.json')
-        write_json_file(f_name, obj)
-        # Now render the repo resource files.
-        render_authors_files(d_name, obj, group_id = group_id)
-        render_thesis_files(d_name, obj, group_id = group_id)
-        render_data_files(d_name, obj, group_id = group_id)
-        # render the combined*.md files
-        for repo in [ "authors", "thesis", "data" ]:
-            #print(f'DEBUG rending combined files: {repo}', file = sys.stderr)
-            err = render_combined_files(repo, d_name, group_id, obj)
-            if err is not None:
-                print(
-                f'error: render_combined_files({repo}' +
-                f', {d_name}, {group_id}) -> {err}', file = sys.stderr)
-        # FIXME: render the group index.json file
-        f_name = os.path.join(d_name, 'index.json')
-        write_json_file(f_name, obj)
-        # FIXME: render the group index.md file
-        f_name = os.path.join(d_name, 'index.md')
-        write_markdown_index_file(f_name, obj)
-    else:
-        print(f'{group_id} has no content, skipping', file = sys.stderr)
+    # FIXME: The people.json doesn't have publication records info, need to fix that for the rest to work
+    print(f'FIXME: generating file not implemented yet.', file = sys.stderr)
+### 
+###     # Now render the repo resource files.
+###     render_authors_files(d_name, obj, people_id = people_id)
+###     render_thesis_files(d_name, obj, people_id = people_id)
+###     render_data_files(d_name, obj, people_id = people_id)
+### 
+###     # render the combined*.md files
+###     for repo in [ "authors", "thesis", "data" ]:
+###         #print(f'DEBUG rending combined files: {repo}', file = sys.stderr)
+###         err = render_combined_files(repo, d_name, people_id, obj)
+###         if err is not None:
+###             print(
+###             f'error: render_combined_files({repo}' +
+###             f', {d_name}, {people_id}) -> {err}', file = sys.stderr)
+### 
+###     # FIXME: render the people index.json file
+###     f_name = os.path.join(d_name, 'index.json')
+###     write_json_file(f_name, obj)
+### 
+###     # FIXME: render the people index.md file
+###     f_name = os.path.join(d_name, 'index.md')
+###     write_markdown_index_file(f_name, obj)
 
-
-def render_groups(group_list, group_id = None):
+def render_peoples(people_list, people_id = None):
     '''take our agents_csv and agent_pubs_csv filenames and aggregate them'''
-    if group_id is not None:
-        render_a_group(group_list, group_id)
-    else:
-        for grp_id in group_list:
-            render_a_group(group_list, grp_id)
+    ### #FIXME: Need to enhance the person objects with record data from each repository
+    for person in people_list:
+        cl_people_id = person.get('cl_people_id', None)
+        if (people_id is None) or (cl_people_id == people_id):
+            print(f'DEBUG rendering {cl_people_id}', file = sys.stderr)
+            render_a_person(people_list, cl_people_id)
 
 def main():
     '''main processing method'''
     app_name = os.path.basename(sys.argv[0])
     argc = len(sys.argv)
     if (argc < 2) or (argc > 3):
-        print(f'{app_name} expected path to group_list.json file', file = sys.stderr)
+        print(f'{app_name} expected path to people_list.json file', file = sys.stderr)
         sys.exit(1)
-    group_list = get_group_list(sys.argv[1])
-    if group_list is None:
-        print(f'could not populate group_list from {sys.argv[1]}')
+    people_list = get_people_list(sys.argv[1])
+    if people_list is None:
+        print(f'could not populate people_list from {sys.argv[1]}')
         sys.exit(1)
-    group_id = None
+    people_id = None
     if argc == 3:
-        group_id = sys.argv[2]
-    render_groups(group_list, group_id)
+        people_id = sys.argv[2]
+    render_peoples(people_list, people_id)
 
 if __name__ == '__main__':
     main()
