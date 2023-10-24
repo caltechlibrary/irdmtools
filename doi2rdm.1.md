@@ -1,6 +1,6 @@
-%doi2rdm(1) irdmtools user manual | version 0.0.57-dev 6ff9890
+%doi2rdm(1) irdmtools user manual | version 0.0.58 f0ec67b
 % R. S. Doiel and Tom Morrell
-% 2023-10-17
+% 2023-10-24
 
 # NAME
 
