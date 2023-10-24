@@ -28,12 +28,12 @@
 <h1 id="synopsis">SYNOPSIS</h1>
 <p>rdm2eprint <a href="#options">OPTIONS</a> RDM_ID</p>
 <h1 id="description">DESCRIPTION</h1>
-<p>rdm2eprint is a Caltech Library centric command line application that
-takes an RDM record ID and returns a EPrint record JSON document. It was
-created to allow us migrate our EPrints repositories minimal change to
-our feeds system which works with EPrint structured data. It uses
-RDM_URL, RDMTOK, RDM_COMMUNITY_ID environment variables for
-configuration. It can read data from a parviously harvest RDM record or
+<p>rdm2eprint is a Caltech Library oriented command line application
+that takes an RDM record ID and returns a EPrint record JSON document.
+It was created to allow us migrate our EPrints repositories minimal
+change to our feeds system which works with EPrint structured data. It
+uses RDM_URL, RDMTOK, RDM_COMMUNITY_ID environment variables for
+configuration. It can read data from a previously harvest RDM record or
 directly from RDM via the API url. The tool is intended to run in a pipe
 line so have minimal options.</p>
 <h1 id="options">OPTIONS</h1>
@@ -52,11 +52,12 @@ display version
 </dd>
 <dt>-config</dt>
 <dd>
-provide a path to an alternate configuration file (e.g. “rdmtools.json”)
+provide a path to an alternate configuration file
+(e.g. “irdmtools.json”)
 </dd>
 <dt>-harvest C_NAME</dt>
 <dd>
-harvest JSON formated eprint records into the dataset collection
+harvest JSON formatted eprint records into the dataset collection
 specified by C_NAME.
 </dd>
 <dt>-ids JSON_ID_FILE</dt>
