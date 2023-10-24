@@ -263,7 +263,7 @@ def write_markdown_combined_file(f_name, repo, group, objects):
     if err is not None:
         print(f'pandoc error: {err}', file = sys.stderr)
 
-def render_combined_files(repo, d_name, group_id):
+def render_combined_files(repo, d_name, group_id, group):
     '''render a combined json file'''
     c_name = f'{repo}.ds'
     csv_name = os.path.join('htdocs', 'groups', f'group_{repo}.csv')
@@ -288,14 +288,7 @@ def render_combined_files(repo, d_name, group_id):
     # Write the combined JSON file for the repository
     write_json_file(f_name, objects)
 
-    # Write the group index Markdown file for the repository
-    src_name = os.path.join(d_name, "group.json")
-    group = read_json_file(src_name)
-    # Write group index file files.
-    f_name = os.path.join(d_name, 'index.json')
-    write_markdown_index_file(f_name, group)
-
-    # Write  fhe combined Markdown filefile
+    # Write  the combined Markdown filefile
     f_name = os.path.join(d_name, o_name + '.md')
     write_markdown_combined_file(f_name, repo, group, objects)
     return None
@@ -446,35 +439,46 @@ def group_has_content(group):
         return True
     return False
 
+
 def render_a_group(group_list, group_id):
     '''render a specific group's content if valid'''
     if (group_id == '') and (' ' in group_id):
         print(f'error: "{group_id}" is not valid', file = sys.stderr)
-    elif group_id in group_list:
-        obj = group_list[group_id]
-        if group_has_content(obj):
-            src = json.dumps(obj, indent=4)
-            d_name = os.path.join('htdocs', 'groups', group_id)
-            f_name = os.path.join(d_name, 'group.json')
-            if not os.path.exists(d_name):
-                os.makedirs(d_name, mode=0o777, exist_ok=True)
-            print(f'Writing {f_name}', file = sys.stderr)
-            with open(f_name, 'w', encoding = 'utf-8') as _w:
-                _w.write(src)
-            render_authors_files(d_name, obj, group_id = group_id)
-            render_thesis_files(d_name, obj, group_id = group_id)
-            render_data_files(d_name, obj, group_id = group_id)
-            for repo in [ "authors", "thesis", "data" ]:
-                #print(f'DEBUG rending combined files: {repo}', file = sys.stderr)
-                err = render_combined_files(repo, d_name, group_id)
-                if err is not None:
-                    print(
-                    f'error: render_combined_files({repo}' +
-                    f', {d_name}, {group_id}) -> {err}', file = sys.stderr)
-        else:
-            print(f'{group_id} has no content, skipping', file = sys.stderr)
-    else:
+        return
+    if group_id not in group_list:
         print(f'error: "could not find {group_id}" in group list', file = sys.stderr)
+        return
+    obj = group_list[group_id]
+    if group_has_content(obj):
+        src = json.dumps(obj, indent=4)
+        d_name = os.path.join('htdocs', 'groups', group_id)
+        if not os.path.exists(d_name):
+            os.makedirs(d_name, mode=0o777, exist_ok=True)
+
+        # Write out the group json file
+        f_name = os.path.join(d_name, 'group.json')
+        write_json_file(f_name, obj)
+        # Now render the repo resource files.
+        render_authors_files(d_name, obj, group_id = group_id)
+        render_thesis_files(d_name, obj, group_id = group_id)
+        render_data_files(d_name, obj, group_id = group_id)
+        # render the combined*.md files
+        for repo in [ "authors", "thesis", "data" ]:
+            #print(f'DEBUG rending combined files: {repo}', file = sys.stderr)
+            err = render_combined_files(repo, d_name, group_id, obj)
+            if err is not None:
+                print(
+                f'error: render_combined_files({repo}' +
+                f', {d_name}, {group_id}) -> {err}', file = sys.stderr)
+        # FIXME: render the group index.json file
+        f_name = os.path.join(d_name, 'index.json')
+        write_json_file(f_name, obj)
+        # FIXME: render the group index.md file
+        f_name = os.path.join(d_name, 'index.md')
+        write_markdown_index_file(f_name, obj)
+    else:
+        print(f'{group_id} has no content, skipping', file = sys.stderr)
+
 
 def render_groups(group_list, group_id = None):
     '''take our agents_csv and agent_pubs_csv filenames and aggregate them'''
@@ -483,7 +487,6 @@ def render_groups(group_list, group_id = None):
     else:
         for grp_id in group_list:
             render_a_group(group_list, grp_id)
-
 
 def main():
     '''main processing method'''
