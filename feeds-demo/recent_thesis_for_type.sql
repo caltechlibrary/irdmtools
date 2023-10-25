@@ -46,7 +46,7 @@ FROM (SELECT jsonb_strip_nulls(jsonb_build_object(
 		'thesis_defense_date', src->'thesis_defense_date',
 		'thesis_degree_date', src->'thesis_degree_date',
 		'thesis_approved_date', src->'thesis_approved_date',
-		'thesis_public_date', src->'thesis_public_date',
+		'thesis_publish_date', src->'thesis_publish_date',
 		'thesis_awards', src->'thesis_awards'
 	)::jsonb) AS src
 	FROM thesis

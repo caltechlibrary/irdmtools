@@ -9,7 +9,7 @@ import operator
 from subprocess import Popen, PIPE, TimeoutExpired
 
 from py_dataset import dataset
-
+import progressbar
 import yaml
 
 
@@ -234,7 +234,6 @@ def write_markdown_index_file(f_name, people):
 
 def build_combined_object(repo, people, objects):
     '''build an object form the decoded array'''
-    #print(f'DEBUG repo -> {repo}', file = sys.stderr)
     # Merge the two objects into a Pandoc friendly structure
     obj = {}
     for k in people:
@@ -266,7 +265,7 @@ def write_markdown_combined_file(f_name, repo, people, objects):
 def render_combined_files(repo, d_name, people_id, people):
     '''render a combined json file'''
     c_name = f'{repo}.ds'
-    csv_name = os.path.join('htdocs', 'peoples', f'people_{repo}.csv')
+    csv_name = os.path.join('htdocs', 'people', f'people_{repo}.csv')
     keys = _retrieve_keys(csv_name, people_id)
     objects = []
     for key in keys:
@@ -275,7 +274,6 @@ def render_combined_files(repo, d_name, people_id, people):
             return f'error access {key} in {c_name}.ds, {err}'
         objects.append(enhance_object(obj))
     if len(objects) == 0:
-        #print(f'DEBUG no objects found for {people_id} in {d_name}, {repo}', file = sys.stderr)
         return None
     # sort the list of objects
     objects.sort(key=operator.itemgetter('date', 'title'))
@@ -424,32 +422,17 @@ def people_has_content(people):
     return False
 
 
-def map_people_list(people_list):
-    '''map_people_list takes the JSON array and turns it into a dict'''
-    m = {}
-    for person in people_list:
-        cl_people_id = person.get('cl_people_id', None)
-        m[cl_people_id] = person
-    return m
 
-def render_a_person(people_list, people_id):
+def render_a_person(people_id, obj):
     '''render a specific people's content if valid'''
     if (people_id == '') and (' ' in people_id):
         print(f'error: "{people_id}" is not valid', file = sys.stderr)
         return
-    people_map = map_people_list(people_list)
-    if people_id not in people_map:
-        # Most people in the list will nap be mapped so 
-        print(f'error: "could not find {people_id}" in people list', file = sys.stderr)
-        return
-    obj = people_map[people_id]
     src = json.dumps(obj, indent=4)
     # We make the directory since we have a Caltech Person
-    d_name = os.path.join('htdocs', 'peoples', people_id)
+    d_name = os.path.join('htdocs', 'people', people_id)
     if not os.path.exists(d_name):
         os.makedirs(d_name, mode=0o777, exist_ok=True)
-    #FIXME: people.json inherict from people_list.json but adds record lists for each repository.
-    pint(f'FIXME: Need to enhance people.json to include repository record info''', file = sys.stder)
     # Write out the people json file
     f_name = os.path.join(d_name, 'people.json')
     write_json_file(f_name, obj)
@@ -479,14 +462,117 @@ def render_a_person(people_list, people_id):
 ###     f_name = os.path.join(d_name, 'index.md')
 ###     write_markdown_index_file(f_name, obj)
 
+
+def map_authors(cl_people_id, authors_objects):
+    '''for a given cl_people_id map the resources identified from list of objects'''
+    m = {}
+    for obj in authors_objects:
+        author_id = obj.get('cl_people_id', None)
+        if author_id == cl_people_id:
+            resource_id = obj.get('resource_id', None)
+            resource_type = obj.get('resource_type', None)
+            if (resource_type is not None) and (resource_id is not None):
+                if resource_type not in m:
+                    m[resource_type] = []
+                m[resource_type].append(resource_id)
+    return m
+
+def map_thesis(cl_people_id, thesis_objects):
+    '''for a given cl_people_id map the resources identified from list of objects'''
+    m = {}
+    for obj in thesis_objects:
+        author_id = obj.get('cl_people_id', None)
+        if author_id == cl_people_id:
+            resource_id = obj.get('resource_id', None)
+            resource_type = obj.get('thesis_type', None)
+            if (resource_type is not None) and (resource_id is not None):
+                if resource_type not in m:
+                    m[resource_type] = []
+                m[resource_type].append(resource_id)
+    return m
+
+def map_data(cl_people_id, data_objects):
+    '''for a given cl_people_id map the resources identified from list of objects'''
+    m = {}
+    for obj in data_objects:
+        author_id = obj.get('cl_people_id', None)
+        if author_id == cl_people_id:
+            resource_id = obj.get('resource_id', None)
+            resource_type = obj.get('resource_type', None)
+            if (resource_type is not None) and (resource_id is not None):
+                if resource_type not in m:
+                    m[resource_type] = []
+                m[resource_type].append(resource_id)
+    return m
+                    
+def map_resources(cl_people_id, person, authors_objects, thesis_objects, data_objects):
+    '''map resources from repositories into the people_list'''
+    r_map = map_authors(cl_people_id, authors_objects)
+    if len(r_map) > 0:
+        person['CaltechAUTHORS'] = r_map
+    r_map = map_thesis(cl_people_id, thesis_objects)
+    if len(r_map) > 0:
+        person['CaltechTHESIS'] = r_map
+    r_map = map_data(cl_people_id, thesis_objects)
+    if len(r_map) > 0:
+        person['CaltechDATA'] = r_map
+    return person
+
+def map_people_list(people_list, authors_objects, thesis_objects, data_objects):
+    '''map_people_list takes the JSON array and turns it into a dict'''
+    m = {}
+    print('mapping people list with authors, thesis and data resources (takes a while)', file = sys.stderr)
+    tot = len(people_list)
+    widgets=[
+         f'map people_list' 
+         ' ', progressbar.Counter(), f'/{tot}',
+         ' ', progressbar.Percentage(),
+         ' ', progressbar.AdaptiveETA(),
+    ]
+    bar = progressbar.ProgressBar(max_value = tot, widgets=widgets)
+    for i, person in enumerate(people_list):
+        cl_people_id = person.get('cl_people_id', None)
+        if (cl_people_id is None) or (cl_people_id == '') or (' ' in cl_people_id):
+            print(f'problem cl_people_id ({i}) -> {person}, skipping')
+            continue
+        m[cl_people_id] = map_resources(cl_people_id, person, authors_objects, thesis_objects, data_objects)
+        bar.update(i)
+    bar.finish()
+    return m
+
 def render_peoples(people_list, people_id = None):
     '''take our agents_csv and agent_pubs_csv filenames and aggregate them'''
     ### #FIXME: Need to enhance the person objects with record data from each repository
-    for person in people_list:
-        cl_people_id = person.get('cl_people_id', None)
+    # Load authors_objects.json
+    f_name = os.path.join('htdocs', 'people', 'authors_objects.json')
+    author_objects = read_json_file(f_name)
+    if author_objects is None:
+        print(f'failed to read author objects from {f_name}', file = sys.stderr)
+        sys.exit(10)
+    # Load thesis_objects.json
+    f_name = os.path.join('htdocs', 'people', 'thesis_objects.json')
+    thesis_objects = read_json_file(f_name)
+    if thesis_objects is None:
+        print(f'failed to read thesis objects from {f_name}', file = sys.stderr)
+        sys.exit(10)
+    # Load data_objects.json
+    f_name = os.path.join('htdocs', 'people', 'data_objects.json')
+    data_objects = read_json_file(f_name)
+    if data_objects is None:
+        print(f'failed to read data objects from {f_name}', file = sys.stderr)
+        sys.exit(10)
+    # Map authors, thesis and data objects into people_list
+    people_list = map_people_list(people_list, author_objects, thesis_objects, data_objects)
+    if people_list is None:
+        print('mapping of authors, thesis and data objects tailed', file = sys.stderr)
+        sys.exit(10)
+    # Write out the mapping of people_list with authors, thesis and data resources
+    f_name = os.path.join('htdocs', 'people', 'people_resources.json')
+    write_json_file(f_name, people_list)
+
+    for cl_people_id in people_list:
         if (people_id is None) or (cl_people_id == people_id):
-            print(f'DEBUG rendering {cl_people_id}', file = sys.stderr)
-            render_a_person(people_list, cl_people_id)
+            render_a_person(cl_people_id, people_list[cl_people_id])
 
 def main():
     '''main processing method'''
