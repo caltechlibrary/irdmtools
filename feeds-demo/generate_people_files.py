@@ -100,7 +100,8 @@ def pandoc_write_file(f_name, objects, template, params = None):
         cmd.append(from_fmt)
         if from_fmt == 'json':
             src = json.dumps(objects).encode('utf--8')
-    print(f'Writing {f_name}')
+    print(f'Writing {f_name}', file = sys.stderr)
+    print(f'DEBUG Popen {cmd}', file = sys.stderr)
     with Popen(cmd, stdin = PIPE, stdout = PIPE, stderr = PIPE) as proc:
         try:
             out, errs = proc.communicate(src, timeout = 60)
@@ -166,6 +167,9 @@ def write_markdown_resource_file(f_name, base_object, resource):
 
 def mk_label(val):
     '''make a label from an id string'''
+    if val is None:
+        raise ValueError('mk_label(val) failed, val cannot be None')  
+        return None
     if '_' in val:
         val = val.replace('_', ' ', -1)
     return val.title()
@@ -422,7 +426,6 @@ def people_has_content(people):
     return False
 
 
-
 def render_a_person(people_id, obj):
     '''render a specific people's content if valid'''
     if (people_id == '') and (' ' in people_id):
@@ -436,12 +439,9 @@ def render_a_person(people_id, obj):
     # Write out the people json file
     f_name = os.path.join(d_name, 'people.json')
     write_json_file(f_name, obj)
-
-    # FIXME: The people.json doesn't have publication records info, need to fix that for the rest to work
-    print(f'FIXME: generating file not implemented yet.', file = sys.stderr)
-### 
-###     # Now render the repo resource files.
-###     render_authors_files(d_name, obj, people_id = people_id)
+    
+    # Now render the repo resource files.
+    render_authors_files(d_name, obj, people_id = people_id)
 ###     render_thesis_files(d_name, obj, people_id = people_id)
 ###     render_data_files(d_name, obj, people_id = people_id)
 ### 
