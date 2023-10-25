@@ -13,6 +13,9 @@ from subprocess import Popen, PIPE
 from irdm import RdmUtil, eprint2rdm, fixup_record
 from eprints_to_rdm import get_file_list
 
+# Global list of DOIs aded during run, which are used to manage slow indexing times when records
+# are updated
+DOI_LIST = []
 
 class WorkObject:
     """create a working object from dict for managing state in complete function."""
@@ -144,14 +147,22 @@ def fix_record(config, eprintid, rdm_id, restriction, reload=False):
         print(f"{eprintid}, None, failed ({eprintid}): eprint2rdm {eprintid}")
         sys.stdout.flush()
         return err  # sys.exit(1)
-    # Let's save our .custom_fields["caltech:internal_note"] value if it exists, per issue #16
-    custom_fields = rec.get("custom_fields", {})
-    internal_note = custom_fields.get("caltech:internal_note", "").strip("\n")
+
+    # Deal with slow indexing of records (when we just moved a DOI into the DOI
+    # field)
+    has_doi=None
+    if "pids" in rec:
+        pids = rec["pids"]
+        new_doi = pids["doi"]["identifier"]
+        if new_doi in DOI_LIST:
+            has_doi = new_doi
+        DOI_LIST.append(new_doi)
 
     # NOTE: fixup_record is destructive. This is the rare case of where we want to work
     # on a copy of the rec rather than modify rec!!!
     rec_copy, err = fixup_record(
-        dict(rec), reload, token=config["RDMTOK"], existing_doi=existing_doi
+        dict(rec), reload, token=config["RDMTOK"], existing_doi=existing_doi,
+        has_doi=has_doi
     )
     if err is not None:
         print(
@@ -297,7 +308,7 @@ def main():
     app_name = os.path.basename(sys.argv[0])
     config, is_ok = check_environment()
     if is_ok:
-        with open("records_to_update.csv") as infile:
+        with open(sys.argv[1]) as infile:
             reader = csv.DictReader(infile)
             for row in reader:
                 eprintid = row["eprintid"]
