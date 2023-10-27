@@ -61,6 +61,8 @@ def format_authors(creators):
 
 def enhance_object(obj):
     '''given an eprint like record, enhance the record to make it Pandoc template friendly'''
+    if 'type' in obj and 'resource_type' not in obj:
+        obj['resource_type'] = obj['type']
     if 'date' in obj:
         obj['pub_year'] = obj['date'][0:4]
     if ('creators' in obj) and ('items' in obj['creators']):
@@ -101,7 +103,7 @@ def pandoc_write_file(f_name, objects, template, params = None):
         if from_fmt == 'json':
             src = json.dumps(objects).encode('utf--8')
     print(f'Writing {f_name}', file = sys.stderr)
-    print(f'DEBUG Popen {cmd}', file = sys.stderr)
+    #print(f'DEBUG Popen {cmd}', file = sys.stderr)
     with Popen(cmd, stdin = PIPE, stdout = PIPE, stderr = PIPE) as proc:
         try:
             out, errs = proc.communicate(src, timeout = 60)
@@ -152,7 +154,7 @@ def pandoc_build_resource(base_object, resource_list):
     for i, item in enumerate(resource_list):
         if i == 0:
             objects['content'].append(pandoc_enhance_item(
-                repository, href, mk_label(resource_type), item))
+                repository, href, resource_type, item))
         else:
             objects['content'].append(pandoc_enhance_item(None, None, None, item))
     return objects
@@ -442,10 +444,10 @@ def render_a_person(people_id, obj):
     
     # Now render the repo resource files.
     render_authors_files(d_name, obj, people_id = people_id)
-###     render_thesis_files(d_name, obj, people_id = people_id)
-###     render_data_files(d_name, obj, people_id = people_id)
-### 
-###     # render the combined*.md files
+    render_thesis_files(d_name, obj, people_id = people_id)
+    render_data_files(d_name, obj, people_id = people_id)
+
+    # render the combined*.md files
 ###     for repo in [ "authors", "thesis", "data" ]:
 ###         #print(f'DEBUG rending combined files: {repo}', file = sys.stderr)
 ###         err = render_combined_files(repo, d_name, people_id, obj)
@@ -454,13 +456,13 @@ def render_a_person(people_id, obj):
 ###             f'error: render_combined_files({repo}' +
 ###             f', {d_name}, {people_id}) -> {err}', file = sys.stderr)
 ### 
-###     # FIXME: render the people index.json file
-###     f_name = os.path.join(d_name, 'index.json')
-###     write_json_file(f_name, obj)
-### 
-###     # FIXME: render the people index.md file
-###     f_name = os.path.join(d_name, 'index.md')
-###     write_markdown_index_file(f_name, obj)
+    # FIXME: render the people index.json file
+    f_name = os.path.join(d_name, 'index.json')
+    write_json_file(f_name, obj)
+
+    # FIXME: render the people index.md file
+    f_name = os.path.join(d_name, 'index.md')
+    write_markdown_index_file(f_name, obj)
 
 
 def map_authors(cl_people_id, authors_objects):
