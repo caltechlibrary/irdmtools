@@ -115,8 +115,6 @@ def build_index_list(group_list):
             group = group_list[k]
             if group_has_content(group):
                 index.append(k)
-    # make sure the list is sorted
-    index.sort()
     return index
 
 def main():
