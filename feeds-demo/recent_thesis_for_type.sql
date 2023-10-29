@@ -19,7 +19,7 @@ FROM (SELECT jsonb_strip_nulls(jsonb_build_object(
 		'eprint_status', src->'eprint_status',
 		'full_text_status', src->'full_text_status',
 		'funders', src->'funders',
-		'id', src->>'id',
+		'id', concat('https://thesis.library.caltech.edu', src->>'id'),
 		'id_number', src->'id_number',
 		'ispublished', src->'ispublished',
 		'issn', src->'issn',

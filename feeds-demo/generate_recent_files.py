@@ -53,6 +53,7 @@ def format_authors(creators):
 
 def enhance_object(obj):
     '''given an eprint like record, enhance the record to make it Pandoc template friendly'''
+    print(f'DEBUG enhance object -> {obj}', file = sys.stderr)
     if 'date' in obj:
         obj['pub_year'] = obj['date'][0:4]
     if ('creators' in obj) and ('items' in obj['creators']):
@@ -101,6 +102,8 @@ def pandoc_write_file(f_name, objects, template, params = None):
 
 def pandoc_enhance_item(repository = None, href = None, resource_type = None, resource = None):
     '''given a resource, enhance it to make it friendly to tempalte in Pandoc'''
+    resource = enhance_object(resource)
+    print(f'DEBUG enhance resource for Pandoc -> {resource}', file = sys.stderr)
     if resource is None:
         return None
     if repository is not None:
@@ -147,9 +150,9 @@ def pandoc_build_resource(base_object, resource_list):
     return objects
 
 def write_markdown_resource_file(f_name, base_object, resource):
-    '''write a group resource page by transform our list of objects'''
+    '''write a recent resource page by transform our list of objects'''
     p_objects = pandoc_build_resource(base_object, resource)
-    err = pandoc_write_file(f_name, p_objects, 'templates/groups-group-resource.md')
+    err = pandoc_write_file(f_name, p_objects, 'templates/recent-resource.md')
     if err is not None:
         print(f'pandoc error: {err}', file = sys.stderr)
 
@@ -170,8 +173,7 @@ def write_markdown_combined_file(f_name, base_object, resource_list):
             objects['content'].append(pandoc_enhance_item(
                 None, None, None, item))
 
-    err = pandoc_write_file(f_name, objects,
-        "templates/recent-combined.md",
+    err = pandoc_write_file(f_name, objects, 'templates/recent-combined.md',
         { 'from_fmt': 'markdown', 'to_fmt': 'markdown' })
     if err is not None:
         print(f'pandoc error: {err}', file = sys.stderr)

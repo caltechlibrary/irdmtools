@@ -1,8 +1,9 @@
-
 # Next
 
 ## bugs
 
+- [ ] The resource types in the recent feeds need vetting, "Software" shows up under "CaltechAUTHORS" but appears to be pointing at CaltechDATA content, I need to double check the "Thesis" listed under CaltechAUTHORS and make sure they areally are non-CaltechAUTHOR thesis (the citation shows Caltech as publisher, but that might be bad crosswalk data)
+- [x] Recent pages the links to the current page because the `official_url` attribute is not popluated. Also authors_list, pub_year, doi, record id (rdmid) is not being populated either. I need to look at how I am enhancing the items in the content array, results can be viewed in `/recent/*.md` files for resources (e.g. article, monograph, etc). 
 - [ ] The title in Markdown generated via Pandoc seem to wrap at a specific column, might be happening as a result of PyYAML wrapping strings, need to sort out as it is causing a problem in linking as implememented in citation.md
 - [ ] `htdocs/groups/<GROUP_ID>/<COMBINED>.md` is not getting rendered from `htdocs/groups/<GROUP_ID>/<COMBINED>.json`
 - [ ] `htdocs/recent/<RESOURCE_TYPE>.md` is not getting rendered from `htdocs/recent/<RESOURCE_TYPE>.json`
