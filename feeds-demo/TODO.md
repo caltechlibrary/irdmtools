@@ -2,7 +2,7 @@
 
 ## bugs
 
-- [ ] On individual people pages CaltechTHESIS and CaltechDATA items aren't being listed at all, e.g. Wennberg-P-O
+- [ ] On individual people pages CaltechTHESIS and CaltechDATA items aren't being listed at all, e.g. Wennberg-P-O, could be corsswalk from ORCID to clpid is broken
 - [ ] publish.bash still needs tuning for numworkers using s5cmd so it doesn't fail with reset
 - [ ] People resource types to labels needs improvements for handling plurals given types, also some underscores aren't being mapped to spaces
 - [x] Groups, GALCIT, combined thesis sort order needs to be reversed (newest first)
