@@ -1,6 +1,6 @@
-%rdmutil(1) irdmtools user manual | version 0.0.59-dev e1a57be
+%rdmutil(1) irdmtools user manual | version 0.0.59-dev 1a55f5c
 % R. S. Doiel and Tom Morrell
-% 2023-10-30
+% 2023-10-31
 
 # NAME
 
