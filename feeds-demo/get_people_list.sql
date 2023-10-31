@@ -33,7 +33,7 @@ WITH t AS (
 		src->>'advisor_count' AS advisor_count,
 		src->>'data_count' AS data_count
     FROM people
-	WHERE src->>'caltech' = 'True'
+	WHERE src->>'authors_count' > 0
 )
 SELECT jsonb_build_object(
 	'cl_people_id', cl_people_id, 

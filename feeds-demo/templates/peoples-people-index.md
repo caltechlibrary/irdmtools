@@ -19,7 +19,7 @@ ${endif}
 
 ${if(division)}
 
-## Diision
+## Division
 
 ${division}
 ${endif}

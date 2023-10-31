@@ -2,9 +2,10 @@
 
 ## bugs
 
+- [ ] On individual people pages CaltechTHESIS and CaltechDATA items aren't being listed at all, e.g. Wennberg-P-O
 - [ ] publish.bash still needs tuning for numworkers using s5cmd so it doesn't fail with reset
 - [ ] People resource types to labels needs improvements for handling plurals given types, also some underscores aren't being mapped to spaces
-- [ ] Groups, GALCIT, combined thesis sort order needs to be reversed (news first)
+- [x] Groups, GALCIT, combined thesis sort order needs to be reversed (newest first)
 - [ ] The resource types in the recent feeds need vetting, "Software" shows up under "CaltechAUTHORS" but appears to be pointing at CaltechDATA content, I need to double check the "Thesis" listed under CaltechAUTHORS and make sure they areally are non-CaltechAUTHOR thesis (the citation shows Caltech as publisher, but that might be bad crosswalk data)
 - [x] Recent pages the links to the current page because the `official_url` attribute is not popluated. Also authors_list, pub_year, doi, record id (rdmid) is not being populated either. I need to look at how I am enhancing the items in the content array, results can be viewed in `/recent/*.md` files for resources (e.g. article, monograph, etc). 
 - [ ] The title in Markdown generated via Pandoc seem to wrap at a specific column, might be happening as a result of PyYAML wrapping strings, need to sort out as it is causing a problem in linking as implememented in citation.md
@@ -39,6 +40,8 @@
 ## make_site.bash
 
 - [ ] Missing combined for people resource pages
+- [ ] Missing RSS rendering for all feeds
+- [ ] Missing BibTeX rendering for all feeds
 - [x] Look at performance issues in make_group_pages and see if pushing this processing into generate_group_json.py might improve things (at least elimate some loops)
 - [x] Create groups/groups_list.json from the CSV files for group's repos and groups.csv
 - [x] Create groups/people_list.json from the CSV files for people's repos and people.csv

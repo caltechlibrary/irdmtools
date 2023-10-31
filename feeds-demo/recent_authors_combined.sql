@@ -43,5 +43,5 @@ FROM (SELECT jsonb_strip_nulls(jsonb_build_object(
 		'subjects', src->'subjects'
 	)::jsonb) AS src
 	FROM authors
-	ORDER BY src->>'date' DESC LIMIT 25) AS t
-ORDER BY src->>'date' ASC;
+	ORDER BY src->>'date' DESC, src->>'title' ASC LIMIT 25) AS t
+ORDER BY src->>'date' DESC, src->>'title' ASC;

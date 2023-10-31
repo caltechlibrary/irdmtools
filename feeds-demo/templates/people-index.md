@@ -1,7 +1,7 @@
 
 # People
 
-People are from [CaltechAUTHORS](https://authors.library.caltech.edu), [CaltechTHESIS](https://thesis.library.caltech.edu) and [CaltechDATA](https://data.caltech.edu)
+People are from [CaltechAUTHORS](https://authors.library.caltech.edu) and their related material.
 
 <menu id="a_to_z">
 ${for(a_to_z)}

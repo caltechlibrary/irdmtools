@@ -277,8 +277,9 @@ def render_combined_files(repo, d_name, group_id, group):
     if len(objects) == 0:
         #print(f'DEBUG no objects found for {group_id} in {d_name}, {repo}', file = sys.stderr)
         return None
-    # sort the list of objects
-    objects.sort(key=operator.itemgetter('date', 'title'))
+    # sort the list of objects, should
+    #objects.sort(key=operator.itemgetter('title'))
+    #objects.sort(key=operator.itemgetter('date'), reverse = True)
     o_name = 'combined'
     if repo == 'thesis':
         o_name = 'combined_thesis'

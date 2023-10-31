@@ -1,7 +1,7 @@
 
 # Feeds Search
 
-NOTE: This page targets searching in our feeds content not in repository records.
+NOTE: This page searches content in our feeds[1].
 
 <link href="./pagefind/pagefind-ui.css" rel="stylesheet">
 <script src="./pagefind/pagefind-ui.js" type="text/javascript"></script>
@@ -19,4 +19,5 @@ NOTE: This page targets searching in our feeds content not in repository records
 </script>
 
 
+[1]: For searching our respositories go to [CaltechAUTHORS](https://authors.library.caltech.edu), [CaltechTHESIS](https://thesis.library.caltech.edu) or [CaltechDATA](https://data.caltech.edu)
 

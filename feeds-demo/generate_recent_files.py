@@ -53,7 +53,7 @@ def format_authors(creators):
 
 def enhance_object(obj):
     '''given an eprint like record, enhance the record to make it Pandoc template friendly'''
-    print(f'DEBUG enhance object -> {obj}', file = sys.stderr)
+    #print(f'DEBUG enhance object -> {obj}', file = sys.stderr)
     if 'date' in obj:
         obj['pub_year'] = obj['date'][0:4]
     if ('creators' in obj) and ('items' in obj['creators']):
@@ -103,7 +103,7 @@ def pandoc_write_file(f_name, objects, template, params = None):
 def pandoc_enhance_item(repository = None, href = None, resource_type = None, resource = None):
     '''given a resource, enhance it to make it friendly to tempalte in Pandoc'''
     resource = enhance_object(resource)
-    print(f'DEBUG enhance resource for Pandoc -> {resource}', file = sys.stderr)
+    #print(f'DEBUG enhance resource for Pandoc -> {resource}', file = sys.stderr)
     if resource is None:
         return None
     if repository is not None:

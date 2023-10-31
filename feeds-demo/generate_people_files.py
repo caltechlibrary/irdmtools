@@ -281,8 +281,6 @@ def render_combined_files(repo, d_name, people_id, people):
         objects.append(enhance_object(obj))
     if len(objects) == 0:
         return None
-    # sort the list of objects
-    objects.sort(key=operator.itemgetter('date', 'title'))
     o_name = 'combined'
     if repo == 'thesis':
         o_name = 'combined_thesis'

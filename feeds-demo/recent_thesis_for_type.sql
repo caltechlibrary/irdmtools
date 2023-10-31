@@ -52,4 +52,4 @@ FROM (SELECT jsonb_strip_nulls(jsonb_build_object(
 	FROM thesis
 	WHERE src->>'thesis_type' = $1 AND src->>'eprint_status' = 'archive'
 	ORDER BY src->>'date' DESC LIMIT 25) AS t
-ORDER BY src->>'date' ASC;
+ORDER BY src->>'date' DESC;
