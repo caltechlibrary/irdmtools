@@ -1,4 +1,4 @@
-py_dataset
+py_dataset >= 2.1.2
 pylint 
 progressbar2
 PyYAML
