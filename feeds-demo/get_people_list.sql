@@ -28,12 +28,12 @@ WITH t AS (
 		src->>'title' AS title,
 		src->>'bio' AS bio,
 		src->>'division' AS division,
-		src->>'authors_count' AS authors_count,
-		src->>'editor_count' AS editor_count,
-		src->>'advisor_count' AS advisor_count,
-		src->>'data_count' AS data_count
+		src->'editor_count' AS editor_count,
+		src->'advisor_count' AS advisor_count,
+		src->'authors_count' AS authors_count,
+		src->'data_count' AS data_count
     FROM people
-	WHERE src->>'authors_count' > 0
+	WHERE src->>'authors_count' != '0'
 )
 SELECT jsonb_build_object(
 	'cl_people_id', cl_people_id, 

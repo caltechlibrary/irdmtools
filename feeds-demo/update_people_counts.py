@@ -9,17 +9,21 @@ import json
 from py_dataset import dataset
 import progressbar
 
+def asInt(val):
+    if (val == '') or (val == "0"):
+        return 0
+    return int(val)
 
 def update_record(c_name, cl_people_id, authors_count, editor_count, thesis_count, advisor_count, data_count):
     '''update the people record with counts'''
     rec, err = dataset.read(c_name, cl_people_id)
     if not (err is None or err == ''):
         print(f'read reading {cl_people_id} from {c_name}, {err}', file = sys.stderr)
-    rec['authors_count'] = authors_count
-    rec['editor_count'] = editor_count
-    rec['thesis_count'] = thesis_count
-    rec['advisor_count'] = advisor_count
-    rec['data_count'] = data_count
+    rec['authors_count'] = asInt(authors_count)
+    rec['editor_count'] = asInt(editor_count)
+    rec['thesis_count'] = asInt(thesis_count)
+    rec['advisor_count'] = asInt(advisor_count)
+    rec['data_count'] = asInt(data_count)
     err = dataset.update(c_name, cl_people_id, rec)
     if not (err is None or err == ''):
         print(f'failed to update {cl_people_id} in {c_name}, {err}', file = sys.stderr)
