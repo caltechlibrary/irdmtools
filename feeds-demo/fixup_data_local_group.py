@@ -36,6 +36,13 @@ def get_fixup_csv(fixup_csv, object_map):
                 object_map[group_id]['record_ids'].append(record_id)
     return object_map
 
+def has_group(group_id, group_items):
+    for grp in group_items:
+        grp_id = grp.get('id', '')
+        if group_id == grp_id:
+            return True
+    return False
+
 def merge_local_group_data(app_name, pid, c_name, object_map):
     '''now that we've build up our object map we can update our 
     dataset collection's objects with local group information'''
@@ -59,12 +66,12 @@ def merge_local_group_data(app_name, pid, c_name, object_map):
                     obj['local_group'] = {}
                 if 'items' not in obj['local_group']:
                     obj['local_group']['items'] = []
-                if normalized_id not in obj['local_group']['items']:
+                if has_group(normalized_id, obj['local_group']['items']) == False:
                     obj['local_group']['items'].append({'id': normalized_id})
-                err = dataset.update(c_name, record_id, obj)
-                if err != '':
-                    err = f'could not update {record_id} in {c_name}, {err}'
-                    return err
+                    err = dataset.update(c_name, record_id, obj)
+                    if err != '':
+                        err = f'could not update {record_id} in {c_name}, {err}'
+                        return err
         bar.update(i)
     bar.finish()
     return None

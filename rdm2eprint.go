@@ -376,12 +376,23 @@ func CrosswalkRdmToEPrint(cfg *Config, rec *simplified.Record, eprint *eprinttoo
 							addItem = true
 							item.ID = id.(string)
 						}
-						// FIXME: title is populated from translating the vocabuarly against
+						// FIXME: title is populated from translating the vocabulary against
 						// and group id attribute so this is always empty.
 						if title, ok := group["title"].(map[string]interface{}); ok {
 							if en, ok := title["en"]; ok {
 								addItem = true
 								item.Value = en.(string)
+							}
+						}
+						//NOTE: Need to make sure we're not adding a duplicate groups
+						for i := 0; i < groupList.Length(); i++ {
+							grp := groupList.IndexOf(i)
+							if grp.ID == item.ID {
+								addItem = false
+								break
+							}
+							if item.Value != "" && (grp.Value == item.Value) {
+								addItem = false
 							}
 						}
 						if addItem {
