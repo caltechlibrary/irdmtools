@@ -61,7 +61,7 @@ def merge_local_group_data(app_name, pid, c_name, object_map):
             for record_id in grp_obj['record_ids']:
                 obj, err = dataset.read(c_name, record_id)
                 if err != '':
-                    return f'error: could not get {record_id} from {c_name}, "{err}"'
+                    return f'''error: dataset.read({c_name}, {record_id}), {err}'''
                 if 'local_group' not in obj:
                     obj['local_group'] = {}
                 if 'items' not in obj['local_group']:
@@ -70,7 +70,7 @@ def merge_local_group_data(app_name, pid, c_name, object_map):
                     obj['local_group']['items'].append({'id': normalized_id})
                     err = dataset.update(c_name, record_id, obj)
                     if err != '':
-                        err = f'could not update {record_id} in {c_name}, {err}'
+                        err = f'''error: dataset.update({c_name}, {record_id}), {err}'''
                         return err
         bar.update(i)
     bar.finish()
