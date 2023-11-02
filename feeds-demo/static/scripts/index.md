@@ -33,3 +33,8 @@ Caltech Library content (e.g. feeds.library.caltech.edu).
 [CL-BuilderWidget.js](CL-BuilderWidget.js)
 : is our first widget built to generate HTML and JavaScript to make it easier to embed or re-use our content in your webpage. It makes extensive use of [CL.js](CL.js). The generated code is for making the library content embeddable in your own webpage.
 
+## Source Code and testing
+
+- [Github](https://github.com/caltechlibrary/cl-js)
+- [Tests](testing.md)
+

@@ -42,7 +42,16 @@
 - [ ] Missing combined for people resource pages
 - [ ] Missing RSS rendering for all feeds
 - [ ] Missing BibTeX rendering for all feeds
+    - [x] Write a simple BibTeX template that iterates over "content"
+    - [ ] Need to add this to generate_people_files.py and generate_groups_files.py and the one that generates the recent lists
 - [x] Look at performance issues in make_group_pages and see if pushing this processing into generate_group_json.py might improve things (at least elimate some loops)
 - [x] Create groups/groups_list.json from the CSV files for group's repos and groups.csv
 - [x] Create groups/people_list.json from the CSV files for people's repos and people.csv
+
+## CL.js improvements, fixes
+
+- [x] Remove lunrs JS files, site uses PageFind and that is my recommendation going forward os there is no "Search" widget possible
+- [ ] Test CL.js scripts using test buckets, may need to make the base url for content configurable when rendering static to htdocs tree
+    - [ ] consider a CL-config.js file that everything uses to pickup appropiate configurtion (e.g. production or testing)
+
 
