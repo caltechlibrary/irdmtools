@@ -3,6 +3,7 @@
 --
 SELECT jsonb_build_object('name', src->>'type', 'label', INITCAP(replace(src->>'type', '_', ' '))) AS obj
 FROM authors
+WHERE src->'type' IS NOT NULL
 GROUP BY src->>'type'
 ORDER BY src->>'type'
 ;

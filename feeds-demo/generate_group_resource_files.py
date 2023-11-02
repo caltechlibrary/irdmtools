@@ -456,27 +456,28 @@ def render_a_group(group_list, group_id):
         if not os.path.exists(d_name):
             os.makedirs(d_name, mode=0o777, exist_ok=True)
 
-        # Write out the group json file
+        # Write out the legacy group.json file
         f_name = os.path.join(d_name, 'group.json')
         write_json_file(f_name, obj)
+
         # Now render the repo resource files.
         render_authors_files(d_name, obj, group_id = group_id)
         render_thesis_files(d_name, obj, group_id = group_id)
         render_data_files(d_name, obj, group_id = group_id)
-        # render the combined*.md files
-        for repo in [ "authors", "thesis", "data" ]:
-            #print(f'DEBUG rending combined files: {repo}', file = sys.stderr)
-            err = render_combined_files(repo, d_name, group_id, obj)
-            if err is not None:
-                print(
-                f'error: render_combined_files({repo}' +
-                f', {d_name}, {group_id}) -> {err}', file = sys.stderr)
         # FIXME: render the group index.json file
         f_name = os.path.join(d_name, 'index.json')
         write_json_file(f_name, obj)
         # FIXME: render the group index.md file
         f_name = os.path.join(d_name, 'index.md')
         write_markdown_index_file(f_name, obj)
+###         # render the combined*.md files
+###         for repo in [ "authors", "thesis", "data" ]:
+###             #print(f'DEBUG rending combined files: {repo}', file = sys.stderr)
+###             err = render_combined_files(repo, d_name, group_id, obj)
+###             if err is not None:
+###                 print(
+###                 f'error: render_combined_files({repo}' +
+###                 f', {d_name}, {group_id}) -> {err}', file = sys.stderr)
     else:
         print(f'{group_id} has no content, skipping', file = sys.stderr)
 
@@ -494,7 +495,7 @@ def main():
     app_name = os.path.basename(sys.argv[0])
     argc = len(sys.argv)
     if (argc < 2) or (argc > 3):
-        print(f'{app_name} expected path to group_list.json file', file = sys.stderr)
+        print(f'{app_name} expected path to group_resources.json file', file = sys.stderr)
         sys.exit(1)
     group_list = get_group_list(sys.argv[1])
     if group_list is None:

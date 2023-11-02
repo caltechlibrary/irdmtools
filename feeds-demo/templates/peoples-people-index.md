@@ -34,8 +34,17 @@ ${if(advisor)}
 
 ## Advisor
 
-${for(advisor)}
-- Thesis and Dissertations: [HTML](${it.combined}.html), [HTML Include](${it.combined}.include), [Markdown](${it.combined}.md), [BibTeX](${it.combined}.bib), [JSON](${it.combined}.json), [RSS](${it.combined}.rss)
+${for(thesis_advisor)}
+- Thesis and Dissertations: [HTML](${it.thesis_advisor}.html), [HTML Include](${it.thesis_advisor}.include), [Markdown](${it.thesis_advisor}.md), [BibTeX](${it.thesis_advisor}.bib), [JSON](${it.thesis_advisor}.json), [RSS](${it.thesis_advisor}.rss)
+${endfor}
+${endif}
+
+${if(committee)}
+
+## Committee Member
+
+${for(thesis_committee)}
+- Thesis and Dissertations: [HTML](${it.thesis_committee}.html), [HTML Include](${it.thesis_committee}.include), [Markdown](${it.thesis_committee}.md), [BibTeX](${it.thesis_committee}.bib), [JSON](${it.thesis_committee}.json), [RSS](${it.thesis_committee}.rss)
 ${endfor}
 ${endif}
 

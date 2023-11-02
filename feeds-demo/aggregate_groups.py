@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-'''Take a (groups.csv and the resource CSVs for authors, thesis and data) or
-peoples.csv and resource CSVs for author, thesis and data) and
-aggregate them into a list of group or people objecfs with publications
-by collection, publication type in type/pub_date (descending) order'''
+'''Take a groups.csv and the combined/resource CSVs for authors, thesis and 
+data or take a peoples.csv and combined/resource CSVs for author, thesis and
+data) and aggregate them into a list of group or people objects with 
+based on the combined/resource CVS's ordering'''
 
 import os
 import sys

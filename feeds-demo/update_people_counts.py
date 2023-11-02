@@ -14,7 +14,7 @@ def asInt(val):
         return 0
     return int(val)
 
-def update_record(c_name, cl_people_id, authors_count, editor_count, thesis_count, advisor_count, data_count):
+def update_record(c_name, cl_people_id, authors_count, editor_count, thesis_count, advisor_count, committee_count, data_count):
     '''update the people record with counts'''
     rec, err = dataset.read(c_name, cl_people_id)
     if not (err is None or err == ''):
@@ -23,6 +23,7 @@ def update_record(c_name, cl_people_id, authors_count, editor_count, thesis_coun
     rec['editor_count'] = asInt(editor_count)
     rec['thesis_count'] = asInt(thesis_count)
     rec['advisor_count'] = asInt(advisor_count)
+    rec['committee_count'] = asInt(committee_count)
     rec['data_count'] = asInt(data_count)
     err = dataset.update(c_name, cl_people_id, rec)
     if not (err is None or err == ''):
@@ -72,7 +73,7 @@ def load_json_count(repo, f_name, id_map):
 
 def update_counts(app_name, pid, people_ids, 
                 authors_json, editor_json,
-                thesis_json, advisor_json, 
+                thesis_json, advisor_json, committee_json, 
                 data_json, orcid_to_clpid_json):
     '''update the counds for repository for each person'''
     # for each person run the statements using dsquery for the counts
@@ -88,6 +89,8 @@ def update_counts(app_name, pid, people_ids,
     editor_count = load_json_count('editor', editor_json, id_map)
     print(f'loading {advisor_json}', file = sys.stderr)
     advisor_count = load_json_count('advisor', advisor_json, id_map)
+    print(f'loading {thesis_json}', file = sys.stderr)
+    committee_count = load_json_count('committee', committee_json, id_map)
     tot = len(people_ids)
     c_name = 'people.ds'
     print(f'process {c_name}', file = sys.stderr)
@@ -104,6 +107,7 @@ def update_counts(app_name, pid, people_ids,
             editor_count.get(cl_people_id, 0),
             thesis_count.get(cl_people_id, 0),
             advisor_count.get(cl_people_id, 0),
+            committee_count.get(cl_people_id, 0),
             data_count.get(cl_people_id, 0))
         _bar.update(i)
     _bar.finish()
@@ -119,11 +123,12 @@ def main():
     editor_json = 'editor_count.json'
     thesis_json = 'thesis_count.json'
     advisor_json = 'advisor_count.json'
+    committee_json = 'committee_count.json'
     data_json = 'data_count.json'
     orcid_to_clpid_json = 'orcid_to_clpid.json'
     update_counts(app_name, pid, people_ids, 
             authors_json, editor_json,
-            thesis_json, advisor_json,
+            thesis_json, advisor_json, committee_json,
             data_json, orcid_to_clpid_json
     )
 

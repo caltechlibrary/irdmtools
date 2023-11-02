@@ -87,10 +87,13 @@ def generate_recent_list(repositories_info):
             print('failed to find object types JSON filename for {repo_name}', file = sys.stderr)
         else:
             f_name = os.path.join('htdocs', 'recent', b_name + '.json')
-            object_types = read_json_file(f_name)
-            object_types.sort(key = operator.itemgetter('label'))
-            for obj_type in object_types:
-                obj['content'].append(obj_type)
+            if os.path.exists(f_name):
+                object_types = read_json_file(f_name)
+                object_types.sort(key = operator.itemgetter('label'))
+                for obj_type in object_types:
+                    obj['content'].append(obj_type)
+            else:
+                print(f'failed to find {f_name}, skipping', file = sys.stderr)
     return obj
 
 def main():
@@ -107,7 +110,7 @@ def main():
             "object_types": "object_types"
         },
         "CaltechDATA": {
-            "combined": "combined_Data",
+            "combined": "combined_data",
             "object_types": "data_object_types"
         }
     })
