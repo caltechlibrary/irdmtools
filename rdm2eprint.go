@@ -711,7 +711,7 @@ func (app *Rdm2EPrint) RunHarvest(in io.Reader, out io.Writer, eout io.Writer, c
 			log.Printf("%s (%d/%d) %s", cName, i, tot, ProgressETA(t0, i, tot))
 		}
 	}
-	log.Printf("Finished, processed %d records in %s", tot, time.Since(t0).Round(time.Second))
+	log.Printf("Finished %s, processed %d records in %s", cName, tot, time.Since(t0).Round(time.Second))
 	return nil
 }
 
