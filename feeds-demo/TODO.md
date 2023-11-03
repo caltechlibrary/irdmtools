@@ -1,5 +1,9 @@
 # Next
 
+- [ ] convert generate_people_resource_files.py to work on people/resource
+- [ ] create generate_people_combined_files.py from generate_people_resource_files.py
+- [ ] create aggregate_people.py to work like aggregate_groups.py
+
 ## bugs
 
 - [ ] On individual people pages CaltechTHESIS and CaltechDATA items aren't being listed at all, e.g. Wennberg-P-O, could be corsswalk from ORCID to clpid is broken
