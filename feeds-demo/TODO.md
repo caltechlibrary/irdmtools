@@ -1,8 +1,17 @@
 # Next
 
-- [ ] convert generate_people_resource_files.py to work on people/resource
-- [ ] create generate_people_combined_files.py from generate_people_resource_files.py
-- [ ] create aggregate_people.py to work like aggregate_groups.py
+- [ ] Render people, resources, index
+    - [x] write generate_people_resource_map.py to work on people/resource
+    - [x] write generate_people_resource_files.py to work on people/resource
+    - [x] test fixup_data_object.py
+    - [ ] test generate_people_resource_map.py
+    - [ ] test generate_people_resource_files.py
+- [ ] Render people, combined
+    - [x] create generate_people_combined_map.py from generate_people_resource_map.py
+    - [x] create generate_people_combined_files.py from generate_people_resource_files.py
+    - [ ] test generate_people_combined_map.py
+    - [ ] test generate_people_combined_files.py
+
 
 ## bugs
 
