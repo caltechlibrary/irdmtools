@@ -1,6 +1,8 @@
 WITH t AS (
 	SELECT
 		_key AS resource_id,
+		src->>'official_url' AS official_url,
+		CONCAT('https//authors.library.caltech.edu/records/', _key) AS href,
 		src->>'title' AS title,
 		src->>'type' AS resource_type,
     	src->>'date' AS pub_date,
@@ -15,6 +17,8 @@ SELECT
 		'resource_id', resource_id, 
 		'cl_people_id', cl_people_id,
 		'resource_type', resource_type,
+		'official_url', official_url,
+		'href', href,
 		'collection', collection,
 		'pub_date', pub_date
 	) AS obj

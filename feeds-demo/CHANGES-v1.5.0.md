@@ -37,6 +37,9 @@ Our feeds system has been updated as a result of the CaltechAUTHORS repository m
     - Pagefind indexes the site and generates our static search support
 - Dataset collections are no longer be published in feeds
 - The `recent` directories under people and groups are no longer being generated in favor of using JavaScript or our Widget to present shorter lists
+- Groups inclusion is based on being identified in the groups list of objects and having something in one or more records in CaltechAUTHORS, CaltechTHESIS or CaltechDATA
+- People inclusion is based on being identified as a Caltech person and being listed as an author in a CaltechAUTHORS's metadata record
+
 
 ## System requirements
 

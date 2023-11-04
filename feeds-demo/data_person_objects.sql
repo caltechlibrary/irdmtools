@@ -1,6 +1,7 @@
 WITH t AS (
 	SELECT
 		_key AS resource_id,
+		CONCAT('https://data.caltech.edu/records/', _key) AS href,
 		src->>'type' AS resource_type,
     	src->>'date' AS pub_date,
 		src->>'collection' AS collection,
@@ -13,6 +14,7 @@ SELECT
 		'resource_id', resource_id, 
 		'orcid', orcid,
 		'resource_type', resource_type,
+		'href', href,
 		'collection', collection,
 		'pub_date', pub_date
 	) AS obj

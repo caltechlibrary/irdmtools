@@ -75,17 +75,22 @@ def build_a_to_z_object(people_list):
         if key is None:
             print(f'missing people id in people_list[{i}] -> {person}', file = sys.stderr)
             continue
-        name = person.get('sort_name', None)
-        if name is None:
-            print(f'missing sort_name in people_list[{i}] -> {person}', file = sys.stderr)
-            continue
-        letter = name[0].upper()
-        if letter != last_letter:
-            a_to_z.append({'href': f'#{letter}', 'label': f' {letter} '})
-            last_letter = letter
-            objects.append({"id": key, "name": name, "letter": f' {letter} '})
+        # Check if they have CaltechAUTHORS content
+        authors_count = person.get('authors_count', 0)
+        if authors_count > 0:
+            name = person.get('sort_name', None)
+            if name is None:
+                print(f'missing sort_name in people_list[{i}] -> {person}', file = sys.stderr)
+                continue
+            letter = name[0].upper()
+            if letter != last_letter:
+                a_to_z.append({'href': f'#{letter}', 'label': f' {letter} '})
+                last_letter = letter
+                objects.append({"id": key, "name": name, "letter": f' {letter} '})
+            else:
+                objects.append({"id": key, "name": name})
         else:
-            objects.append({"id": key, "name": name})
+            print(f'"{key}" has not CaltechAUTHORS content, skipping', file = sys.stderr)
     return {
         "a_to_z": a_to_z,
         "content": objects,

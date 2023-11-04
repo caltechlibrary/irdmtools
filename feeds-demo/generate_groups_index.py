@@ -59,9 +59,9 @@ def pandoc_write_file(f_name, objects, template, params = None):
             out, errs = proc.communicate()
         if out != b'':
             print(f'{out}', file = sys.stderr)
-    if errs != b'':
-        print(f'error: {out}', file = sys.stderr)
-        sys.exit(20)
+        if errs != b'':
+            print(f'error: {errs}', file = sys.stderr)
+            sys.exit(20)
     return None
 
 def build_a_to_z_object(index):

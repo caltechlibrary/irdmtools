@@ -109,9 +109,9 @@ def pandoc_write_file(f_name, objects, template, params = None):
             out, errs = proc.communicate()
         if out != b'':
             print(f'{out}', file = sys.stderr)
-    if errs != b'':
-        print(f'error: {out}', file = sys.stderr)
-        sys.exit(20)
+        if errs != b'':
+            print(f'error: {errs}', file = sys.stderr)
+            sys.exit(20)
     return None
 
 def pandoc_enhance_item(repository = None, href = None, resource_type = None, resource = None):
@@ -365,7 +365,7 @@ def render_data_files(d_name, obj, group_id = None, people_id = None):
                 write_json_file(f_name, objects[0:25])
                 resource_info =  {
                         "repository": "CaltechDATA", 
-                        "href":"https://data.library.caltech.edu",
+                        "href":"https://data.caltech.edu",
                         "resource_type": resource_type,
                         "resource_label": mk_label(resource_type)
                     }

@@ -23,6 +23,9 @@ DOI
 Official URL
 : "${if(it.official_url)}${it.official_url}${endif}"
 
+HRef
+: <${if(it.href)}${it.href}${endif}>
+
 Record ID
 : "${if(it.rdmid)}${it.rdmid}${endif}"
 

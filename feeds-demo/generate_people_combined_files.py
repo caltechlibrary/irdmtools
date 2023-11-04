@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-'''Use the htdocs/people/people_list.json to build out each of the publication JSON lists'''
+'''Use the htdocs/people/people_list.json to build out combined lists for resources'''
 
 import os
 import sys
@@ -23,16 +23,6 @@ def get_people_list(people_list_json):
         people_list = json.loads(src)
         return people_list
     return None
-
-def _retrieve_keys(csv_name, people_id):
-    '''used by render_combined_files(), return a list of keys'''
-    keys = []
-    with open(csv_name, 'r', encoding = 'utf-8', newline = '') as csvfile:
-        _r = csv.DictReader(csvfile)
-        for row in _r:
-            if ('cl_people_id' in row) and (people_id == row['cl_people_id']):
-                keys.append(row['id'])
-    return keys
 
 def format_authors(creators):
     '''format the authors to be friendly to Pandoc template'''
@@ -59,8 +49,11 @@ def format_authors(creators):
             return '; '.join(authors[0:2]) + '; et el.'
     return None
 
-def enhance_object(obj):
+def enhance_object(obj, repo_url = None):
     '''given an eprint like record, enhance the record to make it Pandoc template friendly'''
+    obj_id = obj.get('id', None)
+    if (repo_url is not None) and (obj_id is not None):
+        obj['id'] = f'{repo_url}{obj_id}'
     if 'type' in obj and 'resource_type' not in obj:
         obj['resource_type'] = obj['type']
     if 'date' in obj:
@@ -102,7 +95,6 @@ def pandoc_write_file(f_name, objects, template, params = None):
         cmd.append(from_fmt)
         if from_fmt == 'json':
             src = json.dumps(objects).encode('utf--8')
-    print(f'DEBUG Popen {cmd}', file = sys.stderr)
     print(f'Writing {f_name}', file = sys.stderr)
     with Popen(cmd, stdin = PIPE, stdout = PIPE, stderr = PIPE) as proc:
         try:
@@ -112,9 +104,9 @@ def pandoc_write_file(f_name, objects, template, params = None):
             out, errs = proc.communicate()
         if out != b'':
             print(f'{out}', file = sys.stderr)
-    if errs != b'':
-        print(f'error: {out}', file = sys.stderr)
-        sys.exit(20)
+        if errs != b'':
+            print(f'error: {errs}', file = sys.stderr)
+            sys.exit(20)
     return None
 
 def pandoc_enhance_item(repository = None, href = None, resource_type = None, resource = None):
@@ -133,39 +125,6 @@ def pandoc_enhance_item(repository = None, href = None, resource_type = None, re
             resource['resource_label'] = mk_label(resource_type) + 's'
     return resource
 
-
-def pandoc_build_resource(base_object, resource_list):
-    '''build a object structure suitable for processing with a pandoc template from
-    a base object and a list of object resources'''
-    objects = base_object
-    if 'repository' not in objects:
-        print('missing repository value in object expression', file = sys.stderr)
-        return None
-    repository = objects['repository']
-    if 'href' not in objects:
-        print('missing href value in object expression', file = sys.stderr)
-        return None
-    href = objects['href']
-    if 'resource_type' in objects:
-        resource_type = objects['resource_type']
-    else:
-        resource_type = None
-    objects['content'] = []
-    for i, item in enumerate(resource_list):
-        if i == 0:
-            objects['content'].append(pandoc_enhance_item(
-                repository, href, resource_type, item))
-        else:
-            objects['content'].append(pandoc_enhance_item(None, None, None, item))
-    return objects
-
-
-def write_markdown_resource_file(f_name, base_object, resource):
-    '''write a people resource page by transform our list of objects'''
-    p_objects = pandoc_build_resource(base_object, resource)
-    err = pandoc_write_file(f_name, p_objects, 'templates/peoples-people-resource.md')
-    if err is not None:
-        print(f'pandoc error: {err}', file = sys.stderr)
 
 def mk_label(val):
     '''make a label from an id string'''
@@ -189,36 +148,6 @@ def read_json_file(src_name):
         print(f'failed to read {src_name}', file = sys.stderr)
         sys.exit(1)
     return json.loads(src)
-
-def build_index_object(people):
-    '''build an object form the decoded array'''
-    # Merge the two objects into a Pandoc friendly structure
-    obj = {}
-    resources = []
-    u_map = {
-        "CaltechAUTHORS": "https://authors.library.caltech.edu",
-        "CaltechDATA": "https://data.caltech.edu",
-        "CaltechTHESIS": "https://thesis.library.caltech.edu"
-    }
-    c_map = {
-        "CaltechAUTHORS": "combined",
-        "CaltechDATA": "combined_data",
-        "CaltechTHESIS": "combined_thesis"
-    }
-    for k in people:
-        if k in [ 'CaltechAUTHORS', 'CaltechTHESIS', 'CaltechDATA' ]:
-            obj[k] = people[k]
-    obj['content'] = resources
-    return obj
-
-def write_markdown_index_file(f_name, people):
-    '''coorodiante the write of a index markdown file'''
-    obj = build_index_object(people)
-    err = pandoc_write_file(f_name, obj,
-        "templates/peoples-people-index.md", 
-        { 'from_fmt': 'markdown', 'to_fmt': 'markdown' })
-    if err is not None:
-        print(f'pandoc error: {err}', file = sys.stderr)
 
 def build_combined_object(repo, people, objects):
     '''build an object form the decoded array'''
@@ -250,17 +179,35 @@ def write_markdown_combined_file(f_name, repo, people, objects):
     if err is not None:
         print(f'pandoc error: {err}', file = sys.stderr)
 
-def render_combined_files(repo, d_name, people_id, people):
+def _retrieve_keys(repo_name, people_id, obj):
+    keys = []
+    print(f'DEBUG repo_name -> {repo_name}, people_id -> {people_id}, obj ->{obj}')
+    sys.exit(0) # DEBUG
+
+    return keys
+
+def render_combined_files(repo, d_name, people_id, obj):
     '''render a combined json file'''
     c_name = f'{repo}.ds'
-    csv_name = os.path.join('htdocs', 'people', f'people_{repo}.csv')
-    keys = _retrieve_keys(csv_name, people_id)
+    repo_name = ''
+    repo_url = None
+    if repo == 'author':
+        repo_name = 'CaltechAUTHORS'
+        repo_url = 'https://authors.library.caltech.edu'
+    elif repo == 'thesis':
+        repo_name = 'CaltechTHESIS'
+        repo_url = 'https://thesis.library.caltech.edu'
+    elif repo == 'data':
+        repo_name = 'CaltechDATA'
+        repo_url = 'https:/data.caltech.edu'
+    # retrieve the keys for the person from the repository
+    keys = _retrieve_keys(repo_name, people_id, obj)
     objects = []
     for key in keys:
         obj, err = dataset.read(c_name, key)
         if err is not None and err != '':
             return f'error access {key} in {c_name}.ds, {err}'
-        objects.append(enhance_object(obj))
+        objects.append(enhance_object(obj, repo_url = repo_url))
     if len(objects) == 0:
         return None
     o_name = 'combined'
@@ -294,6 +241,11 @@ def people_has_content(people):
 
 def render_a_person(people_id, obj):
     '''render a specific people's content if valid'''
+    authors_count = obj.get('authors_count', 0)
+    if authors_count == 0:
+        print(f'"{people_id}" has not CaltechAUTHORS content, skipping', file = sys.stderr)
+        return
+
     if (people_id == '') and (' ' in people_id):
         print(f'error: "{people_id}" is not valid', file = sys.stderr)
         return
@@ -313,15 +265,27 @@ def render_a_person(people_id, obj):
             f', {d_name}, {people_id}) -> {err}', file = sys.stderr)
 
 
+def map_objects(cl_people_id, objects):
+    '''for a given cl_people_id aggregate map resources identified from list of objects'''
+    _l = []
+    for obj in objects:
+        author_id = obj.get('cl_people_id', None)
+        resource_id = obj.get('resource_id', None)
+        if (resource_id is not None) and (author_id == cl_people_id):
+            _l.append(resource_id)
+    return _l
 
 def map_resources(cl_people_id, person, authors_objects, thesis_objects, data_objects):
     '''map resources from repositories into the people_list'''
-    if len(authors_objects) > 0:
-        person['CaltechAUTHORS'] = authors_objects
-    if len(thesis_objects) > 0:
-        person['CaltechTHESIS'] = thesis_objects
-    if len(data_objects) > 0:
-        person['CaltechDATA'] = data_objects
+    r_map = map_objects(cl_people_id, authors_objects)
+    if len(r_map) > 0:
+        person['CaltechAUTHORS'] = r_map
+    r_map = map_objects(cl_people_id, thesis_objects)
+    if len(r_map) > 0:
+        person['CaltechTHESIS'] = r_map
+    r_map = map_objects(cl_people_id, data_objects)
+    if len(r_map) > 0:
+        person['CaltechDATA'] = r_map
     return person
 
 def map_people_list(people_list, authors_objects, thesis_objects, data_objects):
@@ -330,7 +294,7 @@ def map_people_list(people_list, authors_objects, thesis_objects, data_objects):
     print('mapping people list with authors, thesis and data resources (takes a while)', file = sys.stderr)
     tot = len(people_list)
     widgets=[
-         f'map people_list' 
+         f'map people_list to people_combined.json' 
          ' ', progressbar.Counter(), f'/{tot}',
          ' ', progressbar.Percentage(),
          ' ', progressbar.AdaptiveETA(),
@@ -367,16 +331,18 @@ def render_peoples(people_list, people_id = None):
     if data_objects is None:
         print(f'failed to read data objects from {f_name}', file = sys.stderr)
         sys.exit(10)
-    # Map authors, thesis and data objects into people_list
-    people_list = map_people_list(people_list, author_objects, thesis_objects, data_objects)
+    
+    f_name = os.path.join('htdocs', 'people', 'people_combined.json')
+    if os.path.exists(f_name):
+        people_list = read_json_file(f_name)
+    else:
+        # Map authors, thesis and data objects into people_list
+        people_list = map_people_list(people_list, author_objects, thesis_objects, data_objects)
+        # Write out the mapping of people combined json with authors, thesis and data resources
+        write_json_file(f_name, people_list)
     if people_list is None:
-        print('mapping of authors, thesis and data objects tailed', file = sys.stderr)
+        print('mapping of authors, thesis and data objects failed, aborting', file = sys.stderr)
         sys.exit(10)
-    # Write out the mapping of people combined json with authors, thesis and data resources
-    #f_name = os.path.join('htdocs', 'people', 'people_combined.json')
-    #print(f'Writing {f_name}', file = sys.stderr)
-    #write_json_file(f_name, people_list)
-
     tot = len(people_list)
     widgets=[
          f'render_a_people ' 
