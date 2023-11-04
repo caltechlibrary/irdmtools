@@ -119,7 +119,7 @@ def render_peoples(people_list, people_id = None):
         print('mapping of authors, thesis and data objects tailed', file = sys.stderr)
         sys.exit(10)
     # Write out the mapping of people_list with authors, thesis and data resources
-    f_name = os.path.join('htdocs', 'people', 'people_resources.json')
+    f_name = os.path.join('htdocs', 'people', 'people_combined.json')
     write_json_file(f_name, people_list)
 
 def main():
