@@ -67,7 +67,7 @@ def enhance_object(obj, repo_url = None):
 def write_json_file(f_name, objects):
     '''render the JSON file from the objects.'''
     src = json.dumps(objects, indent = 4)
-    print(f'Writing {f_name}', file = sys.stderr)
+    #print(f'Writing {f_name}', file = sys.stderr)
     with open(f_name, 'w', encoding = 'utf-8') as _w:
         _w.write(src)
 
@@ -95,7 +95,7 @@ def pandoc_write_file(f_name, objects, template, params = None):
         cmd.append(from_fmt)
         if from_fmt == 'json':
             src = json.dumps(objects).encode('utf--8')
-    print(f'Writing {f_name}', file = sys.stderr)
+    #print(f'Writing {f_name}', file = sys.stderr)
     with Popen(cmd, stdin = PIPE, stdout = PIPE, stderr = PIPE) as proc:
         try:
             out, errs = proc.communicate(src, timeout = 60)
@@ -180,18 +180,16 @@ def write_markdown_combined_file(f_name, repo, people, objects):
         print(f'pandoc error: {err}', file = sys.stderr)
 
 def _retrieve_keys(repo_name, people_id, obj):
-    keys = []
-    print(f'DEBUG repo_name -> {repo_name}, people_id -> {people_id}, obj ->{obj}')
-    sys.exit(0) # DEBUG
-
+    keys = obj.get(repo_name, [])
+    #print(f'DEBUG _retrieve_keys: repo_name -> {repo_name}, people_id -> {people_id}, obj.{repo_name} len -> {len(keys)}')
     return keys
 
-def render_combined_files(repo, d_name, people_id, obj):
+def render_combined_files(repo, d_name, people_id, person):
     '''render a combined json file'''
     c_name = f'{repo}.ds'
     repo_name = ''
     repo_url = None
-    if repo == 'author':
+    if repo == 'authors':
         repo_name = 'CaltechAUTHORS'
         repo_url = 'https://authors.library.caltech.edu'
     elif repo == 'thesis':
@@ -201,7 +199,7 @@ def render_combined_files(repo, d_name, people_id, obj):
         repo_name = 'CaltechDATA'
         repo_url = 'https:/data.caltech.edu'
     # retrieve the keys for the person from the repository
-    keys = _retrieve_keys(repo_name, people_id, obj)
+    keys = _retrieve_keys(repo_name, people_id, person)
     objects = []
     for key in keys:
         obj, err = dataset.read(c_name, key)
@@ -216,12 +214,14 @@ def render_combined_files(repo, d_name, people_id, obj):
     elif repo == 'data':
         o_name = 'combined_data'
     f_name = os.path.join(d_name, o_name + '.json')
+    #print(f'DEBUG render {f_name}', file = sys.stderr)
     # Write the combined JSON file for the repository
     write_json_file(f_name, objects)
 
     # Write  the combined Markdown filefile
     f_name = os.path.join(d_name, o_name + '.md')
-    write_markdown_combined_file(f_name, repo, people, objects)
+    #print(f'DEBUG render {f_name}', file = sys.stderr)
+    write_markdown_combined_file(f_name, repo, person, objects)
     return None
 
 
@@ -345,15 +345,15 @@ def render_peoples(people_list, people_id = None):
         sys.exit(10)
     tot = len(people_list)
     widgets=[
-         f'render_a_people ' 
+         f'render combined people files' 
          ' ', progressbar.Counter(), f'/{tot}',
          ' ', progressbar.Percentage(),
          ' ', progressbar.AdaptiveETA(),
     ]
     bar = progressbar.ProgressBar(max_value = tot, widgets=widgets)
-    print(f'DEBUG looping through ({tot}) people_list', file = sys.stderr)
+    #print(f'DEBUG looping through ({tot}) people_list', file = sys.stderr)
     for i, cl_people_id in enumerate(people_list):
-        print(f'DEBUG i {i}, cl_people_id {cl_people_id}', file = sys.stderr)
+        #print(f'DEBUG i {i}, cl_people_id {cl_people_id}', file = sys.stderr)
         if (people_id is None) or (cl_people_id == people_id):
             render_a_person(cl_people_id, people_list[cl_people_id])
         bar.update(i)
