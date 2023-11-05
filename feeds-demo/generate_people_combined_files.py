@@ -345,7 +345,7 @@ def render_peoples(people_list, people_id = None):
         sys.exit(10)
     tot = len(people_list)
     widgets=[
-         f'render combined people files' 
+         f'render people combined files' 
          ' ', progressbar.Counter(), f'/{tot}',
          ' ', progressbar.Percentage(),
          ' ', progressbar.AdaptiveETA(),

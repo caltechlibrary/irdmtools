@@ -80,7 +80,7 @@ def enhance_object(obj, repo_url = None):
 def write_json_file(f_name, objects):
     '''render the JSON file from the objects.'''
     src = json.dumps(objects, indent = 4)
-    print(f'Writing {f_name}', file = sys.stderr)
+    #print(f'Writing {f_name}', file = sys.stderr)
     with open(f_name, 'w', encoding = 'utf-8') as _w:
         _w.write(src)
 
@@ -108,7 +108,7 @@ def pandoc_write_file(f_name, objects, template, params = None):
         cmd.append(from_fmt)
         if from_fmt == 'json':
             src = json.dumps(objects).encode('utf--8')
-    print(f'Writing {f_name}', file = sys.stderr)
+    #print(f'Writing {f_name}', file = sys.stderr)
     with Popen(cmd, stdin = PIPE, stdout = PIPE, stderr = PIPE) as proc:
         try:
             out, errs = proc.communicate(src, timeout = 60)
@@ -542,9 +542,19 @@ def render_peoples(people_list, people_id = None):
     if people_list is None:
         print('mapping of authors, thesis and data objects failed, aborting', file = sys.stderr)
         sys.exit(10)
-    for cl_people_id in people_list:
+    tot = len(people_list)
+    widgets=[
+         f'render people resource files'
+         ' ', progressbar.Counter(), f'/{tot}',
+         ' ', progressbar.Percentage(),
+         ' ', progressbar.AdaptiveETA(),
+    ]
+    bar = progressbar.ProgressBar(max_value = tot, widgets=widgets)
+    for i, cl_people_id in enumerate(people_list):
         if (people_id is None) or (cl_people_id == people_id):
             render_a_person(cl_people_id, people_list[cl_people_id])
+        bar.update(i)
+    bar.finish()
 
 def main():
     '''main processing method'''
