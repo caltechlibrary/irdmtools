@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-'''Use the htdocs/people/people_list.json to build out combined lists for resources'''
+'''Use the htdocs/people/people_list.json to build out combined lists for combined'''
 
 import os
 import sys
@@ -110,7 +110,7 @@ def pandoc_write_file(f_name, objects, template, params = None):
     return None
 
 def pandoc_enhance_item(repository = None, href = None, resource_type = None, resource = None):
-    '''given a resource, enhance it to make it friendly to tempalte in Pandoc'''
+    '''given a resource, enhance it to make it friendly to template in Pandoc'''
     if resource is None:
         return None
     if repository is not None:
@@ -266,7 +266,7 @@ def render_a_person(people_id, obj):
 
 
 def map_objects(cl_people_id, objects):
-    '''for a given cl_people_id aggregate map resources identified from list of objects'''
+    '''for a given cl_people_id aggregate map combined from list of objects'''
     _l = []
     for obj in objects:
         author_id = obj.get('cl_people_id', None)
@@ -291,7 +291,7 @@ def map_resources(cl_people_id, person, authors_objects, thesis_objects, data_ob
 def map_people_list(people_list, authors_objects, thesis_objects, data_objects):
     '''map_people_list takes the JSON array and turns it into a dict'''
     m = {}
-    print('mapping people list with authors, thesis and data resources (takes a while)', file = sys.stderr)
+    print('mapping people list with authors, thesis and data using combined records (takes a while)', file = sys.stderr)
     tot = len(people_list)
     widgets=[
          f'map people_list to people_combined.json' 
