@@ -10,6 +10,7 @@ from subprocess import Popen, PIPE, TimeoutExpired
 
 from py_dataset import dataset
 
+import progressbar
 import yaml
 
 
@@ -488,8 +489,8 @@ def render_groups(app_name, group_list, group_id = None):
         ]
         bar = progressbar.ProgressBar(max_value = tot, widgets=widgets)
         for i, grp_id in enumerate(group_list):
-            render_a_group(group_list, grp_id)
             bar.update(i)
+            render_a_group(group_list, grp_id)
         bar.finish()
 
 def main():

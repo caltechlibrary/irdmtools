@@ -14,6 +14,7 @@ WITH t AS (
         src->>'given_name' AS given_name,
         CONCAT(src->>'family_name', ', ', src->>'given_name') AS sort_name,
         src->>'orcid' AS orcid,
+		src->>'archivesspace_id' AS archivesspace_id,
 		src->>'viaf_id' AS viaf_id,
 		src->>'isni' AS isni,
 		src->>'wikidata' AS wikidata,
@@ -30,6 +31,7 @@ WITH t AS (
 		src->>'division' AS division,
 		src->'editor_count' AS editor_count,
 		src->'advisor_count' AS advisor_count,
+		src->'committee_count' AS committee_count,
 		src->'authors_count' AS authors_count,
 		src->'data_count' AS data_count
     FROM people
@@ -41,6 +43,7 @@ SELECT jsonb_build_object(
 	'given_name', given_name,
 	'sort_name', sort_name,
 	'orcid', orcid,
+	'archivesspace_id', archivesspace_id,
 	'viaf_id', viaf_id,
 	'isni', isni,
 	'wikidata', wikidata,
@@ -58,6 +61,7 @@ SELECT jsonb_build_object(
 	'authors_count', authors_count,
 	'editor_count', editor_count,
 	'advisor_count', advisor_count,
+	'committee_count', committee_count,
 	'data_count', data_count
 ) AS obj
 FROM t

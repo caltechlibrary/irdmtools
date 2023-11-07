@@ -8,11 +8,12 @@ ${if(alternative)}
 ${endif}
 
 
+${if(description)}
+
 ${if(start)}
-start ${start}${if(end)} through ${end}${endif}
+started ${start}${if(end)} ended ${end}${endif}
 ${endif}
 
-${if(description)}
 ${description}
 
 ${endif}

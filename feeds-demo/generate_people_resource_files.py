@@ -280,14 +280,14 @@ def render_authors_files(d_name, obj, people_id = None):
     '''render the resource JSON files for people_id'''
     # build out the resource type JSON file
     c_name = 'authors'
-    repo_id = 'CaltechAUTHORS'
     repo_url = "https://authors.library.caltech.edu"
-    resource_info =  {
-        "repository": repo_id,
-        "href": repo_url
-    }
-    if repo_id in obj:
-        repo_resources = obj[repo_id]
+    repo_id = 'CaltechAUTHORS'
+    repo_resources = obj.get(repo_id, None)
+    if repo_resources is not None:
+        resource_info =  {
+            "repository": repo_id,
+            "href": repo_url
+        }
         for resource_type in repo_resources:
             objects = build_repo_resource_objects(c_name, repo_url, resource_type, repo_resources)
             if len(objects) > 0:
@@ -309,10 +309,10 @@ def render_thesis_files(d_name, obj, people_id = None):
     '''render the resource JSON files for people_id'''
     # build out the resource type JSON file
     c_name = 'thesis'
-    repo_id = 'CaltechTHESIS'
     repo_url = 'https://thesis.library.caltech.edu'
-    if repo_id in obj:
-        repo_resources = obj[repo_id]
+    repo_id = 'CaltechTHESIS'
+    repo_resources = obj.get(repo_id, None)
+    if repo_resources is not None:
         for resource_type in repo_resources:
             f_name = os.path.join(d_name, f'{resource_type}.json')
             objects = []
@@ -350,8 +350,8 @@ def render_data_files(d_name, obj, people_id = None):
     repo_id = 'CaltechDATA'
     repo_url = 'https://data.caltech.edu'
     data_count = obj.get('data_count', 0)
-    if repo_id in obj:
-        repo_resources = obj[repo_id]
+    repo_resources = obj.get(repo_id, None)
+    if repo_resources is not None:
         for resource_type in repo_resources:
             f_name = os.path.join(d_name, f'{resource_type}.json')
             objects = []
@@ -396,6 +396,38 @@ def people_has_content(people):
         return True
     return False
 
+def enhance_profile(obj):
+    links_and_identifiers = []
+    orcid = obj.get('orcid', None)
+    if (orcid is not None) and (orcid != ""):
+        links_and_identifiers.append({
+            'description': 'ORCID', 
+            'label': orcid, 
+            'link': f'https://orcid.org/{orcid}'
+        })
+    archivesspace = obj.get('archivesspace_id', None)
+    if (archivesspace is not None) and (archivesspace != ""):
+        #print(f'DEBUG archivesspace_id -> {archivesspace}', file = sys.stderr)
+        links_and_identifiers.append({
+            'description': 'Caltech Archives Profile', 
+            'label': archivesspace, 
+            'link': f'https://collections.archives.caltech.edu/agents/people/{archivesspace}'
+        })
+    wikidata = obj.get('wikidata', None)
+    if (wikidata is not None) and (wikidata != ""):
+        links_and_identifiers.append({
+            'description': 'Wikidata', 
+            'label': wikidata, 
+            'link': f'https://www.wikidata.org/wiki/{wikidata}'
+        })
+    # FIXME: Don't remember how to link these ...    
+    #viaf = obj.get('viaf_id', None)
+    #lcnaf = obj.get('lcnaf', None)
+    #snac = obj.get('snac', None)
+    if len(links_and_identifiers) > 0:
+        obj['links_and_identifiers'] = links_and_identifiers
+    return obj
+
 
 def render_a_person(people_id, obj):
     '''render a specific people's content if valid'''
@@ -408,6 +440,7 @@ def render_a_person(people_id, obj):
     if (people_id == '') and (' ' in people_id):
         print(f'error: "{people_id}" is not valid', file = sys.stderr)
         return
+    obj = enhance_profile(obj)
     src = json.dumps(obj, indent=4)
     # We make the directory since we have a Caltech Person
     d_name = os.path.join('htdocs', 'people', people_id)

@@ -7,7 +7,7 @@ ${if(links_and_identifiers)}
 ## Links and Identifiers
 
 ${for(links_and_identifiers)}
-- ${it.description} [${label}](${link})
+${if(it.link)}- ${it.description} [${it.label}](${it.link})${endif}
 ${endfor}
 ${endif}
 

@@ -1,6 +1,6 @@
 
 ${if(name)}
-# ${name} 
+# [${name}](./)
 ${endif}
 
 ${if(alternative)}
@@ -9,7 +9,7 @@ ${endif}
 
 
 ${if(start)}
-start ${start}${if(end)} through ${end}${endif}
+started ${start}${if(end)} ended ${end}${endif}
 ${endif}
 
 ${if(description)}

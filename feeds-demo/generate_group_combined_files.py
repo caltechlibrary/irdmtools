@@ -10,6 +10,7 @@ from subprocess import Popen, PIPE, TimeoutExpired
 
 from py_dataset import dataset
 
+import progressbar
 import yaml
 
 

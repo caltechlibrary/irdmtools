@@ -1,23 +1,11 @@
 
 ${if(name)}
-# ${name} 
+# [${name}](./)
 ${endif}
 
 ${if(alternative)}
 ## (${alternative})
 ${endif}
-
-
-${if(start)}
-start ${start}${if(end)} through ${end}${endif}
-${endif}
-
-${if(description)}
-${description}
-
-${endif}
-
-${if(website)}<${website}>${endif}
 
 ${for(content)}
 ${if(it.repository)}
