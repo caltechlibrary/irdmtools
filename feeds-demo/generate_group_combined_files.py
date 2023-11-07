@@ -72,7 +72,7 @@ def enhance_object(obj):
 def write_json_file(f_name, objects):
     '''render the JSON file from the objects.'''
     src = json.dumps(objects, indent = 4)
-    print(f'Writing {f_name}', file = sys.stderr)
+    #print(f'Writing {f_name}', file = sys.stderr)
     with open(f_name, 'w', encoding = 'utf-8') as _w:
         _w.write(src)
 
@@ -100,7 +100,7 @@ def pandoc_write_file(f_name, objects, template, params = None):
         cmd.append(from_fmt)
         if from_fmt == 'json':
             src = json.dumps(objects).encode('utf--8')
-    print(f'Writing {f_name}')
+    #print(f'Writing {f_name}')
     with Popen(cmd, stdin = PIPE, stdout = PIPE, stderr = PIPE) as proc:
         try:
             out, errs = proc.communicate(src, timeout = 60)
@@ -424,8 +424,18 @@ def render_groups(group_list, group_id = None):
     if group_id is not None:
         render_a_group(group_list, group_id)
     else:
-        for grp_id in group_list:
+        tot = len(group_list)
+        widgets=[
+            f'{app_name}'
+            ' ', progressbar.Counter(), f'/{tot}',
+            ' ', progressbar.Percentage(),
+            ' ', progressbar.AdaptiveETA(),
+        ]
+        bar = progressbar.ProgressBar(max_value = tot, widgets=widgets)
+        for i, grp_id in enumerate(group_list):
             render_a_group(group_list, grp_id)
+            bar.update(i)
+        bar.finish()
 
 def main():
     '''main processing method'''
