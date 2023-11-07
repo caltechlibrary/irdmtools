@@ -474,7 +474,7 @@ def render_a_group(group_list, group_id):
         print(f'{group_id} has no content, skipping', file = sys.stderr)
 
 
-def render_groups(group_list, group_id = None):
+def render_groups(app_name, group_list, group_id = None):
     '''take our agents_csv and agent_pubs_csv filenames and aggregate them'''
     if group_id is not None:
         render_a_group(group_list, group_id)
@@ -506,7 +506,7 @@ def main():
     group_id = None
     if argc == 3:
         group_id = sys.argv[2]
-    render_groups(group_list, group_id)
+    render_groups(app_name, group_list, group_id)
 
 if __name__ == '__main__':
     main()
