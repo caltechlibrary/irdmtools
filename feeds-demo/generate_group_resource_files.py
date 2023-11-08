@@ -322,7 +322,7 @@ def build_repo_resource_objects(c_name, resource_type, repo_resources):
             objects.append(enhance_object(obj))
     return objects
 
-def render_authors_files(d_name, obj, group_id = None, people_id = None):
+def render_authors_files(d_name, obj, group_id = None, group_name = None, people_id = None):
     '''render the resource JSON files for group_id'''
     # build out the resource type JSON file
     c_name = 'authors'
@@ -351,7 +351,7 @@ def render_authors_files(d_name, obj, group_id = None, people_id = None):
                 f_name = os.path.join(d_name, f'{resource_type}.md')
                 write_markdown_resource_file(f_name, resource_info, objects)
 
-def render_thesis_files(d_name, obj, group_id = None, people_id = None):
+def render_thesis_files(d_name, obj, group_id = None, group_name = None, people_id = None):
     '''render the resource JSON files for group_id'''
     # build out the resource type JSON file
     c_name = 'thesis'
@@ -379,7 +379,7 @@ def render_thesis_files(d_name, obj, group_id = None, people_id = None):
                     }
                 if group_id is not None:
                     resource_info["group_id"] = group_id
-                    resource_info["group_label"] = mk_label(group_id)
+                    resource_info["group_label"] = group_name
                 if people_id is not None:
                     resource_info["people_id"] = people_id
                     resource_info["people_label"] = mk_label(people_id)
@@ -388,7 +388,7 @@ def render_thesis_files(d_name, obj, group_id = None, people_id = None):
                 write_markdown_resource_file(f_name, resource_info, objects)
 
 
-def render_data_files(d_name, obj, group_id = None, people_id = None):
+def render_data_files(d_name, obj, group_id = None, group_name = None, people_id = None):
     '''render the resource JSON files for group_id'''
     # build out the resource type JSON file
     c_name = 'data'
@@ -420,7 +420,7 @@ def render_data_files(d_name, obj, group_id = None, people_id = None):
                     }
                 if group_id is not None:
                     resource_info["group_id"] = group_id
-                    resource_info["group_label"] = mk_label(group_id)
+                    resource_info["group_label"] = group_name
                 if people_id is not None:
                     resource_info["people_id"] = people_id
                     resource_info["people_label"] = mk_label(people_id)
@@ -450,7 +450,9 @@ def render_a_group(group_list, group_id):
     if group_id not in group_list:
         print(f'error: "could not find {group_id}" in group list', file = sys.stderr)
         return
+
     obj = group_list[group_id]
+    group_name = obj.get('name', None)
     if group_has_content(obj):
         src = json.dumps(obj, indent=4)
         d_name = os.path.join('htdocs', 'groups', group_id)
@@ -462,9 +464,9 @@ def render_a_group(group_list, group_id):
         write_json_file(f_name, obj)
 
         # Now render the repo resource files.
-        render_authors_files(d_name, obj, group_id = group_id)
-        render_thesis_files(d_name, obj, group_id = group_id)
-        render_data_files(d_name, obj, group_id = group_id)
+        render_authors_files(d_name, obj, group_id = group_id, group_name = group_name)
+        render_thesis_files(d_name, obj, group_id = group_id, group_name = group_name)
+        render_data_files(d_name, obj, group_id = group_id, group_name = group_name)
         # FIXME: render the group index.json file
         f_name = os.path.join(d_name, 'index.json')
         write_json_file(f_name, obj)

@@ -289,21 +289,22 @@ def render_authors_files(d_name, obj, people_id = None):
             "href": repo_url
         }
         for resource_type in repo_resources:
-            objects = build_repo_resource_objects(c_name, repo_url, resource_type, repo_resources)
-            if len(objects) > 0:
-                # Write the people resource files out
-                f_name = os.path.join(d_name, f'{resource_type}.json')
-                write_json_file(f_name, objects)
-                # Setup to write Markdown files
-                if people_id is not None:
-                    resource_info["people_id"] = people_id
-                    resource_info["people_label"] = mk_label(people_id)
-                if people_id is not None:
-                    resource_info["people_id"] = people_id
-                    resource_info["people_label"] = mk_label(people_id)
-                # Write out Markdown files via Pandoc
-                f_name = os.path.join(d_name, f'{resource_type}.md')
-                write_markdown_resource_file(f_name, resource_info, objects)
+            if resource_type not in [ 'dataset', 'software', 'collection' ]:
+                objects = build_repo_resource_objects(c_name, repo_url, resource_type, repo_resources)
+                if len(objects) > 0:
+                    # Write the people resource files out
+                    f_name = os.path.join(d_name, f'{resource_type}.json')
+                    write_json_file(f_name, objects)
+                    # Setup to write Markdown files
+                    if people_id is not None:
+                        resource_info["people_id"] = people_id
+                        resource_info["people_label"] = mk_label(people_id)
+                    if people_id is not None:
+                        resource_info["people_id"] = people_id
+                        resource_info["people_label"] = mk_label(people_id)
+                    # Write out Markdown files via Pandoc
+                    f_name = os.path.join(d_name, f'{resource_type}.md')
+                    write_markdown_resource_file(f_name, resource_info, objects)
 
 def render_thesis_files(d_name, obj, people_id = None):
     '''render the resource JSON files for people_id'''
@@ -409,8 +410,8 @@ def enhance_profile(obj):
     if (archivesspace is not None) and (archivesspace != ""):
         #print(f'DEBUG archivesspace_id -> {archivesspace}', file = sys.stderr)
         links_and_identifiers.append({
-            'description': 'Caltech Archives Profile', 
-            'label': archivesspace, 
+            'description': 'Caltech Archives', 
+            'label': 'Profile', 
             'link': f'https://collections.archives.caltech.edu/agents/people/{archivesspace}'
         })
     wikidata = obj.get('wikidata', None)
