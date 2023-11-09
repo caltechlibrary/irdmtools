@@ -1,6 +1,6 @@
 
-${if(name)}
-# [${name}](./)
+${if(sort_name)}
+# [${sort_name}](./)
 ${endif}
 
 ${if(alternative)}

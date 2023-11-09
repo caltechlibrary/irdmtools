@@ -89,7 +89,7 @@ def update_counts(app_name, pid, people_ids,
     editor_count = load_json_count('editor', editor_json, id_map)
     print(f'loading {advisor_json}', file = sys.stderr)
     advisor_count = load_json_count('advisor', advisor_json, id_map)
-    print(f'loading {thesis_json}', file = sys.stderr)
+    print(f'loading {committee_json}', file = sys.stderr)
     committee_count = load_json_count('committee', committee_json, id_map)
     tot = len(people_ids)
     c_name = 'people.ds'

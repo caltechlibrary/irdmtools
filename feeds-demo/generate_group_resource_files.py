@@ -25,16 +25,6 @@ def get_group_list(group_list_json):
         return group_list
     return None
 
-def _retrieve_keys(csv_name, group_id):
-    '''used by render_combined_files(), return a list of keys'''
-    keys = []
-    with open(csv_name, 'r', encoding = 'utf-8', newline = '') as csvfile:
-        _r = csv.DictReader(csvfile)
-        for row in _r:
-            if ('local_group' in row) and (group_id == row['local_group']):
-                keys.append(row['id'])
-    return keys
-
 def format_authors(creators):
     '''format the authors to be friendly to Pandoc template'''
     if len(creators) > 0:
@@ -60,6 +50,31 @@ def format_authors(creators):
             return '; '.join(authors[0:2]) + '; et el.'
     return None
 
+def format_editor(editors):
+    '''format the authors to be friendly to Pandoc template'''
+    if len(editors) > 0:
+        editors = []
+        for i, editor in enumerate(editors):
+            if 'name' in editors:
+                family_name, given_name = '', ''
+                if 'family' in creator['name']:
+                    family_name = creator['name']['family']
+                if 'given' in creator['name']:
+                    given_name = creator['name']['given']
+                if given_name != '':
+                    authors.append(f'{family_name}, {given_name}')
+                else:
+                    authors.append(f'{family_name}')
+                if i > 3:
+                    break
+        if len(editors) == 1:
+            return editors[0]
+        if len(editors) == 2:
+            return ' and '.join(editors[0:2])
+        if len(editors) > 2:
+            return '; '.join(editors[0:2]) + '; et el.'
+    return None
+
 def enhance_object(obj):
     '''given an eprint like record, enhance the record to make it Pandoc template friendly'''
     if 'date' in obj:
@@ -68,6 +83,10 @@ def enhance_object(obj):
         _l = format_authors(obj['creators']['items'])
         if _l is not None:
             obj['author_list'] = _l
+    if ('editor' in obj) and ('items' in obj['editor']):
+        _l = format_editor(obj['editor']['items'])
+        if _l is not None:
+            obj['editor_list'] = _l
     return obj
 
 def write_json_file(f_name, objects):
@@ -233,69 +252,6 @@ def write_markdown_index_file(f_name, group):
     if err is not None:
         print(f'pandoc error: {err}', file = sys.stderr)
 
-def build_combined_object(repo, group, objects):
-    '''build an object form the decoded array'''
-    #print(f'DEBUG repo -> {repo}', file = sys.stderr)
-    # Merge the two objects into a Pandoc friendly structure
-    obj = {}
-    for k in group:
-        if k not in [ 'CaltechAUTHORS', 'CaltechDATA', 'CaltechTHESIS' ]:
-            obj[k] = group[k]
-    # flatten nested dict
-    u_map = {
-        "CaltechAUTHORS": "https://authors.library.caltech.edu",
-        "CaltechDATA": "https://data.caltech.edu",
-        "CaltechTHESIS": "https://thesis.library.caltech.edu"
-    }
-    repo_name = 'Caltech' + repo.upper()
-    obj['repository'] = repo_name
-    repo_url = u_map.get(repo_name, None)
-    if repo_url is not None:
-        obj['href'] = repo_url
-    obj['content'] = objects
-    return obj
-
-def write_markdown_combined_file(f_name, repo, group, objects):
-    '''coorodiante the write of a combined markdown file'''
-    obj = build_combined_object(repo, group, objects)
-    err = pandoc_write_file(f_name, obj,
-        "templates/groups-group-combined.md", 
-        { 'from_fmt': 'markdown', 'to_fmt': 'markdown' })
-    if err is not None:
-        print(f'pandoc error: {err}', file = sys.stderr)
-
-def render_combined_files(repo, d_name, group_id, group):
-    '''render a combined json file'''
-    c_name = f'{repo}.ds'
-    csv_name = os.path.join('htdocs', 'groups', f'group_{repo}.csv')
-    keys = _retrieve_keys(csv_name, group_id)
-    objects = []
-    for key in keys:
-        obj, err = dataset.read(c_name, key)
-        if err is not None and err != '':
-            return f'error access {key} in {c_name}.ds, {err}'
-        objects.append(enhance_object(obj))
-    if len(objects) == 0:
-        #print(f'DEBUG no objects found for {group_id} in {d_name}, {repo}', file = sys.stderr)
-        return None
-    # sort the list of objects, should
-    #objects.sort(key=operator.itemgetter('title'))
-    #objects.sort(key=operator.itemgetter('date'), reverse = True)
-    o_name = 'combined'
-    if repo == 'thesis':
-        o_name = 'combined_thesis'
-    elif repo == 'data':
-        o_name = 'combined_data'
-    f_name = os.path.join(d_name, o_name + '.json')
-    # Write the combined JSON file for the repository
-    write_json_file(f_name, objects)
-
-    # Write  the combined Markdown filefile
-    f_name = os.path.join(d_name, o_name + '.md')
-    write_markdown_combined_file(f_name, repo, group, objects)
-    return None
-
-
 def merge_resource_info(resource_info, obj, resource_type):
     '''update the resource info based on obj attributes, resource_type'''
     merge_fields = [
@@ -315,9 +271,9 @@ def build_repo_resource_objects(c_name, resource_type, repo_resources):
     '''generates a list of objects from resource type and repository resources'''
     objects = []
     for key in repo_resources[resource_type]:
-        obj, err = dataset.read(f'{c_name}.ds', key)
+        obj, err = dataset.read(c_name, key)
         if err is not None and err != '':
-            print(f'error access {key} in {c_name}.ds, {err}', file = sys.stderr)
+            print(f'error access {key} in {c_name}, {err}', file = sys.stderr)
         else:
             objects.append(enhance_object(obj))
     return objects
@@ -325,8 +281,8 @@ def build_repo_resource_objects(c_name, resource_type, repo_resources):
 def render_authors_files(d_name, obj, group_id = None, group_name = None, people_id = None):
     '''render the resource JSON files for group_id'''
     # build out the resource type JSON file
-    c_name = 'authors'
-    repo_id = f'Caltech{c_name.upper()}'
+    c_name = 'authors.ds'
+    repo_id = 'CaltechAUTHORS'
     resource_info =  {
         "repository": repo_id,
         "href":"https://authors.library.caltech.edu"
@@ -354,17 +310,17 @@ def render_authors_files(d_name, obj, group_id = None, group_name = None, people
 def render_thesis_files(d_name, obj, group_id = None, group_name = None, people_id = None):
     '''render the resource JSON files for group_id'''
     # build out the resource type JSON file
-    c_name = 'thesis'
-    repo_id = f'Caltech{c_name.upper()}'
+    c_name = 'thesis.ds'
+    repo_id = 'CaltechTHESIS'
     if repo_id in obj:
         repo_resources = obj[repo_id]
         for resource_type in repo_resources:
             f_name = os.path.join(d_name, f'{resource_type}.json')
             objects = []
             for key in repo_resources[resource_type]:
-                obj, err = dataset.read(f'{c_name}.ds', key)
+                obj, err = dataset.read(c_name, key)
                 if err is not None and err != '':
-                    print(f'error access {key} in {c_name}.ds, {err}', file = sys.stderr)
+                    print(f'error access {key} in {c_name}, {err}', file = sys.stderr)
                 else:
                     objects.append(enhance_object(obj))
             if len(objects) > 0:
@@ -372,11 +328,11 @@ def render_thesis_files(d_name, obj, group_id = None, group_name = None, people_
                 write_json_file(f_name, objects)
                 # setup for Markdown files
                 resource_info =  {
-                        "repository": "CaltechTHESIS", 
-                        "href":"https://thesis.library.caltech.edu",
-                        "resource_type": resource_type,
-                        "resource_label": mk_label(resource_type)
-                    }
+                    "repository": "CaltechTHESIS", 
+                    "href":"https://thesis.library.caltech.edu",
+                    "resource_type": resource_type,
+                    "resource_label": mk_label(resource_type)
+                }
                 if group_id is not None:
                     resource_info["group_id"] = group_id
                     resource_info["group_label"] = group_name
@@ -391,17 +347,17 @@ def render_thesis_files(d_name, obj, group_id = None, group_name = None, people_
 def render_data_files(d_name, obj, group_id = None, group_name = None, people_id = None):
     '''render the resource JSON files for group_id'''
     # build out the resource type JSON file
-    c_name = 'data'
-    repo_id = f'Caltech{c_name.upper()}'
+    c_name = 'data.ds'
+    repo_id = f'CaltechDATA'
     if repo_id in obj:
         repo_resources = obj[repo_id]
         for resource_type in repo_resources:
             f_name = os.path.join(d_name, f'{resource_type}.json')
             objects = []
             for key in repo_resources[resource_type]:
-                obj, err = dataset.read(f'{c_name}.ds', key)
+                obj, err = dataset.read(c_name, key)
                 if err is not None and err != '':
-                    print(f'error access {key} in {c_name}.ds, {err}', file = sys.stderr)
+                    print(f'error access {key} in {c_name}, {err}', file = sys.stderr)
                 else:
                     objects.append(enhance_object(obj))
             if len(objects) > 0:
@@ -413,11 +369,11 @@ def render_data_files(d_name, obj, group_id = None, group_name = None, people_id
                     os.makedirs(recent_d_name, mode=0o777, exist_ok =True)
                 write_json_file(f_name, objects[0:25])
                 resource_info =  {
-                        "repository": "CaltechDATA", 
-                        "href":"https://data.caltech.edu",
-                        "resource_type": resource_type,
-                        "resource_label": mk_label(resource_type)
-                    }
+                    "repository": "CaltechDATA", 
+                    "href":"https://data.caltech.edu",
+                    "resource_type": resource_type,
+                    "resource_label": mk_label(resource_type)
+                }
                 if group_id is not None:
                     resource_info["group_id"] = group_id
                     resource_info["group_label"] = group_name
@@ -450,7 +406,6 @@ def render_a_group(group_list, group_id):
     if group_id not in group_list:
         print(f'error: "could not find {group_id}" in group list', file = sys.stderr)
         return
-
     obj = group_list[group_id]
     group_name = obj.get('name', None)
     if group_has_content(obj):

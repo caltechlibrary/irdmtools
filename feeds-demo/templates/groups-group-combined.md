@@ -1,6 +1,6 @@
 
 ${if(name)}
-# ${name} 
+# [${name}](./)
 ${endif}
 
 ${if(alternative)}

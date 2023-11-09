@@ -1,6 +1,6 @@
 
 ${if(sort_name)}
-# ${sort_name} 
+# [${sort_name}](./)
 ${endif}
 
 ${for(content)}
