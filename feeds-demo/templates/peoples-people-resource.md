@@ -1,6 +1,8 @@
 
 ${if(sort_name)}
+
 # [${sort_name}](./)
+
 ${endif}
 
 ${if(alternative)}
@@ -10,7 +12,7 @@ ${endif}
 ${for(content)}
 ${if(it.repository)}
 
-## ${if(it.resource_type)}${it.resource_type}s${endif} from [${it.repository}](${it.href})
+## ${if(it.resource_label)}${it.resource_label}${endif} from [${it.repository}](${it.href})
 
 ${endif}
 ${it:citation.md()}

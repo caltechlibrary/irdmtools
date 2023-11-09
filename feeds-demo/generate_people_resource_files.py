@@ -24,17 +24,7 @@ def get_people_list(people_list_json):
         return people_list
     return None
 
-def _retrieve_keys(csv_name, people_id):
-    '''used by render_combined_files(), return a list of keys'''
-    keys = []
-    with open(csv_name, 'r', encoding = 'utf-8', newline = '') as csvfile:
-        _r = csv.DictReader(csvfile)
-        for row in _r:
-            if ('cl_people_id' in row) and (people_id == row['cl_people_id']):
-                keys.append(row['id'])
-    return keys
-
-def format_authors(creators):
+def format_person_agent(creators):
     '''format the authors to be friendly to Pandoc template'''
     if len(creators) > 0:
         authors = []
@@ -72,7 +62,7 @@ def enhance_object(obj, repo_url = None):
     if 'date' in obj:
         obj['pub_year'] = obj['date'][0:4]
     if ('creators' in obj) and ('items' in obj['creators']):
-        _l = format_authors(obj['creators']['items'])
+        _l = format_person_agent(obj['creators']['items'])
         if _l is not None:
             obj['author_list'] = _l
     return obj
@@ -122,7 +112,7 @@ def pandoc_write_file(f_name, objects, template, params = None):
             sys.exit(20)
     return None
 
-def pandoc_enhance_item(repository = None, href = None, resource_type = None, resource = None):
+def pandoc_enhance_item(repository = None, href = None, resource_type = None, resource_label = None, resource = None):
     '''given a resource, enhance it to make it friendly to tempalte in Pandoc'''
     if resource is None:
         return None
@@ -132,10 +122,11 @@ def pandoc_enhance_item(repository = None, href = None, resource_type = None, re
         resource['href'] = href
     if resource_type is not None:
         resource['resource_type'] = resource_type
-        if resource_type.endswith('s'):
-            resource['resource_label'] = mk_label(resource_type)
+    if resource_label is not None:
+        if resource_label.endswith('s'):
+            resource['resource_label'] = resource_type
         else:
-            resource['resource_label'] = mk_label(resource_type) + 's'
+            resource['resource_label'] = resource_type + 's'
     return resource
 
 
@@ -143,27 +134,25 @@ def pandoc_build_resource(base_object, resource_list):
     '''build a object structure suitable for processing with a pandoc template from
     a base object and a list of object resources'''
     objects = base_object
-    if 'repository' not in objects:
-        print('missing repository value in object expression', file = sys.stderr)
+    repository = base_object.get('repository', None)
+    resource_type = base_object.get('resource_type', None)
+    resource_label = base_object.get('resource_label', None)
+    href = base_object.get('href', None)
+    if repository is None:
+        print('WARNING: missing repository value in object expression', file = sys.stderr)
         return None
-    repository = objects['repository']
-    if 'href' not in objects:
-        print('missing href value in object expression', file = sys.stderr)
+    if href is None:
+        print('WARNING: missing href value in object expression', file = sys.stderr)
         return None
-    href = objects['href']
-    if 'resource_type' in objects:
-        resource_type = objects['resource_type']
-    else:
-        resource_type = None
     objects['content'] = []
     for i, item in enumerate(resource_list):
         if i == 0:
-            objects['content'].append(pandoc_enhance_item(
-                repository, href, resource_type, item))
+            _o = pandoc_enhance_item(repository, href, resource_type, resource_label, item)
         else:
-            objects['content'].append(pandoc_enhance_item(None, None, None, item))
+            _o = pandoc_enhance_item(None, None, None, None, item)
+        if _o is not None:
+            objects['content'].append(_o)
     return objects
-
 
 def write_markdown_resource_file(f_name, base_object, resource):
     '''write a people resource page by transform our list of objects'''
@@ -231,6 +220,16 @@ def build_index_object(people):
                 resources.append(resource)
         else:
             obj[k] = people[k]
+    # Add links for editor, advisor and committee as needed.
+    thesis_advisor = people.get('CaltechTHESIS:advisor', None)
+    if thesis_advisor is not None:
+        obj['thesis_advisor'] = thesis_advisor
+    thesis_committee = people.get('CaltechTHESIS:committee', None)
+    if thesis_committee is not None:
+        obj['thesis_committee'] = thesis_committee
+    editor = people.get('CaltechAUTHORS:editor', None)
+    if editor is not None:
+        obj['editor'] = editor
     obj['content'] = resources
     return obj
 
@@ -284,39 +283,6 @@ def render_authors_files(d_name, obj, people_id = None):
                     f_name = os.path.join(d_name, f'{resource_type}.md')
                     write_markdown_resource_file(f_name, resource_info, objects)
 
-def render_editor_files(d_name, obj, people_id = None):
-    '''render the resource JSON files for editors with people_id'''
-    # build out the resource type JSON file
-    c_name = 'authors.ds'
-    repo_url = "https://authors.library.caltech.edu"
-    repo_id = 'CaltechAUTHORS:editor'
-    repo_resources = obj.get(repo_id, None)
-    if repo_resources is not None:
-        f_name = os.path.join(d_name, 'editor.json')
-        objects = []
-        for key in repo_resources:
-            obj, err = dataset.read(c_name, key)
-            if err is not None and err != '':
-                 print(f'error access {key} in {c_name}, {err}', file = sys.stderr)
-            else:
-                 objects.append(enhance_object(obj, repo_url = repo_url))
-        if len(objects) > 0:
-            # Handle writing files
-            write_json_file(f_name, objects)
-            # setup for Markdown files
-            resource_info =  {
-                "repository": "CaltechAUTHORS", 
-                "href":"https://thesis.library.caltech.edu",
-                "resource_type": resource_type,
-                "resource_label": mk_label(resource_type)
-            }
-            if people_id is not None:
-                resource_info["people_id"] = people_id
-                resource_info["people_label"] = mk_label(people_id)
-            # Write out Markdown files via Pandoc
-            f_name = os.path.join(d_name, 'editor.md')
-            write_markdown_resource_file(f_name, resource_info, objects)
-
 
 def render_thesis_files(d_name, obj, people_id = None):
     '''render the resource JSON files for people_id'''
@@ -351,72 +317,6 @@ def render_thesis_files(d_name, obj, people_id = None):
                 # Write out Markdown files via Pandoc
                 f_name = os.path.join(d_name, f'{resource_type}.md')
                 write_markdown_resource_file(f_name, resource_info, objects)
-
-def render_advisor_files(d_name, obj, people_id = None):
-    '''render the advisor JSON and files for people_id'''
-    # build out the resource type JSON file
-    c_name = 'thesis.ds'
-    repo_url = 'https://thesis.library.caltech.edu'
-    repo_id = 'CaltechTHESIS:advisor'
-    repo_resources = obj.get(repo_id, None)
-    if repo_resources is not None:
-        f_name = os.path.join(d_name, 'advisor.json')
-        objects = []
-        for key in repo_resources:
-            obj, err = dataset.read(c_name, key)
-            if err is not None and err != '':
-                 print(f'error access {key} in {c_name}, {err}', file = sys.stderr)
-            else:
-                 objects.append(enhance_object(obj, repo_url = repo_url))
-        if len(objects) > 0:
-            # Handle writing files
-            write_json_file(f_name, objects)
-            # setup for Markdown files
-            resource_info =  {
-                "repository": "CaltechTHESIS", 
-                "href":"https://thesis.library.caltech.edu",
-                "resource_type": resource_type,
-                "resource_label": mk_label(resource_type)
-            }
-            if people_id is not None:
-                resource_info["people_id"] = people_id
-                resource_info["people_label"] = mk_label(people_id)
-            # Write out Markdown files via Pandoc
-            f_name = os.path.join(d_name, 'advisor.md')
-            write_markdown_resource_file(f_name, resource_info, objects)
-
-def render_committee_files(d_name, obj, people_id = None):
-    '''render the committee JSON and files for people_id'''
-    # build out the resource type JSON file
-    c_name = 'thesis.ds'
-    repo_url = 'https://thesis.library.caltech.edu'
-    repo_id = 'CaltechTHESIS:committee'
-    repo_resources = obj.get(repo_id, None)
-    if repo_resources is not None:
-        f_name = os.path.join(d_name, 'committee.json')
-        objects = []
-        for key in repo_resources:
-            obj, err = dataset.read(c_name, key)
-            if err is not None and err != '':
-                 print(f'error access {key} in {c_name}, {err}', file = sys.stderr)
-            else:
-                 objects.append(enhance_object(obj, repo_url = repo_url))
-        if len(objects) > 0:
-            # Handle writing files
-            write_json_file(f_name, objects)
-            # setup for Markdown files
-            resource_info =  {
-                "repository": "CaltechTHESIS", 
-                "href":"https://thesis.library.caltech.edu",
-                "resource_type": resource_type,
-                "resource_label": mk_label(resource_type)
-            }
-            if people_id is not None:
-                resource_info["people_id"] = people_id
-                resource_info["people_label"] = mk_label(people_id)
-            # Write out Markdown files via Pandoc
-            f_name = os.path.join(d_name, 'committee.md')
-            write_markdown_resource_file(f_name, resource_info, objects)
 
 
 def render_data_files(d_name, obj, people_id = None):
@@ -501,6 +401,16 @@ def enhance_profile(obj):
     #viaf = obj.get('viaf_id', None)
     #lcnaf = obj.get('lcnaf', None)
     #snac = obj.get('snac', None)
+    editor_count = obj.get('editor_count', 0)
+    if editor_count > 0:
+        obj['editor'] = 'editor'
+    advisor_count = obj.get('advisor_count', 0)
+    if advisor_count > 0:
+        obj['thesis_advisor'] = 'advisor'
+    committee_count = obj.get('committee_count', 0)
+    if committee_count > 0:
+        obj['thesis_committee'] = 'committee'
+
     if len(links_and_identifiers) > 0:
         obj['links_and_identifiers'] = links_and_identifiers
     return obj
@@ -511,9 +421,6 @@ def render_a_person(people_id, obj):
     authors_count = obj.get('authors_count', 0)
     thesis_count = obj.get('thesis_count', 0)
     data_count = obj.get('data_count', 0)
-    editor_count = obj.get('editor_count', 0)
-    advisor_count = obj.get('advisor_count', 0)
-    committee_count = obj.get('committee_count', 0)
     if authors_count == 0:
         print(f'"{people_id}" has no CaltechAUTHORS content, skipping', file = sys.stderr)
         return
@@ -532,17 +439,11 @@ def render_a_person(people_id, obj):
     
     # Now render the repo resource files.
     render_authors_files(d_name, obj, people_id = people_id)
-    if editor_count > 0:
-        render_editor_files(d_name, obj, people_id = people_id)
     if thesis_count > 0:
         render_thesis_files(d_name, obj, people_id = people_id)
-    if advisor_count > 0:
-        render_advisor_files(d_name, obj, people_id = people_id)
-    if committee_count > 0:
-        render_committee_files(d_name, obj, people_id = people_id)
     if data_count > 0:
         render_data_files(d_name, obj, people_id = people_id)
-
+    
     # Now render the people index.json file
     f_name = os.path.join(d_name, 'index.json')
     write_json_file(f_name, obj)
@@ -551,27 +452,12 @@ def render_a_person(people_id, obj):
     f_name = os.path.join(d_name, 'index.md')
     write_markdown_index_file(f_name, obj)
 
-
 def map_authors(cl_people_id, authors_objects):
     '''for a given cl_people_id map the resources identified from list of objects'''
     m = {}
     for obj in authors_objects:
         author_id = obj.get('cl_people_id', None)
         if author_id == cl_people_id:
-            resource_id = obj.get('resource_id', None)
-            resource_type = obj.get('resource_type', None)
-            if (resource_type is not None) and (resource_id is not None):
-                if resource_type not in m:
-                    m[resource_type] = []
-                m[resource_type].append(resource_id)
-    return m
-
-def map_editor(cl_people_id, editor_objects):
-    '''for a given cl_people_id map the resources identified from editor list of objects'''
-    m = {}
-    for obj in authors_objects:
-        editor = obj.get('editor_id', None)
-        if editor_id == cl_people_id:
             resource_id = obj.get('resource_id', None)
             resource_type = obj.get('resource_type', None)
             if (resource_type is not None) and (resource_id is not None):
@@ -594,35 +480,6 @@ def map_thesis(cl_people_id, thesis_objects):
                 m[resource_type].append(resource_id)
     return m
 
-def map_advisor(cl_people_id, advisor_objects):
-    '''for a given cl_people_id map the resource identified from advisor list of objects'''
-    m = {}
-    for obj in advisor_objects:
-        advisor_id = obj.get('advisor_id', None)
-        if advisor_id == cl_people_id:
-            resource_id = obj.get('resource_id', None)
-            resource_type = obj.get('thesis_type', None)
-            if (resource_type is not None) and (resource_id is not None):
-                if resource_type not in m:
-                    m[resource_type] = []
-                m[resource_type].append(resource_id)
-    return m
-
-def map_committee(cl_people_id, committee_objects):
-    '''for a given cl_people_id map the resource identified from committee list of objects'''
-    m = {}
-    for obj in committee_objects:
-        committee_id = obj.get('committee_id', None)
-        if committee_id == cl_people_id:
-            resource_id = obj.get('resource_id', None)
-            resource_type = obj.get('thesis_type', None)
-            if (resource_type is not None) and (resource_id is not None):
-                if resource_type not in m:
-                    m[resource_type] = []
-                m[resource_type].append(resource_id)
-    return m
-
-
 def map_data(cl_people_id, data_objects):
     '''for a given cl_people_id map the resources identified from list of objects'''
     m = {}
@@ -637,30 +494,20 @@ def map_data(cl_people_id, data_objects):
                 m[resource_type].append(resource_id)
     return m
                     
-def map_resources(cl_people_id, person, authors_objects, thesis_objects, data_objects, editor_objeccts, advisor_objects, committee_objects):
+def map_resources(cl_people_id, person, authors_objects, thesis_objects, data_objects):
     '''map resources from repositories into the people_list'''
     r_map = map_authors(cl_people_id, authors_objects)
     if len(r_map) > 0:
         person['CaltechAUTHORS'] = r_map
-    r_map = map_editors(cl_people_id, editor_objects)
-    if len(r_map) > 0:
-        person['CaltechAUTHORS:editor'] = r_map
     r_map = map_thesis(cl_people_id, thesis_objects)
     if len(r_map) > 0:
         person['CaltechTHESIS'] = r_map
-    r_map = map_advisor(cl_people_id, advisor_objects)
-    if len(r_map) > 0:
-        person['CaltechTHESIS:advisor'] = r_map
-    r_map = map_committee(cl_people_id, advisor_objects)
-    if len(r_map) > 0:
-        person['CaltechTHESIS:committee'] = r_map
     r_map = map_data(cl_people_id, data_objects)
     if len(r_map) > 0:
         person['CaltechDATA'] = r_map
-
     return person
 
-def map_people_list(people_list, authors_objects, thesis_objects, data_objects, editor_objects, advisor_objects, committee_objects):
+def map_people_list(people_list, authors_objects, thesis_objects, data_objects):
     '''map_people_list takes the JSON array and turns it into a dict'''
     m = {}
     print('mapping people list with authors, thesis and data resources (takes a while)', file = sys.stderr)
@@ -677,8 +524,7 @@ def map_people_list(people_list, authors_objects, thesis_objects, data_objects, 
         if (cl_people_id is None) or (cl_people_id == '') or (' ' in cl_people_id):
             print(f'problem cl_people_id ({i}) -> {person}, skipping')
             continue
-        m[cl_people_id] = map_resources(cl_people_id, person, authors_objects, thesis_objects, data_objects, 
-            editor_objects, advisor_objects, committee_objects)
+        m[cl_people_id] = map_resources(cl_people_id, person, authors_objects, thesis_objects, data_objects)
         bar.update(i)
     bar.finish()
     return m
@@ -692,31 +538,12 @@ def render_peoples(people_list, people_id = None):
     if author_objects is None:
         print(f'failed to read author objects from {f_name}', file = sys.stderr)
         sys.exit(10)
-    # Load editor_objects.json
-    f_name = os.path.join('htdocs', 'people', 'editor_objects.json')
-    editor_objects = read_json_file(f_name)
-    if editor_objects is None:
-        print(f'failed to read editor objects from {f_name}', file = sys.stderr)
-        sys.exit(10)
     # Load thesis_objects.json
     f_name = os.path.join('htdocs', 'people', 'thesis_objects.json')
     thesis_objects = read_json_file(f_name)
     if thesis_objects is None:
         print(f'failed to read thesis objects from {f_name}', file = sys.stderr)
         sys.exit(10)
-    # Load advisor_objects.json
-    f_name = os.path.join('htdocs', 'people', 'advisor_objects.json')
-    advisor_objects = read_json_file(f_name)
-    if advisor_objects is None:
-        print(f'failed to read advisor objects from {f_name}', file = sys.stderr)
-        sys.exit(10)
-    # Load committee_objects.json
-    f_name = os.path.join('htdocs', 'people', 'committee_objects.json')
-    committee_objects = read_json_file(f_name)
-    if committee_objects is None:
-        print(f'failed to read committee objects from {f_name}', file = sys.stderr)
-        sys.exit(10)
-
     # Load data_objects.json
     f_name = os.path.join('htdocs', 'people', 'data_objects.json')
     data_objects = read_json_file(f_name)
@@ -728,8 +555,7 @@ def render_peoples(people_list, people_id = None):
     if os.path.exists(f_name):
         people_list = read_json_file(f_name)
     else:
-        people_list = map_people_list(people_list, author_objects, thesis_objects, data_objects,
-            editor_objects, advisor_objects, committee_objects)
+        people_list = map_people_list(people_list, author_objects, thesis_objects, data_objects)
         # Write out the mapping of people_list with authors, thesis and data resources
         write_json_file(f_name, people_list)
     if people_list is None:

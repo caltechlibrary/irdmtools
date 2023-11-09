@@ -1,6 +1,8 @@
 
 ${if(sort_name)}
+
 # [${sort_name}](./)
+
 ${endif}
 
 ${if(links_and_identifiers)}
@@ -30,23 +32,27 @@ ${if(bio)}
 ${bio}
 ${endif}
 
-${if(advisor)}
+${if(thesis_advisor)}
 
 ## Advisor
 
-${for(thesis_advisor)}
-- Thesis and Dissertations: [HTML](${it.thesis_advisor}.html), [HTML Include](${it.thesis_advisor}.include), [Markdown](${it.thesis_advisor}.md), [BibTeX](${it.thesis_advisor}.bib), [JSON](${it.thesis_advisor}.json), [RSS](${it.thesis_advisor}.rss)
-${endfor}
+- Thesis and Dissertations: [HTML](advisor.html), [HTML Include](advisor.include), [Markdown](advisor.md), [BibTeX](advisor.bib), [JSON](advisor.json), [RSS](advisor.rss)
 ${endif}
 
-${if(committee)}
+${if(thesis_committee)}
 
 ## Committee Member
 
-${for(thesis_committee)}
-- Thesis and Dissertations: [HTML](${it.thesis_committee}.html), [HTML Include](${it.thesis_committee}.include), [Markdown](${it.thesis_committee}.md), [BibTeX](${it.thesis_committee}.bib), [JSON](${it.thesis_committee}.json), [RSS](${it.thesis_committee}.rss)
-${endfor}
+- Thesis and Dissertations: [HTML](committee.html), [HTML Include](committee.include), [Markdown](committee.md), [BibTeX](committee.bib), [JSON](committee.json), [RSS](committee.rss)
 ${endif}
+
+${if(editor)}
+
+## Editor
+
+- Editor: [HTML](editor.html), [HTML Include](editor.include), [Markdown](editor.md), [BibTeX](editor.bib), [JSON](editor.json), [RSS](editor.rss)
+${endif}
+
 
 ${for(content)}
 ${if(it.repository)}

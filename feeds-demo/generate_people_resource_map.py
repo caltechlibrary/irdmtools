@@ -101,20 +101,6 @@ def map_authors(cl_people_id, authors_objects):
                 m[resource_type].append(resource_id)
     return m
 
-def map_editor(cl_people_id, editor_objects):
-    '''for a given cl_people_id map the resources identified from editor list of objects'''
-    m = {}
-    for obj in editor_objects:
-        editor_id = obj.get('editor_id', None)
-        if editor_id == cl_people_id:
-            resource_id = obj.get('resource_id', None)
-            resource_type = obj.get('resource_type', None)
-            if (resource_type is not None) and (resource_id is not None):
-                if resource_type not in m:
-                    m[resource_type] = []
-                m[resource_type].append(resource_id)
-    return m
-
 
 def map_thesis(cl_people_id, thesis_objects):
     '''for a given cl_people_id map the resources identified from list of objects'''
@@ -122,36 +108,6 @@ def map_thesis(cl_people_id, thesis_objects):
     for obj in thesis_objects:
         author_id = obj.get('cl_people_id', None)
         if author_id == cl_people_id:
-            resource_id = obj.get('resource_id', None)
-            resource_type = obj.get('thesis_type', None)
-            if (resource_type is not None) and (resource_id is not None):
-                if resource_type not in m:
-                    m[resource_type] = []
-                m[resource_type].append(resource_id)
-    return m
-
-def map_advisor(cl_people_id, advisor_objects):
-    '''for a given cl_people_id map the resources identified from advisor list
-    of objects in CaltechTHESIS'''
-    m = {}
-    for obj in advisor_objects:
-        advisor_id = obj.get('advisor_id', None)
-        if advisor_id == cl_people_id:
-            resource_id = obj.get('resource_id', None)
-            resource_type = obj.get('thesis_type', None)
-            if (resource_type is not None) and (resource_id is not None):
-                if resource_type not in m:
-                    m[resource_type] = []
-                m[resource_type].append(resource_id)
-    return m
-
-def map_committee(cl_people_id, committee_objects):
-    '''for a given cl_people_id map the resources identified from committee list
-    of objects in CaltechTHESIS'''
-    m = {}
-    for obj in committee_objects:
-        committee_id = obj.get('committee_id', None)
-        if committee_id == cl_people_id:
             resource_id = obj.get('resource_id', None)
             resource_type = obj.get('thesis_type', None)
             if (resource_type is not None) and (resource_id is not None):
@@ -174,7 +130,7 @@ def map_data(cl_people_id, data_objects):
                 m[resource_type].append(resource_id)
     return m
                     
-def map_resources(cl_people_id, person, authors_objects, thesis_objects, data_objects, editor_objects, advisor_objects, committee_objects):
+def map_resources(cl_people_id, person, authors_objects, thesis_objects, data_objects):
     '''map resources from repositories into the people_list'''
     r_map = map_authors(cl_people_id, authors_objects)
     if len(r_map) > 0:
@@ -185,18 +141,9 @@ def map_resources(cl_people_id, person, authors_objects, thesis_objects, data_ob
     r_map = map_data(cl_people_id, data_objects)
     if len(r_map) > 0:
         person['CaltechDATA'] = r_map
-    r_map = map_editor(cl_people_id, editor_objects)
-    if len(r_map) > 0:
-        person['CaltechAUTHORS:editor'] = r_map
-    r_map = map_advisor(cl_people_id, advisor_objects)
-    if len(r_map) > 0:
-        person['CaltechTHESIS:advisor'] = r_map
-    r_map = map_committee(cl_people_id, committee_objects)
-    if len(r_map) > 0:
-        person['CaltechTHESIS:committee'] = r_map
     return person
 
-def map_people_list(people_list, authors_objects, thesis_objects, data_objects, editor_objects, advisor_objects, committee_objects):
+def map_people_list(people_list, authors_objects, thesis_objects, data_objects):
     '''map_people_list takes the JSON array and turns it into a dict'''
     m = {}
     print('mapping people list with authors, thesis and data resources (takes a while)', file = sys.stderr)
@@ -213,7 +160,7 @@ def map_people_list(people_list, authors_objects, thesis_objects, data_objects, 
         if (cl_people_id is None) or (cl_people_id == '') or (' ' in cl_people_id):
             print(f'problem cl_people_id ({i}) -> {person}, skipping')
             continue
-        m[cl_people_id] = map_resources(cl_people_id, person, authors_objects, thesis_objects, data_objects, editor_objects, advisor_objects, committee_objects)
+        m[cl_people_id] = map_resources(cl_people_id, person, authors_objects, thesis_objects, data_objects)
         bar.update(i)
     bar.finish()
     return m
@@ -239,27 +186,8 @@ def render_peoples(people_list, people_id = None):
     if data_objects is None:
         print(f'failed to read data objects from {f_name}', file = sys.stderr)
         sys.exit(10)
-    # Load editor_objects.json
-    f_name = os.path.join('htdocs', 'people', 'editor_objects.json')
-    editor_objects = read_json_file(f_name)
-    if editor_objects is None:
-        print(f'failed to read editor objects from {f_name}', file = sys.stderr)
-        sys.exit(10)
-    # Load advisor_objects.json
-    f_name = os.path.join('htdocs', 'people', 'advisor_objects.json')
-    advisor_objects = read_json_file(f_name)
-    if advisor_objects is None:
-        print(f'failed to read advisor objects from {f_name}', file = sys.stderr)
-        sys.exit(10)
-    # Load committee_objects.json
-    f_name = os.path.join('htdocs', 'people', 'committee_objects.json')
-    committee_objects = read_json_file(f_name)
-    if committee_objects is None:
-        print(f'failed to read committee objects from {f_name}', file = sys.stderr)
-        sys.exit(10
     # Map authors, thesis and data objects into people_list
-    people_list = map_people_list(people_list, author_objects, thesis_objects, data_objects, 
-                                  editor_objects, advisor_objects, committee_objects)
+    people_list = map_people_list(people_list, author_objects, thesis_objects, data_objects)
     if people_list is None:
         print('mapping of authors, thesis and data objects tailed', file = sys.stderr)
         sys.exit(10)
