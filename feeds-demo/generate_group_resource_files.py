@@ -299,7 +299,7 @@ def render_authors_files(d_name, obj, group_id = None, group_name = None, people
                 # Setup to write Markdown files
                 if group_id is not None:
                     resource_info["group_id"] = group_id
-                    resource_info["group_label"] = mk_label(group_id)
+                    resource_info["group_label"] = group_name
                 if people_id is not None:
                     resource_info["people_id"] = people_id
                     resource_info["people_label"] = mk_label(people_id)
@@ -377,7 +377,7 @@ def render_data_files(d_name, obj, group_id = None, group_name = None, people_id
                     resource_info["people_id"] = people_id
                     resource_info["people_label"] = mk_label(people_id)
                 # Write out Markdown files via Pandoc
-                f_name = os.path.join(d_name, f'{resource_type}.json')
+                f_name = os.path.join(d_name, f'{resource_type}.md')
                 write_markdown_resource_file(f_name, resource_info, objects)
 
 def group_has_content(group):
