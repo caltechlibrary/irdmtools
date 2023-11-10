@@ -2,7 +2,8 @@
 
 ## bugs
 
-- [ ] advisor.md and committee.md are not getting generated or linked in the people feeds
+- [ ] The PhD are not rendering, e.g. Newhall-X-X though it does show up under "combined" for thesis
+- [x] advisor.md and committee.md are not getting generated or linked in the people feeds
 - [ ] On individual people pages CaltechTHESIS and CaltechDATA items aren't being listed at all, e.g. Wennberg-P-O, could be corsswalk from ORCID to clpid is broken
 - [ ] publish.bash still needs tuning for numworkers using s5cmd so it doesn't fail with reset
 - [ ] People resource types to labels needs improvements for handling plurals given types, also some underscores aren't being mapped to spaces
