@@ -352,7 +352,6 @@ def render_data_files(d_name, obj, group_id = None, group_name = None, people_id
     if repo_id in obj:
         repo_resources = obj[repo_id]
         for resource_type in repo_resources:
-            f_name = os.path.join(d_name, f'{resource_type}.json')
             objects = []
             for key in repo_resources[resource_type]:
                 obj, err = dataset.read(c_name, key)
@@ -362,12 +361,9 @@ def render_data_files(d_name, obj, group_id = None, group_name = None, people_id
                     objects.append(enhance_object(obj))
             if len(objects) > 0:
                 # Write JSON resource file
+                f_name = os.path.join(d_name, f'{resource_type}.json')
                 write_json_file(f_name, objects)
                 # Handle the recent sub folder
-                recent_d_name = os.path.join(d_name, 'recent')
-                if not os.path.exists(recent_d_name):
-                    os.makedirs(recent_d_name, mode=0o777, exist_ok =True)
-                write_json_file(f_name, objects[0:25])
                 resource_info =  {
                     "repository": "CaltechDATA", 
                     "href":"https://data.caltech.edu",
@@ -381,7 +377,7 @@ def render_data_files(d_name, obj, group_id = None, group_name = None, people_id
                     resource_info["people_id"] = people_id
                     resource_info["people_label"] = mk_label(people_id)
                 # Write out Markdown files via Pandoc
-                f_name = os.path.join(d_name, 'recent', f'{resource_type}.json')
+                f_name = os.path.join(d_name, f'{resource_type}.json')
                 write_markdown_resource_file(f_name, resource_info, objects)
 
 def group_has_content(group):
