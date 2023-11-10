@@ -32,6 +32,15 @@ ${if(bio)}
 ${bio}
 ${endif}
 
+${if(caltech_degrees)}
+
+## CaltechTHESIS
+
+${for(caltech_degrees)}
+${it:degrees.md()}
+${endfor}
+${endif}
+
 ${if(thesis_advisor)}
 
 ## Advisor

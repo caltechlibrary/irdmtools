@@ -400,7 +400,26 @@ def enhance_profile(obj):
     # FIXME: Don't remember how to link these ...    
     #viaf = obj.get('viaf_id', None)
     #lcnaf = obj.get('lcnaf', None)
-    #snac = obj.get('snac', None)
+    snac = obj.get('snac', None)
+    if (snac is not None) and (snac != ""):
+        links_and_identifiers.append({
+            'description': 'SNAC',
+            'label': snac,
+            'link': f'https://snaccooperative.org/view/{snac}'
+        })
+    print(f'DEBUG popping CaltechTHESIS from obj, {obj["CaltechTHESIS"]}', file = sys.stderr)
+    thesis = obj.pop('CaltechTHESIS', None)
+    if thesis is not None:
+        c_name = 'thesis.ds'
+        degrees = []
+        for degree in thesis:
+            print(f'DEBUG looking up degree {degree}', file = sys.stderr)
+            for thesis_id in thesis[degree]:
+                print(f'DEBUG looking up thesis_id {thesis_id}', file = sys.stderr)
+                rec, err = dataset.read(c_name, thesis_id)
+                if (err is not None) and err == '':
+                    degrees.append(rec)
+        obj['caltech_degrees'] = degrees
     editor_count = obj.get('editor_count', 0)
     if editor_count > 0:
         obj['editor'] = 'editor'
@@ -427,6 +446,7 @@ def render_a_person(people_id, obj):
     if (people_id == '') and (' ' in people_id):
         print(f'error: "{people_id}" is not valid', file = sys.stderr)
         return
+    print(f'DEBUG enhancing profile {people_id}', file = sys.stderr)
     obj = enhance_profile(obj)
     src = json.dumps(obj, indent=4)
     # We make the directory since we have a Caltech Person
