@@ -92,8 +92,6 @@ def generate_recent_list(repositories_info):
                 object_types.sort(key = operator.itemgetter('label'))
                 for obj_type in object_types:
                     obj['content'].append(obj_type)
-            else:
-                print(f'failed to find {f_name}, skipping', file = sys.stderr)
     return obj
 
 def main():

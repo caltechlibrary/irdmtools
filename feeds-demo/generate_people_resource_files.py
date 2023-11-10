@@ -407,15 +407,12 @@ def enhance_profile(obj):
             'label': snac,
             'link': f'https://snaccooperative.org/view/{snac}'
         })
-    print(f'DEBUG popping CaltechTHESIS from obj, {obj["CaltechTHESIS"]}', file = sys.stderr)
     thesis = obj.pop('CaltechTHESIS', None)
     if thesis is not None:
         c_name = 'thesis.ds'
         degrees = []
         for degree in thesis:
-            print(f'DEBUG looking up degree {degree}', file = sys.stderr)
             for thesis_id in thesis[degree]:
-                print(f'DEBUG looking up thesis_id {thesis_id}', file = sys.stderr)
                 rec, err = dataset.read(c_name, thesis_id)
                 if (err is not None) and err == '':
                     degrees.append(rec)
@@ -441,7 +438,7 @@ def render_a_person(people_id, obj):
     thesis_count = obj.get('thesis_count', 0)
     data_count = obj.get('data_count', 0)
     if authors_count == 0:
-        print(f'"{people_id}" has no CaltechAUTHORS content, skipping', file = sys.stderr)
+        #print(f'"{people_id}" has no CaltechAUTHORS content, skipping', file = sys.stderr)
         return
     if (people_id == '') and (' ' in people_id):
         print(f'error: "{people_id}" is not valid', file = sys.stderr)
@@ -542,7 +539,7 @@ def map_people_list(people_list, authors_objects, thesis_objects, data_objects):
     for i, person in enumerate(people_list):
         cl_people_id = person.get('cl_people_id', None)
         if (cl_people_id is None) or (cl_people_id == '') or (' ' in cl_people_id):
-            print(f'problem cl_people_id ({i}) -> {person}, skipping')
+            #print(f'problem cl_people_id ({i}) -> {person}, skipping')
             continue
         m[cl_people_id] = map_resources(cl_people_id, person, authors_objects, thesis_objects, data_objects)
         bar.update(i)

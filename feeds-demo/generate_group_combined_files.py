@@ -416,8 +416,6 @@ def render_a_group(group_list, group_id):
                 print(
                 f'error: render_combined_files({repo}' +
                 f', {d_name}, {group_id}) -> {err}', file = sys.stderr)
-    else:
-        print(f'{group_id} has no content, skipping', file = sys.stderr)
 
 
 def render_groups(app_name, group_list, group_id = None):

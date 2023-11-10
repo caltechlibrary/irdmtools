@@ -428,8 +428,6 @@ def render_a_group(group_list, group_id):
         # FIXME: render the group index.md file
         f_name = os.path.join(d_name, 'index.md')
         write_markdown_index_file(f_name, obj)
-    else:
-        print(f'{group_id} has no content, skipping', file = sys.stderr)
 
 
 def render_groups(app_name, group_list, group_id = None):

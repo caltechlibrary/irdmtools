@@ -89,8 +89,6 @@ def build_a_to_z_object(people_list):
                 objects.append({"id": key, "name": name, "letter": f' {letter} '})
             else:
                 objects.append({"id": key, "name": name})
-        else:
-            print(f'"{key}" has not CaltechAUTHORS content, skipping', file = sys.stderr)
     return {
         "a_to_z": a_to_z,
         "content": objects,

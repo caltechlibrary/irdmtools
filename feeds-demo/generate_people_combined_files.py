@@ -384,7 +384,7 @@ def render_a_person(people_id, obj):
     advisor_count = obj.get('advisor_count', 0)
     committee_count = obj.get('committee_count', 0)
     if authors_count == 0:
-        print(f'"{people_id}" has not CaltechAUTHORS content, skipping', file = sys.stderr)
+        #print(f'"{people_id}" has not CaltechAUTHORS content, skipping', file = sys.stderr)
         return
 
     if (people_id == '') and (' ' in people_id):
@@ -492,7 +492,7 @@ def map_people_list(people_list, authors_objects, thesis_objects, data_objects, 
     for i, person in enumerate(people_list):
         cl_people_id = person.get('cl_people_id', None)
         if (cl_people_id is None) or (cl_people_id == '') or (' ' in cl_people_id):
-            print(f'problem cl_people_id ({i}) -> {person}, skipping')
+            #print(f'problem cl_people_id ({i}) -> {person}, skipping')
             continue
         m[cl_people_id] = map_resources(cl_people_id, person, authors_objects, thesis_objects, data_objects,
                                         editor_objects, advisor_objects, committee_objects)
