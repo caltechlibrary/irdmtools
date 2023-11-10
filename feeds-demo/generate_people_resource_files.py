@@ -56,7 +56,6 @@ def enhance_object(obj, repo_url = None):
     if (repo_url is not None) and (obj_id is not None):
         if not obj_id.startswith('https://'):
             obj['id'] = f'{repo_url}{obj_id}'
-            #print(f'DEBUG enhanced id -> {obj["id"]}', file = sys.stderr)
     if 'type' in obj and 'resource_type' not in obj:
         obj['resource_type'] = obj['type']
     if 'date' in obj:
@@ -443,7 +442,6 @@ def render_a_person(people_id, obj):
     if (people_id == '') and (' ' in people_id):
         print(f'error: "{people_id}" is not valid', file = sys.stderr)
         return
-    print(f'DEBUG enhancing profile {people_id}', file = sys.stderr)
     obj = enhance_profile(obj)
     src = json.dumps(obj, indent=4)
     # We make the directory since we have a Caltech Person
