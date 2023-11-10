@@ -3,6 +3,7 @@
 *.tmp
 *.swp
 *.env
+*.log
 # Project specific
 fixup_data_local_group.csv
 publish.txt
