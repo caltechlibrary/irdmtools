@@ -2,12 +2,10 @@
 
 ## bugs
 
-- [ ] The PhD are not rendering, e.g. Newhall-X-X though it does show up under "combined" for thesis
-- [x] advisor.md and committee.md are not getting generated or linked in the people feeds
-- [ ] On individual people pages CaltechTHESIS and CaltechDATA items aren't being listed at all, e.g. Wennberg-P-O, could be corsswalk from ORCID to clpid is broken
-- [ ] publish.bash still needs tuning for numworkers using s5cmd so it doesn't fail with reset
 - [ ] People resource types to labels needs improvements for handling plurals given types, also some underscores aren't being mapped to spaces
 - [ ] The resource types in the recent feeds need vetting, "Software" shows up under "CaltechAUTHORS" but appears to be pointing at CaltechDATA content, I need to double check the "Thesis" listed under CaltechAUTHORS and make sure they areally are non-CaltechAUTHOR thesis (the citation shows Caltech as publisher, but that might be bad crosswalk data)
+- [ ] Review templates for recent, make sure label is used where it should be used
+- [ ] In recent, restrict the resource_types that should be in CaltechDATA from CaltechAUTHORS, also "Thesis" should be a recent feed under CaltechAUTHORS.
 - [ ] page.tmpl needs to be enhance so the page title is meaningful and will improve the useful for pagefind search results for the site.
     - [x] Pages need to include group, people or resource in title
     - [ ] Group pages should have title plus "resource type" for sub pages
@@ -37,6 +35,10 @@
     - [x] create generate_people_combined_files.py from generate_people_resource_files.py
     - [x] test generate_people_combined_map.py
     - [x] test generate_people_combined_files.py
+- [x] The PhD are not rendering, e.g. Newhall-X-X though it does show up under "combined" for thesis
+- [x] advisor.md and committee.md are not getting generated or linked in the people feeds
+- [x] On individual people pages CaltechTHESIS and CaltechDATA items aren't being listed at all, e.g. Wennberg-P-O, could be corsswalk from ORCID to clpid is broken
+- [x ] publish.bash still needs tuning for numworkers using s5cmd so it doesn't fail with reset
 
 
 
