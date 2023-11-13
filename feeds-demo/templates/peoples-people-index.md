@@ -45,21 +45,21 @@ ${if(thesis_advisor)}
 
 ## Advisor
 
-- Thesis and Dissertations: [HTML](advisor.html), [HTML Include](advisor.include), [Markdown](advisor.md), [BibTeX](advisor.bib), [JSON](advisor.json), [RSS](advisor.rss)
+- Thesis and Dissertations: [HTML](advisor.html), [HTML Include](advisor.include), [BibTeX](advisor.bib), [JSON](advisor.json), [RSS](advisor.rss)
 ${endif}
 
 ${if(thesis_committee)}
 
 ## Committee Member
 
-- Thesis and Dissertations: [HTML](committee.html), [HTML Include](committee.include), [Markdown](committee.md), [BibTeX](committee.bib), [JSON](committee.json), [RSS](committee.rss)
+- Thesis and Dissertations: [HTML](committee.html), [HTML Include](committee.include), [BibTeX](committee.bib), [JSON](committee.json), [RSS](committee.rss)
 ${endif}
 
 ${if(editor)}
 
 ## Editor
 
-- Editor: [HTML](editor.html), [HTML Include](editor.include), [Markdown](editor.md), [BibTeX](editor.bib), [JSON](editor.json), [RSS](editor.rss)
+- Editor: [HTML](editor.html), [HTML Include](editor.include), [BibTeX](editor.bib), [JSON](editor.json), [RSS](editor.rss)
 ${endif}
 
 
@@ -68,10 +68,10 @@ ${if(it.repository)}
 
 ... from [${it.repository}](${it.href})
 
-- Combined [HTML](${it.combined}.html), [HTML Include](${it.combined}.include), [Markdown](${it.combined}.md), [BibTeX](${it.combined}.bib), [JSON](${it.combined}.json), [RSS](${it.combined}.rss)
+- Combined [HTML](${it.combined}.html), [HTML Include](${it.combined}.include), [BibTeX](${it.combined}.bib), [JSON](${it.combined}.json), [RSS](${it.combined}.rss)
 ${endif}
 ${if(it.resource_type)}
-- ${it.label} [HTML](${it.resource_type}.html), [HTML Include](${it.resource_type}.include), [Markdown](${it.resource_type}.md), [BibTeX](${it.resource_type}.bib), [JSON](${it.resource_type}.json), [RSS](${it.resource_type}.rss)
+- ${it.label} [HTML](${it.resource_type}.html), [HTML Include](${it.resource_type}.include), [BibTeX](${it.resource_type}.bib), [JSON](${it.resource_type}.json), [RSS](${it.resource_type}.rss)
 ${endif}
 ${endfor}
 
