@@ -144,7 +144,7 @@ def object_to_bibtex(obj):
         _l.append(('pages', pages))
     if resource_type == 'article':
         entry_type = 'article'
-    elif resource_tpye.startswith('book'):
+    elif resource_type.startswith('book'):
         entry_type = 'book'
     else:
         entry_type = 'other'
