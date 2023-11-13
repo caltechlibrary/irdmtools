@@ -2,3 +2,4 @@ py_dataset >= 2.1.2
 pylint 
 progressbar2
 PyYAML
+pybtex >= 0.24

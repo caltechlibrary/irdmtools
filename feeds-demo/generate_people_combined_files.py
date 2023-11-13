@@ -8,9 +8,12 @@ import json
 #import operator
 from subprocess import Popen, PIPE, TimeoutExpired
 
+# Caltech Library packages
 from py_dataset import dataset
+# 3rd Party packages
 import progressbar
 import yaml
+from pybtex.database import BibliographyData, Entry
 
 
 def get_people_list(people_list_json):
@@ -82,6 +85,82 @@ def write_json_file(f_name, objects):
     #print(f'Writing {f_name}', file = sys.stderr)
     with open(f_name, 'w', encoding = 'utf-8') as _w:
         _w.write(src)
+
+def object_person_to_name_bib_list(field_name, obj):
+    people = []
+    agents = obj.get(field_name, None)
+    if agents is not None:
+        items = agents.get('items', [])
+        for item in items:
+            name = item.get('name', None)
+            if name is not None:
+                family = name.get('family', None)
+                given = name.get('given', None)
+                if (family is not None) and (given is not None):
+                    people.append(f'{family}, {given}')
+    return people
+
+def object_to_bibtex(obj):
+    resource_type = obj.get('resource_type', 'other')
+    title = obj.get('title', None)
+    journal = obj.get('journal', None)
+    pub_year = obj.get('pub_year', None)
+    official_url = obj.get('official_url', None)
+    record_uri = obj.get('id', None)
+    isbn = obj.get('isbn', None)
+    issn = obj.get('issn', None)
+    doi = obj.get('doi', None)
+    vol = obj.get('volume', None)
+    vol_no = obj.get('number', None)
+    pmcid = obj.get('pmcid', None)
+    pages = obj.get('pagerange', None)
+    authors = object_person_to_name_bib_list('creators', obj)
+    _l = []
+    if len(authors) > 0:
+        _l.append(('author', ' and '.join(authors)))
+    if title is not None:
+        _l.append(('title', title))
+    if journal is not None:
+        _l.append(('journal', journal))
+    if pub_year is not None:
+        _l.append(('year', pub_year))
+    if official_url is not None:
+        _l.append(('url', official_url))
+    if record_uri is not None:
+        _l.append(('id', record_uri))
+    if isbn is not None:
+        _l.append(('isbn', isbn))
+    if issn is not None:
+        _l.append(('issn', issn))
+    if doi is not None:
+        _l.append(('doi', doi))
+    if vol is not None:
+        _l.append(('volume', vol))
+    if vol_no is not None:
+        _l.append(('number', vol_no))
+    if pmcid is not None:
+        _l.append(('pmcid', pmcid))
+    if pages is not None:
+        _l.append(('pages', pages))
+    if resource_type == 'article':
+        entry_type = 'article'
+    elif resource_tpye.startswith('book'):
+        entry_type = 'book'
+    else:
+        entry_type = 'other'
+    entry = Entry(entry_type, _l)
+    return BibliographyData({
+        record_uri: entry,
+    }).to_string('bibtex') + "\n\n"
+
+
+def write_bibtex_file(f_name, objects):
+    '''takes a list record objects and write BibTeX using pybtex to a file'''
+    with open(f_name, 'w') as _f:
+        _f.write('\n')
+        for obj in objects:
+            _f.write(object_to_bibtex(obj))
+
 
 def pandoc_write_file(f_name, objects, template, params = None):
     '''render the objects to a markdown file using template'''
@@ -234,6 +313,8 @@ def render_combined_files(repo, d_name, people_id, person):
     # Write  the combined Markdown filefile
     f_name = os.path.join(d_name, o_name + '.md')
     write_markdown_combined_file(f_name, repo, person, objects)
+    f_name = os.path.join(d_name, o_name + '.bib')
+    write_bibtex_file(f_name, objects)
     return None
 
 
@@ -306,6 +387,9 @@ def render_editor_files(d_name, obj, people_id, person):
             # Write out Markdown files via Pandoc
             f_name = os.path.join(d_name, 'editor.md')
             write_markdown_file(f_name, resource_info, person, objects)
+            # Write out BibTeX file
+            f_name = os.path.join(d_name, 'editor.bib')
+            write_bibtex_file(f_name, objects)
 
 def render_advisor_files(d_name, obj, people_id, person):
     '''render the advisor JSON and files for people_id'''
@@ -340,6 +424,9 @@ def render_advisor_files(d_name, obj, people_id, person):
             # Write out Markdown files via Pandoc
             f_name = os.path.join(d_name, 'advisor.md')
             write_markdown_file(f_name, resource_info, person, objects)
+            # Write out BibTeX file
+            f_name = os.path.join(d_name, 'advisor.bib')
+            write_bibtex_file(f_name, objects)
 
 
 def render_committee_files(d_name, obj, people_id, person):
@@ -375,6 +462,9 @@ def render_committee_files(d_name, obj, people_id, person):
             # Write out Markdown files via Pandoc
             f_name = os.path.join(d_name, 'committee.md')
             write_markdown_file(f_name, resource_info, person, objects)
+            # Write out BibTeX file
+            f_name = os.path.join(d_name, 'committee.bib')
+            write_bibtex_file(f_name, objects)
 
 
 def render_a_person(people_id, obj):
