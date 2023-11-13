@@ -14,6 +14,7 @@ from py_dataset import dataset
 import progressbar
 import yaml
 from pybtex.database import BibliographyData, Entry
+from feedgen.feed import FeedGenerator
 
 
 def get_group_list(group_list_json):
@@ -172,6 +173,58 @@ def write_bibtex_file(f_name, objects):
         _f.write('\n')
         for obj in objects:
             _f.write(object_to_bibtex(obj))
+
+def remove_prefix(text, prefix):
+    if text.startswith(prefix):
+        return text[len(prefix):]
+    return text
+
+def write_rss_file(f_name, feed_title, objects):
+    feed_url = 'https://feeds.library.caltech.edu/' + remove_prefix(f_name, 'htdocs/')
+    fg = FeedGenerator()
+    fg.id(feed_url)
+    fg.title(feed_title)
+    fg.description('A Caltech Library Repository Feed')
+    fg.link(href = feed_url, rel = 'self')
+    fg.language('en')
+    fg.author({'name': 'Caltech Library', 'email': 'library@caltech.edu'})
+    for obj in objects:
+        record_uri = obj.get('id', None)
+        title = obj.get('title', None)
+        pub_year = obj.get('pub_year', None)
+        official_url = obj.get('official_url', None)
+        authors = object_person_to_name_bib_list('creators', obj)
+        abstract = obj.get('abstract', None)
+        doi = obj.get('doi', None)
+        pmcid = obj.get('pmcid', None)
+        if record_uri is not None:
+            description = []
+            if len(authors) > 0:
+                description.append(f'''Authors: {'; '.join(authors)}''')
+            if pub_year is not None:
+                description.append(f'Year: {pub_year}')
+            if doi is not None:
+                description.append(f'DOI: {doi}')
+            if pmcid is not None:
+                description.append(f'PMCID: {pmcid}')
+            if abstract is not None:
+                description.append(f'${abstract}')
+            entry = fg.add_entry()
+            entry.id(record_uri)
+            entry.guid(record_uri)
+            if official_url is not None:
+                entry.link( href = official_url)
+            else:
+                entry.link(href = record_uri)
+            if title is not None:
+                entry.title(title)
+            entry.description('\n\n'.join(description))
+    src = fg.rss_str(pretty=True)
+    with open(f_name, 'w') as _f:
+        if isinstance(src, bytes):
+            src = src.decode('utf-8')
+        _f.write(src)
+
 
 def pandoc_write_file(f_name, objects, template, params = None):
     '''render the objects to a markdown file using template'''
@@ -384,8 +437,12 @@ def render_authors_files(d_name, obj, group_id = None, group_name = None, people
                 f_name = os.path.join(d_name, f'{resource_type}.md')
                 write_markdown_resource_file(f_name, resource_info, objects)
                 # Write out BibTeX file
-                f_nam e= os.path.join(d_name, f'{resource_type}.bib')
+                f_name = os.path.join(d_name, f'{resource_type}.bib')
                 write_bibtex_file(f_name, objects)
+                # Write out RSS file
+                f_name = os.path.join(d_name, f'{resource_type}.rss')
+                label = mk_label(resource_type)
+                write_rss_file(f_name, f'{label} feed', objects)
 
 def render_thesis_files(d_name, obj, group_id = None, group_name = None, people_id = None):
     '''render the resource JSON files for group_id'''
@@ -419,12 +476,16 @@ def render_thesis_files(d_name, obj, group_id = None, group_name = None, people_
                 if people_id is not None:
                     resource_info["people_id"] = people_id
                     resource_info["people_label"] = mk_label(people_id)
-                # Write out Markdown files via Pandoc
+                # Write out Markdown file
                 f_name = os.path.join(d_name, f'{resource_type}.md')
                 write_markdown_resource_file(f_name, resource_info, objects)
-                # Write the BibTeX files
+                # Write out BibTeX file
                 f_name = os.path.join(d_name, f'{resource_type}.bib')
                 write_bibtex_file(f_name, objects)
+                # Write out RSS file
+                f_name = os.path.join(d_name, f'{resource_type}.rss')
+                label = mk_label(resource_type)
+                write_rss_file(f_name, f'{label} feed', objects)
 
 
 def render_data_files(d_name, obj, group_id = None, group_name = None, people_id = None):
@@ -459,12 +520,16 @@ def render_data_files(d_name, obj, group_id = None, group_name = None, people_id
                 if people_id is not None:
                     resource_info["people_id"] = people_id
                     resource_info["people_label"] = mk_label(people_id)
-                # Write out Markdown files via Pandoc
+                # Write out Markdown file
                 f_name = os.path.join(d_name, f'{resource_type}.md')
                 write_markdown_resource_file(f_name, resource_info, objects)
-                # Write out BibTeX files
+                # Write out BibTeX file
                 f_name = os.path.join(d_name, f'{resource_type}.bib')
                 write_bibtex_file(f_name, objects)
+                # Write out RSS file
+                f_name = os.path.join(d_name, f'{resource_type}.rss')
+                label = mk_label(resource_type)
+                write_rss_file(f_name, f'{label} feed', objects)
 
 def group_has_content(group):
     '''check to make sure it makes sense to render the group. There should
