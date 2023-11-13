@@ -8,9 +8,12 @@ import csv
 import operator
 from subprocess import Popen, PIPE, TimeoutExpired
 
+# Caltech Library Packages
 from py_dataset import dataset
+# 3rd Party Packages
 import progressbar
 import yaml
+from pybtex.database import BibliographyData, Entry
 
 
 def read_json_file(src_name):
@@ -25,6 +28,82 @@ def read_json_file(src_name):
         print(f'failed to read {src_name}', file = sys.stderr)
         sys.exit(1)
     return json.loads(src)
+
+def object_person_to_name_bib_list(field_name, obj):
+    people = []
+    agents = obj.get(field_name, None)
+    if agents is not None:
+        items = agents.get('items', [])
+        for item in items:
+            name = item.get('name', None)
+            if name is not None:
+                family = name.get('family', None)
+                given = name.get('given', None)
+                if (family is not None) and (given is not None):
+                    people.append(f'{family}, {given}')
+    return people
+
+def object_to_bibtex(obj):
+    resource_type = obj.get('resource_type', 'other')
+    title = obj.get('title', None)
+    journal = obj.get('journal', None)
+    pub_year = obj.get('pub_year', None)
+    official_url = obj.get('official_url', None)
+    record_uri = obj.get('id', None)
+    isbn = obj.get('isbn', None)
+    issn = obj.get('issn', None)
+    doi = obj.get('doi', None)
+    vol = obj.get('volume', None)
+    vol_no = obj.get('number', None)
+    pmcid = obj.get('pmcid', None)
+    pages = obj.get('pagerange', None)
+    authors = object_person_to_name_bib_list('creators', obj)
+    _l = []
+    if len(authors) > 0:
+        _l.append(('author', ' and '.join(authors)))
+    if title is not None:
+        _l.append(('title', title))
+    if journal is not None:
+        _l.append(('journal', journal))
+    if pub_year is not None:
+        _l.append(('year', pub_year))
+    if official_url is not None:
+        _l.append(('url', official_url))
+    if record_uri is not None:
+        _l.append(('id', record_uri))
+    if isbn is not None:
+        _l.append(('isbn', isbn))
+    if issn is not None:
+        _l.append(('issn', issn))
+    if doi is not None:
+        _l.append(('doi', doi))
+    if vol is not None:
+        _l.append(('volume', vol))
+    if vol_no is not None:
+        _l.append(('number', vol_no))
+    if pmcid is not None:
+        _l.append(('pmcid', pmcid))
+    if pages is not None:
+        _l.append(('pages', pages))
+    if resource_type == 'article':
+        entry_type = 'article'
+    elif resource_type.startswith('book'):
+        entry_type = 'book'
+    else:
+        entry_type = 'other'
+    entry = Entry(entry_type, _l)
+    return BibliographyData({
+        record_uri: entry,
+    }).to_string('bibtex') + "\n\n"
+
+
+def write_bibtex_file(f_name, objects):
+    '''takes a list record objects and write BibTeX using pybtex to a file'''
+    with open(f_name, 'w') as _f:
+        _f.write('\n')
+        for obj in objects:
+            _f.write(object_to_bibtex(obj))
+
 
 def format_authors(creators):
     '''format the authors to be friendly to Pandoc template'''
@@ -190,14 +269,22 @@ def render_authors():
         obj['resource_type'] = resource.get('name', None)
         f_name = os.path.join('htdocs', 'recent', resource['name'] + '.json')
         resource_list = read_json_file(f_name)
+        # Write out Markdown file
         f_name = os.path.join('htdocs', 'recent', resource['name'] + '.md')
         write_markdown_resource_file(f_name, obj, resource_list)
+        # Write out BibTeX file
+        f_name = os.path.join('htdocs', 'recent', resource['name'] + '.bib')
+        write_bibtex_file(f_name, resource_list)
     # render combined resource file
     del obj['resource_type']
     f_name = os.path.join('htdocs', 'recent', 'combined.json')
     resource_list = read_json_file(f_name)
+    # Write out Markdown file
     f_name = os.path.join('htdocs', 'recent', 'combined.md')
     write_markdown_combined_file(f_name, obj, resource_list)
+    # Write out BibTeX file
+    f_name = os.path.join('htdocs', 'recent', 'combined.bib')
+    write_bibtex_file(f_name, resource_list)
 
 
 
@@ -213,14 +300,22 @@ def render_data():
         obj['resource_type'] = resource.get('name', None)
         f_name = os.path.join('htdocs', 'recent', resource['name'] + '.json')
         resource_list = read_json_file(f_name)
+        # Write out Markdown file
         f_name = os.path.join('htdocs', 'recent', resource['name'] + '.md')
         write_markdown_resource_file(f_name, obj, resource_list)
+        # Write out BibTeX file
+        f_name = os.path.join('htdocs', 'recent', resource['name'] + '.bib')
+        write_bibtex_file(f_name, resource_list)
     # render combined resource file
     del obj['resource_type']
     f_name = os.path.join('htdocs', 'recent', 'combined_data.json')
     resource_list = read_json_file(f_name)
+    # Write out Markdown file
     f_name = os.path.join('htdocs', 'recent', 'combined_data.md')
     write_markdown_combined_file(f_name, obj, resource_list)
+    # Write out BibTeX file
+    f_name = os.path.join('htdocs', 'recent', 'combined_data.bib')
+    write_bibtex_file(f_name, resource_list)
 
 
 def render_recent():

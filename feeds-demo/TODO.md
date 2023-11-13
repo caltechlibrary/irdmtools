@@ -64,9 +64,15 @@
 
 - [ ] Missing combined for people resource pages
 - [ ] Missing RSS rendering for all feeds
+    - [ ] Identifiy RSS 2.0 rendering library for Python
+    - [ ] Groups, resource and combined
+    - [ ] People, resources and combined
+    - [ ] Recent feeds
 - [ ] Missing BibTeX rendering for all feeds
-    - [x] Write a simple BibTeX template that iterates over "content"
-    - [ ] Need to add this to generate_people_files.py and generate_groups_files.py and the one that generates the recent lists
+    - [x] Identify BibTeX rendering library for Python
+    - [x] Groups, resource and combined
+    - [x] People, resources and combined
+    - [ ] Recent feeds
 - [x] Look at performance issues in make_group_pages and see if pushing this processing into generate_group_json.py might improve things (at least elimate some loops)
 - [x] Create groups/groups_list.json from the CSV files for group's repos and groups.csv
 - [x] Create groups/people_list.json from the CSV files for people's repos and people.csv
