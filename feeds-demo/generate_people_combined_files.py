@@ -635,28 +635,6 @@ def map_resources(cl_people_id, person, authors_objects, thesis_objects, data_ob
         person['CaltechTHESIS:committee'] = r_map
     return person
 
-def map_people_list(people_list, authors_objects, thesis_objects, data_objects, editor_objects, advisor_objects, committee_objects):
-    '''map_people_list takes the JSON array and turns it into a dict'''
-    m = {}
-    print('mapping people list with authors, thesis and data using combined records (takes a while)', file = sys.stderr)
-    tot = len(people_list)
-    widgets=[
-         f'map people_list to people_combined.json' 
-         ' ', progressbar.Counter(), f'/{tot}',
-         ' ', progressbar.Percentage(),
-         ' ', progressbar.AdaptiveETA(),
-    ]
-    bar = progressbar.ProgressBar(max_value = tot, widgets=widgets)
-    for i, person in enumerate(people_list):
-        cl_people_id = person.get('cl_people_id', None)
-        if (cl_people_id is None) or (cl_people_id == '') or (' ' in cl_people_id):
-            #print(f'problem cl_people_id ({i}) -> {person}, skipping')
-            continue
-        m[cl_people_id] = map_resources(cl_people_id, person, authors_objects, thesis_objects, data_objects,
-                                        editor_objects, advisor_objects, committee_objects)
-        bar.update(i)
-    bar.finish()
-    return m
 
 def render_peoples(people_list, people_id = None):
     '''take our CSV and JSON files and aggregate them'''
@@ -702,11 +680,8 @@ def render_peoples(people_list, people_id = None):
     if os.path.exists(f_name):
         people_list = read_json_file(f_name)
     else:
-        # Map authors, thesis and data objects into people_list
-        people_list = map_people_list(people_list, author_objects, thesis_objects, data_objects,
-                                      editor_objects, advisor_objects, committee_objects)
-        # Write out the mapping of people combined json with authors, thesis and data resources
-        write_json_file(f_name, people_list)
+        print(f'{f_name} not found, aborting')
+        sys.exit(10)
     if people_list is None:
         print('mapping of authors, thesis and data objects failed, aborting', file = sys.stderr)
         sys.exit(10)

@@ -149,7 +149,7 @@ def map_people_list(people_list, authors_objects, thesis_objects, data_objects):
     print('mapping people list with authors, thesis and data resources (takes a while)', file = sys.stderr)
     tot = len(people_list)
     widgets=[
-         f'map people_list' 
+         f'map people_list to people_resources.json' 
          ' ', progressbar.Counter(), f'/{tot}',
          ' ', progressbar.Percentage(),
          ' ', progressbar.AdaptiveETA(),
