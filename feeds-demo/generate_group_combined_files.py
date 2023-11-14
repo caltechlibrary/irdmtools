@@ -153,7 +153,10 @@ def write_bibtex_file(f_name, objects):
     with open(f_name, 'w') as _f:
         _f.write('\n')
         for obj in objects:
-            _f.write(object_to_bibtex(obj))
+            record_id = obj.get('id', None)
+            title = obj.get('title', None)
+            if (record_id is not None) and (title is not None):
+                _f.write(object_to_bibtex(obj))
 
 def remove_prefix(text, prefix):
     if text.startswith(prefix):
