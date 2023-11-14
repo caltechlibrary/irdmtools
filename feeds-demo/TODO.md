@@ -3,14 +3,14 @@
 ## bugs
 
 - [ ] People resource types to labels needs improvements for handling plurals given types, also some underscores aren't being mapped to spaces
-- [ ] The resource types in the recent feeds need vetting, "Software" shows up under "CaltechAUTHORS" but appears to be pointing at CaltechDATA content, I need to double check the "Thesis" listed under CaltechAUTHORS and make sure they areally are non-CaltechAUTHOR thesis (the citation shows Caltech as publisher, but that might be bad crosswalk data)
-- [ ] Review templates for recent, make sure label is used where it should be used
-- [ ] In recent, restrict the resource_types that should be in CaltechDATA from CaltechAUTHORS, also "Thesis" should be a recent feed under CaltechAUTHORS.
 - [ ] page.tmpl needs to be enhance so the page title is meaningful and will improve the useful for pagefind search results for the site.
     - [x] Pages need to include group, people or resource in title
     - [ ] Group pages should have title plus "resource type" for sub pages
     - [x] People pages should have title plus "resource type" for sub pages
     - [ ] Recent pages should have title plus "resource type" for sub pages
+- [x] Review templates for recent, make sure label is used where it should be used
+- [x] In recent, restrict the resource_types that should be in CaltechDATA from CaltechAUTHORS, also "Thesis" should be a recent feed under CaltechAUTHORS.
+- [x] The resource types in the recent feeds need vetting, "Software" shows up under "CaltechAUTHORS" but appears to be pointing at CaltechDATA content, I need to double check the "Thesis" listed under CaltechAUTHORS and make sure they areally are non-CaltechAUTHOR thesis (the citation shows Caltech as publisher, but that might be bad crosswalk data)
 - [x] Groups, GALCIT, combined thesis sort order needs to be reversed (newest first)
 - [x] Recent pages the links to the current page because the `official_url` attribute is not popluated. Also authors_list, pub_year, doi, record id (rdmid) is not being populated either. I need to look at how I am enhancing the items in the content array, results can be viewed in `/recent/*.md` files for resources (e.g. article, monograph, etc). 
 - [x] The title in Markdown generated via Pandoc seem to wrap at a specific column, might be happening as a result of PyYAML wrapping strings, need to sort out as it is causing a problem in linking as implememented in citation.md
@@ -38,17 +38,17 @@
 - [x] The PhD are not rendering, e.g. Newhall-X-X though it does show up under "combined" for thesis
 - [x] advisor.md and committee.md are not getting generated or linked in the people feeds
 - [x] On individual people pages CaltechTHESIS and CaltechDATA items aren't being listed at all, e.g. Wennberg-P-O, could be corsswalk from ORCID to clpid is broken
-- [x ] publish.bash still needs tuning for numworkers using s5cmd so it doesn't fail with reset
+- [x] publish.bash still needs tuning for numworkers using s5cmd so it doesn't fail with reset
 
 
 
 ## make_datasets.bash
 
-- [ ] Refactor, code to generate "combined" lists need a different sort than group_list.json and people_resources.json provide, implement group_combined.json, people_combined.json via dsquery or python program, tease this code out from `generate_*_files.py`. 
+- [x] Refactor, code to generate "combined" lists need a different sort than group_list.json and people_resources.json provide, implement group_combined.json, people_combined.json via dsquery or python program, tease this code out from `generate_*_files.py`. 
     - [x] Rename `generate_group_files.py` to `generate_group_resource_files.py`
     - [x] Create `generate_group_combined_files.py`
-    - [ ] Rename `generate_*_files.py` to `generate_*_resource_files.py`
-    - [ ] Create `generate_*_combined_files.py`
+    - [x] Rename `generate_*_files.py` to `generate_*_resource_files.py`
+    - [x] Create `generate_*_combined_files.py`
 - [x] figure out how to update people.ds counts, this is probable faster to be done via an export of counts and cl_people_id from authors.ds, data.ds and thesis.ds then merge the the result into people.ds
     - [x] authors_count
     - [x] editor_count
@@ -62,17 +62,17 @@
 
 ## make_site.bash
 
-- [ ] Missing combined for people resource pages
-- [ ] Missing RSS rendering for all feeds
-    - [ ] Identifiy RSS 2.0 rendering library for Python
-    - [ ] Groups, resource and combined
-    - [ ] People, resources and combined
-    - [ ] Recent feeds
-- [ ] Missing BibTeX rendering for all feeds
+- [x] Missing combined for people resource pages
+- [x] Missing RSS rendering for all feeds
+    - [x] Identifiy RSS 2.0 rendering library for Python
+    - [x] Groups, resource and combined
+    - [x] People, resources and combined
+    - [x] Recent feeds
+- [x] Missing BibTeX rendering for all feeds
     - [x] Identify BibTeX rendering library for Python
     - [x] Groups, resource and combined
     - [x] People, resources and combined
-    - [ ] Recent feeds
+    - [x] Recent feeds
 - [x] Look at performance issues in make_group_pages and see if pushing this processing into generate_group_json.py might improve things (at least elimate some loops)
 - [x] Create groups/groups_list.json from the CSV files for group's repos and groups.csv
 - [x] Create groups/people_list.json from the CSV files for people's repos and people.csv
