@@ -64,14 +64,20 @@ def pandoc_write_file(f_name, objects, template, params = None):
             sys.exit(20)
     return None
 
-def build_a_to_z_object(index):
+def build_a_to_z_object(index, group_list):
     '''build an object form the decoded array'''
     objects = []
     a_to_z = []
     last_letter = ''
     for key in index:
-        name = key.replace('-', ' ', -1)
-        letter = name[0].upper()
+        group = group_list.get(key, None)
+        if group is None:
+            print(f'WARNING failed to retrieve group {key} in build_a_to_z_object(index, group_list)')
+            name = key.replace('-', ' ', -1)
+            letter = name[0].upper()
+        else:
+            name = group.get('name', None)
+            letter = name[0].upper()
         if letter != last_letter:
             a_to_z.append({'href': f'#{letter}', 'label': f' {letter} '})
             last_letter = letter
@@ -83,9 +89,9 @@ def build_a_to_z_object(index):
         "content": objects,
     }
 
-def render_a_to_z_list(f_name, index):
+def render_a_to_z_list(f_name, index, group_list):
     '''generate an A to Z list for htdocs/groups/index.md from htdocs/groups/index.json'''
-    pg_obj = build_a_to_z_object(index)
+    pg_obj = build_a_to_z_object(index, group_list)
     pandoc_write_file(f_name, pg_obj, 'templates/groups-index.md', {
         "from_fmt": "markdown",
         "to_fmt": "markdown"
@@ -131,7 +137,7 @@ def main():
     write_json_file(f_name, index)
     # Write out the A to Z list as htdocs/groups/index.md"
     f_name = os.path.join('htdocs', 'groups', 'index.md')
-    render_a_to_z_list(f_name, index)
+    render_a_to_z_list(f_name, index, group_list)
 
 if __name__ == '__main__':
     main()
