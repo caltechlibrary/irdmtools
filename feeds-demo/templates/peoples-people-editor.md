@@ -1,9 +1,9 @@
 
 ${if(sort_name)}
 
-# [${sort_name}](./)
+# Editor: [${sort_name}](./)
 
-As editor.
+from CaltechAUTHORS
 
 ${endif}
 

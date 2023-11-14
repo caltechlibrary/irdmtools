@@ -176,6 +176,13 @@ func CrosswalkRdmToEPrint(cfg *Config, rec *simplified.Record, eprint *eprinttoo
 		if doi, ok := getMetadataIdentifier(rec, "doi"); ok {
 			eprint.DOI = doi
 		}
+		if (rec.PID != nil) {
+			if doi, ok := rec.PID["doi"].(map[string]interface{}); ok {
+				if identifier, ok := doi["identifier"].(string); ok {
+					eprint.DOI = identifier
+				}
+			}
+		}
 		if pmcid, ok := getMetadataIdentifier(rec, "pmcid"); ok {
 			eprint.PMCID = pmcid
 		}
@@ -419,6 +426,20 @@ func CrosswalkRdmToEPrint(cfg *Config, rec *simplified.Record, eprint *eprinttoo
 			eprint.OtherNumberingSystem.Append(otherNumberSystemItem)
 		}
 	}
+	// Finally we need to add our PrimaryObject
+	/*
+	primaryObject := make(map[string]interface{})
+	primaryObject["basename"] = ""
+	primaryObject["url"] = ""
+	primaryObject["mime_type"] = ""
+	primaryObject["content"] = ""
+	primaryObject["license"] = ""
+	primaryObject["filesize"] = ""
+	primaryObject["version"] = ""
+	*/
+
+
+
 	// Now that we have enough information the eprint structure we can answer some questions
 	// and infer values.
 	if eprint.Type != "article" && eprint.Publication == "" {

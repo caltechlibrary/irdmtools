@@ -21,7 +21,7 @@ ${if(website)}<${website}>${endif}
 
 ${if(repository)}
 
-## combined from [${repository}](${href})
+### combined from [${repository}](${href})
 
 ${endif}
 ${for(content)}

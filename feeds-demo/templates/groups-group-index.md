@@ -23,7 +23,7 @@ ${if(website)}<${website}>${endif}
 ${for(content)}
 ${if(it.repository)}
 
-... from [${it.repository}](${it.href})
+### [${it.repository}](${it.href})
 
 - Combined [HTML](${it.combined}.html), [HTML Include](${it.combined}.include), [BibTeX](${it.combined}.bib), [JSON](${it.combined}.json), [RSS](${it.combined}.rss)
 ${endif}
