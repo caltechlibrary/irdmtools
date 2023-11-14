@@ -907,6 +907,7 @@ func GetRecord(cfg *Config, id string, draft bool) (*simplified.Record, error) {
 	if err := JSONUnmarshal(src, &rec); err != nil {
 		return nil, err
 	}
+	fmt.Fprintf(os.Stderr, "DEBUG got record ExternalPIDs -> %+v\n", rec.ExternalPIDs)
 	return rec, nil
 }
 

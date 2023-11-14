@@ -8,7 +8,7 @@ require (
 	github.com/caltechlibrary/dataset/v2 v2.1.8
 	github.com/caltechlibrary/eprinttools v1.3.6
 	github.com/caltechlibrary/pairtree v1.0.2
-	github.com/caltechlibrary/simplified v0.0.23-0.20231114221953-63cc61e87a52
+	github.com/caltechlibrary/simplified v0.0.23-0.20231114231003-718cd0a30ee5
 	github.com/go-sql-driver/mysql v1.7.1
 	github.com/lib/pq v1.10.9
 	gopkg.in/yaml.v3 v3.0.1

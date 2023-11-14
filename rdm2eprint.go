@@ -43,6 +43,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"os"
 
 	// Caltech Library Packages
 	"github.com/caltechlibrary/dataset/v2"
@@ -175,12 +176,10 @@ func CrosswalkRdmToEPrint(cfg *Config, rec *simplified.Record, eprint *eprinttoo
 		}
 		if doi, ok := getMetadataIdentifier(rec, "doi"); ok {
 			eprint.DOI = doi
-		}
-		if (rec.PID != nil) {
-			if doi, ok := rec.PID["doi"].(map[string]interface{}); ok {
-				if identifier, ok := doi["identifier"].(string); ok {
-					eprint.DOI = identifier
-				}
+		} 
+		if (rec.ExternalPIDs != nil) {
+			if doi, ok := rec.ExternalPIDs["doi"]; ok {
+				eprint.DOI = doi.Identifier
 			}
 		}
 		if pmcid, ok := getMetadataIdentifier(rec, "pmcid"); ok {
