@@ -424,17 +424,31 @@ func CrosswalkRdmToEPrint(cfg *Config, rec *simplified.Record, eprint *eprinttoo
 			eprint.OtherNumberingSystem.Append(otherNumberSystemItem)
 		}
 	}
-	// Finally we need to add our PrimaryObject
-	/*
-	primaryObject := make(map[string]interface{})
-	primaryObject["basename"] = ""
-	primaryObject["url"] = ""
-	primaryObject["mime_type"] = ""
-	primaryObject["content"] = ""
-	primaryObject["license"] = ""
-	primaryObject["filesize"] = ""
-	primaryObject["version"] = ""
-	*/
+	if (rec.Files != nil) {
+		// Finally we need to add our Related and Primary Objects
+		defaultPreview := rec.Files.DefaultPreview
+		if rec.Files.Entries != nil  {
+			for _, entry := range rec.Files.Entries {
+				if defaultPreview == "" {
+					defaultPreview = entry.Key
+				}
+				if defaultPreview == entry.Key {
+					eprint.PrimaryObject = map[string]interface{}{
+						"basename": defaultPreview,
+						"url": fmt.Sprintf("/records/%s/files/%s", rec.ID, defaultPreview),
+					}
+				} else {
+					if eprint.RelatedObjects == nil {
+						eprint.RelatedObjects = []map[string]interface{}{}
+					}
+					eprint.RelatedObjects = append(eprint.RelatedObjects, map[string]interface{}{
+						"basename": entry.Key,
+						"url": fmt.Sprintf("/records/%s/files/%s", rec.ID, entry.Key),
+					})
+				}
+			}
+		}
+	}
 
 
 
