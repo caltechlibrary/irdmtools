@@ -86,9 +86,13 @@ def build_a_to_z_object(people_list):
             if letter != last_letter:
                 a_to_z.append({'href': f'#{letter}', 'label': f' {letter} '})
                 last_letter = letter
-                objects.append({"id": key, "name": name, "letter": f' {letter} '})
+                o = {"id": key, "name": name, "letter": f' {letter} '}
             else:
-                objects.append({"id": key, "name": name})
+                o = {"id": key, "name": name }
+            orcid = person.get('orcid', None)
+            if orcid is not None:
+                o["orcid"] = orcid
+            objects.append(o)
     return {
         "a_to_z": a_to_z,
         "content": objects,

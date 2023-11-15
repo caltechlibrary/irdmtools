@@ -883,7 +883,8 @@ WHERE json->>'id' = $1 LIMIT 1;`
     t.key AS key 
 FROM t
 JOIN rdm_records_metadata ON (t.record_id = rdm_records_metadata.id)
-WHERE json->>'id' = $1`
+WHERE json->>'id' = $1
+ORDER BY key ASC`
 	entries, err := db.Query(stmt, rdmID)
 	if err != nil {
 		return nil, err

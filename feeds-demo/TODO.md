@@ -80,7 +80,7 @@
 ## CL.js improvements, fixes
 
 - [x] Remove lunrs JS files, site uses PageFind and that is my recommendation going forward os there is no "Search" widget possible
-- [ ] Test CL.js scripts using test buckets, may need to make the base url for content configurable when rendering static to htdocs tree
-    - [ ] consider a CL-config.js file that everything uses to pickup appropiate configurtion (e.g. production or testing)
+- [x] Test CL.js scripts using test buckets, may need to make the base url for content configurable when rendering static to htdocs tree
+    - [x] (NOT NEEDED) consider a CL-config.js file that everything uses to pickup appropiate configurtion (e.g. production or testing)
 
 
