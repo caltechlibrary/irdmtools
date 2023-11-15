@@ -854,6 +854,7 @@ WHERE json->>'id' = $1 LIMIT 1;`
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 	var src []byte
 	for rows.Next() {
 		if err := rows.Scan(&src); err != nil {
@@ -866,6 +867,53 @@ WHERE json->>'id' = $1 LIMIT 1;`
 	}
 	rec := &simplified.Record{}
 	err = JSONUnmarshal(src, &rec)
+	if err != nil {
+		return nil, err
+	}
+
+	// Now we try to add Files.Entries to Record.
+	stmt = `WITH t AS (
+    SELECT record_id AS record_id,
+           files_object.key AS key 
+    FROM rdm_records_files
+    JOIN files_object ON (rdm_records_files.key = files_object.key)
+	ORDER BY files_object.key ASC
+) SELECT 
+    (CASE WHEN json->'files'->>'default_preview' = t.key THEN TRUE else FALSE END) AS is_default_preview, 
+    t.key AS key 
+FROM t
+JOIN rdm_records_metadata ON (t.record_id = rdm_records_metadata.id)
+WHERE json->>'id' = $1`
+	entries, err := db.Query(stmt, rdmID)
+	if err != nil {
+		return nil, err
+	}
+	defer entries.Close()
+	var (
+		isDefaultPreview bool
+		fName string
+	)
+	fileEntries := map[string]*simplified.Entry{}
+	for entries.Next() {
+		if err := entries.Scan(&isDefaultPreview, &fName); err != nil {
+			return nil, err
+		}
+		fileEntries[fName] = &simplified.Entry{
+			Key: fName,
+		}
+		if isDefaultPreview {
+			if rec.Files == nil {
+				rec.Files = &simplified.Files{}
+			}
+			rec.Files.DefaultPreview = fName
+		}
+	}
+	if len(fileEntries) > 0 {
+		if rec.Files == nil {
+			rec.Files = &simplified.Files{}
+		}
+		rec.Files.Entries = fileEntries
+	}
 	return rec, err
 }
 

@@ -1,6 +1,6 @@
-%rdm2eprint(1) irdmtools user manual | version 0.0.59 2f15a7b5
+%rdm2eprint(1) irdmtools user manual | version 0.0.60 5bc81b11
 % R. S. Doiel and Tom Morrell
-% 2023-11-14
+% 2023-11-15
 
 # NAME
 
