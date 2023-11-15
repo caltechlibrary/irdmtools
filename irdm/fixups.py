@@ -165,7 +165,7 @@ def normalize_pub(pub_url=None, doi=None):
 # Where possible these adjustments should be ported back
 # into eprinttools' simple.go and crosswalk.go.
 #
-def fixup_record(record, reload=False, token=None, existing_doi=None):
+def fixup_record(record, reload=False, token=None, existing_doi=None, has_doi=None):
     """fixup_record accepts a dict of simple record and files returns a
     normlzied record dict that is a for migration into Invenio-RDM."""
     record_id = get_dict_path(record, ["pid", "id"])
@@ -275,18 +275,21 @@ def fixup_record(record, reload=False, token=None, existing_doi=None):
         record["files"] = {"enabled": False, "order": []}
     # Normalize DOI, issue #39
     doi = normalize_doi(get_dict_path(record, ["pids", "doi", "identifier"]))
+    id_doi = None
     if doi is not None:
         # Mark system DOIs
         if doi.startswith("10.7907"):
             record["pids"]["doi"]["provider"] = "datacite"
             record["pids"]["doi"]["client"] = "datacite"
+            if "publisher" not in record["metadata"]:
+                record["metadata"]["publisher"] = "California Institute of Technology"
         if not reload:
             # See if DOI already exists in CaltechAUTHORS, if so move it to metadata identifiers.
-            has_doi = None
             if not existing_doi:
-                has_doi, err = check_for_doi(doi, in_production, token)
-                if err is not None:
-                    return rec, err
+                if has_doi is None:
+                    has_doi, err = check_for_doi(doi, in_production, token)
+                    if err is not None:
+                        return rec, err
             if has_doi:
                 del record["pids"]["doi"]
                 if "metadata" not in record:
@@ -296,6 +299,7 @@ def fixup_record(record, reload=False, token=None, existing_doi=None):
                 record["metadata"]["identifiers"].append(
                     {"scheme": "doi", "identifier": f"{doi}"}
                 )
+                id_doi = doi
                 doi = None
 
     # Make sure records DOI isn't in related identifiers
@@ -305,13 +309,13 @@ def fixup_record(record, reload=False, token=None, existing_doi=None):
         keep_identifiers = []
         for identifier in identifiers:
             scheme = get_dict_path(identifier, ["scheme"])
-            id_val = get_dict_path(identifier, ["identifier"])
+            id_val = get_dict_path(identifier, ["identifier"]).replace(" ","")
             relation = get_dict_path(identifier, ["relation_type", "id"])
             if idutils.is_doi(id_val):
                 normalized = normalize_doi(id_val)
-                if normalized != doi:
+                if normalized not in [doi,id_doi]:
                     if id_val not in added_identifiers:
-                        identifier["identifier"] = id_val
+                        identifier["identifier"] = normalized
                         identifier["scheme"] = "doi"
                         added_identifiers.append(id_val)
                         keep_identifiers.append(identifier)

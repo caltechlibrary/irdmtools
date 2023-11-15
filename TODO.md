@@ -5,6 +5,7 @@ Action Items
 Bugs
 ----
 
+- [ ] progress.go is producing non-sensical estamates of the time remaining, need to review my math
 - [ ] eprint2rdm missing metadata attributes
 	- [x] journal related fields (e.g. journal:journal) in custom fields
 	- [ ] thesis related fields

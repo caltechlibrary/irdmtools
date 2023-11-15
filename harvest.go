@@ -108,7 +108,7 @@ func Harvest(cfg *Config, fName string, debug bool) error {
 		}
 		// The rest API seems to have two rate limits, 5000 requests per hour and 500 requests per minute
 		if iTime, reportProgress = CheckWaitInterval(iTime, time.Minute); reportProgress || i == 0 {
-			log.Printf("last id %q (%d/%d) %s", id, i, tot, ProgressETA(t0, i, tot))
+			log.Printf("%s last id %q (%d/%d) %s", cName, id, i, tot, ProgressETA(t0, i, tot))
 		}
 		// NOTE: We need to respect rate limits of RDM API
 		cfg.rl.Throttle(i, tot)
@@ -176,7 +176,7 @@ func harvestEPrintRecordsFromMySQL(cfg *Config, recordIds []int, debug bool) err
 		}
 		// The rest API seems to have two rate limits, 5000 requests per hour and 500 requests per minute
 		if iTime, reportProgress = CheckWaitInterval(iTime, time.Minute); reportProgress || i == 0 {
-			l.Printf("last id %d (%d/%d) %s", eprintid, i, tot, ProgressETA(t0, i, tot))
+			l.Printf("%s last id %d (%d/%d) %s", cName, eprintid, i, tot, ProgressETA(t0, i, tot))
 		}
 	}
 	l.Printf("%d harvested, %d errors, running time %s", hCnt, eCnt, time.Since(t0).Round(time.Second))
@@ -242,7 +242,7 @@ func HarvestEPrintRecords(cfg *Config, recordIds []int, debug bool) error {
 		}
 		// The rest API seems to have two rate limits, 5000 requests per hour and 500 requests per minute
 		if iTime, reportProgress = CheckWaitInterval(iTime, time.Minute); reportProgress || i == 0 {
-			l.Printf("last id %q (%d/%d) %s", id, i, tot, ProgressETA(t0, i, tot))
+			l.Printf("%s last id %q (%d/%d) %s", cName, id, i, tot, ProgressETA(t0, i, tot))
 		}
 		// NOTE: We need to respect rate limits of RDM API
 		//cfg.rl.Throttle(i, tot)
@@ -314,7 +314,7 @@ func HarvestEPrints(cfg *Config, fName string, debug bool) error {
 		}
 		// The rest API seems to have two rate limits, 5000 requests per hour and 500 requests per minute
 		if iTime, reportProgress = CheckWaitInterval(iTime, time.Minute); reportProgress || i == 0 {
-			log.Printf("last id %q (%d/%d) %s", id, i, tot, ProgressETA(t0, i, tot))
+			log.Printf("%s last id %q (%d/%d) %s", cName, id, i, tot, ProgressETA(t0, i, tot))
 		}
 		// NOTE: We need to respect rate limits of RDM API
 		//cfg.rl.Throttle(i, tot)

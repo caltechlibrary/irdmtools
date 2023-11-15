@@ -175,6 +175,11 @@ func CrosswalkRdmToEPrint(cfg *Config, rec *simplified.Record, eprint *eprinttoo
 		}
 		if doi, ok := getMetadataIdentifier(rec, "doi"); ok {
 			eprint.DOI = doi
+		} 
+		if (rec.ExternalPIDs != nil) {
+			if doi, ok := rec.ExternalPIDs["doi"]; ok {
+				eprint.DOI = doi.Identifier
+			}
 		}
 		if pmcid, ok := getMetadataIdentifier(rec, "pmcid"); ok {
 			eprint.PMCID = pmcid
@@ -376,12 +381,23 @@ func CrosswalkRdmToEPrint(cfg *Config, rec *simplified.Record, eprint *eprinttoo
 							addItem = true
 							item.ID = id.(string)
 						}
-						// FIXME: title is populated from translating the vocabuarly against
+						// FIXME: title is populated from translating the vocabulary against
 						// and group id attribute so this is always empty.
 						if title, ok := group["title"].(map[string]interface{}); ok {
 							if en, ok := title["en"]; ok {
 								addItem = true
 								item.Value = en.(string)
+							}
+						}
+						//NOTE: Need to make sure we're not adding a duplicate groups
+						for i := 0; i < groupList.Length(); i++ {
+							grp := groupList.IndexOf(i)
+							if grp.ID == item.ID {
+								addItem = false
+								break
+							}
+							if item.Value != "" && (grp.Value == item.Value) {
+								addItem = false
 							}
 						}
 						if addItem {
@@ -408,6 +424,20 @@ func CrosswalkRdmToEPrint(cfg *Config, rec *simplified.Record, eprint *eprinttoo
 			eprint.OtherNumberingSystem.Append(otherNumberSystemItem)
 		}
 	}
+	// Finally we need to add our PrimaryObject
+	/*
+	primaryObject := make(map[string]interface{})
+	primaryObject["basename"] = ""
+	primaryObject["url"] = ""
+	primaryObject["mime_type"] = ""
+	primaryObject["content"] = ""
+	primaryObject["license"] = ""
+	primaryObject["filesize"] = ""
+	primaryObject["version"] = ""
+	*/
+
+
+
 	// Now that we have enough information the eprint structure we can answer some questions
 	// and infer values.
 	if eprint.Type != "article" && eprint.Publication == "" {
@@ -697,10 +727,10 @@ func (app *Rdm2EPrint) RunHarvest(in io.Reader, out io.Writer, eout io.Writer, c
 			}
 		}
 		if rptTime, reportProgress = CheckWaitInterval(rptTime, (30 * time.Second)); reportProgress {
-			log.Printf("(%d/%d) %s", i, tot, ProgressETA(t0, i, tot))
+			log.Printf("%s (%d/%d) %s", cName, i, tot, ProgressETA(t0, i, tot))
 		}
 	}
-	log.Printf("Finished, processed %d records in %s", tot, time.Since(t0).Round(time.Second))
+	log.Printf("Finished %s, processed %d records in %s", cName, tot, time.Since(t0).Round(time.Second))
 	return nil
 }
 

@@ -405,6 +405,7 @@ func CheckDOI(cfg *Config, doi string) ([]map[string]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+	hName := u.Host
 	// Setup our query parameters, i.e. q=*
 	// ?q=pids.doi.identifier:"10.1126/science.82.2123.219"&allversions=true
 	u.Path = "/api/records"
@@ -421,7 +422,7 @@ func CheckDOI(cfg *Config, doi string) ([]map[string]interface{}, error) {
 	records := []map[string]interface{}{}
 	for i := 0; uri != ""; i++ {
 		if iTime, reportProgress = CheckWaitInterval(iTime, time.Minute); reportProgress || (i == 0) {
-			log.Printf("(%d/%d) %s", len(records), tot, ProgressETA(t0, len(records), tot))
+			log.Printf("%s (%d/%d) %s", hName, len(records), tot, ProgressETA(t0, len(records), tot))
 		}
 		dbgPrintf(cfg, "requesting %s", uri)
 		src, headers, err := getJSON(cfg.InvenioToken, uri)
@@ -480,6 +481,7 @@ func Query(cfg *Config, q string, sort string) ([]map[string]interface{}, error)
 	if err != nil {
 		return nil, err
 	}
+	hName := u.Host
 	// Setup our query parameters, i.e. q=*
 	uri := fmt.Sprintf("%s/api/records?sort=%s&q=%s", u.String(), sort, q)
 	tot := 0
@@ -490,7 +492,7 @@ func Query(cfg *Config, q string, sort string) ([]map[string]interface{}, error)
 	records := []map[string]interface{}{}
 	for i := 0; uri != ""; i++ {
 		if iTime, reportProgress = CheckWaitInterval(iTime, time.Minute); reportProgress || (i == 0) {
-			log.Printf("(%d/%d) %s", len(records), tot, ProgressETA(t0, len(records), tot))
+			log.Printf("%s (%d/%d) %s", hName, len(records), tot, ProgressETA(t0, len(records), tot))
 		}
 		dbgPrintf(cfg, "requesting %s", uri)
 		src, headers, err := getJSON(cfg.InvenioToken, uri)
@@ -905,6 +907,7 @@ func GetRecord(cfg *Config, id string, draft bool) (*simplified.Record, error) {
 	if err := JSONUnmarshal(src, &rec); err != nil {
 		return nil, err
 	}
+	fmt.Fprintf(os.Stderr, "DEBUG got record ExternalPIDs -> %+v\n", rec.ExternalPIDs)
 	return rec, nil
 }
 
