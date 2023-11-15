@@ -43,7 +43,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"os"
 
 	// Caltech Library Packages
 	"github.com/caltechlibrary/dataset/v2"
