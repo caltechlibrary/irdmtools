@@ -14,7 +14,6 @@ from caltechdata_api import caltechdata_edit
 def check_environment():
     """Check to make sure all the environment variables have values and are avialable"""
     varnames = [
-        "RDM_URL",
         "RDMTOK",
     ]
     config = {}
@@ -29,15 +28,24 @@ def check_environment():
     return config, is_ok
 
 
-def wipe_ind_record(config, rdm_id):
+def wipe_ind_record(config, rdm_id, message=None):
 
-    with open('blank.json','r') as infile:
+    with open(f"deleted_records/{rdm_id}.json", "w") as outfile:
+        response = requests.get(
+            f"https://authors.library.caltech.edu/api/records/{rdm_id}"
+        )
+        outfile.write(json.dumps(response.json(), indent=4))
+
+    with open("blank.json", "r") as infile:
         metadata = json.load(infile)
+
+        if message:
+            metadata["metadata"]["description"] = message
 
         caltechdata_edit(
             rdm_id,
             metadata=metadata,
-            token=config['RDMTOK'],
+            token=config["RDMTOK"],
             production=True,
             publish=True,
             authors=True,
@@ -52,6 +60,7 @@ def wipe_record(rdm_id):
             print(f"Aborting update_from_eprints, {err}", file=sys.stderr)
             sys.exit(1)
 
+
 #
 # Wipe record
 #
@@ -60,7 +69,8 @@ def main():
     config, is_ok = check_environment()
     if is_ok:
         rdm_id = sys.argv[1]
-        err = wipe_ind_record(config, rdm_id)
+        message = sys.argv[2]
+        err = wipe_ind_record(config, rdm_id, message)
         if err is not None:
             print(f"Aborting {app_name}, {err}", file=sys.stderr)
             sys.exit(1)

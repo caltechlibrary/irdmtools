@@ -1,0 +1,249 @@
+{
+    "access": {
+        "files": "public",
+        "embargo": {
+            "reason": null,
+            "active": false
+        },
+        "status": "open",
+        "record": "public"
+    },
+    "metadata": {
+        "rights": [
+            {
+                "description": {
+                    "en": "No commercial reproduction, distribution, display or performance rights in this work are provided."
+                },
+                "title": {
+                    "en": "Other"
+                }
+            }
+        ],
+        "publication_date": "1997-12",
+        "identifiers": [
+            {
+                "scheme": "eprintid",
+                "identifier": "65130"
+            },
+            {
+                "scheme": "resolverid",
+                "identifier": "CaltechAUTHORS:20160307-134207071"
+            }
+        ],
+        "additional_descriptions": [
+            {
+                "description": "\u00a9 1997 American Economic Association. \n\nThe financial support of the National Science Foundation is gratefully acknowledged. We thank Roger Gordon. R. Mark Isaac, John Ledyard, Jimmy Walker, Nat Wilcox, and four other referees for offering helpful suggestions and comments. The views expressed are those of the authors and do not necessarily reflect the views of the California Institute of Technology or the Federal Communications Commission.",
+                "type": {
+                    "id": "additional",
+                    "title": {
+                        "de": "Sonstige",
+                        "en": "Additional Information"
+                    }
+                }
+            },
+            {
+                "description": "<p>Published - <a href=\"/records/2s1bk-7a891/files/anomalous_behavior.pdf?download=1\">anomalous_behavior.pdf</a></p>",
+                "type": {
+                    "id": "attached-files",
+                    "title": {
+                        "de": "Sonstige",
+                        "en": "Attached Files"
+                    }
+                }
+            }
+        ],
+        "description": "We report the results of voluntary contributions experiments where subjects are randomly assigned different rates of return from their private consumption. These random assignments are changed round to round, enabling the measurement of individual player contribution rates as a function of that player's investment cost. We directly test these response functions for the presence of warm-glow and/or altruism effects. We find significant evidence for heterogeneous warm-glow effects that are, on average, low in magnitude. We statistically reject the presence of an altruism effect.",
+        "title": "Anomalous Behavior in Linear Public Goods Experiments: How Much and why?",
+        "dates": [
+            {
+                "description": "Created from EPrint's datestamp field",
+                "date": "2016-03-10",
+                "type": {
+                    "id": "created",
+                    "title": {
+                        "de": "Erstellt",
+                        "en": "Created"
+                    }
+                }
+            },
+            {
+                "description": "Created from EPrint's last_modified field",
+                "date": "2019-11-22",
+                "type": {
+                    "id": "updated",
+                    "title": {
+                        "de": "Aktualisiert",
+                        "en": "Updated"
+                    }
+                }
+            }
+        ],
+        "version": "Published",
+        "resource_type": {
+            "id": "publication-article",
+            "title": {
+                "de": "Zeitschriftenartikel",
+                "en": "Journal Article"
+            }
+        },
+        "creators": [
+            {
+                "person_or_org": {
+                    "type": "personal",
+                    "given_name": "Thomas R.",
+                    "identifiers": [
+                        {
+                            "scheme": "clpid",
+                            "identifier": "Palfrey-T-R"
+                        },
+                        {
+                            "scheme": "orcid",
+                            "identifier": "0000-0003-0769-8109"
+                        }
+                    ],
+                    "family_name": "Palfrey",
+                    "name": "Palfrey, Thomas R."
+                }
+            },
+            {
+                "person_or_org": {
+                    "type": "personal",
+                    "given_name": "Jeffrey E.",
+                    "identifiers": [
+                        {
+                            "scheme": "clpid",
+                            "identifier": "Prisbrey-J-E"
+                        }
+                    ],
+                    "family_name": "Prisbrey",
+                    "name": "Prisbrey, Jeffrey E."
+                }
+            }
+        ],
+        "related_identifiers": [
+            {
+                "relation_type": {
+                    "id": "describes",
+                    "title": {
+                        "de": "Beschreibt",
+                        "en": "Describes"
+                    }
+                },
+                "scheme": "url",
+                "identifier": "http://www.jstor.org/stable/2951327"
+            },
+            {
+                "relation_type": {
+                    "id": "describes",
+                    "title": {
+                        "de": "Beschreibt",
+                        "en": "Describes"
+                    }
+                },
+                "scheme": "url",
+                "identifier": "http://resolver.caltech.edu/CaltechAUTHORS:20170825-153319388"
+            }
+        ],
+        "publisher": "American Economic Association",
+        "funding": [
+            {
+                "funder": {
+                    "name": "NSF"
+                }
+            }
+        ]
+    },
+    "stats": {
+        "this_version": {
+            "data_volume": 598046.0,
+            "unique_downloads": 1,
+            "unique_views": 14,
+            "views": 14,
+            "downloads": 1
+        },
+        "all_versions": {
+            "data_volume": 598046.0,
+            "unique_downloads": 1,
+            "unique_views": 14,
+            "views": 14,
+            "downloads": 1
+        }
+    },
+    "created": "2023-08-19T02:04:48.182816+00:00",
+    "versions": {
+        "index": 1,
+        "is_latest": true
+    },
+    "links": {
+        "self": "https://authors.library.caltech.edu/api/records/2s1bk-7a891",
+        "self_html": "https://authors.library.caltech.edu/records/2s1bk-7a891",
+        "self_iiif_manifest": "https://authors.library.caltech.edu/api/iiif/record:2s1bk-7a891/manifest",
+        "self_iiif_sequence": "https://authors.library.caltech.edu/api/iiif/record:2s1bk-7a891/sequence/default",
+        "files": "https://authors.library.caltech.edu/api/records/2s1bk-7a891/files",
+        "archive": "https://authors.library.caltech.edu/api/records/2s1bk-7a891/files-archive",
+        "latest": "https://authors.library.caltech.edu/api/records/2s1bk-7a891/versions/latest",
+        "latest_html": "https://authors.library.caltech.edu/records/2s1bk-7a891/latest",
+        "draft": "https://authors.library.caltech.edu/api/records/2s1bk-7a891/draft",
+        "versions": "https://authors.library.caltech.edu/api/records/2s1bk-7a891/versions",
+        "access_links": "https://authors.library.caltech.edu/api/records/2s1bk-7a891/access/links",
+        "reserve_doi": "https://authors.library.caltech.edu/api/records/2s1bk-7a891/draft/pids/doi",
+        "communities": "https://authors.library.caltech.edu/api/records/2s1bk-7a891/communities",
+        "communities-suggestions": "https://authors.library.caltech.edu/api/records/2s1bk-7a891/communities-suggestions",
+        "requests": "https://authors.library.caltech.edu/api/records/2s1bk-7a891/requests"
+    },
+    "id": "2s1bk-7a891",
+    "custom_fields": {
+        "caltech:groups": [
+            {
+                "id": "Social-Science-Working-Papers",
+                "title": {
+                    "en": "Social Science Working Papers"
+                }
+            }
+        ],
+        "caltech:other_num_id": "833",
+        "journal:journal": {
+            "pages": "829-846",
+            "issn": "0002-8282",
+            "volume": "87",
+            "title": "American Economic Review",
+            "issue": "5"
+        },
+        "caltech:other_num_name": "Social Science Working Paper"
+    },
+    "is_published": true,
+    "revision_id": 9,
+    "status": "published",
+    "is_draft": false,
+    "parent": {
+        "id": "g6w3a-vv122",
+        "communities": {
+            "default": "aedd135f-227e-4fdf-9476-5b3fd011bac6",
+            "ids": [
+                "aedd135f-227e-4fdf-9476-5b3fd011bac6"
+            ]
+        }
+    },
+    "files": {
+        "entries": {
+            "anomalous_behavior.pdf": {
+                "key": "anomalous_behavior.pdf",
+                "metadata": null,
+                "size": 598046,
+                "ext": "pdf",
+                "mimetype": "application/pdf"
+            }
+        },
+        "count": 1,
+        "order": [],
+        "enabled": true,
+        "total_bytes": 598046
+    },
+    "updated": "2023-12-01T22:17:54.830252+00:00",
+    "pids": {
+        "oai": {
+            "provider": "oai",
+            "identifier": "oai:authors.library.caltech.edu:2s1bk-7a891"
+        }
+    }
+}

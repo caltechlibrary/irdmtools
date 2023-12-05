@@ -1,0 +1,281 @@
+{
+    "access": {
+        "files": "public",
+        "embargo": {
+            "reason": null,
+            "active": false
+        },
+        "status": "metadata-only",
+        "record": "public"
+    },
+    "metadata": {
+        "rights": [
+            {
+                "description": {
+                    "en": "No commercial reproduction, distribution, display or performance rights in this work are provided."
+                },
+                "title": {
+                    "en": "Other"
+                }
+            }
+        ],
+        "languages": [
+            {
+                "id": "eng",
+                "title": {
+                    "en": "English"
+                }
+            }
+        ],
+        "publication_date": "1993",
+        "identifiers": [
+            {
+                "scheme": "eprintid",
+                "identifier": "44260"
+            },
+            {
+                "scheme": "resolverid",
+                "identifier": "CaltechAUTHORS:20140311-145930385"
+            }
+        ],
+        "additional_descriptions": [
+            {
+                "description": "\u00a9 1992 Addison-Wesley.\nThe research support of the National Science Foundation and the Caltech Laboratory\nof Experiments in Economics and Political Science is gratefully acknowledged.\nClauser is a senior at Occidental College and Plott is a professor at Cal tech.\nThe comments of Mark Isaac led to several changes in this paper and are greatly\nappreciated.",
+                "type": {
+                    "id": "additional",
+                    "title": {
+                        "de": "Sonstige",
+                        "en": "Additional Information"
+                    }
+                }
+            }
+        ],
+        "description": "Effective conspiracies are more easily formed in posted-offer and in sealed-bid\nmarkets than in double auction markets. A feature of double auctions\nis isolated as the possible source of the behavioral differences. The double\nauction presents conspirators with continuous temptations to defect\nfrom conspiratorial agreements. It also fosters a second type of competition\namong sellers for access to buyers caused by the fact that only one\nquotation can be exposed to the market at any instant in time. An extreme\ncase of the restricted exposure feature is the New York rule that\nrequires that only the (first) best offers are exposed to the market and\ncan be replaced only by better offers. This second type of competition can\nbe interpreted as a coordination problem for volume allocation that could\ninteract with other features of the process to undermine conspiracy. The\nresearch demonstrates that this second type of competition cannot account\nfor observed differences. When the second type of competition is removed\nthrough the creation of a special type of market organization called The\nIndividualized Seller Market Double Auction, the conspiracies still have\nlittle or no effectiveness.",
+        "title": "DELETE On the Anatomy of the \"Nonfacilitating\" Features of the Double Auction Institution in Conspiratorial Markets",
+        "version": "Published",
+        "resource_type": {
+            "id": "publication-section",
+            "title": {
+                "de": "Buchkapitel",
+                "en": "Book Section - Chapter"
+            }
+        },
+        "creators": [
+            {
+                "person_or_org": {
+                    "type": "personal",
+                    "given_name": "Laura",
+                    "identifiers": [
+                        {
+                            "scheme": "clpid",
+                            "identifier": "Clauser-L"
+                        }
+                    ],
+                    "family_name": "Clauser",
+                    "name": "Clauser, Laura"
+                }
+            },
+            {
+                "affiliations": [
+                    {
+                        "id": "05dxps055",
+                        "name": "California Institute of Technology"
+                    }
+                ],
+                "person_or_org": {
+                    "type": "personal",
+                    "given_name": "Charles R.",
+                    "identifiers": [
+                        {
+                            "scheme": "clpid",
+                            "identifier": "Plott-C-R"
+                        },
+                        {
+                            "scheme": "orcid",
+                            "identifier": "0000-0001-8363-3628"
+                        }
+                    ],
+                    "family_name": "Plott",
+                    "name": "Plott, Charles R."
+                }
+            }
+        ],
+        "related_identifiers": [
+            {
+                "relation_type": {
+                    "id": "isnewversionof",
+                    "title": {
+                        "de": "Ist eine neue Version von",
+                        "en": "Is new version of"
+                    }
+                },
+                "resource_type": {
+                    "id": "publication-workingpaper",
+                    "title": {
+                        "de": "Arbeitspapier",
+                        "en": "Working Paper"
+                    }
+                },
+                "scheme": "url",
+                "identifier": "http://resolver.caltech.edu/CaltechAUTHORS:20170830-145952144"
+            },
+            {
+                "relation_type": {
+                    "id": "ispartof",
+                    "title": {
+                        "de": "Ist Teil von",
+                        "en": "Is part of"
+                    }
+                },
+                "resource_type": {
+                    "id": "publication-book",
+                    "title": {
+                        "de": "Buch",
+                        "en": "Book"
+                    }
+                },
+                "scheme": "doi",
+                "identifier": "10.4324/9780429492532"
+            }
+        ],
+        "publisher": "Addison-Wesley",
+        "funding": [
+            {
+                "funder": {
+                    "name": "NSF"
+                }
+            },
+            {
+                "funder": {
+                    "name": "Caltech Laboratory for Experimental Economics and Political Science"
+                }
+            }
+        ],
+        "contributors": [
+            {
+                "role": {
+                    "id": "editor",
+                    "title": {
+                        "de": "EditorIn",
+                        "en": "Editor"
+                    }
+                },
+                "person_or_org": {
+                    "type": "personal",
+                    "given_name": "Daniel J.",
+                    "identifiers": [
+                        {
+                            "scheme": "clpid",
+                            "identifier": "Friedman-D-J"
+                        }
+                    ],
+                    "family_name": "Friedman",
+                    "name": "Friedman, Daniel J."
+                }
+            },
+            {
+                "role": {
+                    "id": "editor",
+                    "title": {
+                        "de": "EditorIn",
+                        "en": "Editor"
+                    }
+                },
+                "person_or_org": {
+                    "type": "personal",
+                    "given_name": "Jennifer M.",
+                    "identifiers": [
+                        {
+                            "scheme": "clpid",
+                            "identifier": "Rust-J-M"
+                        }
+                    ],
+                    "family_name": "Rust",
+                    "name": "Rust, Jennifer M."
+                }
+            }
+        ]
+    },
+    "stats": {
+        "this_version": {
+            "data_volume": 0.0,
+            "unique_downloads": 0,
+            "unique_views": 13,
+            "views": 14,
+            "downloads": 0
+        },
+        "all_versions": {
+            "data_volume": 0.0,
+            "unique_downloads": 0,
+            "unique_views": 14,
+            "views": 15,
+            "downloads": 0
+        }
+    },
+    "created": "2023-08-20T01:06:21.291594+00:00",
+    "versions": {
+        "index": 3,
+        "is_latest": true
+    },
+    "links": {
+        "self": "https://authors.library.caltech.edu/api/records/xb1by-jaq68",
+        "self_html": "https://authors.library.caltech.edu/records/xb1by-jaq68",
+        "self_iiif_manifest": "https://authors.library.caltech.edu/api/iiif/record:xb1by-jaq68/manifest",
+        "self_iiif_sequence": "https://authors.library.caltech.edu/api/iiif/record:xb1by-jaq68/sequence/default",
+        "files": "https://authors.library.caltech.edu/api/records/xb1by-jaq68/files",
+        "archive": "https://authors.library.caltech.edu/api/records/xb1by-jaq68/files-archive",
+        "latest": "https://authors.library.caltech.edu/api/records/xb1by-jaq68/versions/latest",
+        "latest_html": "https://authors.library.caltech.edu/records/xb1by-jaq68/latest",
+        "draft": "https://authors.library.caltech.edu/api/records/xb1by-jaq68/draft",
+        "versions": "https://authors.library.caltech.edu/api/records/xb1by-jaq68/versions",
+        "access_links": "https://authors.library.caltech.edu/api/records/xb1by-jaq68/access/links",
+        "reserve_doi": "https://authors.library.caltech.edu/api/records/xb1by-jaq68/draft/pids/doi",
+        "communities": "https://authors.library.caltech.edu/api/records/xb1by-jaq68/communities",
+        "communities-suggestions": "https://authors.library.caltech.edu/api/records/xb1by-jaq68/communities-suggestions",
+        "requests": "https://authors.library.caltech.edu/api/records/xb1by-jaq68/requests"
+    },
+    "id": "xb1by-jaq68",
+    "custom_fields": {
+        "caltech:publication_status": [
+            {
+                "id": "published",
+                "title": {
+                    "en": "Published"
+                }
+            }
+        ],
+        "imprint:imprint": {
+            "pages": "333-353",
+            "place": "Reading, MA",
+            "title": "The double auction market: institutions, theories, and evidence",
+            "isbn": "9780201622638"
+        }
+    },
+    "is_published": true,
+    "revision_id": 11,
+    "status": "published",
+    "is_draft": false,
+    "parent": {
+        "id": "geeyd-gnm56",
+        "communities": {
+            "default": "aedd135f-227e-4fdf-9476-5b3fd011bac6",
+            "ids": [
+                "aedd135f-227e-4fdf-9476-5b3fd011bac6"
+            ]
+        }
+    },
+    "files": {
+        "entries": {},
+        "count": 0,
+        "order": [],
+        "enabled": false,
+        "total_bytes": 0
+    },
+    "updated": "2023-11-30T20:13:47.908560+00:00",
+    "pids": {
+        "oai": {
+            "provider": "oai",
+            "identifier": "oai:authors.library.caltech.edu:xb1by-jaq68"
+        }
+    }
+}

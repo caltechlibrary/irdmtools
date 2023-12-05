@@ -1,0 +1,219 @@
+{
+    "access": {
+        "files": "restricted",
+        "embargo": {
+            "reason": null,
+            "active": false
+        },
+        "status": "metadata-only",
+        "record": "public"
+    },
+    "metadata": {
+        "rights": [
+            {
+                "description": {
+                    "en": "No commercial reproduction, distribution, display or performance rights in this work are provided."
+                },
+                "title": {
+                    "en": "Other"
+                }
+            }
+        ],
+        "publication_date": "1972-10",
+        "identifiers": [
+            {
+                "scheme": "eprintid",
+                "identifier": "83741"
+            },
+            {
+                "scheme": "doi",
+                "identifier": "10.2307/2525853"
+            },
+            {
+                "scheme": "resolverid",
+                "identifier": "CaltechAUTHORS:20171207-152538192"
+            }
+        ],
+        "additional_descriptions": [
+            {
+                "description": "\u00a9 1972 Economics Department of the University of Pennsylvania. \n\nManuscript received December 2, 1970; revised April 20, 1972. \n\nThis research has been financed partly by the MSSB Workshop on Lags in Economic Behavior held at the University of Chicago in 1970 and partly by grants from the National Science Foundation and the Ford Foundation to the Cowles Foundation for Research in Economics at Yale University. We thank D. Smallwood, P.J. Dhrymes, and the referee for helpful comments. We would also like to thank K. Wallis, who pointed out an error in an earlier version. \n\nOriginally issued as Social Science Working Paper 10.",
+                "type": {
+                    "id": "additional",
+                    "title": {
+                        "de": "Sonstige",
+                        "en": "Additional Information"
+                    }
+                }
+            }
+        ],
+        "description": "It is by now well known that in the presence of lagged dependent variables and serially correlated errors certain two-step procedures are not asymptotically as efficient as the method of Maximum Likelihood (ML). In the present paper we discuss three two-step procedures that have been suggested in the literature and show that not only are the two-step procedures inefficient when compared with the ML method, but in some cases may not be more efficient than the first step of the two-step procedure.",
+        "title": "DELETE On the asymptotic properties of some two-step procedures for estimating distributed lag models",
+        "subjects": [
+            {
+                "subject": "Estimators, Estimation methods, Consistent estimators, Covariance matrices, Mathematical dependent variables, Instrumental variables estimation, Least squares, Economic models, Maximum likelihood estimation, Statistical estimation"
+            }
+        ],
+        "version": "Published",
+        "resource_type": {
+            "id": "publication-article",
+            "title": {
+                "de": "Zeitschriftenartikel",
+                "en": "Journal Article"
+            }
+        },
+        "creators": [
+            {
+                "person_or_org": {
+                    "type": "personal",
+                    "given_name": "David M.",
+                    "identifiers": [
+                        {
+                            "scheme": "clpid",
+                            "identifier": "Grether-D-M"
+                        }
+                    ],
+                    "family_name": "Grether",
+                    "name": "Grether, David M."
+                }
+            },
+            {
+                "person_or_org": {
+                    "type": "personal",
+                    "given_name": "G. S.",
+                    "identifiers": [
+                        {
+                            "scheme": "clpid",
+                            "identifier": "Maddala-G-S"
+                        }
+                    ],
+                    "family_name": "Maddala",
+                    "name": "Maddala, G. S."
+                }
+            }
+        ],
+        "related_identifiers": [
+            {
+                "relation_type": {
+                    "id": "describes",
+                    "title": {
+                        "de": "Beschreibt",
+                        "en": "Describes"
+                    }
+                },
+                "resource_type": {
+                    "id": "publication-article",
+                    "title": {
+                        "de": "Zeitschriftenartikel",
+                        "en": "Journal Article"
+                    }
+                },
+                "scheme": "doi",
+                "identifier": "10.2307/2525853"
+            }
+        ],
+        "publisher": "Wiley",
+        "funding": [
+            {
+                "funder": {
+                    "name": "University of Chicago"
+                }
+            },
+            {
+                "funder": {
+                    "name": "NSF"
+                }
+            },
+            {
+                "funder": {
+                    "name": "Ford Foundation"
+                }
+            },
+            {
+                "funder": {
+                    "name": "Cowles Foundation for Research in Economics"
+                }
+            }
+        ]
+    },
+    "stats": {
+        "this_version": {
+            "data_volume": 0.0,
+            "unique_downloads": 0,
+            "unique_views": 7,
+            "views": 7,
+            "downloads": 0
+        },
+        "all_versions": {
+            "data_volume": 0.0,
+            "unique_downloads": 0,
+            "unique_views": 7,
+            "views": 7,
+            "downloads": 0
+        }
+    },
+    "created": "2023-08-19T08:04:42.089875+00:00",
+    "versions": {
+        "index": 2,
+        "is_latest": true
+    },
+    "links": {
+        "self": "https://authors.library.caltech.edu/api/records/yhtp0-3kv72",
+        "self_html": "https://authors.library.caltech.edu/records/yhtp0-3kv72",
+        "self_iiif_manifest": "https://authors.library.caltech.edu/api/iiif/record:yhtp0-3kv72/manifest",
+        "self_iiif_sequence": "https://authors.library.caltech.edu/api/iiif/record:yhtp0-3kv72/sequence/default",
+        "files": "https://authors.library.caltech.edu/api/records/yhtp0-3kv72/files",
+        "archive": "https://authors.library.caltech.edu/api/records/yhtp0-3kv72/files-archive",
+        "latest": "https://authors.library.caltech.edu/api/records/yhtp0-3kv72/versions/latest",
+        "latest_html": "https://authors.library.caltech.edu/records/yhtp0-3kv72/latest",
+        "draft": "https://authors.library.caltech.edu/api/records/yhtp0-3kv72/draft",
+        "versions": "https://authors.library.caltech.edu/api/records/yhtp0-3kv72/versions",
+        "access_links": "https://authors.library.caltech.edu/api/records/yhtp0-3kv72/access/links",
+        "reserve_doi": "https://authors.library.caltech.edu/api/records/yhtp0-3kv72/draft/pids/doi",
+        "communities": "https://authors.library.caltech.edu/api/records/yhtp0-3kv72/communities",
+        "communities-suggestions": "https://authors.library.caltech.edu/api/records/yhtp0-3kv72/communities-suggestions",
+        "requests": "https://authors.library.caltech.edu/api/records/yhtp0-3kv72/requests"
+    },
+    "id": "yhtp0-3kv72",
+    "custom_fields": {
+        "caltech:groups": [
+            {
+                "id": "Social-Science-Working-Papers",
+                "title": {
+                    "en": "Social Science Working Papers"
+                }
+            }
+        ],
+        "caltech:other_num_id": "10",
+        "journal:journal": {
+            "pages": "737-744",
+            "issn": "0020-6598",
+            "volume": "13",
+            "title": "International Economic Review",
+            "issue": "3"
+        },
+        "caltech:other_num_name": "Social Science Working Paper"
+    },
+    "is_published": true,
+    "revision_id": 9,
+    "status": "published",
+    "is_draft": false,
+    "parent": {
+        "id": "hk1q4-dfk27",
+        "communities": {
+            "default": "aedd135f-227e-4fdf-9476-5b3fd011bac6",
+            "ids": [
+                "aedd135f-227e-4fdf-9476-5b3fd011bac6"
+            ]
+        }
+    },
+    "files": {
+        "enabled": false
+    },
+    "updated": "2023-11-30T20:24:18.459077+00:00",
+    "pids": {
+        "oai": {
+            "provider": "oai",
+            "identifier": "oai:authors.library.caltech.edu:yhtp0-3kv72"
+        }
+    }
+}

@@ -1,6 +1,11 @@
 {
     "pids": {
     },
+    "access": {
+    "files": "restricted",
+    "status": "restricted",
+    "record": "restricted"
+    },
     "metadata": {
         "resource_type": {"id": "other"},
         "creators": [

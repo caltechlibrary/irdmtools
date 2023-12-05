@@ -1,0 +1,246 @@
+{
+    "access": {
+        "files": "public",
+        "embargo": {
+            "reason": null,
+            "active": false
+        },
+        "status": "metadata-only",
+        "record": "public"
+    },
+    "metadata": {
+        "rights": [
+            {
+                "description": {
+                    "en": "No commercial reproduction, distribution, display or performance rights in this work are provided."
+                },
+                "title": {
+                    "en": "Other"
+                }
+            }
+        ],
+        "publication_date": "1994",
+        "identifiers": [
+            {
+                "scheme": "eprintid",
+                "identifier": "44463"
+            },
+            {
+                "scheme": "resolverid",
+                "identifier": "CaltechAUTHORS:20140324-114445476"
+            }
+        ],
+        "additional_descriptions": [
+            {
+                "description": "\u00a9 1994 Springer-Verlag. \n\nReceived: September 14, 1992: revised version May 14, 1993. \n\nWe acknowledge the financial support of the National Science Foundation and the Caltech Laboratory for Experimental Economics and Political Science. Comments by David Grether. John Ledyard, Michael Levine. Jennifer Reinganum, and Richard Sutch have been very helpful.",
+                "type": {
+                    "id": "additional",
+                    "title": {
+                        "de": "Sonstige",
+                        "en": "Additional Information"
+                    }
+                }
+            }
+        ],
+        "description": "This paper applies an experimental testbed methodology to the evaluation of a proposed mechanism for allocating the right to land at the New York airports. The mechanism is called a \"zero-out auction\" because it is supposed to allocate the rights efficiently like an auction while leaving all of the consumer's surplus with the buyers (as opposed to allocating some to the seller as would be the case with an ordinary auction). A new behavioral hypothesis is introduced to account for limited rationality of individuals and unusual behaviors of the process. The axiom, called the unbiased expectations hypothesis, does a good job of modeling individual behavior in the context of a game model.",
+        "title": "A study of zero-out auctions: testbed experiments of a process of allocating private rights to the use of public property",
+        "dates": [
+            {
+                "description": "Created from EPrint's datestamp field",
+                "date": "2014-04-02",
+                "type": {
+                    "id": "created",
+                    "title": {
+                        "de": "Erstellt",
+                        "en": "Created"
+                    }
+                }
+            },
+            {
+                "description": "Created from EPrint's last_modified field",
+                "date": "2021-11-10",
+                "type": {
+                    "id": "updated",
+                    "title": {
+                        "de": "Aktualisiert",
+                        "en": "Updated"
+                    }
+                }
+            }
+        ],
+        "subjects": [
+            {
+                "subject": "Experiments, airport slots, landing rights, auctions, policy"
+            }
+        ],
+        "version": "public",
+        "resource_type": {
+            "id": "publication-article",
+            "title": {
+                "de": "Zeitschriftenartikel",
+                "en": "Journal Article"
+            }
+        },
+        "creators": [
+            {
+                "person_or_org": {
+                    "type": "personal",
+                    "given_name": "Kemal",
+                    "identifiers": [
+                        {
+                            "scheme": "clpid",
+                            "identifier": "G\u00fcler-K"
+                        }
+                    ],
+                    "family_name": "G\u00fcler",
+                    "name": "G\u00fcler, Kemal"
+                }
+            },
+            {
+                "person_or_org": {
+                    "type": "personal",
+                    "given_name": "Charles R.",
+                    "identifiers": [
+                        {
+                            "scheme": "clpid",
+                            "identifier": "Plott-C-R"
+                        }
+                    ],
+                    "family_name": "Plott",
+                    "name": "Plott, Charles R."
+                }
+            },
+            {
+                "person_or_org": {
+                    "type": "personal",
+                    "given_name": "Quang H.",
+                    "identifiers": [
+                        {
+                            "scheme": "clpid",
+                            "identifier": "Vuong-Quang-H"
+                        }
+                    ],
+                    "family_name": "Vuong",
+                    "name": "Vuong, Quang H."
+                }
+            }
+        ],
+        "related_identifiers": [
+            {
+                "relation_type": {
+                    "id": "describes",
+                    "title": {
+                        "de": "Beschreibt",
+                        "en": "Describes"
+                    }
+                },
+                "scheme": "url",
+                "identifier": "http://resolver.caltech.edu/CaltechAUTHORS:20170908-145812758"
+            }
+        ],
+        "publisher": "Springer",
+        "funding": [
+            {
+                "funder": {
+                    "name": "NSF"
+                }
+            },
+            {
+                "funder": {
+                    "name": "Caltech Laboratory for Experimental Economics and Political Science"
+                }
+            }
+        ]
+    },
+    "stats": {
+        "this_version": {
+            "data_volume": 0.0,
+            "unique_downloads": 0,
+            "unique_views": 0,
+            "views": 0,
+            "downloads": 0
+        },
+        "all_versions": {
+            "data_volume": 0.0,
+            "unique_downloads": 0,
+            "unique_views": 19,
+            "views": 19,
+            "downloads": 0
+        }
+    },
+    "created": "2023-08-20T03:32:28.327079+00:00",
+    "versions": {
+        "index": 2,
+        "is_latest": false
+    },
+    "links": {
+        "self": "https://authors.library.caltech.edu/api/records/3vg7w-bgv69",
+        "self_html": "https://authors.library.caltech.edu/records/3vg7w-bgv69",
+        "self_doi": "https://authors.library.caltech.edu/doi/10.1007/BF01211119",
+        "doi": "https://doi.org/10.1007/BF01211119",
+        "self_iiif_manifest": "https://authors.library.caltech.edu/api/iiif/record:3vg7w-bgv69/manifest",
+        "self_iiif_sequence": "https://authors.library.caltech.edu/api/iiif/record:3vg7w-bgv69/sequence/default",
+        "files": "https://authors.library.caltech.edu/api/records/3vg7w-bgv69/files",
+        "archive": "https://authors.library.caltech.edu/api/records/3vg7w-bgv69/files-archive",
+        "latest": "https://authors.library.caltech.edu/api/records/3vg7w-bgv69/versions/latest",
+        "latest_html": "https://authors.library.caltech.edu/records/3vg7w-bgv69/latest",
+        "draft": "https://authors.library.caltech.edu/api/records/3vg7w-bgv69/draft",
+        "versions": "https://authors.library.caltech.edu/api/records/3vg7w-bgv69/versions",
+        "access_links": "https://authors.library.caltech.edu/api/records/3vg7w-bgv69/access/links",
+        "reserve_doi": "https://authors.library.caltech.edu/api/records/3vg7w-bgv69/draft/pids/doi",
+        "communities": "https://authors.library.caltech.edu/api/records/3vg7w-bgv69/communities",
+        "communities-suggestions": "https://authors.library.caltech.edu/api/records/3vg7w-bgv69/communities-suggestions",
+        "requests": "https://authors.library.caltech.edu/api/records/3vg7w-bgv69/requests"
+    },
+    "id": "3vg7w-bgv69",
+    "custom_fields": {
+        "caltech:groups": [
+            {
+                "id": "Social-Science-Working-Papers",
+                "title": {
+                    "en": "Social Science Working Papers"
+                }
+            }
+        ],
+        "caltech:other_num_id": "650",
+        "journal:journal": {
+            "pages": "67-104",
+            "issn": "0938-2259",
+            "volume": "4",
+            "title": "Economic Theory",
+            "issue": "1"
+        },
+        "caltech:other_num_name": "Social Science Working Paper"
+    },
+    "is_published": true,
+    "revision_id": 5,
+    "status": "published",
+    "is_draft": false,
+    "parent": {
+        "id": "zmgf9-xwy28",
+        "communities": {
+            "default": "aedd135f-227e-4fdf-9476-5b3fd011bac6",
+            "ids": [
+                "aedd135f-227e-4fdf-9476-5b3fd011bac6"
+            ]
+        }
+    },
+    "files": {
+        "entries": {},
+        "count": 0,
+        "order": [],
+        "enabled": false,
+        "total_bytes": 0
+    },
+    "updated": "2023-10-26T00:30:05.683235+00:00",
+    "pids": {
+        "doi": {
+            "provider": "external",
+            "identifier": "10.1007/BF01211119"
+        },
+        "oai": {
+            "provider": "oai",
+            "identifier": "oai:authors.library.caltech.edu:3vg7w-bgv69"
+        }
+    }
+}

@@ -1,0 +1,247 @@
+{
+    "access": {
+        "files": "public",
+        "embargo": {
+            "reason": null,
+            "active": false
+        },
+        "status": "open",
+        "record": "public"
+    },
+    "metadata": {
+        "rights": [
+            {
+                "description": {
+                    "en": "No commercial reproduction, distribution, display or performance rights in this work are provided."
+                },
+                "title": {
+                    "en": "Other"
+                }
+            }
+        ],
+        "publication_date": "1987",
+        "identifiers": [
+            {
+                "scheme": "eprintid",
+                "identifier": "44501"
+            },
+            {
+                "scheme": "resolverid",
+                "identifier": "CaltechAUTHORS:20140325-115207518"
+            }
+        ],
+        "additional_descriptions": [
+            {
+                "description": "\u00a9 1987 Cambridge University Press.\nThe financial support of the National Science Foundation and the California\nInstitute of Technology Program for Enterprise and Public Policy is gratefully\nacknowledged. I also wish to thank Alvin Roth and Howard Kunreuther, who\nprovided comments on an early draft.",
+                "type": {
+                    "id": "additional",
+                    "title": {
+                        "de": "Sonstige",
+                        "en": "Additional Information"
+                    }
+                }
+            },
+            {
+                "description": "<p>Published - <a href=\"/records/9rqpq-wxj68/files/Plott_1987p193.pdf?download=1\">Plott_1987p193.pdf</a></p>",
+                "type": {
+                    "id": "attached-files",
+                    "title": {
+                        "de": "Sonstige",
+                        "en": "Attached Files"
+                    }
+                }
+            }
+        ],
+        "description": "The term \"parallelism\" refers to a vague notion about how observations\nof simple laboratory phenomena can help one understand and\npredict the behavior of a complicated and changing world. Of what use\nare experimental results to someone who is interested in something\nvastly larger and more complicated, perhaps fundamentally different\nthan anything that can be studied in a laboratory setting? Questions\nsuch as this and the related notion of parallelism have probably existed\nfrom the earliest development of scientific experimental methodology,\nand although I found the term in a paper by Vernon Smith (1980) the\nnotion itself pervades all branches of science and engineering.",
+        "title": "Dimensions of Parallelism: Some Policy Applications of Experimental Methods",
+        "dates": [
+            {
+                "description": "Created from EPrint's datestamp field",
+                "date": "2014-04-01",
+                "type": {
+                    "id": "created",
+                    "title": {
+                        "de": "Erstellt",
+                        "en": "Created"
+                    }
+                }
+            },
+            {
+                "description": "Created from EPrint's last_modified field",
+                "date": "2019-10-03",
+                "type": {
+                    "id": "updated",
+                    "title": {
+                        "de": "Aktualisiert",
+                        "en": "Updated"
+                    }
+                }
+            }
+        ],
+        "version": "Published",
+        "resource_type": {
+            "id": "publication-section",
+            "title": {
+                "de": "Buchkapitel",
+                "en": "Book Section - Chapter"
+            }
+        },
+        "creators": [
+            {
+                "person_or_org": {
+                    "type": "personal",
+                    "given_name": "Charles R.",
+                    "identifiers": [
+                        {
+                            "scheme": "clpid",
+                            "identifier": "Plott-C-R"
+                        }
+                    ],
+                    "family_name": "Plott",
+                    "name": "Plott, Charles R."
+                }
+            }
+        ],
+        "related_identifiers": [
+            {
+                "relation_type": {
+                    "id": "describes",
+                    "title": {
+                        "de": "Beschreibt",
+                        "en": "Describes"
+                    }
+                },
+                "scheme": "url",
+                "identifier": "http://resolver.caltech.edu/CaltechAUTHORS:20170915-152544869"
+            }
+        ],
+        "publisher": "Cambridge University Press",
+        "funding": [
+            {
+                "funder": {
+                    "name": "NSF"
+                }
+            },
+            {
+                "funder": {
+                    "name": "Caltech Program for Enterprise and Public Policy"
+                }
+            }
+        ],
+        "contributors": [
+            {
+                "role": {
+                    "id": "other",
+                    "title": {
+                        "de": "Andere",
+                        "en": "Other"
+                    }
+                },
+                "person_or_org": {
+                    "type": "personal",
+                    "given_name": "Alvin E.",
+                    "identifiers": [
+                        {
+                            "scheme": "clpid",
+                            "identifier": "Roth-A-E"
+                        }
+                    ],
+                    "family_name": "Roth",
+                    "name": "Roth, Alvin E."
+                }
+            }
+        ]
+    },
+    "stats": {
+        "this_version": {
+            "data_volume": 54436320.0,
+            "unique_downloads": 10,
+            "unique_views": 16,
+            "views": 16,
+            "downloads": 10
+        },
+        "all_versions": {
+            "data_volume": 54436320.0,
+            "unique_downloads": 10,
+            "unique_views": 16,
+            "views": 16,
+            "downloads": 10
+        }
+    },
+    "created": "2023-08-19T19:03:37.971938+00:00",
+    "versions": {
+        "index": 1,
+        "is_latest": true
+    },
+    "links": {
+        "self": "https://authors.library.caltech.edu/api/records/9rqpq-wxj68",
+        "self_html": "https://authors.library.caltech.edu/records/9rqpq-wxj68",
+        "self_iiif_manifest": "https://authors.library.caltech.edu/api/iiif/record:9rqpq-wxj68/manifest",
+        "self_iiif_sequence": "https://authors.library.caltech.edu/api/iiif/record:9rqpq-wxj68/sequence/default",
+        "files": "https://authors.library.caltech.edu/api/records/9rqpq-wxj68/files",
+        "archive": "https://authors.library.caltech.edu/api/records/9rqpq-wxj68/files-archive",
+        "latest": "https://authors.library.caltech.edu/api/records/9rqpq-wxj68/versions/latest",
+        "latest_html": "https://authors.library.caltech.edu/records/9rqpq-wxj68/latest",
+        "draft": "https://authors.library.caltech.edu/api/records/9rqpq-wxj68/draft",
+        "versions": "https://authors.library.caltech.edu/api/records/9rqpq-wxj68/versions",
+        "access_links": "https://authors.library.caltech.edu/api/records/9rqpq-wxj68/access/links",
+        "reserve_doi": "https://authors.library.caltech.edu/api/records/9rqpq-wxj68/draft/pids/doi",
+        "communities": "https://authors.library.caltech.edu/api/records/9rqpq-wxj68/communities",
+        "communities-suggestions": "https://authors.library.caltech.edu/api/records/9rqpq-wxj68/communities-suggestions",
+        "requests": "https://authors.library.caltech.edu/api/records/9rqpq-wxj68/requests"
+    },
+    "id": "9rqpq-wxj68",
+    "custom_fields": {
+        "caltech:groups": [
+            {
+                "id": "Social-Science-Working-Papers",
+                "title": {
+                    "en": "Social Science Working Papers"
+                }
+            }
+        ],
+        "imprint:imprint": {
+            "pages": "193-219",
+            "place": "Cambridge",
+            "title": "Laboratory experimentation in economics: six points of view",
+            "isbn": "9780521333924"
+        },
+        "caltech:other_num_id": "569",
+        "caltech:other_num_name": "Social Science Working Paper"
+    },
+    "is_published": true,
+    "revision_id": 5,
+    "status": "published",
+    "is_draft": false,
+    "parent": {
+        "id": "mj4w3-9tr64",
+        "communities": {
+            "default": "aedd135f-227e-4fdf-9476-5b3fd011bac6",
+            "ids": [
+                "aedd135f-227e-4fdf-9476-5b3fd011bac6"
+            ]
+        }
+    },
+    "files": {
+        "entries": {
+            "Plott_1987p193.pdf": {
+                "key": "Plott_1987p193.pdf",
+                "metadata": null,
+                "size": 5443632,
+                "ext": "pdf",
+                "mimetype": "application/pdf"
+            }
+        },
+        "count": 1,
+        "order": [],
+        "enabled": true,
+        "total_bytes": 5443632
+    },
+    "updated": "2023-10-26T14:21:08.889185+00:00",
+    "pids": {
+        "oai": {
+            "provider": "oai",
+            "identifier": "oai:authors.library.caltech.edu:9rqpq-wxj68"
+        }
+    }
+}

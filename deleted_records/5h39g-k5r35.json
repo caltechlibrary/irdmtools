@@ -1,0 +1,244 @@
+{
+    "access": {
+        "files": "public",
+        "embargo": {
+            "reason": null,
+            "active": false
+        },
+        "status": "open",
+        "record": "public"
+    },
+    "metadata": {
+        "rights": [
+            {
+                "description": {
+                    "en": "No commercial reproduction, distribution, display or performance rights in this work are provided."
+                },
+                "title": {
+                    "en": "Other"
+                }
+            }
+        ],
+        "publication_date": "2017-11-30",
+        "identifiers": [
+            {
+                "scheme": "eprintid",
+                "identifier": "83578"
+            },
+            {
+                "scheme": "resolverid",
+                "identifier": "CaltechAUTHORS:20171129-155310046"
+            }
+        ],
+        "additional_descriptions": [
+            {
+                "description": "Financial support was provided by the Caltech Laboratory of Experimental Economics and Political Science, the National Science Foundation, the International Center For Finance at Yale University. We thank Bill Brown (Claremont), Peter DeMarzo (Berkeley), Will Goetzmann (Yale), Mark Johnson (Tulane), Tony Kwasnica (Penn State), Claude Montmarquette and Claudia Keser (CIRANO, Montr\u00e9al), William Sharpe (Stanford), Woody Studenmund (Occidental College), and Ivo Welch (UCLA), for allowing us to involve their students in our experimental financial markets. The paper benefited from comments in a joint UCLA-Caltech workshop, at CEPR's 1999 Financial Markets Summer Symposium in Gerzensee, and during seminars at the Norwegian School of Management, the Claremont Graduate University, the University of Antwerp, and the University of Louvain. \n\nPublished as Bossaerts, Peter and Plott, Charles (2004) Basic Principles of Asset Pricing Theory: Evidence from Large-scale Experimental Financial Markets. Review of Finance, 8 (2). pp. 135-169.",
+                "type": {
+                    "id": "additional",
+                    "title": {
+                        "de": "Sonstige",
+                        "en": "Additional Information"
+                    }
+                }
+            },
+            {
+                "description": "<p>Submitted - <a href=\"/records/5h39g-k5r35/files/sswp1070.pdf?download=1\">sswp1070.pdf</a></p>",
+                "type": {
+                    "id": "attached-files",
+                    "title": {
+                        "de": "Sonstige",
+                        "en": "Attached Files"
+                    }
+                }
+            }
+        ],
+        "description": "We report on six large-scale financial markets experiments that were designed to test two of the most basic propositions of modern asset pricing theory, namely, that the interaction between risk averse agents in a competitive market leads to equilibration, and that, in equilibrium, risk premia are solely determined by covariance with aggregate risk. We designed the experiments within the framework suggested by two theoretical models, namely, Arrow and Debreu's complete-markets model, and the Sharpe-Lintner-Mossin Capital Asset Pricing Model (CAPM). This framework enabled us to measure how far our markets were from equilibrium at any point in time, thereby allowing us to gauge the success of the models. The distance measures do not require knowledge of the (uncontrollable) level and dispersion of risk aversion among subjects, and adjust for the impact of progressive trading on the eventual equilibrium. Unlike in our earlier, thin-markets experiments, we discovered swift convergence towards equilibrium prices of Arrow and Debreu's model or the CAPM. This discovery is significant, because subjects always lacked the information to deliberately set asset prices using either model. Sometimes, however, the equilibrium was not found to be robust, with markets readily veering away, apparently as a result of deviations of subjective beliefs from objective probabilities. Still, we find evidence that this did not destroy the tendency for markets to equilibrate as predicted by the theory. In each experiment, we formally test and reject the hypothesis that prices are a random walk, in favor of stochastic convergence towards CAPM and Arrow Debreu equilibrium.",
+        "title": "Basic Principles of Asset Pricing Theory: Evidence From Large-Scale Experimental Financial Markets",
+        "dates": [
+            {
+                "description": "Created from EPrint's datestamp field",
+                "date": "2017-11-30",
+                "type": {
+                    "id": "created",
+                    "title": {
+                        "de": "Erstellt",
+                        "en": "Created"
+                    }
+                }
+            },
+            {
+                "description": "Created from EPrint's last_modified field",
+                "date": "2019-10-03",
+                "type": {
+                    "id": "updated",
+                    "title": {
+                        "de": "Aktualisiert",
+                        "en": "Updated"
+                    }
+                }
+            }
+        ],
+        "subjects": [
+            {
+                "subject": "General Equilibrium Theory, Capital Asset Pricing Model, Complete Markets, Experimental Economics, Efficient Markets Hypothesis, Price Discovery"
+            }
+        ],
+        "version": "Submitted",
+        "resource_type": {
+            "id": "publication-report",
+            "title": {
+                "de": "Bericht",
+                "en": "Report"
+            }
+        },
+        "creators": [
+            {
+                "person_or_org": {
+                    "type": "personal",
+                    "given_name": "Peter",
+                    "identifiers": [
+                        {
+                            "scheme": "clpid",
+                            "identifier": "Bossaerts-P"
+                        },
+                        {
+                            "scheme": "orcid",
+                            "identifier": "0000-0003-2308-2603"
+                        }
+                    ],
+                    "family_name": "Bossaerts",
+                    "name": "Bossaerts, Peter"
+                }
+            },
+            {
+                "person_or_org": {
+                    "type": "personal",
+                    "given_name": "Charles R.",
+                    "identifiers": [
+                        {
+                            "scheme": "clpid",
+                            "identifier": "Plott-C-R"
+                        }
+                    ],
+                    "family_name": "Plott",
+                    "name": "Plott, Charles R."
+                }
+            }
+        ],
+        "related_identifiers": [
+            {
+                "relation_type": {
+                    "id": "describes",
+                    "title": {
+                        "de": "Beschreibt",
+                        "en": "Describes"
+                    }
+                },
+                "scheme": "url",
+                "identifier": "http://resolver.caltech.edu/CaltechAUTHORS:20140317-153601944"
+            }
+        ],
+        "publisher": "California Institute of Technology",
+        "funding": [
+            {
+                "funder": {
+                    "name": "Caltech Laboratory of Experimental Economics and Political Science"
+                }
+            },
+            {
+                "funder": {
+                    "name": "NSF"
+                }
+            },
+            {
+                "funder": {
+                    "name": "Yale University International Center For Finance"
+                }
+            }
+        ]
+    },
+    "stats": {
+        "this_version": {
+            "data_volume": 13152880.0,
+            "unique_downloads": 10,
+            "unique_views": 15,
+            "views": 15,
+            "downloads": 10
+        },
+        "all_versions": {
+            "data_volume": 13152880.0,
+            "unique_downloads": 10,
+            "unique_views": 15,
+            "views": 15,
+            "downloads": 10
+        }
+    },
+    "created": "2023-08-19T05:22:03.326227+00:00",
+    "versions": {
+        "index": 1,
+        "is_latest": true
+    },
+    "links": {
+        "self": "https://authors.library.caltech.edu/api/records/5h39g-k5r35",
+        "self_html": "https://authors.library.caltech.edu/records/5h39g-k5r35",
+        "self_iiif_manifest": "https://authors.library.caltech.edu/api/iiif/record:5h39g-k5r35/manifest",
+        "self_iiif_sequence": "https://authors.library.caltech.edu/api/iiif/record:5h39g-k5r35/sequence/default",
+        "files": "https://authors.library.caltech.edu/api/records/5h39g-k5r35/files",
+        "archive": "https://authors.library.caltech.edu/api/records/5h39g-k5r35/files-archive",
+        "latest": "https://authors.library.caltech.edu/api/records/5h39g-k5r35/versions/latest",
+        "latest_html": "https://authors.library.caltech.edu/records/5h39g-k5r35/latest",
+        "draft": "https://authors.library.caltech.edu/api/records/5h39g-k5r35/draft",
+        "versions": "https://authors.library.caltech.edu/api/records/5h39g-k5r35/versions",
+        "access_links": "https://authors.library.caltech.edu/api/records/5h39g-k5r35/access/links",
+        "reserve_doi": "https://authors.library.caltech.edu/api/records/5h39g-k5r35/draft/pids/doi",
+        "communities": "https://authors.library.caltech.edu/api/records/5h39g-k5r35/communities",
+        "communities-suggestions": "https://authors.library.caltech.edu/api/records/5h39g-k5r35/communities-suggestions",
+        "requests": "https://authors.library.caltech.edu/api/records/5h39g-k5r35/requests"
+    },
+    "id": "5h39g-k5r35",
+    "custom_fields": {
+        "caltech:groups": [
+            {
+                "id": "Social-Science-Working-Papers",
+                "title": {
+                    "en": "Social Science Working Papers"
+                }
+            }
+        ]
+    },
+    "is_published": true,
+    "revision_id": 5,
+    "status": "published",
+    "is_draft": false,
+    "parent": {
+        "id": "yybjs-g5891",
+        "communities": {
+            "default": "aedd135f-227e-4fdf-9476-5b3fd011bac6",
+            "ids": [
+                "aedd135f-227e-4fdf-9476-5b3fd011bac6"
+            ]
+        }
+    },
+    "files": {
+        "entries": {
+            "sswp1070.pdf": {
+                "key": "sswp1070.pdf",
+                "metadata": null,
+                "size": 1315288,
+                "ext": "pdf",
+                "mimetype": "application/pdf"
+            }
+        },
+        "count": 1,
+        "order": [],
+        "enabled": true,
+        "total_bytes": 1315288
+    },
+    "updated": "2023-10-17T23:14:51.167565+00:00",
+    "pids": {
+        "oai": {
+            "provider": "oai",
+            "identifier": "oai:authors.library.caltech.edu:5h39g-k5r35"
+        }
+    }
+}
