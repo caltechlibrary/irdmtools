@@ -34,6 +34,7 @@ Bugs
 Next
 ----
 
+- [ ] rdmutil get_all_ids needs a get_all_stale_ids counterpart, see issue #68
 - [x] add put_record to rdmutil, actually done as many steps, new_record, new_draft, update_draft, ...
 - [x] Implement a CrossRef to Invenio RDM record
 - [x] Figure out a faster way to retrieve RDM ids without using the API or OAI-PMH. Possibly options would be to create an rdmapid service, or direct query via PostgreSQL. 

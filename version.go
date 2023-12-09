@@ -6,13 +6,13 @@ import (
 
 const (
     // Version number of release
-    Version = "0.0.61"
+    Version = "0.0.62-dev"
 
     // ReleaseDate, the date version.go was generated
     ReleaseDate = "2023-12-08"
 
     // ReleaseHash, the Git hash when version.go was generated
-    ReleaseHash = "1a5239e6"
+    ReleaseHash = "92e1411e"
 
     LicenseText = `
 Redistribution and use in source and binary forms, with or without

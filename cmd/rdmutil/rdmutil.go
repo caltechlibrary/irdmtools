@@ -59,8 +59,9 @@ var (
 
 # DESCRIPTION
 
-__{app_name}__ provides a quick wrapper around Invenio-RDM's OAI-PMH
-and REST API. By default {app_name} looks for three environment variables.
+__{app_name}__ start out as a quick wrapper around Invenio-RDM's OAI-PMH
+and REST API. By default {app_name} looks for three environment variables
+using those API. 
 
 RDM_URL
 : the URL of the Invenio RDM API and OAI-PMH services
@@ -82,6 +83,30 @@ If you have access to Postgres database and configure the environment
 with access credentials then {app_name} can get a list of ids much
 quicker.  The variables used to form a connection are RDM_DB_HOST,
 RDM_DB_HOST and if password is required RDM_DB_PASSWORD.
+
+__{app_name}__ can also be configured to directly query RDM's Postgres
+database.  This is usually much much faster (and avoids the rate limits).
+Since reconstructing the JSON from the API is tricky it's considered
+experimental.
+
+The environment variables used with direct access to RDM Postgres database
+are as follows.
+
+REPO_ID
+: Repository id (i.e. the name of the Postgres database used by RDM)
+
+C_NAME
+: Name of dataset collection used for storing results
+
+RDM_DB_USER
+: The username used to access Postgres database
+
+RDM_DB_PASSWORD
+: The password if needed to access the Postgres database.
+
+RDM_DB_HOST
+: The hostname of the database server to access runing Postgres.
+
 
 # OPTIONS
 
@@ -108,7 +133,10 @@ get_modified_ids START [END]
 : Returns a list of modified record ids (created, updated, deleted) in the time range listed.  This method uses OAI-PMH for id retrieval. It is rate limited. Start and end dates are inclusive and should be specific in YYYY-MM-DD format.
 
 get_all_ids
-: Returns a list of all repository record ids. The method uses OAI-PMH for id retrieval. It is rate limited and will take come time to return all record ids. A test instance took 11 minutes to retrieve 24000 record ids.
+: Returns a list of all repository record ids latest versions. The method uses OAI-PMH for id retrieval. It is rate limited and will take come time to return all record ids. A test instance took 11 minutes to retrieve 24000 record ids. If direct Postgres access is setup it queries the database directly (much much faster)
+
+get_all_stale_ids
+: Returns a list of public record ids that are NOT the latest version of the records, useful when prune a dataset collection of RDM records
 
 check_doi DOI
 : This takes a DOI and searches the .pids.doi.identifiers for matching rdm records or drafts. DOI is required.
