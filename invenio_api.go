@@ -545,7 +545,12 @@ func getRecordIdsFromPg(cfg *Config) ([]string, error) {
 		return nil, err
 	}
 	keys := []string{}
-	stmt := `SELECT json->>'id' AS rdmid FROM rdm_records_metadata WHERE json->'access'->>'record' = 'public'`
+	stmt := `SELECT json->>'id' AS rdmid
+ FROM rdm_records_metadata
+ LEFT JOIN rdm_versions_state
+   ON (rdm_records_metadata.id = rdm_versions_state.latest_id)
+WHERE json->'access'->>'record' = 'public'
+  AND latest_id IS NOT NULL`
 	rows, err := db.Query(stmt)
 	if err != nil {
 		return nil, err
