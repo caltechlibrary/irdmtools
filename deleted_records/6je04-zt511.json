@@ -1,0 +1,264 @@
+{
+    "access": {
+        "files": "restricted",
+        "embargo": {
+            "reason": null,
+            "active": false
+        },
+        "status": "metadata-only",
+        "record": "public"
+    },
+    "metadata": {
+        "rights": [
+            {
+                "description": {
+                    "en": "No commercial reproduction, distribution, display or performance rights in this work are provided."
+                },
+                "title": {
+                    "en": "Other"
+                }
+            }
+        ],
+        "publication_date": "2002-12",
+        "identifiers": [
+            {
+                "scheme": "eprintid",
+                "identifier": "43914"
+            },
+            {
+                "scheme": "doi",
+                "identifier": "10.1023/A:1020871917917"
+            },
+            {
+                "scheme": "resolverid",
+                "identifier": "CaltechAUTHORS:20140220-143226413"
+            }
+        ],
+        "additional_descriptions": [
+            {
+                "description": "\u00a9 2002 Economic Science Association.\n\nThe financial support of the National Science Foundation, the Caltech Laboratory for Experimental Economics\nand Political Science, the Hong Kong SAR University Grants Committee and the HKUST Center for Experimental\nBusiness Research is gratefully acknowledged. We would like to thank Tim Cason, Leonard Cheng, S.H. Chew,\nJim Cox, John Dickhaut, Dan Friedman, Steve Gjerstad, John Ledyard, Charles Noussair, Jason Shachat, and\nShyam Sunder for their comments.",
+                "type": {
+                    "id": "additional",
+                    "title": {
+                        "de": "Sonstige",
+                        "en": "Additional Information"
+                    }
+                }
+            }
+        ],
+        "description": "This research builds on the work of D.K. Gode and Shyam Sunder who demonstrated the existence of a strong relationship between market institutions and the ability of markets to seek equilibrium - even when the agents themselves have limited intelligence and behave with substantial randomness.  The question posed is whether or not market institutions account for the operation of the law of supply and demand in markets population by humans and no role required of human rationality.  Are institutions responsible for the operations of the law of supply and demand or are behavioral principles also at work?  Experiments with humans and simulations with robots both conducted in conditions in which major institutional and structural aids to convergence were removed, produced clear answers.  Human markets converge, while robot markets do not.  The structural and institutional features certainly facilitated convergence under conditions of substantial irrationality, but they are not necessary for convergence in markets in which agents have the rationality of humans.",
+        "title": "On the Behavioral Foundations of the Law of Supply and Demand: Human Convergence and Robot Randomness",
+        "dates": [
+            {
+                "description": "Created from EPrint's datestamp field",
+                "date": "2014-02-20",
+                "type": {
+                    "id": "created",
+                    "title": {
+                        "de": "Erstellt",
+                        "en": "Created"
+                    }
+                }
+            },
+            {
+                "description": "Created from EPrint's last_modified field",
+                "date": "2021-11-10",
+                "type": {
+                    "id": "updated",
+                    "title": {
+                        "de": "Aktualisiert",
+                        "en": "Updated"
+                    }
+                }
+            }
+        ],
+        "subjects": [
+            {
+                "subject": "experiments, rationality, equilibration, robots"
+            }
+        ],
+        "version": "public",
+        "resource_type": {
+            "id": "publication-article",
+            "title": {
+                "de": "Zeitschriftenartikel",
+                "en": "Journal Article"
+            }
+        },
+        "creators": [
+            {
+                "person_or_org": {
+                    "type": "personal",
+                    "given_name": "Paul J.",
+                    "identifiers": [
+                        {
+                            "scheme": "clpid",
+                            "identifier": "Brewer-P-J"
+                        }
+                    ],
+                    "family_name": "Brewer",
+                    "name": "Brewer, Paul J."
+                }
+            },
+            {
+                "person_or_org": {
+                    "type": "personal",
+                    "given_name": "Maria",
+                    "identifiers": [
+                        {
+                            "scheme": "clpid",
+                            "identifier": "Huang-Maria"
+                        }
+                    ],
+                    "family_name": "Huang",
+                    "name": "Huang, Maria"
+                }
+            },
+            {
+                "person_or_org": {
+                    "type": "personal",
+                    "given_name": "Brad",
+                    "identifiers": [
+                        {
+                            "scheme": "clpid",
+                            "identifier": "Nelson-B-D"
+                        }
+                    ],
+                    "family_name": "Nelson",
+                    "name": "Nelson, Brad"
+                }
+            },
+            {
+                "person_or_org": {
+                    "type": "personal",
+                    "given_name": "Charles R.",
+                    "identifiers": [
+                        {
+                            "scheme": "clpid",
+                            "identifier": "Plott-C-R"
+                        }
+                    ],
+                    "family_name": "Plott",
+                    "name": "Plott, Charles R."
+                }
+            }
+        ],
+        "related_identifiers": [
+            {
+                "relation_type": {
+                    "id": "describes",
+                    "title": {
+                        "de": "Beschreibt",
+                        "en": "Describes"
+                    }
+                },
+                "scheme": "url",
+                "identifier": "http://resolver.caltech.edu/CaltechAUTHORS:20171106-145242357"
+            }
+        ],
+        "publisher": "Springer",
+        "funding": [
+            {
+                "funder": {
+                    "name": "NSF"
+                }
+            },
+            {
+                "funder": {
+                    "name": "Caltech Laboratory for Experimental Economics and Political Science"
+                }
+            },
+            {
+                "funder": {
+                    "name": "Hong Kong SAR University Grants Committee"
+                }
+            },
+            {
+                "funder": {
+                    "name": "HKUST Center for Experimental Business Research"
+                }
+            }
+        ]
+    },
+    "stats": {
+        "this_version": {
+            "data_volume": 0.0,
+            "unique_downloads": 0,
+            "unique_views": 32,
+            "views": 32,
+            "downloads": 0
+        },
+        "all_versions": {
+            "data_volume": 0.0,
+            "unique_downloads": 0,
+            "unique_views": 32,
+            "views": 32,
+            "downloads": 0
+        }
+    },
+    "created": "2023-08-19T10:21:21.973813+00:00",
+    "versions": {
+        "index": 2,
+        "is_latest": true
+    },
+    "links": {
+        "self": "https://authors.library.caltech.edu/api/records/6je04-zt511",
+        "self_html": "https://authors.library.caltech.edu/records/6je04-zt511",
+        "self_iiif_manifest": "https://authors.library.caltech.edu/api/iiif/record:6je04-zt511/manifest",
+        "self_iiif_sequence": "https://authors.library.caltech.edu/api/iiif/record:6je04-zt511/sequence/default",
+        "files": "https://authors.library.caltech.edu/api/records/6je04-zt511/files",
+        "archive": "https://authors.library.caltech.edu/api/records/6je04-zt511/files-archive",
+        "latest": "https://authors.library.caltech.edu/api/records/6je04-zt511/versions/latest",
+        "latest_html": "https://authors.library.caltech.edu/records/6je04-zt511/latest",
+        "draft": "https://authors.library.caltech.edu/api/records/6je04-zt511/draft",
+        "versions": "https://authors.library.caltech.edu/api/records/6je04-zt511/versions",
+        "access_links": "https://authors.library.caltech.edu/api/records/6je04-zt511/access/links",
+        "reserve_doi": "https://authors.library.caltech.edu/api/records/6je04-zt511/draft/pids/doi",
+        "communities": "https://authors.library.caltech.edu/api/records/6je04-zt511/communities",
+        "communities-suggestions": "https://authors.library.caltech.edu/api/records/6je04-zt511/communities-suggestions",
+        "requests": "https://authors.library.caltech.edu/api/records/6je04-zt511/requests"
+    },
+    "id": "6je04-zt511",
+    "custom_fields": {
+        "caltech:groups": [
+            {
+                "id": "Social-Science-Working-Papers",
+                "title": {
+                    "en": "Social Science Working Papers"
+                }
+            }
+        ],
+        "caltech:other_num_id": "1079",
+        "journal:journal": {
+            "pages": "179-208",
+            "issn": "1386-4157",
+            "volume": "5",
+            "title": "Experimental Economics",
+            "issue": "3"
+        },
+        "caltech:other_num_name": "Social Science Working Paper"
+    },
+    "is_published": true,
+    "revision_id": 7,
+    "status": "published",
+    "is_draft": false,
+    "parent": {
+        "id": "bgsfb-z0g04",
+        "communities": {
+            "default": "aedd135f-227e-4fdf-9476-5b3fd011bac6",
+            "ids": [
+                "aedd135f-227e-4fdf-9476-5b3fd011bac6"
+            ]
+        }
+    },
+    "files": {
+        "enabled": false
+    },
+    "updated": "2023-11-30T20:58:04.296745+00:00",
+    "pids": {
+        "oai": {
+            "provider": "oai",
+            "identifier": "oai:authors.library.caltech.edu:6je04-zt511"
+        }
+    }
+}

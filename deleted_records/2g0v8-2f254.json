@@ -1,0 +1,232 @@
+{
+    "access": {
+        "files": "restricted",
+        "embargo": {
+            "reason": null,
+            "active": false
+        },
+        "status": "metadata-only",
+        "record": "public"
+    },
+    "metadata": {
+        "rights": [
+            {
+                "description": {
+                    "en": "No commercial reproduction, distribution, display or performance rights in this work are provided."
+                },
+                "title": {
+                    "en": "Other"
+                }
+            }
+        ],
+        "publication_date": "1996-10",
+        "identifiers": [
+            {
+                "scheme": "eprintid",
+                "identifier": "44465"
+            },
+            {
+                "scheme": "doi",
+                "identifier": "10.1016/0167-7187(96)01014-4"
+            },
+            {
+                "scheme": "resolverid",
+                "identifier": "CaltechAUTHORS:20140324-115157136"
+            }
+        ],
+        "additional_descriptions": [
+            {
+                "description": "\u00a9 1996 Elsevier Science B.V.\n\nThe financial support of the National Science Foundation and the Caltech Laboratory for\nExperimental Economics and Political Science is gratefully acknowledged. We wish to give a special\nacknowledgment to Jan-Eric Nilsson of the Centre for Research in Transportation and Society,\nBorl\u00e4nge, Sweden, for the information he provided on the industrial organization of railroads in\nSweden and the current political environment. The comments of John Ledyard, Richard McKelvey,\nScott Page, and David Porter have also been very helpful in the development of this project.",
+                "type": {
+                    "id": "additional",
+                    "title": {
+                        "de": "Sonstige",
+                        "en": "Additional Information"
+                    }
+                }
+            }
+        ],
+        "description": "The questions posed for study are motivated by controversies over how Sweden might change from a centralized system of railroad management to a decentralized system. The central rail administration, Banverket, will retain ownership and maintenance responsibility of the tracks, but will sell access to the tracks to private firms. The questions are about the mechanism that might accomplish this task. Parties to the controversy have claimed that the technical aspects of networks will, as a matter of principle, preclude the operation of any decentralized method. This paper explores the properties of a mechanism developed as a challenge to that claim. The mechanism is examined in the context of a testbed experimental environment that contains many potential problem causing elements. In the tests performed the mechanism operated to efficiently allocate access to the network and it did so for behavioral reasons that are understandable in terms of theory. The paper closes with suggestions for further study of environments that might present additional challenges to a mechanism.",
+        "title": "DELETE A Binary Conflict Ascending Price (BICAP) Mechanism for the Decentralized Allocation of the Right to Use Railroad Tracks",
+        "dates": [
+            {
+                "description": "Created from EPrint's datestamp field",
+                "date": "2014-04-04",
+                "type": {
+                    "id": "created",
+                    "title": {
+                        "de": "Erstellt",
+                        "en": "Created"
+                    }
+                }
+            },
+            {
+                "description": "Created from EPrint's last_modified field",
+                "date": "2021-11-10",
+                "type": {
+                    "id": "updated",
+                    "title": {
+                        "de": "Aktualisiert",
+                        "en": "Updated"
+                    }
+                }
+            }
+        ],
+        "subjects": [
+            {
+                "subject": "Experiment"
+            },
+            {
+                "subject": "Privatization"
+            },
+            {
+                "subject": "Auctions"
+            }
+        ],
+        "version": "public",
+        "resource_type": {
+            "id": "publication-article",
+            "title": {
+                "de": "Zeitschriftenartikel",
+                "en": "Journal Article"
+            }
+        },
+        "creators": [
+            {
+                "person_or_org": {
+                    "type": "personal",
+                    "given_name": "Paul J.",
+                    "identifiers": [
+                        {
+                            "scheme": "clpid",
+                            "identifier": "Brewer-P-J"
+                        }
+                    ],
+                    "family_name": "Brewer",
+                    "name": "Brewer, Paul J."
+                }
+            },
+            {
+                "person_or_org": {
+                    "type": "personal",
+                    "given_name": "Charles R.",
+                    "identifiers": [
+                        {
+                            "scheme": "clpid",
+                            "identifier": "Plott-C-R"
+                        }
+                    ],
+                    "family_name": "Plott",
+                    "name": "Plott, Charles R."
+                }
+            }
+        ],
+        "related_identifiers": [
+            {
+                "relation_type": {
+                    "id": "describes",
+                    "title": {
+                        "de": "Beschreibt",
+                        "en": "Describes"
+                    }
+                },
+                "scheme": "url",
+                "identifier": "http://resolver.caltech.edu/CaltechAUTHORS:20170822-150740999"
+            }
+        ],
+        "publisher": "Elsevier",
+        "funding": [
+            {
+                "funder": {
+                    "name": "NSF"
+                }
+            },
+            {
+                "funder": {
+                    "name": "Caltech Laboratory for Experimental Economics and Political Science"
+                }
+            }
+        ]
+    },
+    "stats": {
+        "this_version": {
+            "data_volume": 0.0,
+            "unique_downloads": 0,
+            "unique_views": 7,
+            "views": 7,
+            "downloads": 0
+        },
+        "all_versions": {
+            "data_volume": 0.0,
+            "unique_downloads": 0,
+            "unique_views": 7,
+            "views": 7,
+            "downloads": 0
+        }
+    },
+    "created": "2023-08-22T11:15:48.249180+00:00",
+    "versions": {
+        "index": 2,
+        "is_latest": true
+    },
+    "links": {
+        "self": "https://authors.library.caltech.edu/api/records/2g0v8-2f254",
+        "self_html": "https://authors.library.caltech.edu/records/2g0v8-2f254",
+        "self_iiif_manifest": "https://authors.library.caltech.edu/api/iiif/record:2g0v8-2f254/manifest",
+        "self_iiif_sequence": "https://authors.library.caltech.edu/api/iiif/record:2g0v8-2f254/sequence/default",
+        "files": "https://authors.library.caltech.edu/api/records/2g0v8-2f254/files",
+        "archive": "https://authors.library.caltech.edu/api/records/2g0v8-2f254/files-archive",
+        "latest": "https://authors.library.caltech.edu/api/records/2g0v8-2f254/versions/latest",
+        "latest_html": "https://authors.library.caltech.edu/records/2g0v8-2f254/latest",
+        "draft": "https://authors.library.caltech.edu/api/records/2g0v8-2f254/draft",
+        "versions": "https://authors.library.caltech.edu/api/records/2g0v8-2f254/versions",
+        "access_links": "https://authors.library.caltech.edu/api/records/2g0v8-2f254/access/links",
+        "reserve_doi": "https://authors.library.caltech.edu/api/records/2g0v8-2f254/draft/pids/doi",
+        "communities": "https://authors.library.caltech.edu/api/records/2g0v8-2f254/communities",
+        "communities-suggestions": "https://authors.library.caltech.edu/api/records/2g0v8-2f254/communities-suggestions",
+        "requests": "https://authors.library.caltech.edu/api/records/2g0v8-2f254/requests"
+    },
+    "id": "2g0v8-2f254",
+    "custom_fields": {
+        "caltech:groups": [
+            {
+                "id": "Social-Science-Working-Papers",
+                "title": {
+                    "en": "Social Science Working Papers"
+                }
+            }
+        ],
+        "caltech:other_num_id": "887",
+        "journal:journal": {
+            "pages": "857-886",
+            "issn": "0167-7187",
+            "volume": "14",
+            "title": "International Journal of Industrial Organization",
+            "issue": "6"
+        },
+        "caltech:other_num_name": "Social Science Working Paper"
+    },
+    "is_published": true,
+    "revision_id": 7,
+    "status": "published",
+    "is_draft": false,
+    "parent": {
+        "id": "pnnbq-py649",
+        "communities": {
+            "default": "aedd135f-227e-4fdf-9476-5b3fd011bac6",
+            "ids": [
+                "aedd135f-227e-4fdf-9476-5b3fd011bac6"
+            ]
+        }
+    },
+    "files": {
+        "enabled": false
+    },
+    "updated": "2023-11-30T21:46:39.238632+00:00",
+    "pids": {
+        "oai": {
+            "provider": "oai",
+            "identifier": "oai:authors.library.caltech.edu:2g0v8-2f254"
+        }
+    }
+}

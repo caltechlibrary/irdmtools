@@ -176,7 +176,8 @@ func (app *RdmUtil) GetModifiedIds(start string, end string) ([]byte, error) {
 }
 
 // GetRecordIds returns a byte slice for a JSON encode list
-// of record ids or an error.
+// of record ids or an error. The record ids are for the latest
+// pbulished verison of the records.
 //
 // ```
 //
@@ -193,6 +194,35 @@ func (app *RdmUtil) GetModifiedIds(start string, end string) ([]byte, error) {
 // ```
 func (app *RdmUtil) GetRecordIds() ([]byte, error) {
 	ids, err := GetRecordIds(app.Cfg)
+	if err != nil {
+		return nil, err
+	}
+	src, err := JSONMarshalIndent(ids, "", "    ")
+	if err != nil {
+		return nil, err
+	}
+	return src, nil
+}
+
+// GetRecordStaleIds returns a byte slice for a JSON encode list
+// of record ids or an error. The record ids are for the stale
+// versions of published records.
+//
+// ```
+//
+//	app := new(irdmtools.RdmUtil)
+//	if err := app.LoadConfig("irdmtools.json"); err != nil {
+//	   // ... handle error ...
+//	}
+//	src, err := app.GetRecordStaleIds()
+//	if err != nil {
+//	    // ... handle error ...
+//	}
+//	fmt.Printf("%s\n", src)
+//
+// ```
+func (app *RdmUtil) GetRecordStaleIds() ([]byte, error) {
+	ids, err := GetRecordStaleIds(app.Cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -1122,6 +1152,8 @@ func (app *RdmUtil) Run(in io.Reader, out io.Writer, eout io.Writer, action stri
 		src, err = app.GetModifiedIds(start, end)
 	case "get_all_ids":
 		src, err = app.GetRecordIds()
+	case "get_all_stale_ids":
+		src, err = app.GetRecordStaleIds()
 	case "get_raw_record":
 		recordId, _, _, err = getRecordParams(params, true, false, false)
 		if err != nil {
