@@ -29,9 +29,14 @@
 <p>rdmutil <a href="#options">OPTIONS</a> ACTION [ACTION_PARAMETERS
 …]</p>
 <h1 id="description">DESCRIPTION</h1>
-<p><strong>rdmutil</strong> provides a quick wrapper around
-Invenio-RDM’s OAI-PMH and REST API. By default rdmutil looks for three
-environment variables.</p>
+<p><strong>rdmutil</strong> is way of interacting with Invenio-RDM
+through its Postgres database (or a copy of that database) or web API
+(JSON and OAI-PMH). It was inspired the RDM JSON API but was implemented
+as a way of quickly processing data without the hinderance of rate
+limits (needed when RDM is public facing). If Postgres access is
+configured then it’ll use SQL to retrieve the JSON data. It still uses
+the JSON API for update operations. rdmutil uses environment variables
+for configuration. For accessing the JSON API it uses the following.</p>
 <dl>
 <dt>RDM_URL</dt>
 <dd>
@@ -41,21 +46,38 @@ the URL of the Invenio RDM API and OAI-PMH services
 <dd>
 the token needed to access the Invenio RDM API and OAI-PMH services
 </dd>
-<dt>RDM_C_NAME</dt>
+</dl>
+<p>dataset related environment variables (i.e. for harvest action)</p>
+<p><strong>rdmutil</strong> environment variable for storing harvested
+content.</p>
+<dl>
+<dt>C_NAME</dt>
 <dd>
 A dataset collection name. Collection must exist. See
 <code>dataset help init</code>
 </dd>
 </dl>
-<p>The environment provides the default values for configuration. They
-maybe overwritten by using a JSON configuration file. The corresponding
-attributes are “invenio_api”, “invenio_token” and “c_name”.</p>
-<p>By default rdmutil uses the OAI-PMH service to retrieve record ids.
-This will be slow, possibly too slow if reasonably sized repositories.
-If you have access to Postgres database and configure the environment
-with access credentials then rdmutil can get a list of ids much quicker.
-The variables used to form a connection are RDM_DB_HOST, RDM_DB_HOST and
-if password is required RDM_DB_PASSWORD.</p>
+<p><strong>rdmutil</strong> PostgreSQL related environment variabels
+are</p>
+<dl>
+<dt>REPO_ID</dt>
+<dd>
+Repository id (i.e. the name of the Postgres database used by RDM)
+</dd>
+<dt>RDM_DB_USER</dt>
+<dd>
+The username used to access Postgres database
+</dd>
+<dt>RDM_DB_PASSWORD</dt>
+<dd>
+(optional) The password if needed to access the Postgres database.
+</dd>
+<dt>RDM_DB_HOST</dt>
+<dd>
+(optional) The hostname of the database server to access runing
+Postgres. by default it assumes localhost running on port 5432.
+</dd>
+</dl>
 <h1 id="options">OPTIONS</h1>
 <dl>
 <dt>help</dt>
@@ -89,16 +111,23 @@ placeholder will be used for the token value.
 <dt>get_modified_ids START [END]</dt>
 <dd>
 Returns a list of modified record ids (created, updated, deleted) in the
-time range listed. This method uses OAI-PMH for id retrieval. It is rate
-limited. Start and end dates are inclusive and should be specific in
-YYYY-MM-DD format.
+time range listed. If Postgres is not configured this method uses
+OAI-PMH for id retrieval. It is rate limited. Start and end dates are
+inclusive and should be specific in YYYY-MM-DD format.
 </dd>
 <dt>get_all_ids</dt>
 <dd>
-Returns a list of all repository record ids. The method uses OAI-PMH for
-id retrieval. It is rate limited and will take come time to return all
-record ids. A test instance took 11 minutes to retrieve 24000 record
-ids.
+Returns a list of all repository record ids latest versions. The method
+uses OAI-PMH for id retrieval is Postgress access is not configure. That
+can be terribly slow and rate limited. A test instance took 11 minutes
+to retrieve 24000 record ids. If direct Postgres access is setup it
+queries the database directly (much much faster).
+</dd>
+<dt>get_all_stale_ids</dt>
+<dd>
+Returns a list of public record ids that are NOT the latest version of
+the records, useful when prune a dataset collection of stale RDM
+records.
 </dd>
 <dt>check_doi DOI</dt>
 <dd>
@@ -107,26 +136,32 @@ records or drafts. DOI is required.
 </dd>
 <dt>query QUERY_STRING [size | size sort]</dt>
 <dd>
-Returns a result using RDM’s search engine. It is limited to about 10K
-total results. You can use the see RDM’s documentation for query
-construction. See <a
+Returns a result using RDM’s search engine. The JSON API access must be
+defined. It is limited to about 10K total results. You can use the see
+RDM’s documentation for query construction. See <a
 href="https://inveniordm.docs.cern.ch/customize/search/"
 class="uri">https://inveniordm.docs.cern.ch/customize/search/</a>, <a
 href="https://inveniordm.docs.cern.ch/reference/rest_api_requests/"
 class="uri">https://inveniordm.docs.cern.ch/reference/rest_api_requests/</a>
-and
-https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-query-string-query.html#query-string-syntax.
-Query takes one required parameter and two option.
+and <a
+href="https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-query-string-query.html#query-string-syntax"
+class="uri">https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-query-string-query.html#query-string-syntax</a>.
+Query takes one required parameter and two optional.
 </dd>
 <dt>get_record RECORD_ID</dt>
 <dd>
 Returns a specific simplified record indicated by RECORD_ID,
-e.g. bq3se-47g50. The RECORD_ID is a required parameter.
+e.g. bq3se-47g50. The RECORD_ID is a required parameter. If Postgres
+access is defined then it does this by SQL assembling an object similar
+to the one available via “/api/records/RECORD_ID” path in the JSON API.
+If Postgres is not configured then it retrieves the record via the JSON
+API.
 </dd>
 <dt>get_raw_record RECORD_ID</dt>
 <dd>
 Returns a specific map/dictionary record indicated by RECORD_ID,
-e.g. bq3se-47g50. The RECORD_ID is a required parameter.
+e.g. bq3se-47g50. The RECORD_ID is a required parameter. It uses the
+JSON API.
 </dd>
 <dt>get_files RECORD_ID</dt>
 <dd>
@@ -141,9 +176,9 @@ and FILENAME are required parameters.
 <dt>retrieve_file RECORD_ID FILENAME [OUTPUT_FILENAME]</dt>
 <dd>
 Retrieves the file indicated by RECORD_ID and FILENAME, e.g. bq3se-47g50
-is a record id and article.pdf is a filename. RECORD_ID and FILENAME are
-required parameters. OUTPUT_FILENAME is optional, if present then the
-file will be save to this name on the file system.
+is a record id and article.pdf is a filename. RECORD_ID and FILENAME
+arei required parameters. OUTPUT_FILENAME is optional, if present then
+the file will be save to this name on the file system.
 </dd>
 <dt>get_versions</dt>
 <dd>
@@ -182,13 +217,10 @@ restrictions before publishing the new version draft.
 <dd>
 This will publish a new draft version. RECORD_ID is required.
 VERSION_LABEL is optional. PUBLICATION_DATE is optional.
-PUBLICATION_DATE is in YYYY, YYYY-MM or YYYY-MM-DD format.
+PUBLICATION_DATE is in YYYY, YYYY-MM or YYYY-MM-DD format. Will need to
+set .metadata.publication_date, doi and version name in the versioned
+draft before publish_version is called. RECORD_ID is required.
 </dd>
-</dl>
-<p>will need to set .metadata.publication_date, doi and version name in
-the versioned draft before publish_version is called. RECORD_ID is
-required.</p>
-<dl>
 <dt>new_draft RECORD_ID</dt>
 <dd>
 Create a new draft for an existing record. RECORD_ID is required.
