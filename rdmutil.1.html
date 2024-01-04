@@ -163,6 +163,12 @@ Returns a specific map/dictionary record indicated by RECORD_ID,
 e.g. bq3se-47g50. The RECORD_ID is a required parameter. It uses the
 JSON API.
 </dd>
+<dt>get_record_versions RECORD_ID</dt>
+<dd>
+Get the records versions as a JSON array. It requires Postgres DB access
+and returns the versions found in the rdm_records_metadata_versions
+table.
+</dd>
 <dt>get_files RECORD_ID</dt>
 <dd>
 Return a list of files for record with RECORD_ID. RECORD_ID is required.
