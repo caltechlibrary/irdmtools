@@ -983,6 +983,69 @@ ORDER BY key ASC`
 	return rec, err
 }
 
+// getRecordVersionsFromPg will return all record versions by querying Invenio RDM's Postgres
+// database.
+func getRecordVersionsFromPg(cfg *Config, rdmID string) ([]*map[string]interface{}, error) {
+	var (
+		db *sql.DB
+		err error
+	)
+	if cfg.pgDB != nil {
+		db = cfg.pgDB
+	} else if cfg.pgDB == nil && cfg.InvenioDbHost != "" && cfg.InvenioDbUser != ""{
+		sslmode := "?sslmode=require"
+		if strings.HasPrefix(cfg.InvenioDbHost, "localhost") {
+			sslmode = "?sslmode=disable"
+		}
+		connStr := fmt.Sprintf("postgres://%s@%s/%s%s", 
+		cfg.InvenioDbUser, cfg.InvenioDbHost, cfg.RepoID, sslmode)
+		if cfg.InvenioDbPassword != "" {
+			connStr = fmt.Sprintf("postgres://%s:%s@%s/%s%s", 
+				cfg.InvenioDbUser, cfg.InvenioDbPassword, cfg.InvenioDbHost, cfg.RepoID, sslmode)
+		}
+		db, err = sql.Open("postgres", connStr)
+		if err != nil {
+			return nil, err
+		}
+		defer db.Close()
+	 }
+	stmt := `SELECT jsonb_pretty(jsonb_strip_nulls(jsonb_build_object(
+	'id', json->>'id',
+	'metadata', json,
+	'created', created,
+	'updated', updated,
+	'version', version_id
+))) AS src
+FROM rdm_records_metadata_version
+WHERE json->>'id' = $1
+ORDER BY version_id`
+	rows, err := db.Query(stmt, rdmID)
+	if err != nil {
+		//fmt.Fprintf(os.Stderr, "%s", stmt)
+		return nil, err
+	}
+	defer rows.Close()
+	var src []byte
+	records := []*map[string]interface{}{}
+	for rows.Next() {
+		if err := rows.Scan(&src); err != nil {
+			return nil, err
+		}
+		rec := &map[string]interface{}{}
+		err = JSONUnmarshal(src, &rec)
+		if err != nil {
+			return nil, err
+		}
+		records = append(records, rec)
+	}
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+	return records, err
+}
+
+
 // GetRecord takes a configuration object and record id,
 // contacts an RDM instance and returns a simplified record
 // and an error value.
@@ -1025,6 +1088,24 @@ func GetRecord(cfg *Config, id string, draft bool) (*simplified.Record, error) {
 	return rec, nil
 }
 
+// GetRecordVersions takes a configuration object and record id,
+// queries the Postgres database and returns the matching json
+// blogs in the rdm_records_medata_version table as a JSON array.
+//
+// ```
+// cfg, _ := LoadConfig("config.json")
+// id := "qez01-2309a"
+// record, err := GetRecordVersions(cfg, id)
+// if err != nil {
+//    // ... handle error ...
+// }
+// ```
+func GetRecordVersions(cfg *Config, id string) ([]*map[string]interface{}, error) {
+	if cfg.InvenioDbHost != "" && cfg.InvenioDbUser != "" {
+		return getRecordVersionsFromPg(cfg, id)
+	}
+	return nil, fmt.Errorf("requires Postgres access support")
+}
 
 // GetFile takes a configuration object, record id and filename,
 // contacts an RDM instance and returns the specific file metadata

@@ -204,6 +204,7 @@ func (app *RdmUtil) GetRecordIds() ([]byte, error) {
 	return src, nil
 }
 
+
 // GetRecordStaleIds returns a byte slice for a JSON encode list
 // of record ids or an error. The record ids are for the stale
 // versions of published records.
@@ -290,6 +291,36 @@ func (app *RdmUtil) GetRawRecord(id string) ([]byte, error) {
 	}
 	return src, nil
 }
+
+// GetRecordVersions returns a byte slice fron JSON encoded list
+// of record versions for a given RDM record id.
+//
+// ```
+//
+//	app := new(irdmtools.RdmUtil)
+//	if err := app.LoadConfig("irdmtools.json"); err != nil {
+//	   // ... handle error ...
+//	}
+//	recordId := "5wh3x-cj477"
+//	src, err := app.GetRecordVersions(recordId)
+//	if err != nil {
+//	    // ... handle error ...
+//	}
+//	fmt.Printf("%s\n", src)
+//
+// ```
+func (app *RdmUtil) GetRecordVersions(id string) ([]byte, error) {
+	records, err := GetRecordVersions(app.Cfg, id)
+	if err != nil {
+		return nil, err
+	}
+	src, err := JSONMarshalIndent(records, "", "    ")
+	if err != nil {
+		return nil, err
+	}
+	return src, nil
+}
+
 
 // GetDraftFiles returns the metadata for a draft's files
 //
@@ -1166,6 +1197,12 @@ func (app *RdmUtil) Run(in io.Reader, out io.Writer, eout io.Writer, action stri
 			return err
 		}
 		src, err = app.GetRecord(recordId)
+	case "get_record_versions":
+	    recordId, _, _, err = getRecordParams(params, true, false, false)
+		if err != nil {
+			return err
+		}
+		src, err = app.GetRecordVersions(recordId)
 	case "get_draft_files":
 		recordId, _, _, err = getRecordParams(params, true, false, false)
 		if err != nil {

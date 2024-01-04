@@ -162,6 +162,10 @@ get_raw_record RECORD_ID
 : Returns a specific map/dictionary record indicated by RECORD_ID, e.g. bq3se-47g50.
 The RECORD_ID is a required parameter. It uses the JSON API.
 
+get_record_versions RECORD_ID
+: Get the records versions as a JSON array. It requires Postgres DB access and
+returns the versions found in the rdm_records_metadata_versions table.
+
 get_files RECORD_ID
 : Return a list of files for record with RECORD_ID.  RECORD_ID is required.
 
