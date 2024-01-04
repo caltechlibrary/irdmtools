@@ -62,6 +62,7 @@ var (
 		"publication-article":              "article",
 		"publication-section":              "book_section",
 		"publication-report":               "monograph",
+		"publication-preprint":		        "monograph",
 		"publication-book":                 "book",
 		"conference-paper":                 "conference_item",
 		"conference-poster":                "conference_item",
