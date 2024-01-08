@@ -22,7 +22,7 @@ def fix_custom_fields_eprints(eprintid,rdmid,token,data):
     
     fix_custom_fields(rec_copy,rdmid,token,data)
 
-def fix_custom_fields(comparison_metadata,rdmid,token,data)
+def fix_custom_fields(comparison_metadata,rdmid,token,data):
     if 'custom_fields' in comparison_metadata:
         custom = comparison_metadata['custom_fields']
 
@@ -44,7 +44,7 @@ def fix_custom_fields(comparison_metadata,rdmid,token,data)
     else:
         print(f"Record {rdmid} has no custom fields")
 
-token = os.environ["CTATOK"]
+#token = os.environ["CTATOK"]
 
 to_update = get_group_records(token, "Division-of-Biology-and-Biological-Engineering")
 
