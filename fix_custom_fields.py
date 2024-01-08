@@ -57,12 +57,12 @@ with open('migrated_records.csv') as infile:
 
 for record in to_update:
     rdmid = record['id']
-    if rdmid in eprint_ids:
+    if rdmid not in eprint_ids:
         #eprintid = eprint_ids[rdmid]
         #print(rdmid,eprintid)
         #fix_custom_fields_eprints(eprintid,rdmid,token,record)
-    else:
-        print(f"Pre-eprints record: {rdmid}")
+    #else:
+        print(f"Non-eprints record: {rdmid}")
         versions = get_record_versions(rdmid)
         print(versions[0])
         exit()
