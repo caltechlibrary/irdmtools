@@ -44,7 +44,7 @@ def fix_custom_fields(comparison_metadata,rdmid,token,data):
     else:
         print(f"Record {rdmid} has no custom fields")
 
-#token = os.environ["CTATOK"]
+token = os.environ["CTATOK"]
 
 to_update = get_group_records("Division-of-Biology-and-Biological-Engineering")
 
@@ -64,5 +64,7 @@ for record in to_update:
     #else:
         print(f"Non-eprints record: {rdmid}")
         versions = get_record_versions(rdmid)
-        print(versions[0])
+        last = versions[0]
+        print(last['custom_fields'])
+        fix_custom_fields(last.rdmis,token,record)
         exit()
