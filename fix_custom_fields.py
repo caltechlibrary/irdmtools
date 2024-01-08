@@ -46,7 +46,7 @@ def fix_custom_fields(comparison_metadata,rdmid,token,data):
 
 #token = os.environ["CTATOK"]
 
-to_update = get_group_records(token, "Division-of-Biology-and-Biological-Engineering")
+to_update = get_group_records("Division-of-Biology-and-Biological-Engineering")
 
 eprint_ids = {}
 with open('migrated_records.csv') as infile:

@@ -16,4 +16,4 @@ from .utils import humanbytes
 from .version import version_text, license_text
 from .client import IRDM_Client
 from .fixups import fixup_record, get_dict_path
-from .irdmtools import RdmUtil, eprint2rdm
+from .irdmtools import RdmUtil, eprint2rdm, get_record_versions
