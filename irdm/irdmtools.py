@@ -49,6 +49,19 @@ class RdmUtil:
             return json.loads(src), None
         return None, f"failed to get record {rdm_id}"
 
+    def get_record_versions(self, rdm_id):
+        """get published RDM record versions"""
+        cmd = ["rdmutil", "get_record_versions", rdm_id]
+        with Popen(cmd, stdout=PIPE, stderr=PIPE) as proc:
+            src, err = proc.communicate()
+            exit_code = proc.returncode
+            if exit_code > 0:
+                return None, err
+            if not isinstance(src, bytes):
+                src = src.encode("utf-8")
+            return json.loads(src), None
+        return None, f"failed to get record {rdm_id}"
+
     def get_draft(self, rdm_id):
         """retreives an existing draft record for the record id provided"""
         cmd = ["rdmutil", "get_draft", rdm_id]
