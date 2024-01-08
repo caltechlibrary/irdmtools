@@ -64,7 +64,7 @@ for record in to_update:
     #else:
         print(f"Non-eprints record: {rdmid}")
         versions = get_record_versions(rdmid)
-        last = versions[0]
+        last = versions[0][0]
         print(last['custom_fields'])
         fix_custom_fields(last.rdmis,token,record)
         exit()
