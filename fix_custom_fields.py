@@ -1,10 +1,10 @@
-import sys,os,csv
+import sys,os,csv,json
 import requests
-from irdm import eprint2rdm, fixup_record
+from irdm import eprint2rdm, fixup_record, get_record_versions
 from caltechdata_api import caltechdata_edit
 from ames.harvesters import get_group_records
 
-def fix_custom_fields(eprintid,rdmid,token,data):
+def fix_custom_fields_eprints(eprintid,rdmid,token,data):
 
     rec, err = eprint2rdm(eprintid)
     if err is not None:
@@ -20,12 +20,18 @@ def fix_custom_fields(eprintid,rdmid,token,data):
     #print(json.dumps(rec))
     rec_copy, err = fixup_record(dict(rec),has_doi=True)
     
-    if 'custom_fields' in rec_copy:
-        eprints_custom = rec_copy['custom_fields']
+    fix_custom_fields(rec_copy,rdmid,token,data)
 
-        for field in eprints_custom:
+def fix_custom_fields(comparison_metadata,rdmid,token,data):
+    if 'custom_fields' in comparison_metadata:
+        custom = comparison_metadata['custom_fields']
+
+        for field in custom:
             if field not in data['custom_fields']:
-                data['custom_fields'][field] = eprints_custom[field]
+                data['custom_fields'][field] = custom[field]
+
+        print(json.dumps(data['custom_fields'], indent=4))
+        exit()
 
         caltechdata_edit(
             rdmid,
@@ -40,7 +46,7 @@ def fix_custom_fields(eprintid,rdmid,token,data):
 
 token = os.environ["CTATOK"]
 
-to_update = get_group_records(token, "Division-of-Biology-and-Biological-Engineering")
+to_update = get_group_records("Division-of-Biology-and-Biological-Engineering")
 
 eprint_ids = {}
 with open('migrated_records.csv') as infile:
@@ -51,10 +57,14 @@ with open('migrated_records.csv') as infile:
 
 for record in to_update:
     rdmid = record['id']
-    if rdmid in eprint_ids:
-        eprintid = eprint_ids[rdmid]
-        print(rdmid,eprintid)
-        fix_custom_fields(eprintid,rdmid,token,record)
-    else:
-        print(f"Pre-eprints record: {rdmid}")
-
+    if rdmid not in eprint_ids:
+        #eprintid = eprint_ids[rdmid]
+        #print(rdmid,eprintid)
+        #fix_custom_fields_eprints(eprintid,rdmid,token,record)
+    #else:
+        print(f"Non-eprints record: {rdmid}")
+        versions = get_record_versions(rdmid)
+        last = versions[0][0]
+        print(last['custom_fields'])
+        fix_custom_fields(last.rdmis,token,record)
+        exit()
