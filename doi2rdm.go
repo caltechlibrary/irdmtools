@@ -66,6 +66,7 @@ var (
 		"journal-article":   "publication-article",
 		"book":              "publication-book",
 		"book_section":      "publication-section",
+		"book-chapter":      "publication-section",
 		"conference_item":   "conference-paper",
 		"dataset":           "dataset",
 		"experiment":        "publication-deliverable",

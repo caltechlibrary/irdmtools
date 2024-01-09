@@ -4,7 +4,7 @@
 # Set the package name and version to install
 #
 PACKAGE="irdmtools"
-VERSION="0.0.65-dev"
+VERSION="0.0.65"
 GIT_GROUP="caltechlibrary"
 RELEASE="https://github.com/$GIT_GROUP/$PACKAGE/releases/tag/v$VERSION"
 
@@ -33,6 +33,9 @@ ZIPFILE="$PACKAGE-v$VERSION-$OS_NAME-$MACHINE.zip"
 # Check to see if this zip file has been downloaded.
 #
 DOWNLOAD_URL="https://github.com/$GIT_GROUP/$PACKAGE/releases/download/v$VERSION/$ZIPFILE"
+if [ ! -d "$HOME/Downloads" ]; then
+	mkdir -p "$HOME/Downloads"
+fi
 if ! curl -L -o "$HOME/Downloads/$ZIPFILE" "$DOWNLOAD_URL"; then
 	echo "Curl failed to get $DOWNLOAD_URL"
 fi
