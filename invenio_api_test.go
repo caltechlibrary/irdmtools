@@ -76,11 +76,10 @@ func Test01Config(t *testing.T) {
 		t.Errorf("tests are not configured")
 		t.FailNow()
 	}
-	if cfg.InvenioAPI == "" {
-		t.Errorf("missing an InvenioAPI URL")
-	}
-	if cfg.InvenioToken == "" {
-		t.Errorf("missing an Invenio Token")
+	if cfg.InvenioAPI != "" && cfg.InvenioToken == "" {
+		t.Errorf("missing an Invenio API Token")
+	} else if cfg.InvenioAPI == "" && cfg.InvenioDbHost == "" {
+		t.Errorf("expected either Ivenio API or Db Host to be set")
 	}
 }
 

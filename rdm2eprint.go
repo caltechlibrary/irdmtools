@@ -272,6 +272,9 @@ func CrosswalkRdmToEPrint(cfg *Config, rec *simplified.Record, eprint *eprinttoo
 			if resolverID, ok := getIdentifier(rec.Metadata.Identifiers, "resolverid"); ok {
 				eprint.OfficialURL = fmt.Sprintf("https://resolver.caltech.edu/%s", resolverID)
 				eprint.IDNumber = resolverID
+			} else if rec.ID != "" {
+				//NOTE: We need to assemble an appropriate RDM url since resolver isn't available
+				eprint.OfficialURL = fmt.Sprintf("%s/records/%s", cfg.InvenioAPI, rec.ID)
 			}
 		}
 		if rec.Metadata.Rights != nil && len(rec.Metadata.Rights) > 0 {
@@ -436,7 +439,7 @@ func CrosswalkRdmToEPrint(cfg *Config, rec *simplified.Record, eprint *eprinttoo
 				if defaultPreview == entry.Key {
 					eprint.PrimaryObject = map[string]interface{}{
 						"basename": defaultPreview,
-						"url": fmt.Sprintf("/records/%s/files/%s", rec.ID, defaultPreview),
+						"url": fmt.Sprintf("%s/records/%s/files/%s", cfg.InvenioAPI, rec.ID, defaultPreview),
 					}
 				} else {
 					if eprint.RelatedObjects == nil {
@@ -444,7 +447,7 @@ func CrosswalkRdmToEPrint(cfg *Config, rec *simplified.Record, eprint *eprinttoo
 					}
 					eprint.RelatedObjects = append(eprint.RelatedObjects, map[string]interface{}{
 						"basename": entry.Key,
-						"url": fmt.Sprintf("/records/%s/files/%s", rec.ID, entry.Key),
+						"url": fmt.Sprintf("%s/records/%s/files/%s", cfg.InvenioAPI, rec.ID, entry.Key),
 					})
 				}
 			}

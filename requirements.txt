@@ -3,5 +3,6 @@ idutils
 progressbar2
 s3fs
 caltechdata_api
+ames
 py_dataset
 pylint 

@@ -1009,13 +1009,18 @@ func getRecordVersionsFromPg(cfg *Config, rdmID string) ([]*map[string]interface
 		}
 		defer db.Close()
 	 }
-	stmt := `SELECT jsonb_pretty(jsonb_strip_nulls(jsonb_build_object(
+	stmt := `SELECT jsonb_strip_nulls(jsonb_build_object(
 	'id', json->>'id',
 	'metadata', json,
 	'created', created,
 	'updated', updated,
-	'version', version_id
-))) AS src
+	'version', version_id,
+	'index', index,
+	'uuid_id', id,
+	'parent_id', parent_id,
+	'bucket_id', bucket_id,
+	'operation_type', operation_type
+)) AS src
 FROM rdm_records_metadata_version
 WHERE json->>'id' = $1
 ORDER BY version_id`

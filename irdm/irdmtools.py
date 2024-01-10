@@ -275,6 +275,20 @@ class RdmUtil:
         return None, "failed to run update_draft"
 
 
+def get_record_versions(rdm_id):
+    """get published RDM record versions"""
+    cmd = ["rdmutil", "get_record_versions", rdm_id]
+    with Popen(cmd, stdout=PIPE, stderr=PIPE) as proc:
+        src, err = proc.communicate()
+        exit_code = proc.returncode
+        if exit_code > 0:
+            return None, err
+        if not isinstance(src, bytes):
+            src = src.encode("utf-8")
+        return json.loads(src), None
+    return None, f"failed to get record {rdm_id}"
+
+
 def eprint2rdm(eprint_id):
     """Run the eprint2rdm command and get back a converted eprint record"""
     cmd = ["eprint2rdm"]
