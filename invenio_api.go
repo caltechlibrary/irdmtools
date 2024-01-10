@@ -937,6 +937,8 @@ WHERE json->>'id' = $1 LIMIT 1;`
 	}
 
 	// Now we try to add Files.Entries to Record.
+	// FIXME: this is way too slow
+/*
 	stmt = `WITH t AS (
     SELECT record_id AS record_id,
            files_object.key AS key 
@@ -950,6 +952,16 @@ FROM t
 JOIN rdm_records_metadata ON (t.record_id = rdm_records_metadata.id)
 WHERE json->>'id' = $1
 ORDER BY key ASC`
+*/
+
+	stmt = `SELECT
+    (CASE WHEN fd.json->'files'->>'default_preview' = fo.key THEN TRUE else FALSE END) AS is_default_preview,
+    fo.key AS key
+FROM rdm_records_metadata rd
+JOIN rdm_records_files fd ON (rd.id = fd.record_id)
+JOIN files_object fo ON (fd.key = fo.key)
+WHERE rd.json->>'id' = $1
+ORDER BY fo.key ASC`
 	entries, err := db.Query(stmt, rdmID)
 	if err != nil {
 		return nil, err

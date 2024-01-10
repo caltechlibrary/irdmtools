@@ -76,7 +76,32 @@ func Harvest(cfg *Config, fName string, debug bool) error {
 	}
 	t0 := time.Now()
 	iTime, reportProgress := time.Now(), false
-	cfg.rl = new(RateLimit)
+	//fmt.Printf("DEBUG are we using the RDM REST API? %t\n", (cfg.InvenioDbHost == ""))
+	if cfg.InvenioDbHost == "" {
+		cfg.rl = new(RateLimit)
+	} else {
+		cfg.rl = nil
+		// Need to open our Postgres connection and defer the closing of it.
+		if cfg.pgDB == nil {
+			sslmode := "?sslmode=require"
+			if strings.HasPrefix(cfg.InvenioDbHost, "localhost") {
+				sslmode = "?sslmode=disable"
+			}
+			connStr := fmt.Sprintf("postgres://%s@%s/%s%s", 
+			cfg.InvenioDbUser, cfg.InvenioDbHost, cfg.RepoID, sslmode)
+			if cfg.InvenioDbPassword != "" {
+				connStr = fmt.Sprintf("postgres://%s:%s@%s/%s%s", 
+					cfg.InvenioDbUser, cfg.InvenioDbPassword, cfg.InvenioDbHost, cfg.RepoID, sslmode)
+			}
+			db, err := sql.Open("postgres", connStr)
+			if err != nil {
+				return  err
+			}
+			defer db.Close()
+			cfg.pgDB = db
+		}
+	}
+	//fmt.Printf("DEBUG is cfg.rl nil? %t, is cfg.pgDB nil? %t\n", (cfg.rl == nil), (cfg.pgDB == nil))
 	for i, id := range recordIds {
 		rec, err := GetRecord(cfg, id, false)
 		if err != nil {
@@ -110,8 +135,11 @@ func Harvest(cfg *Config, fName string, debug bool) error {
 		if iTime, reportProgress = CheckWaitInterval(iTime, time.Minute); reportProgress || i == 0 {
 			log.Printf("%s last id %q (%d/%d) %s", cName, id, i, tot, ProgressETA(t0, i, tot))
 		}
-		// NOTE: We need to respect rate limits of RDM API
-		cfg.rl.Throttle(i, tot)
+		// NOTE: We need to respect rate limits of RDM API if we're using it!
+		if cfg.rl != nil {
+			fmt.Println("DEBUG we are throttling API access")
+			cfg.rl.Throttle(i, tot)
+		}
 	}
 	log.Printf("%d harvested, %d errors, running time %s", hCnt, eCnt, time.Since(t0).Round(time.Second))
 	return nil
@@ -244,8 +272,6 @@ func HarvestEPrintRecords(cfg *Config, recordIds []int, debug bool) error {
 		if iTime, reportProgress = CheckWaitInterval(iTime, time.Minute); reportProgress || i == 0 {
 			l.Printf("%s last id %q (%d/%d) %s", cName, id, i, tot, ProgressETA(t0, i, tot))
 		}
-		// NOTE: We need to respect rate limits of RDM API
-		//cfg.rl.Throttle(i, tot)
 	}
 	l.Printf("%d harvested, %d errors, running time %s", hCnt, eCnt, time.Since(t0).Round(time.Second))
 	return nil
@@ -316,8 +342,6 @@ func HarvestEPrints(cfg *Config, fName string, debug bool) error {
 		if iTime, reportProgress = CheckWaitInterval(iTime, time.Minute); reportProgress || i == 0 {
 			log.Printf("%s last id %q (%d/%d) %s", cName, id, i, tot, ProgressETA(t0, i, tot))
 		}
-		// NOTE: We need to respect rate limits of RDM API
-		//cfg.rl.Throttle(i, tot)
 	}
 	log.Printf("%d harvested, %d errors, running time %s", hCnt, eCnt, time.Since(t0).Round(time.Second))
 	return nil
