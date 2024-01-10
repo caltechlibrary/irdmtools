@@ -29,9 +29,20 @@ def fix_custom_fields(comparison_metadata,rdmid,token,data):
         for field in custom:
             if field not in data['custom_fields']:
                 data['custom_fields'][field] = custom[field]
+        
+        repeat = False
+        new = []
+        for group in data['custom_fields']['caltech:groups']:
+            if group['id'] == "Division-of-Biology-and-Biological-Engineering":
+                if not repeat:
+                    new.append(group)
+                    repeat=True
+            else:
+                new.append(group)
+        data['custom_fields']['caltech:groups'] = new
 
         print(json.dumps(data['custom_fields'], indent=4))
-        exit()
+        #input("Press Enter to continue...")
 
         caltechdata_edit(
             rdmid,
@@ -64,7 +75,7 @@ for record in to_update:
     #else:
         print(f"Non-eprints record: {rdmid}")
         versions = get_record_versions(rdmid)
-        last = versions[0][0]
-        print(last['custom_fields'])
-        fix_custom_fields(last.rdmis,token,record)
-        exit()
+        if versions[0] != []:
+            last = versions[0][0]['metadata']
+            fix_custom_fields(last,rdmid,token,record)
+
