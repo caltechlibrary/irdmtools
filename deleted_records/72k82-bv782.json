@@ -1,0 +1,185 @@
+{
+    "parent": {
+        "communities": {
+            "default": "aedd135f-227e-4fdf-9476-5b3fd011bac6",
+            "ids": [
+                "aedd135f-227e-4fdf-9476-5b3fd011bac6"
+            ]
+        },
+        "id": "sddc3-dpf53"
+    },
+    "stats": {
+        "this_version": {
+            "downloads": 11,
+            "views": 8,
+            "unique_views": 5,
+            "data_volume": 25991918.0,
+            "unique_downloads": 6
+        },
+        "all_versions": {
+            "downloads": 11,
+            "views": 8,
+            "unique_views": 5,
+            "data_volume": 25991918.0,
+            "unique_downloads": 6
+        }
+    },
+    "access": {
+        "files": "public",
+        "record": "public",
+        "status": "open",
+        "embargo": {
+            "active": false,
+            "reason": null
+        }
+    },
+    "created": "2023-09-21T22:27:14.309389+00:00",
+    "revision_id": 3,
+    "links": {
+        "self": "https://authors.library.caltech.edu/api/records/72k82-bv782",
+        "self_html": "https://authors.library.caltech.edu/records/72k82-bv782",
+        "self_doi": "https://authors.library.caltech.edu/doi/10.7907111/72k82-bv782",
+        "doi": "https://doi.org/10.7907111/72k82-bv782",
+        "self_iiif_manifest": "https://authors.library.caltech.edu/api/iiif/record:72k82-bv782/manifest",
+        "self_iiif_sequence": "https://authors.library.caltech.edu/api/iiif/record:72k82-bv782/sequence/default",
+        "files": "https://authors.library.caltech.edu/api/records/72k82-bv782/files",
+        "archive": "https://authors.library.caltech.edu/api/records/72k82-bv782/files-archive",
+        "latest": "https://authors.library.caltech.edu/api/records/72k82-bv782/versions/latest",
+        "latest_html": "https://authors.library.caltech.edu/records/72k82-bv782/latest",
+        "draft": "https://authors.library.caltech.edu/api/records/72k82-bv782/draft",
+        "versions": "https://authors.library.caltech.edu/api/records/72k82-bv782/versions",
+        "access_links": "https://authors.library.caltech.edu/api/records/72k82-bv782/access/links",
+        "reserve_doi": "https://authors.library.caltech.edu/api/records/72k82-bv782/draft/pids/doi",
+        "communities": "https://authors.library.caltech.edu/api/records/72k82-bv782/communities",
+        "communities-suggestions": "https://authors.library.caltech.edu/api/records/72k82-bv782/communities-suggestions",
+        "requests": "https://authors.library.caltech.edu/api/records/72k82-bv782/requests"
+    },
+    "versions": {
+        "is_latest": true,
+        "index": 1
+    },
+    "files": {
+        "default_preview": "RDMworkbook_1.0.pdf",
+        "total_bytes": 4533353,
+        "entries": {
+            "RDMworkbook_1.0.pdf": {
+                "key": "RDMworkbook_1.0.pdf",
+                "mimetype": "application/pdf",
+                "ext": "pdf",
+                "metadata": null,
+                "size": 2384285
+            },
+            "RDMworkbook_1.0.epub": {
+                "key": "RDMworkbook_1.0.epub",
+                "mimetype": "application/epub+zip",
+                "ext": "epub",
+                "metadata": null,
+                "size": 2149068
+            }
+        },
+        "enabled": true,
+        "order": [],
+        "count": 2
+    },
+    "custom_fields": {
+        "caltech:groups": [
+            {
+                "title": {
+                    "en": "Caltech Library"
+                },
+                "id": "Caltech-Library"
+            }
+        ],
+        "imprint:imprint": {
+            "pages": "50",
+            "title": "The Research Data Management Workbook",
+            "isbn": "978-1-60049-015-6",
+            "place": "Pasadena, CA"
+        }
+    },
+    "status": "published",
+    "updated": "2023-09-21T22:27:14.384495+00:00",
+    "id": "72k82-bv782",
+    "pids": {
+        "doi": {
+            "client": "datacite",
+            "provider": "datacite",
+            "identifier": "10.7907111/72k82-bv782"
+        },
+        "oai": {
+            "provider": "oai",
+            "identifier": "oai:authors.library.caltech.edu:72k82-bv782"
+        }
+    },
+    "metadata": {
+        "creators": [
+            {
+                "person_or_org": {
+                    "identifiers": [
+                        {
+                            "scheme": "clpid",
+                            "identifier": "Briney-Kristin-A"
+                        },
+                        {
+                            "scheme": "orcid",
+                            "identifier": "0000-0003-1802-0184"
+                        }
+                    ],
+                    "type": "personal",
+                    "name": "Briney, Kristin",
+                    "given_name": "Kristin",
+                    "family_name": "Briney"
+                },
+                "affiliations": [
+                    {
+                        "name": "California Institute of Technology",
+                        "id": "05dxps055"
+                    }
+                ]
+            }
+        ],
+        "resource_type": {
+            "title": {
+                "de": "Buch",
+                "en": "Book"
+            },
+            "id": "publication-book"
+        },
+        "version": "Published",
+        "description": "<p>The Research Data Management Workbook is made up of a collection of exercises for researchers to improve their data management. The Workbook contains exercises across the data lifecycle, including:&nbsp;</p><ul><li>Evaluate a laboratory notebook&nbsp;</li><li>Write a project-level README.txt&nbsp;</li><li>Create a data dictionary&nbsp;</li><li>Set up a file organization system&nbsp;</li><li>Create a file naming convention&nbsp;</li><li>Pick storage and backup systems&nbsp;</li><li>Test your backup&nbsp;</li><li>Write a living data management plan (DMP)&nbsp;</li><li>Determine data stewardship&nbsp;</li><li>Pick a data repository&nbsp;</li><li>Share data&nbsp;</li><li>Prepare data for future use&nbsp;</li><li>Convert data files types&nbsp;</li><li>Create an Archive folder&nbsp;</li><li>Separate from the institution&nbsp;</li></ul><p>Every exercise comes with a description of its value within data management, instructions on how to do the exercise, original source of the exercise (when applicable), and the exercise itself.&nbsp;</p>",
+        "publication_date": "2023-10-02",
+        "publisher": "Caltech Library",
+        "title": "The Research Data Management Workbook",
+        "rights": [
+            {
+                "id": "cc-by-nc-4.0",
+                "description": {
+                    "en": ""
+                },
+                "props": {
+                    "url": "https://creativecommons.org/licenses/by-nc/4.0/legalcode",
+                    "scheme": "spdx"
+                },
+                "title": {
+                    "en": "Creative Commons Attribution Non Commercial 4.0 International"
+                }
+            }
+        ],
+        "identifiers": [
+            {
+                "scheme": "url",
+                "identifier": "https://library.caltech.edu/RDMworkbook"
+            }
+        ],
+        "languages": [
+            {
+                "title": {
+                    "en": "English"
+                },
+                "id": "eng"
+            }
+        ]
+    },
+    "is_published": true,
+    "is_draft": false
+}
