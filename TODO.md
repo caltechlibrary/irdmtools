@@ -5,7 +5,8 @@ Action Items
 Bugs
 ----
 
-- [ ] progress.go is producing non-sensical estamates of the time remaining, need to review my math
+- [ ] Local group items are including an empty "{}" as an entry when retrieved with ep3util (e.g. thesis repository, ep3util get_record 7320)
+- [x] progress.go is producing non-sensical estamates of the time remaining, need to review my math (this was a really bad SQL query on my part)
 - [ ] eprint2rdm missing metadata attributes
 	- [x] journal related fields (e.g. journal:journal) in custom fields
 	- [ ] thesis related fields

@@ -7,6 +7,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"os"
 	"strings"
 	"time"
 
@@ -1494,8 +1495,20 @@ func makeDirValue(ID int) string {
 	return fmt.Sprintf(`disk0/%s`, strings.TrimSuffix(pairtree.Encode(fmt.Sprintf("%08d", ID)), "/"))
 }
 
+// resizeItemList requires a non-nil itemList, NOTE: it can't create it since itemList is an interface.
 func resizeItemList(pos int, itemList eprinttools.ItemsInterface) {
-	if (pos >= 0) && (pos >= itemList.Length()) {
+	if pos == 0 && itemList.Length() == 0 {
+		itemList.Init()
+		if itemList.Length() == 0 {
+			item := itemList.IndexOf(0)
+			if item == nil {
+				item := new(eprinttools.Item)
+				itemList.Append(item)
+			}
+		}
+	} 
+	if (pos > 0) && (pos >= itemList.Length()) {
+		// FIXME: I'm getting an exta element when appending to length zero
 		for j := itemList.Length(); j <= (pos + 1); j++ {
 			item := new(eprinttools.Item)
 			itemList.Append(item)
@@ -1656,7 +1669,6 @@ func eprintIDToThesisCommittee(eprintID int, db *sql.DB, tables map[string][]str
 /*
  * SimpleItemList model
  */
-
 func eprintIDToSimpleItemList(db *sql.DB, tables map[string][]string, eprintID int, tableName string, itemList eprinttools.ItemsInterface) int {
 	columnName := strings.TrimPrefix(tableName, `eprint_`)
 	var (
@@ -1675,13 +1687,22 @@ func eprintIDToSimpleItemList(db *sql.DB, tables map[string][]string, eprintID i
 				if err := rows.Scan(&pos, &value); err != nil {
 					log.Printf("Could not scan %s for %d, %s", tableName, eprintID, err)
 				} else {
+					// DEBUG ON
+					if tableName == "eprint_local_group" {
+						fmt.Fprintf(os.Stderr, "DEBUG itemList.Length() -> %d, pos -> %d, value -> %s\n", itemList.Length(), pos, value)
+					}
+					// DEBUG OFF
 					if value != "" {
 						resizeItemList(pos, itemList)
+						// DEBUG ON
+						if tableName == "eprint_local_group" {
+							fmt.Fprintf(os.Stderr, "DEBUG itemList.Length() now %d\n", itemList.Length())
+						}
+					// DEBUG OFF
 						if item := itemList.IndexOf(pos); item != nil {
 							item.Pos = pos
 							item.Value = value
 						} else {
-
 							log.Printf("Failed to resize item major/minor list (table: %s, eprintID: %d) scanned pos: %d, value: %q itemList.Length() %d -> %+v\n", tableName, eprintID, pos, value, itemList.Length(), item)
 						}
 					}
@@ -1691,6 +1712,12 @@ func eprintIDToSimpleItemList(db *sql.DB, tables map[string][]string, eprintID i
 			rows.Close()
 		}
 	}
+	// DEBUG ON
+	if tableName == "eprint_local_group" {
+		l := itemList.Length()
+		fmt.Fprintf(os.Stderr, "DEBUG length %d, itemList -> %+v\n", l, itemList.IndexOf(l-1))
+	}
+	// DEBUG OFF
 	return itemList.Length()
 }
 
