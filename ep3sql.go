@@ -7,7 +7,6 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
-	"os"
 	"strings"
 	"time"
 
@@ -1294,6 +1293,7 @@ func documentIDToRelation(baseURL string, documentID int, pos int, db *sql.DB, t
 
 	if okTypeTable && okUriTable {
 		itemList := new(eprinttools.RelationItemList)
+		itemList.Items = []*eprinttools.Item{}
 		stmt := fmt.Sprintf(`SELECT document_relation_type.pos AS pos, document_relation_type.relation_type, document_relation_uri.relation_uri FROM %s JOIN %s ON ((%s.docid = %s.docid) AND (%s.pos = %s.pos)) WHERE (%s.docid = ?)`, typeTable, uriTable, typeTable, uriTable, typeTable, uriTable, typeTable)
 		rows, err := db.Query(stmt, documentID)
 		if err != nil {
@@ -1392,7 +1392,6 @@ func eprintIDToDocumentList(baseURL string, eprintID int, db *sql.DB, tables map
 /*
  * Common models and help functions
  */
-
 func makePersonName(given string, family string, honourific string, lineage string) *eprinttools.Name {
 	name := new(eprinttools.Name)
 	isFlat := true
@@ -1497,19 +1496,20 @@ func makeDirValue(ID int) string {
 
 // resizeItemList requires a non-nil itemList, NOTE: it can't create it since itemList is an interface.
 func resizeItemList(pos int, itemList eprinttools.ItemsInterface) {
-	if pos == 0 && itemList.Length() == 0 {
-		itemList.Init()
-		if itemList.Length() == 0 {
-			item := itemList.IndexOf(0)
-			if item == nil {
-				item := new(eprinttools.Item)
-				itemList.Append(item)
-			}
+	// NOTE: Zero is a special case because of how I implemented eprinttools ItemsIterface.Length().
+	// I didn't make the distinction between an empty list and a list with a zero-th element.
+	if pos == 0 {
+		// Check to see if there is space for the zero-ith element allocated
+		item := itemList.IndexOf(0)
+		if item == nil {
+			// We need to add an empty element to provide space.
+			item := new(eprinttools.Item)
+			itemList.Append(item)
 		}
+		return
 	} 
-	if (pos > 0) && (pos >= itemList.Length()) {
-		// FIXME: I'm getting an exta element when appending to length zero
-		for j := itemList.Length(); j <= (pos + 1); j++ {
+	if (pos >= itemList.Length()) {
+		for j := itemList.Length(); j <= pos; j++ {
 			item := new(eprinttools.Item)
 			itemList.Append(item)
 		}
@@ -1588,6 +1588,7 @@ func eprintIDToPersonItemList(db *sql.DB, tables map[string][]string, eprintID i
 func eprintIDToCreators(eprintID int, db *sql.DB, tables map[string][]string) *eprinttools.CreatorItemList {
 	tablePrefix := `eprint_creators`
 	itemList := new(eprinttools.CreatorItemList)
+	itemList.Items = []*eprinttools.Item{}
 	if count := eprintIDToPersonItemList(db, tables, eprintID, tablePrefix, itemList); count > 0 {
 		return itemList
 	}
@@ -1597,6 +1598,7 @@ func eprintIDToCreators(eprintID int, db *sql.DB, tables map[string][]string) *e
 func eprintIDToEditors(eprintID int, db *sql.DB, tables map[string][]string) *eprinttools.EditorItemList {
 	tablePrefix := `eprint_editors`
 	itemList := new(eprinttools.EditorItemList)
+	itemList.Items = []*eprinttools.Item{}
 	if count := eprintIDToPersonItemList(db, tables, eprintID, tablePrefix, itemList); count > 0 {
 		return itemList
 	}
@@ -1606,6 +1608,7 @@ func eprintIDToEditors(eprintID int, db *sql.DB, tables map[string][]string) *ep
 func eprintIDToContributors(eprintID int, db *sql.DB, tables map[string][]string) *eprinttools.ContributorItemList {
 	tablePrefix := `eprint_contributors`
 	itemList := new(eprinttools.ContributorItemList)
+	itemList.Items = []*eprinttools.Item{}
 	if count := eprintIDToPersonItemList(db, tables, eprintID, tablePrefix, itemList); count > 0 {
 		return itemList
 	}
@@ -1615,6 +1618,7 @@ func eprintIDToContributors(eprintID int, db *sql.DB, tables map[string][]string
 func eprintIDToExhibitors(eprintID int, db *sql.DB, tables map[string][]string) *eprinttools.ExhibitorItemList {
 	tablePrefix := `eprint_exhibitors`
 	itemList := new(eprinttools.ExhibitorItemList)
+	itemList.Items = []*eprinttools.Item{}
 	if count := eprintIDToPersonItemList(db, tables, eprintID, tablePrefix, itemList); count > 0 {
 		return itemList
 	}
@@ -1624,6 +1628,7 @@ func eprintIDToExhibitors(eprintID int, db *sql.DB, tables map[string][]string) 
 func eprintIDToProducers(eprintID int, db *sql.DB, tables map[string][]string) *eprinttools.ProducerItemList {
 	tablePrefix := `eprint_producers`
 	itemList := new(eprinttools.ProducerItemList)
+	itemList.Items = []*eprinttools.Item{}
 	if count := eprintIDToPersonItemList(db, tables, eprintID, tablePrefix, itemList); count > 0 {
 		return itemList
 	}
@@ -1633,6 +1638,7 @@ func eprintIDToProducers(eprintID int, db *sql.DB, tables map[string][]string) *
 func eprintIDToConductors(eprintID int, db *sql.DB, tables map[string][]string) *eprinttools.ConductorItemList {
 	tablePrefix := `eprint_conductors`
 	itemList := new(eprinttools.ConductorItemList)
+	itemList.Items = []*eprinttools.Item{}
 	if count := eprintIDToPersonItemList(db, tables, eprintID, tablePrefix, itemList); count > 0 {
 		return itemList
 	}
@@ -1642,6 +1648,7 @@ func eprintIDToConductors(eprintID int, db *sql.DB, tables map[string][]string) 
 func eprintIDToLyricists(eprintID int, db *sql.DB, tables map[string][]string) *eprinttools.LyricistItemList {
 	tablePrefix := `eprint_lyricists`
 	itemList := new(eprinttools.LyricistItemList)
+	itemList.Items = []*eprinttools.Item{}
 	if count := eprintIDToPersonItemList(db, tables, eprintID, tablePrefix, itemList); count > 0 {
 		return itemList
 	}
@@ -1651,6 +1658,7 @@ func eprintIDToLyricists(eprintID int, db *sql.DB, tables map[string][]string) *
 func eprintIDToThesisAdvisors(eprintID int, db *sql.DB, tables map[string][]string) *eprinttools.ThesisAdvisorItemList {
 	tablePrefix := `eprint_thesis_advisor`
 	itemList := new(eprinttools.ThesisAdvisorItemList)
+	itemList.Items = []*eprinttools.Item{}
 	if count := eprintIDToPersonItemList(db, tables, eprintID, tablePrefix, itemList); count > 0 {
 		return itemList
 	}
@@ -1660,6 +1668,7 @@ func eprintIDToThesisAdvisors(eprintID int, db *sql.DB, tables map[string][]stri
 func eprintIDToThesisCommittee(eprintID int, db *sql.DB, tables map[string][]string) *eprinttools.ThesisCommitteeItemList {
 	tablePrefix := `eprint_thesis_committee`
 	itemList := new(eprinttools.ThesisCommitteeItemList)
+	itemList.Items = []*eprinttools.Item{}
 	if count := eprintIDToPersonItemList(db, tables, eprintID, tablePrefix, itemList); count > 0 {
 		return itemList
 	}
@@ -1687,18 +1696,8 @@ func eprintIDToSimpleItemList(db *sql.DB, tables map[string][]string, eprintID i
 				if err := rows.Scan(&pos, &value); err != nil {
 					log.Printf("Could not scan %s for %d, %s", tableName, eprintID, err)
 				} else {
-					// DEBUG ON
-					if tableName == "eprint_local_group" {
-						fmt.Fprintf(os.Stderr, "DEBUG itemList.Length() -> %d, pos -> %d, value -> %s\n", itemList.Length(), pos, value)
-					}
-					// DEBUG OFF
 					if value != "" {
 						resizeItemList(pos, itemList)
-						// DEBUG ON
-						if tableName == "eprint_local_group" {
-							fmt.Fprintf(os.Stderr, "DEBUG itemList.Length() now %d\n", itemList.Length())
-						}
-					// DEBUG OFF
 						if item := itemList.IndexOf(pos); item != nil {
 							item.Pos = pos
 							item.Value = value
@@ -1712,18 +1711,13 @@ func eprintIDToSimpleItemList(db *sql.DB, tables map[string][]string, eprintID i
 			rows.Close()
 		}
 	}
-	// DEBUG ON
-	if tableName == "eprint_local_group" {
-		l := itemList.Length()
-		fmt.Fprintf(os.Stderr, "DEBUG length %d, itemList -> %+v\n", l, itemList.IndexOf(l-1))
-	}
-	// DEBUG OFF
 	return itemList.Length()
 }
 
 func eprintIDToLocalGroup(eprintID int, db *sql.DB, tables map[string][]string) *eprinttools.LocalGroupItemList {
 	tableName := `eprint_local_group`
 	itemList := new(eprinttools.LocalGroupItemList)
+	itemList.Items = []*eprinttools.Item{}
 	if count := eprintIDToSimpleItemList(db, tables, eprintID, tableName, itemList); count > 0 {
 		return itemList
 	}
@@ -1733,6 +1727,7 @@ func eprintIDToLocalGroup(eprintID int, db *sql.DB, tables map[string][]string) 
 func eprintIDToReferenceText(eprintID int, db *sql.DB, tables map[string][]string) *eprinttools.ReferenceTextItemList {
 	tableName := `eprint_referencetext`
 	itemList := new(eprinttools.ReferenceTextItemList)
+	itemList.Items = []*eprinttools.Item{}
 	if count := eprintIDToSimpleItemList(db, tables, eprintID, tableName, itemList); count > 0 {
 		return itemList
 	}
@@ -1742,6 +1737,7 @@ func eprintIDToReferenceText(eprintID int, db *sql.DB, tables map[string][]strin
 func eprintIDToProjects(eprintID int, db *sql.DB, tables map[string][]string) *eprinttools.ProjectItemList {
 	tableName := `eprint_projects`
 	itemList := new(eprinttools.ProjectItemList)
+	itemList.Items = []*eprinttools.Item{}
 	if count := eprintIDToSimpleItemList(db, tables, eprintID, tableName, itemList); count > 0 {
 		return itemList
 	}
@@ -1751,6 +1747,7 @@ func eprintIDToProjects(eprintID int, db *sql.DB, tables map[string][]string) *e
 func eprintIDToSubjects(eprintID int, db *sql.DB, tables map[string][]string) *eprinttools.SubjectItemList {
 	tableName := `eprint_subjects`
 	itemList := new(eprinttools.SubjectItemList)
+	itemList.Items = []*eprinttools.Item{}
 	if count := eprintIDToSimpleItemList(db, tables, eprintID, tableName, itemList); count > 0 {
 		return itemList
 	}
@@ -1760,6 +1757,7 @@ func eprintIDToSubjects(eprintID int, db *sql.DB, tables map[string][]string) *e
 func eprintIDToAccompaniment(eprintID int, db *sql.DB, tables map[string][]string) *eprinttools.AccompanimentItemList {
 	tableName := `eprint_accompaniment`
 	itemList := new(eprinttools.AccompanimentItemList)
+	itemList.Items = []*eprinttools.Item{}
 	if count := eprintIDToSimpleItemList(db, tables, eprintID, tableName, itemList); count > 0 {
 		return itemList
 	}
@@ -1769,6 +1767,7 @@ func eprintIDToAccompaniment(eprintID int, db *sql.DB, tables map[string][]strin
 func eprintIDToSkillAreas(eprintID int, db *sql.DB, tables map[string][]string) *eprinttools.SkillAreaItemList {
 	tableName := `eprint_skill_areas`
 	itemList := new(eprinttools.SkillAreaItemList)
+	itemList.Items = []*eprinttools.Item{}
 	if count := eprintIDToSimpleItemList(db, tables, eprintID, tableName, itemList); count > 0 {
 		return itemList
 	}
@@ -1778,6 +1777,7 @@ func eprintIDToSkillAreas(eprintID int, db *sql.DB, tables map[string][]string) 
 func eprintIDToCopyrightHolders(eprintID int, db *sql.DB, tables map[string][]string) *eprinttools.CopyrightHolderItemList {
 	tableName := `eprint_copyright_holders`
 	itemList := new(eprinttools.CopyrightHolderItemList)
+	itemList.Items = []*eprinttools.Item{}
 	if count := eprintIDToSimpleItemList(db, tables, eprintID, tableName, itemList); count > 0 {
 		return itemList
 	}
@@ -1787,6 +1787,7 @@ func eprintIDToCopyrightHolders(eprintID int, db *sql.DB, tables map[string][]st
 func eprintIDToReference(eprintID int, db *sql.DB, tables map[string][]string) *eprinttools.ReferenceItemList {
 	tableName := `eprint_reference`
 	itemList := new(eprinttools.ReferenceItemList)
+	itemList.Items = []*eprinttools.Item{}
 	if count := eprintIDToSimpleItemList(db, tables, eprintID, tableName, itemList); count > 0 {
 		return itemList
 	}
@@ -1796,6 +1797,7 @@ func eprintIDToReference(eprintID int, db *sql.DB, tables map[string][]string) *
 func eprintIDToAltTitle(eprintID int, db *sql.DB, tables map[string][]string) *eprinttools.AltTitleItemList {
 	tableName := `eprint_alt_title`
 	itemList := new(eprinttools.AltTitleItemList)
+	itemList.Items = []*eprinttools.Item{}
 	if count := eprintIDToSimpleItemList(db, tables, eprintID, tableName, itemList); count > 0 {
 		return itemList
 	}
@@ -1805,6 +1807,7 @@ func eprintIDToAltTitle(eprintID int, db *sql.DB, tables map[string][]string) *e
 func eprintIDToPatentAssignee(eprintID int, db *sql.DB, tables map[string][]string) *eprinttools.PatentAssigneeItemList {
 	tableName := `eprint_patent_assignee`
 	itemList := new(eprinttools.PatentAssigneeItemList)
+	itemList.Items = []*eprinttools.Item{}
 	if count := eprintIDToSimpleItemList(db, tables, eprintID, tableName, itemList); count > 0 {
 		return itemList
 	}
@@ -1814,6 +1817,7 @@ func eprintIDToPatentAssignee(eprintID int, db *sql.DB, tables map[string][]stri
 func eprintIDToRelatedPatents(eprintID int, db *sql.DB, tables map[string][]string) *eprinttools.RelatedPatentItemList {
 	tableName := `eprint_related_patents`
 	itemList := new(eprinttools.RelatedPatentItemList)
+	itemList.Items = []*eprinttools.Item{}
 	if count := eprintIDToSimpleItemList(db, tables, eprintID, tableName, itemList); count > 0 {
 		return itemList
 	}
@@ -1823,6 +1827,7 @@ func eprintIDToRelatedPatents(eprintID int, db *sql.DB, tables map[string][]stri
 func eprintIDToDivisions(eprintID int, db *sql.DB, tables map[string][]string) *eprinttools.DivisionItemList {
 	tableName := `eprint_divisions`
 	itemList := new(eprinttools.DivisionItemList)
+	itemList.Items = []*eprinttools.Item{}
 	if count := eprintIDToSimpleItemList(db, tables, eprintID, tableName, itemList); count > 0 {
 		return itemList
 	}
@@ -1832,6 +1837,7 @@ func eprintIDToDivisions(eprintID int, db *sql.DB, tables map[string][]string) *
 func eprintIDToOptionMajor(eprintID int, db *sql.DB, tables map[string][]string) *eprinttools.OptionMajorItemList {
 	tableName := `eprint_option_major`
 	itemList := new(eprinttools.OptionMajorItemList)
+	itemList.Items = []*eprinttools.Item{}
 	if count := eprintIDToSimpleItemList(db, tables, eprintID, tableName, itemList); count > 0 {
 		return itemList
 	}
@@ -1841,6 +1847,7 @@ func eprintIDToOptionMajor(eprintID int, db *sql.DB, tables map[string][]string)
 func eprintIDToOptionMinor(eprintID int, db *sql.DB, tables map[string][]string) *eprinttools.OptionMinorItemList {
 	tableName := `eprint_option_minor`
 	itemList := new(eprinttools.OptionMinorItemList)
+	itemList.Items = []*eprinttools.Item{}
 	if count := eprintIDToSimpleItemList(db, tables, eprintID, tableName, itemList); count > 0 {
 		return itemList
 	}
@@ -1861,6 +1868,7 @@ func eprintIDToConfCreators(eprintID int, db *sql.DB, tables map[string][]string
 	_, ok := tables[tableName]
 	if ok {
 		itemList := new(eprinttools.ConfCreatorItemList)
+		itemList.Items = []*eprinttools.Item{}
 		stmt := fmt.Sprintf(`SELECT pos, IFNULL(%s, '') AS %s
 FROM %s WHERE eprintid = ? ORDER BY eprintid, pos`, columnName, columnName, tableName)
 		rows, err := db.Query(stmt, eprintID)
@@ -1938,6 +1946,7 @@ func eprintIDToCorpCreators(eprintID int, db *sql.DB, tables map[string][]string
 		value string
 	)
 	itemList := new(eprinttools.CorpCreatorItemList)
+	itemList.Items = []*eprinttools.Item{}
 	tableName := `eprint_corp_creators_name`
 	columnName := `corp_creators_name`
 	_, ok := tables[tableName]
@@ -2016,6 +2025,7 @@ func eprintIDToCorpContributors(eprintID int, db *sql.DB, tables map[string][]st
 		value string
 	)
 	itemList := new(eprinttools.CorpContributorItemList)
+	itemList.Items = []*eprinttools.Item{}
 	tableName := `eprint_corp_contributors_name`
 	columnName := `corp_contributors_name`
 	_, ok := tables[tableName]
@@ -2099,6 +2109,7 @@ func eprintIDToFunders(eprintID int, db *sql.DB, tables map[string][]string) *ep
 	if ok {
 		// eprint_%_id is a known structure. eprintid, pos, contributors_id
 		itemList := new(eprinttools.FunderItemList)
+		itemList.Items = []*eprinttools.Item{}
 		stmt := fmt.Sprintf(`SELECT pos, IFNULL(%s, '') AS %s FROM %s WHERE eprintid = ? ORDER BY eprintid, pos`, columnName, columnName, tableName)
 		rows, err := db.Query(stmt, eprintID)
 		if err != nil {
@@ -2171,6 +2182,7 @@ func eprintIDToRelatedURL(baseURL string, eprintID int, db *sql.DB, tables map[s
 		"eprint_related_url_description": "related_url_description",
 	}
 	itemList := new(eprinttools.RelatedURLItemList)
+	itemList.Items = []*eprinttools.Item{}
 	for tableName, columnName := range tablesAndColumns {
 		if _, ok := tables[tableName]; ok {
 			stmt := fmt.Sprintf(`SELECT pos, IFNULL(%s, "") AS %s FROM %s WHERE eprintid = ? ORDER BY eprintid, pos`, columnName, columnName, tableName)
@@ -2224,6 +2236,7 @@ func eprintIDToOtherNumberingSystem(eprintID int, db *sql.DB, tables map[string]
 	}
 	if ok {
 		itemList := new(eprinttools.OtherNumberingSystemItemList)
+		itemList.Items = []*eprinttools.Item{}
 		stmt := fmt.Sprintf(`
 SELECT %s.pos AS pos, IFNULL(other_numbering_system_name, '') AS name, IFNULL(other_numbering_system_id, '') AS systemid FROM %s JOIN %s ON (%s.eprintid = %s.eprintid AND %s.pos = %s.pos) WHERE %s.eprintid = ?`, tableNames[0], tableNames[0], tableNames[1], tableNames[0], tableNames[1], tableNames[0], tableNames[1], tableNames[0])
 		rows, err := db.Query(stmt, eprintID)
@@ -2268,6 +2281,7 @@ func eprintIDToItemIssues(eprintID int, db *sql.DB, tables map[string][]string) 
 			value                                       string
 		)
 		itemList := new(eprinttools.ItemIssueItemList)
+		itemList.Items = []*eprinttools.Item{}
 		stmt := fmt.Sprintf(`SELECT pos,
 IFNULL(item_issues_timestamp_year, 0) AS year,
 IFNULL(item_issues_timestamp_month, 0) AS month,
