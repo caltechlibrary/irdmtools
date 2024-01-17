@@ -1,0 +1,408 @@
+{
+    "access": {
+        "record": "public",
+        "embargo": {
+            "active": false,
+            "reason": null
+        },
+        "status": "open",
+        "files": "public"
+    },
+    "id": "rfchc-3hp60",
+    "is_draft": false,
+    "metadata": {
+        "additional_descriptions": [
+            {
+                "type": {
+                    "title": {
+                        "de": "Sonstige",
+                        "en": "Additional Information"
+                    },
+                    "id": "additional"
+                },
+                "description": "<p>The copyright holder for this preprint is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made available under a CC-BY-NC-ND 4.0 International license. We thank Rothenberg lab members for helpful discussions, Rochelle Diamond and members of the Caltech Flow Cytometry and Cell Sorting facility for sorting, Igor Antoshechkin and Vijaya Kumar of the Caltech Jacobs Genomics Facility for bulk RNA sequencing, Henry Amrhein and Diane Trout for computer support, Jeff Park and Sisi Chen from the Caltech Single Cell Profiling and Engineering Center for providing support for processing 10X Chromium samples, Ingrid Soto for mouse care, Maria Quiloan for mouse genotyping and supervision. Support for this project came from USPHS grants (R01AI135200, R01HL119102, and R01HD100039) to E.V.R., and by a Cancer Research Institute Irvington Postdoctoral Fellowship CRI.SHIN and Caltech Baxter Fellowship (to B.S.). F.G. was supported in part by NIH 1RF1NS122060-01. Support also came from The Beckman Institute at Caltech for all the Caltech facilities, from the Biology and Biological Engineering Division Bowes Leadership Chair Fund, the Louis A. Garfinkle Memorial Laboratory Fund, and the Al Sherman Foundation. E.V.R. gratefully acknowledges support from the Edward B. Lewis Professorship and past support from the Albert Billings Ruddock Professorship. Competing Interests. WZ is employed by BillionToOne, Inc. and has been employed by 10X Genomics. EVR is a member of the Scientific Advisory Board for Century Therapeutics and has advised Kite Pharma and A2 Biotherapeutics.</p>"
+            },
+            {
+                "type": {
+                    "title": {
+                        "de": "Sonstige",
+                        "en": "Attached Files"
+                    },
+                    "id": "attached-files"
+                },
+                "description": "<p>Submitted - <a href=\"../records/rfchc-3hp60/files/2022.11.18.517146v1.full.pdf?download=1\">2022.11.18.517146v1.full.pdf</a></p>\n<p>Supplemental Material - <a href=\"../records/rfchc-3hp60/files/media-1.pdf?download=1\">media-1.pdf</a></p>\n<p>Supplemental Material - <a href=\"../records/rfchc-3hp60/files/media-2.csv?download=1\">media-2.csv</a></p>\n<p>Supplemental Material - <a href=\"../records/rfchc-3hp60/files/media-3.csv?download=1\">media-3.csv</a></p>\n<p>Supplemental Material - <a href=\"../records/rfchc-3hp60/files/media-4.csv?download=1\">media-4.csv</a></p>\n<p>Supplemental Material - <a href=\"../records/rfchc-3hp60/files/media-5.xlsx?download=1\">media-5.xlsx</a></p>\n<p>Supplemental Material - <a href=\"../records/rfchc-3hp60/files/media-6.xlsx?download=1\">media-6.xlsx</a></p>"
+            }
+        ],
+        "description": "<p>Runx factors are essential for lineage specification of various hematopoietic cells, including T lymphocytes. However, they regulate context-specific genes and occupy distinct genomic regions in different cell types. Here, we show that dynamic Runx binding shifts in early T-cell development are mostly not restricted by local chromatin state but regulated by Runx dosage and functional partners. Runx co-factors compete to recruit a limited pool of Runx factors in early T-progenitors, and a modest increase in Runx protein availability at pre-commitment stages causes premature Runx occupancy at post-commitment binding sites. This results in striking T-lineage developmental acceleration by selectively activating T-identity and innate lymphoid cell programs. These are collectively regulated by Runx together with other, Runx-induced transcription factors that co-occupy Runx target genes and propagate gene network changes.</p>",
+        "title": "Runx factors launch T-cell and innate lymphoid programs via direct and gene network-based mechanisms",
+        "creators": [
+            {
+                "person_or_org": {
+                    "family_name": "Shin",
+                    "identifiers": [
+                        {
+                            "scheme": "clpid",
+                            "identifier": "Shin-Boyoung"
+                        },
+                        {
+                            "scheme": "orcid",
+                            "identifier": "0000-0001-7926-5527"
+                        }
+                    ],
+                    "name": "Shin, Boyoung",
+                    "given_name": "Boyoung",
+                    "type": "personal"
+                }
+            },
+            {
+                "person_or_org": {
+                    "family_name": "Zhou",
+                    "identifiers": [
+                        {
+                            "scheme": "clpid",
+                            "identifier": "Zhou-Wen-Cynthia"
+                        },
+                        {
+                            "scheme": "orcid",
+                            "identifier": "0000-0003-0357-2744"
+                        }
+                    ],
+                    "name": "Zhou, Wen",
+                    "given_name": "Wen",
+                    "type": "personal"
+                }
+            },
+            {
+                "person_or_org": {
+                    "family_name": "Wang",
+                    "identifiers": [
+                        {
+                            "scheme": "clpid",
+                            "identifier": "Wang-Jue"
+                        }
+                    ],
+                    "name": "Wang, Jue",
+                    "given_name": "Jue",
+                    "type": "personal"
+                }
+            },
+            {
+                "person_or_org": {
+                    "family_name": "Gao",
+                    "identifiers": [
+                        {
+                            "scheme": "clpid",
+                            "identifier": "Gao-Fan"
+                        },
+                        {
+                            "scheme": "orcid",
+                            "identifier": "0000-0001-6832-3402"
+                        }
+                    ],
+                    "name": "Gao, Fan",
+                    "given_name": "Fan",
+                    "type": "personal"
+                }
+            },
+            {
+                "person_or_org": {
+                    "family_name": "Rothenberg",
+                    "identifiers": [
+                        {
+                            "scheme": "clpid",
+                            "identifier": "Rothenberg-E-V"
+                        },
+                        {
+                            "scheme": "orcid",
+                            "identifier": "0000-0002-3901-347X"
+                        }
+                    ],
+                    "name": "Rothenberg, Ellen V.",
+                    "given_name": "Ellen V.",
+                    "type": "personal"
+                }
+            }
+        ],
+        "version": "Supplemental Material + Submitted",
+        "identifiers": [
+            {
+                "scheme": "eprintid",
+                "identifier": "120174"
+            },
+            {
+                "scheme": "resolverid",
+                "identifier": "CaltechAUTHORS:20230316-182830000.66"
+            }
+        ],
+        "publication_date": "2023-03-17",
+        "funding": [
+            {
+                "award": {
+                    "title": {
+                        "en": " "
+                    },
+                    "number": "R01AI135200"
+                },
+                "funder": {
+                    "name": "NIH"
+                }
+            },
+            {
+                "award": {
+                    "title": {
+                        "en": " "
+                    },
+                    "number": "R01HL119102"
+                },
+                "funder": {
+                    "name": "NIH"
+                }
+            },
+            {
+                "award": {
+                    "title": {
+                        "en": " "
+                    },
+                    "number": "R01HD100039"
+                },
+                "funder": {
+                    "name": "NIH"
+                }
+            },
+            {
+                "award": {
+                    "title": {
+                        "en": " "
+                    },
+                    "number": "CRI.SHIN"
+                },
+                "funder": {
+                    "name": "Cancer Research Institute"
+                }
+            },
+            {
+                "funder": {
+                    "name": "Caltech Baxter Fellowship"
+                }
+            },
+            {
+                "award": {
+                    "title": {
+                        "en": " "
+                    },
+                    "number": "1RF1NS122060-01"
+                },
+                "funder": {
+                    "name": "NIH"
+                }
+            },
+            {
+                "funder": {
+                    "name": "Caltech Beckman Institute"
+                }
+            },
+            {
+                "funder": {
+                    "name": "Caltech Division of Biology and Biological Engineering"
+                }
+            },
+            {
+                "funder": {
+                    "name": "Louis A. Garfinkle Memorial Laboratory Fund"
+                }
+            },
+            {
+                "funder": {
+                    "name": "Al Sherman Foundation"
+                }
+            },
+            {
+                "funder": {
+                    "name": "Edward B. Lewis Professorship of Biology"
+                }
+            },
+            {
+                "funder": {
+                    "name": "Albert Billings Ruddock Professorship"
+                }
+            }
+        ],
+        "rights": [
+            {
+                "description": {
+                    "en": "No commercial reproduction, distribution, display or performance rights in this work are provided."
+                },
+                "title": {
+                    "en": "Other"
+                }
+            }
+        ],
+        "dates": [
+            {
+                "description": "Created from EPrint's datestamp field",
+                "date": "2023-03-17",
+                "type": {
+                    "title": {
+                        "de": "Erstellt",
+                        "en": "Created"
+                    },
+                    "id": "created"
+                }
+            },
+            {
+                "description": "Created from EPrint's last_modified field",
+                "date": "2023-03-17",
+                "type": {
+                    "title": {
+                        "de": "Aktualisiert",
+                        "en": "Updated"
+                    },
+                    "id": "updated"
+                }
+            }
+        ],
+        "resource_type": {
+            "title": {
+                "de": "Bericht",
+                "en": "Report"
+            },
+            "id": "publication-report"
+        }
+    },
+    "is_published": true,
+    "status": "published",
+    "revision_id": 13,
+    "pids": {
+        "doi": {
+            "provider": "external",
+            "identifier": "10.1101/2022.11.18.517146"
+        },
+        "oai": {
+            "provider": "oai",
+            "identifier": "oai:authors.library.caltech.edu:rfchc-3hp60"
+        }
+    },
+    "custom_fields": {
+        "caltech:groups": [
+            {
+                "title": {
+                    "en": "Millard and Muriel Jacobs Genetics and Genomics Laboratory"
+                },
+                "id": "Millard-and-Muriel-Jacobs-Genetics-and-Genomics-Laboratory"
+            },
+            {
+                "title": {
+                    "en": "Division of Biology and Biological Engineering"
+                },
+                "id": "Division-of-Biology-and-Biological-Engineering"
+            }
+        ]
+    },
+    "links": {
+        "self": "https://authors.library.caltech.edu/api/records/rfchc-3hp60",
+        "self_html": "https://authors.library.caltech.edu/records/rfchc-3hp60",
+        "self_doi": "https://authors.library.caltech.edu/doi/10.1101/2022.11.18.517146",
+        "doi": "https://doi.org/10.1101/2022.11.18.517146",
+        "self_iiif_manifest": "https://authors.library.caltech.edu/api/iiif/record:rfchc-3hp60/manifest",
+        "self_iiif_sequence": "https://authors.library.caltech.edu/api/iiif/record:rfchc-3hp60/sequence/default",
+        "files": "https://authors.library.caltech.edu/api/records/rfchc-3hp60/files",
+        "archive": "https://authors.library.caltech.edu/api/records/rfchc-3hp60/files-archive",
+        "latest": "https://authors.library.caltech.edu/api/records/rfchc-3hp60/versions/latest",
+        "latest_html": "https://authors.library.caltech.edu/records/rfchc-3hp60/latest",
+        "draft": "https://authors.library.caltech.edu/api/records/rfchc-3hp60/draft",
+        "versions": "https://authors.library.caltech.edu/api/records/rfchc-3hp60/versions",
+        "access_links": "https://authors.library.caltech.edu/api/records/rfchc-3hp60/access/links",
+        "reserve_doi": "https://authors.library.caltech.edu/api/records/rfchc-3hp60/draft/pids/doi",
+        "communities": "https://authors.library.caltech.edu/api/records/rfchc-3hp60/communities",
+        "communities-suggestions": "https://authors.library.caltech.edu/api/records/rfchc-3hp60/communities-suggestions",
+        "requests": "https://authors.library.caltech.edu/api/records/rfchc-3hp60/requests"
+    },
+    "files": {
+        "total_bytes": 36908397,
+        "count": 7,
+        "entries": {
+            "media-5.xlsx": {
+                "metadata": null,
+                "mimetype": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "size": 3132514,
+                "ext": "xlsx",
+                "key": "media-5.xlsx"
+            },
+            "2022.11.18.517146v1.full.pdf": {
+                "metadata": null,
+                "mimetype": "application/pdf",
+                "size": 12040394,
+                "ext": "pdf",
+                "key": "2022.11.18.517146v1.full.pdf"
+            },
+            "media-1.pdf": {
+                "metadata": null,
+                "mimetype": "application/pdf",
+                "size": 20168729,
+                "ext": "pdf",
+                "key": "media-1.pdf"
+            },
+            "media-6.xlsx": {
+                "metadata": null,
+                "mimetype": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "size": 21084,
+                "ext": "xlsx",
+                "key": "media-6.xlsx"
+            },
+            "media-2.csv": {
+                "metadata": null,
+                "mimetype": "text/csv",
+                "size": 1441381,
+                "ext": "csv",
+                "key": "media-2.csv"
+            },
+            "media-3.csv": {
+                "metadata": null,
+                "mimetype": "text/csv",
+                "size": 75286,
+                "ext": "csv",
+                "key": "media-3.csv"
+            },
+            "media-4.csv": {
+                "metadata": null,
+                "mimetype": "text/csv",
+                "size": 29009,
+                "ext": "csv",
+                "key": "media-4.csv"
+            }
+        },
+        "order": [],
+        "enabled": true
+    },
+    "stats": {
+        "all_versions": {
+            "downloads": 49,
+            "data_volume": 554616330.0,
+            "unique_downloads": 48,
+            "unique_views": 87,
+            "views": 88
+        },
+        "this_version": {
+            "downloads": 49,
+            "data_volume": 554616330.0,
+            "unique_downloads": 48,
+            "unique_views": 87,
+            "views": 88
+        }
+    },
+    "versions": {
+        "is_latest": true,
+        "index": 1
+    },
+    "updated": "2024-01-17T22:28:16.279520+00:00",
+    "created": "2023-08-20T08:48:11.766034+00:00",
+    "parent": {
+        "id": "d80w0-dcf02",
+        "communities": {
+            "default": "aedd135f-227e-4fdf-9476-5b3fd011bac6",
+            "ids": [
+                "aedd135f-227e-4fdf-9476-5b3fd011bac6"
+            ]
+        }
+    }
+}
