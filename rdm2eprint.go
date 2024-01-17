@@ -272,10 +272,7 @@ func CrosswalkRdmToEPrint(cfg *Config, rec *simplified.Record, eprint *eprinttoo
 			if resolverID, ok := getIdentifier(rec.Metadata.Identifiers, "resolverid"); ok {
 				eprint.OfficialURL = fmt.Sprintf("https://resolver.caltech.edu/%s", resolverID)
 				eprint.IDNumber = resolverID
-			} else if rec.ID != "" {
-				//NOTE: We need to assemble an appropriate RDM url since resolver isn't available
-				eprint.OfficialURL = fmt.Sprintf("%s/records/%s", cfg.InvenioAPI, rec.ID)
-			}
+			} 
 		}
 		if rec.Metadata.Rights != nil && len(rec.Metadata.Rights) > 0 {
 			if rights, ok := rec.Metadata.Rights[0].Description["en"]; ok {
@@ -455,6 +452,11 @@ func CrosswalkRdmToEPrint(cfg *Config, rec *simplified.Record, eprint *eprinttoo
 	}
 
 
+	// Make sure we populate Official URL is populated if we don't have a resolver URL available
+	if eprint.OfficialURL == "" && rec.ID != "" {
+		//NOTE: We need to assemble an appropriate RDM url since resolver isn't available
+		eprint.OfficialURL = fmt.Sprintf("%s/records/%s", cfg.InvenioAPI, rec.ID)
+	}
 
 	// Now that we have enough information the eprint structure we can answer some questions
 	// and infer values.
@@ -623,8 +625,8 @@ func (app *Rdm2EPrint) Configure(configFName string, envPrefix string, debug boo
 		app.Cfg.Debug = true
 	}
 	// Make sure we have a minimal useful configuration
-	if (app.Cfg.InvenioAPI == "" || app.Cfg.InvenioToken == "") && app.Cfg.InvenioDbHost == "" {
-		return fmt.Errorf("RDM_URL and RDMTOK are not set, RDM_DB_HOST is not set.")
+	if app.Cfg.InvenioAPI == "" || (app.Cfg.InvenioToken == "" && app.Cfg.InvenioDbHost == "") {
+		return fmt.Errorf("RDM_URL, RDMTOK or RDM_DB_HOST are missing")
 	}
 	return nil
 }
