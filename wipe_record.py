@@ -72,10 +72,10 @@ def main():
         message = sys.argv[2]
         err = wipe_ind_record(config, rdm_id, message)
         if err is not None:
-            print(f"Aborting {app_name}, {err}", file=sys.stderr)
+            print(f"Aborting, {err}", file=sys.stderr)
             sys.exit(1)
     else:
-        print(f"Aborting {app_name}, environment not setup", file=sys.stderr)
+        print(f"Aborting, environment not setup", file=sys.stderr)
         sys.exit(1)
 
 
