@@ -1,6 +1,6 @@
 module github.com/caltechlibrary/irdmtools
 
-go 1.21.1
+go 1.21.6
 
 require (
 	github.com/caltechlibrary/crossrefapi v1.0.6
