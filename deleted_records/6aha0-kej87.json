@@ -1,0 +1,384 @@
+{
+    "access": {
+        "record": "public",
+        "embargo": {
+            "active": false,
+            "reason": null
+        },
+        "status": "open",
+        "files": "public"
+    },
+    "id": "6aha0-kej87",
+    "is_draft": false,
+    "metadata": {
+        "additional_descriptions": [
+            {
+                "type": {
+                    "title": {
+                        "de": "Sonstige",
+                        "en": "Additional Information"
+                    },
+                    "id": "additional"
+                },
+                "description": "\u00a9 2023 American Chemical Society. \n\nD.A.C. is a National Science Foundation Graduate Research Fellow (DGE-1745301) and is supported by a National Academies of Science, Engineering, and Medicine Ford Foundation Predoctoral Fellowship. This project has received funding from the European Union's Horizon 2020 research and innovation programme under the Marie Sklodowska-Curie grant agreement No. 883987 (D.B.). N.P.K. acknowledges support from the Hertz Fellowship and from the National Science Foundation Graduate Research Fellowship under Grant No. DGE1745301. The Caltech EPR facility acknowledges support from the Beckman Institute and the Dow Next Generation Educator Fund. Support has been provided by the National Institutes of Health (National Institute of General Medical Sciences, R35-GM142595). The computations presented here were conducted in the Resnick High Performance Computing Center, a facility supported by Resnick Sustainability Institute at the California Institute of Technology. \n\nThe authors declare no competing financial interest."
+            },
+            {
+                "type": {
+                    "title": {
+                        "de": "Sonstige",
+                        "en": "Attached Files"
+                    },
+                    "id": "attached-files"
+                },
+                "description": "<p>Accepted Version - <a href=\"/records/6aha0-kej87/files/nihms-1905678.pdf?download=1\">nihms-1905678.pdf</a></p><p>Supplemental Material - <a href=\"/records/6aha0-kej87/files/ic3c00917_si_001.pdf?download=1\">ic3c00917_si_001.pdf</a></p><p>Supplemental Material - <a href=\"/records/6aha0-kej87/files/ic3c00917_si_002.zip?download=1\">ic3c00917_si_002.zip</a></p>"
+            }
+        ],
+        "description": "We report the facile photochemical generation of a library of Ni(I)\u2013bpy halide complexes (Ni(I)(\u1d3fbpy)X (R = t-Bu, H, MeOOC; X = Cl, Br, I) and benchmark their relative reactivity toward competitive oxidative addition and off-cycle dimerization pathways. Structure\u2013function relationships between the ligand set and reactivity are developed, with particular emphasis on rationalizing previously uncharacterized ligand-controlled reactivity toward high energy and challenging C(sp\u00b2)\u2013Cl bonds. Through a dual Hammett and computational analysis, the mechanism of the formal oxidative addition is found to proceed through an S_(N)Ar-type pathway, consisting of a nucleophilic two-electron transfer between the Ni(I) 3d(z\u00b2) orbital and the C_(aryl)\u2013Cl \u03c3* orbital, which contrasts the mechanism previously observed for activation of weaker C(sp\u00b2)\u2013Br/I bonds. The bpy substituent provides a strong influence on reactivity, ultimately determining whether oxidative addition or dimerization even occurs. Here, we elucidate the origin of this substituent influence as arising from perturbations to the effective nuclear charge (Z_(eff)) of the Ni(I) center. Electron donation to the metal decreases Z_(eff), which leads to a significant destabilization of the entire 3d orbital manifold. Decreasing the 3d(z\u00b2) electron binding energies leads to a powerful two-electron donor to activate strong C(sp\u00b2)\u2013Cl bonds. These changes also prove to have an analogous effect on dimerization, with decreases in Z_(eff) leading to more rapid dimerization. Ligand-induced modulation of Z_(eff) and the 3d(z\u00b2) orbital energy is thus a tunable target by which the reactivity of Ni(I) complexes can be altered, providing a direct route to stimulate reactivity with even stronger C\u2013X bonds and potentially unveiling new ways to accomplish Ni-mediated photocatalytic cycles.",
+        "title": "Photogenerated Ni(I)-Bipyridine Halide Complexes: Structure-Function Relationships for Competitive C(sp\u00b2)-Cl Oxidative Addition and Dimerization Reactivity Pathways",
+        "creators": [
+            {
+                "person_or_org": {
+                    "family_name": "Cagan",
+                    "identifiers": [
+                        {
+                            "scheme": "clpid",
+                            "identifier": "Cagan-David-A"
+                        },
+                        {
+                            "scheme": "orcid",
+                            "identifier": "0000-0002-4719-2789"
+                        }
+                    ],
+                    "name": "Cagan, David A.",
+                    "given_name": "David A.",
+                    "type": "personal"
+                }
+            },
+            {
+                "person_or_org": {
+                    "family_name": "B\u00edm",
+                    "identifiers": [
+                        {
+                            "scheme": "clpid",
+                            "identifier": "B\u00edm-Daniel"
+                        },
+                        {
+                            "scheme": "orcid",
+                            "identifier": "0000-0003-3100-4293"
+                        }
+                    ],
+                    "name": "B\u00edm, Daniel",
+                    "given_name": "Daniel",
+                    "type": "personal"
+                }
+            },
+            {
+                "person_or_org": {
+                    "family_name": "McNicholas",
+                    "identifiers": [
+                        {
+                            "scheme": "clpid",
+                            "identifier": "McNicholas-Brendon-J"
+                        },
+                        {
+                            "scheme": "orcid",
+                            "identifier": "0000-0002-3654-681X"
+                        }
+                    ],
+                    "name": "McNicholas, Brendon J.",
+                    "given_name": "Brendon J.",
+                    "type": "personal"
+                }
+            },
+            {
+                "person_or_org": {
+                    "family_name": "Kazmierczak",
+                    "identifiers": [
+                        {
+                            "scheme": "clpid",
+                            "identifier": "Kazmierczak-Nathanael-P"
+                        },
+                        {
+                            "scheme": "orcid",
+                            "identifier": "0000-0002-7822-6769"
+                        }
+                    ],
+                    "name": "Kazmierczak, Nathanael P.",
+                    "given_name": "Nathanael P.",
+                    "type": "personal"
+                }
+            },
+            {
+                "person_or_org": {
+                    "family_name": "Oyala",
+                    "identifiers": [
+                        {
+                            "scheme": "clpid",
+                            "identifier": "Oyala-Paul-H"
+                        },
+                        {
+                            "scheme": "orcid",
+                            "identifier": "0000-0002-8761-4667"
+                        }
+                    ],
+                    "name": "Oyala, Paul H.",
+                    "given_name": "Paul H.",
+                    "type": "personal"
+                }
+            },
+            {
+                "person_or_org": {
+                    "family_name": "Hadt",
+                    "identifiers": [
+                        {
+                            "scheme": "clpid",
+                            "identifier": "Hadt-R-G"
+                        },
+                        {
+                            "scheme": "orcid",
+                            "identifier": "0000-0001-6026-1358"
+                        }
+                    ],
+                    "name": "Hadt, Ryan G.",
+                    "given_name": "Ryan G.",
+                    "type": "personal"
+                }
+            }
+        ],
+        "version": "Accepted Version + Supplemental Material",
+        "identifiers": [
+            {
+                "scheme": "pmcid",
+                "identifier": "PMC10330939"
+            },
+            {
+                "scheme": "eprintid",
+                "identifier": "122114"
+            },
+            {
+                "scheme": "resolverid",
+                "identifier": "CaltechAUTHORS:20230705-704041500.13"
+            }
+        ],
+        "publication_date": "2023-06-19",
+        "funding": [
+            {
+                "award": {
+                    "title": {
+                        "en": " "
+                    },
+                    "number": "DGE-1745301"
+                },
+                "funder": {
+                    "name": "NSF Graduate Research Fellowship"
+                }
+            },
+            {
+                "funder": {
+                    "name": "Ford Foundation"
+                }
+            },
+            {
+                "award": {
+                    "title": {
+                        "en": " "
+                    },
+                    "number": "883987"
+                },
+                "funder": {
+                    "name": "Marie Curie Fellowship"
+                }
+            },
+            {
+                "funder": {
+                    "name": "Fannie and John Hertz Foundation"
+                }
+            },
+            {
+                "funder": {
+                    "name": "Caltech Beckman Institute"
+                }
+            },
+            {
+                "funder": {
+                    "name": "Dow Next Generation Educator Fund"
+                }
+            },
+            {
+                "award": {
+                    "title": {
+                        "en": " "
+                    },
+                    "number": "R35-GM142595"
+                },
+                "funder": {
+                    "name": "NIH"
+                }
+            },
+            {
+                "funder": {
+                    "name": "Resnick Sustainability Institute"
+                }
+            }
+        ],
+        "rights": [
+            {
+                "description": {
+                    "en": "No commercial reproduction, distribution, display or performance rights in this work are provided."
+                },
+                "title": {
+                    "en": "Other"
+                }
+            }
+        ],
+        "subjects": [
+            {
+                "subject": "Inorganic Chemistry"
+            },
+            {
+                "subject": "Physical and Theoretical Chemistry"
+            }
+        ],
+        "dates": [
+            {
+                "description": "Created from EPrint's datestamp field",
+                "date": "2023-07-21",
+                "type": {
+                    "title": {
+                        "de": "Erstellt",
+                        "en": "Created"
+                    },
+                    "id": "created"
+                }
+            },
+            {
+                "description": "Created from EPrint's last_modified field",
+                "date": "2023-07-21",
+                "type": {
+                    "title": {
+                        "de": "Aktualisiert",
+                        "en": "Updated"
+                    },
+                    "id": "updated"
+                }
+            }
+        ],
+        "publisher": "American Chemical Society",
+        "resource_type": {
+            "title": {
+                "de": "Zeitschriftenartikel",
+                "en": "Journal Article"
+            },
+            "id": "publication-article"
+        }
+    },
+    "is_published": true,
+    "status": "published",
+    "revision_id": 5,
+    "pids": {
+        "doi": {
+            "provider": "external",
+            "identifier": "10.1021/acs.inorgchem.3c00917"
+        },
+        "oai": {
+            "provider": "oai",
+            "identifier": "oai:authors.library.caltech.edu:6aha0-kej87"
+        }
+    },
+    "custom_fields": {
+        "journal:journal": {
+            "issn": "0020-1669",
+            "pages": "9538-9551",
+            "title": "Inorganic Chemistry",
+            "volume": "62",
+            "issue": "24"
+        },
+        "caltech:groups": [
+            {
+                "title": {
+                    "en": "Resnick Sustainability Institute"
+                },
+                "id": "Resnick-Sustainability-Institute"
+            }
+        ]
+    },
+    "links": {
+        "self": "https://authors.library.caltech.edu/api/records/6aha0-kej87",
+        "self_html": "https://authors.library.caltech.edu/records/6aha0-kej87",
+        "self_doi": "https://authors.library.caltech.edu/doi/10.1021/acs.inorgchem.3c00917",
+        "doi": "https://doi.org/10.1021/acs.inorgchem.3c00917",
+        "self_iiif_manifest": "https://authors.library.caltech.edu/api/iiif/record:6aha0-kej87/manifest",
+        "self_iiif_sequence": "https://authors.library.caltech.edu/api/iiif/record:6aha0-kej87/sequence/default",
+        "files": "https://authors.library.caltech.edu/api/records/6aha0-kej87/files",
+        "archive": "https://authors.library.caltech.edu/api/records/6aha0-kej87/files-archive",
+        "latest": "https://authors.library.caltech.edu/api/records/6aha0-kej87/versions/latest",
+        "latest_html": "https://authors.library.caltech.edu/records/6aha0-kej87/latest",
+        "draft": "https://authors.library.caltech.edu/api/records/6aha0-kej87/draft",
+        "versions": "https://authors.library.caltech.edu/api/records/6aha0-kej87/versions",
+        "access_links": "https://authors.library.caltech.edu/api/records/6aha0-kej87/access/links",
+        "reserve_doi": "https://authors.library.caltech.edu/api/records/6aha0-kej87/draft/pids/doi",
+        "communities": "https://authors.library.caltech.edu/api/records/6aha0-kej87/communities",
+        "communities-suggestions": "https://authors.library.caltech.edu/api/records/6aha0-kej87/communities-suggestions",
+        "requests": "https://authors.library.caltech.edu/api/records/6aha0-kej87/requests"
+    },
+    "files": {
+        "total_bytes": 14805777,
+        "count": 3,
+        "entries": {
+            "nihms-1905678.pdf": {
+                "metadata": null,
+                "mimetype": "application/pdf",
+                "size": 2447823,
+                "ext": "pdf",
+                "key": "nihms-1905678.pdf"
+            },
+            "ic3c00917_si_002.zip": {
+                "metadata": null,
+                "mimetype": "application/zip",
+                "size": 97125,
+                "ext": "zip",
+                "key": "ic3c00917_si_002.zip"
+            },
+            "ic3c00917_si_001.pdf": {
+                "metadata": null,
+                "mimetype": "application/pdf",
+                "size": 12260829,
+                "ext": "pdf",
+                "key": "ic3c00917_si_001.pdf"
+            }
+        },
+        "order": [],
+        "enabled": true
+    },
+    "stats": {
+        "all_versions": {
+            "downloads": 1,
+            "data_volume": 12260829.0,
+            "unique_downloads": 1,
+            "unique_views": 6,
+            "views": 6
+        },
+        "this_version": {
+            "downloads": 1,
+            "data_volume": 12260829.0,
+            "unique_downloads": 1,
+            "unique_views": 6,
+            "views": 6
+        }
+    },
+    "versions": {
+        "is_latest": true,
+        "index": 1
+    },
+    "updated": "2023-10-20T18:59:41.738148+00:00",
+    "created": "2023-08-22T21:12:28.214439+00:00",
+    "parent": {
+        "id": "x2z6s-4pb74",
+        "communities": {
+            "default": "aedd135f-227e-4fdf-9476-5b3fd011bac6",
+            "ids": [
+                "aedd135f-227e-4fdf-9476-5b3fd011bac6"
+            ]
+        }
+    }
+}
