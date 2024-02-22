@@ -1,0 +1,267 @@
+{
+    "access": {
+        "record": "public",
+        "embargo": {
+            "active": false,
+            "reason": null
+        },
+        "status": "metadata-only",
+        "files": "public"
+    },
+    "id": "bpy31-50r06",
+    "is_draft": false,
+    "metadata": {
+        "additional_descriptions": [
+            {
+                "type": {
+                    "title": {
+                        "de": "Sonstige",
+                        "en": "Additional Information"
+                    },
+                    "id": "additional"
+                },
+                "description": "\u00a9 2023 American Chemical Society. \n\nThe authors thank the National Institutes of Health (R01 GM-075757) (for studies of Fe-mediated N\u2082RR); E.A.B. thanks the National Science Foundation for a Graduate Research Fellowship under Grant No. DGE-1745301. The authors also acknowledge the Resnick Sustainability Institute at Caltech for support of enabling facilities and the DOW Next Generation Fund for support of the EPR facility."
+            }
+        ],
+        "description": "Controlling product selectivity in multiproton, multielectron reductions of unsaturated small molecules is of fundamental interest in catalysis. For the N\u2082 reduction reaction (N\u2082RR) in particular, parameters that dictate selectivity for either the 6H\u207a/6e\u207b product ammonia (NH\u2083) or the 4H\u207a/4e\u207b product hydrazine (N\u2082H\u2084) are poorly understood. To probe this issue, we have developed conditions to invert the selectivity of a tris(phosphino)borane iron catalyst (Fe), with which NH\u2083 is typically the major product of N\u2082R, to instead favor N\u2082H\u2084 as the sole observed fixed-N product (&gt;99:1). This dramatic shift is achieved by replacing moderate reductants and strong acids with a very strongly reducing but weakly acidic Sm^(II)\u2013(2-pyrrolidone) core supported by a hexadentate dianionic macrocyclic ligand (Sm^(II)\u2013PH) as the net hydrogen-atom donor. The activity and efficiency of the catalyst with this reagent remain high (up to 69 equiv of N\u2082H\u2084 per Fe and 67% fixed-N yield per H\u207a). However, by generating N\u2082H\u2084 as the kinetic product, the overpotential of this Sm-driven reaction is 700 mV lower than that of the mildest reported set of NH\u2083\u208b selective conditions with Fe. Mechanistic data support assignment of iron hydrazido(2\u2212) species FeNNH\u2082 as selectivity-determining: we infer that protonation of FeNNH\u2082 at N_\u03b2, favored by strong acids, releases NH\u2083, whereas one-electron reduction to FeNNH\u2082\u207b, favored by strong reductants such as Sm\u1d35\u1d35\u2013PH, produces N\u2082H\u2084 via reactivity initiated at N_\u03b1. Spectroscopic data also implicate a role for Sm\u1d35\u1d35\u1d35-binding to anionic FeN\u2082\u207b (via an Fe\u2013N\u2082\u208b-Sm\u1d35\u1d35\u1d35 species) with respect to catalytic efficacy.",
+        "title": "Highly Selective Fe-Catalyzed Nitrogen Fixation to Hydrazine Enabled by Sm(II) Reagents with Tailored Redox Potential and pK\u2090",
+        "creators": [
+            {
+                "person_or_org": {
+                    "family_name": "Boyd",
+                    "identifiers": [
+                        {
+                            "scheme": "clpid",
+                            "identifier": "Boyd-Emily-A"
+                        },
+                        {
+                            "scheme": "orcid",
+                            "identifier": "0000-0003-0150-5396"
+                        }
+                    ],
+                    "name": "Boyd, Emily A.",
+                    "given_name": "Emily A.",
+                    "type": "personal"
+                }
+            },
+            {
+                "person_or_org": {
+                    "family_name": "Peters",
+                    "identifiers": [
+                        {
+                            "scheme": "clpid",
+                            "identifier": "Peters-J-C"
+                        },
+                        {
+                            "scheme": "orcid",
+                            "identifier": "0000-0002-6610-4414"
+                        }
+                    ],
+                    "name": "Peters, Jonas C.",
+                    "given_name": "Jonas C.",
+                    "type": "personal"
+                }
+            }
+        ],
+        "version": "public",
+        "identifiers": [
+            {
+                "scheme": "eprintid",
+                "identifier": "122442"
+            },
+            {
+                "scheme": "doi",
+                "identifier": "10.1021/jacs.3c03352"
+            },
+            {
+                "scheme": "resolverid",
+                "identifier": "CaltechAUTHORS:20230725-856852000.7"
+            }
+        ],
+        "publication_date": "2023-07-12",
+        "funding": [
+            {
+                "award": {
+                    "title": {
+                        "en": " "
+                    },
+                    "number": "R01 GM-075757"
+                },
+                "funder": {
+                    "name": "NIH"
+                }
+            },
+            {
+                "award": {
+                    "title": {
+                        "en": " "
+                    },
+                    "number": "DGE-1745301"
+                },
+                "funder": {
+                    "name": "NSF Graduate Research Fellowship"
+                }
+            },
+            {
+                "funder": {
+                    "name": "Resnick Sustainability Institute"
+                }
+            },
+            {
+                "funder": {
+                    "name": "Dow Next Generation Educator Fund"
+                }
+            }
+        ],
+        "rights": [
+            {
+                "description": {
+                    "en": "No commercial reproduction, distribution, display or performance rights in this work are provided."
+                },
+                "title": {
+                    "en": "Other"
+                }
+            }
+        ],
+        "subjects": [
+            {
+                "subject": "Colloid and Surface Chemistry"
+            },
+            {
+                "subject": "Biochemistry"
+            },
+            {
+                "subject": "General Chemistry"
+            },
+            {
+                "subject": "Catalysis"
+            }
+        ],
+        "dates": [
+            {
+                "description": "Created from EPrint's datestamp field",
+                "date": "2023-08-17",
+                "type": {
+                    "title": {
+                        "de": "Erstellt",
+                        "en": "Created"
+                    },
+                    "id": "created"
+                }
+            },
+            {
+                "description": "Created from EPrint's last_modified field",
+                "date": "2023-08-17",
+                "type": {
+                    "title": {
+                        "de": "Aktualisiert",
+                        "en": "Updated"
+                    },
+                    "id": "updated"
+                }
+            }
+        ],
+        "publisher": "American Chemical Society",
+        "resource_type": {
+            "title": {
+                "de": "Zeitschriftenartikel",
+                "en": "Journal Article"
+            },
+            "id": "publication-article"
+        },
+        "related_identifiers": [
+            {
+                "scheme": "doi",
+                "identifier": "10.1021/jacs.3c03352",
+                "relation_type": {
+                    "title": {
+                        "de": "Beschreibt",
+                        "en": "Describes"
+                    },
+                    "id": "describes"
+                }
+            }
+        ]
+    },
+    "is_published": true,
+    "status": "published",
+    "revision_id": 5,
+    "pids": {
+        "oai": {
+            "provider": "oai",
+            "identifier": "oai:authors.library.caltech.edu:bpy31-50r06"
+        }
+    },
+    "custom_fields": {
+        "journal:journal": {
+            "issn": "0002-7863",
+            "pages": "14784-14792",
+            "title": "Journal of the American Chemical Society",
+            "volume": "145",
+            "issue": "27"
+        },
+        "caltech:groups": [
+            {
+                "title": {
+                    "en": "Resnick Sustainability Institute"
+                },
+                "id": "Resnick-Sustainability-Institute"
+            }
+        ]
+    },
+    "links": {
+        "self": "https://authors.library.caltech.edu/api/records/bpy31-50r06",
+        "self_html": "https://authors.library.caltech.edu/records/bpy31-50r06",
+        "self_iiif_manifest": "https://authors.library.caltech.edu/api/iiif/record:bpy31-50r06/manifest",
+        "self_iiif_sequence": "https://authors.library.caltech.edu/api/iiif/record:bpy31-50r06/sequence/default",
+        "files": "https://authors.library.caltech.edu/api/records/bpy31-50r06/files",
+        "archive": "https://authors.library.caltech.edu/api/records/bpy31-50r06/files-archive",
+        "latest": "https://authors.library.caltech.edu/api/records/bpy31-50r06/versions/latest",
+        "latest_html": "https://authors.library.caltech.edu/records/bpy31-50r06/latest",
+        "draft": "https://authors.library.caltech.edu/api/records/bpy31-50r06/draft",
+        "versions": "https://authors.library.caltech.edu/api/records/bpy31-50r06/versions",
+        "access_links": "https://authors.library.caltech.edu/api/records/bpy31-50r06/access/links",
+        "reserve_doi": "https://authors.library.caltech.edu/api/records/bpy31-50r06/draft/pids/doi",
+        "communities": "https://authors.library.caltech.edu/api/records/bpy31-50r06/communities",
+        "communities-suggestions": "https://authors.library.caltech.edu/api/records/bpy31-50r06/communities-suggestions",
+        "requests": "https://authors.library.caltech.edu/api/records/bpy31-50r06/requests"
+    },
+    "files": {
+        "total_bytes": 0,
+        "count": 0,
+        "entries": {},
+        "order": [],
+        "enabled": false
+    },
+    "stats": {
+        "all_versions": {
+            "downloads": 0,
+            "data_volume": 0.0,
+            "unique_downloads": 0,
+            "unique_views": 36,
+            "views": 36
+        },
+        "this_version": {
+            "downloads": 0,
+            "data_volume": 0.0,
+            "unique_downloads": 0,
+            "unique_views": 36,
+            "views": 36
+        }
+    },
+    "versions": {
+        "is_latest": true,
+        "index": 1
+    },
+    "updated": "2023-10-20T20:34:30.576365+00:00",
+    "created": "2023-08-22T21:23:06.908129+00:00",
+    "parent": {
+        "id": "p7jz1-1sp17",
+        "communities": {
+            "default": "aedd135f-227e-4fdf-9476-5b3fd011bac6",
+            "ids": [
+                "aedd135f-227e-4fdf-9476-5b3fd011bac6"
+            ]
+        }
+    }
+}

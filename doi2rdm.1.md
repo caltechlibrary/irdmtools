@@ -1,6 +1,6 @@
-%doi2rdm(1) irdmtools user manual | version 0.0.68 9eb40b17
+%doi2rdm(1) irdmtools user manual | version 0.0.70 2d224184
 % R. S. Doiel and Tom Morrell
-% 2024-01-16
+% 2024-02-22
 
 # NAME
 
@@ -8,7 +8,7 @@ doi2rdm
 
 # SYNOPSIS
 
-doi2rdm [OPTIONS] DOI
+doi2rdm [OPTIONS] [OPTIONS_YAML] DOI
 
 # DESCRIPTION
 
@@ -17,6 +17,15 @@ that takes a DOI, queries the CrossRef API then returns a JSON document
 suitable for import into Invenio RDM. The DOI can be in either their
 canonical form or URL form (e.g. "10.1021/acsami.7b15651" or
 "https://doi.org/10.1021/acsami.7b15651").
+
+# OPTIONS_YAML
+
+doi2rdm can use an YAML options file to set the behavior of the
+crosswalk from CrossRef to RDM. This replaces many of the options
+previously required in prior implementations of this tool. See all the
+default options setting use the `-show-yaml` command line
+options. You can save this to disk, modify it, then use them for
+migrating content from CrossRef to RDM.
 
 # OPTIONS
 
@@ -32,36 +41,29 @@ canonical form or URL form (e.g. "10.1021/acsami.7b15651" or
 -diff JSON_FILENAME
 : compare the JSON_FILENAME contents with record generated from CrossRef works record
 
--dot-initials
-: Add period to initials in given name
-
--download
-: attempt to download the digital object if object URL provided
-
--mailto
-: (string) set the mailto value for CrossRef API access (default "helpdesk@library.caltech.edu")
-
--resource-map
-: Use this two column CSV file (no header row) to map resource types in CrossRef to RDM
-
--contributor-map
-: Use this two column CSV file (no header row) to map contributor types from CrossRef (e.g.
-"author", "translator", "editor", "chair") to RDM roles.
+-show-yaml
+: This will display the default YAML configuration file. You can save this and customize to suit your needs.
 
 # EXAMPLES
 
 Example generating a JSON document for a single DOI. The resulting
-text file is called "article.json".
+text file is called "article.json". In this example "options.yaml"
+is the configuration file for setup for your RDM instance.
 
 ~~~
-	doi2rdm "10.1021/acsami.7b15651" >article.json
+	doi2rdm options.yaml "10.1021/acsami.7b15651" >article.json
 ~~~
 
 Check to see the difference from the saved "article.json" and
 the current metadata retrieved from CrossRef.
 
 ~~~
-	doi2rdm -diff article.json "10.1021/acsami.7b15651
+	doi2rdm -diff article.json doi2rdm.yaml "10.1021/acsami.7b15651
 ~~~
 
+Save the default YAML options to a file. 
+
+~~~
+	doi2rdm -show-yaml >options.yaml
+~~~
 
