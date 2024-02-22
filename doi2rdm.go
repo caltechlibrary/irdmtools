@@ -80,72 +80,72 @@ mailto: helpdesk@library.caltech.edu
 dot_initials: true
 # Map the CrossRef type to RDM type
 contributor_types:
-  author:           author
-  editor:           editor
-  reviewer:         reviewer
+  author: author
+  editor: editor
+  reviewer: reviewer
   review-assistent: other
-  stats-reviewer:   other
-  reader:           other
-  translator:       translator
+  stats-reviewer: other
+  reader: other
+  translator: translator
 # Map the CrossRef resource type to the RDM type
 resource_types:
-  article:           publication-article
-  journal-article:   publication-article
-  book:              publication-book
-  book_section:      publication-section
-  book-chapter:      publication-section
-  conference_item:   conference-paper
+  article: publication-article
+  journal-article: publication-article
+  book: publication-book
+  book_section: publication-section
+  book-chapter: publication-section
+  conference_item: conference-paper
   proceedings-article: conference-paper
-  dataset:           dataset
-  experiment:        publication-deliverable
-  journal_issue:     publication-issue
-  lab_notes:         labnotebook
-  monograph:         publication-report
-  oral_history:      publication-oralhistory
-  patent:            publication-patent
-  software:          software
+  dataset: dataset
+  experiment: publication-deliverable
+  journal_issue: publication-issue
+  lab_notes: labnotebook
+  monograph: publication-report
+  oral_history: publication-oralhistory
+  patent: publication-patent
+  software: software
   teaching_resource: teachingresource
-  thesis:            publication-thesis
-  video:             video
-  website:           other
-  other:             other
-  image:             other
-  report:            publication-workingpaper
-  report-component:  publication-workingpaper
-  posted-content:    publication-preprint
+  thesis: publication-thesis
+  video: video
+  website: other
+  other: other
+  image: other
+  report: publication-workingpaper
+  report-component: publication-workingpaper
+  posted-content: publication-preprint
 # Mapping DOI prefixes to Publisher names (used to normalize publisher names)
 doi_prefix_publishers:
-  10.1103:  American Physical Society
-  10.1063:  American Institute of Physics
-  10.1039:  Royal Society of Chemistry
-  10.1242:  Company of Biologists
-  10.1073:  PNAS
-  10.1109:  IEEE
-  10.2514:  AIAA
-  10.1029:  AGU (pre-Wiley hosting)
-  10.1093:  MNRAS
-  10.1046:  Geophysical Journal International
-  10.1175:  American Meteorological Society
-  10.1083:  Rockefeller University Press
-  10.1084:  Rockefeller University Press
-  10.1085:  Rockefeller University Press
+  10.1103: American Physical Society
+  10.1063: American Institute of Physics
+  10.1039: Royal Society of Chemistry
+  10.1242: Company of Biologists
+  10.1073: PNAS
+  10.1109: IEEE
+  10.2514: AIAA
+  10.1029: AGU (pre-Wiley hosting)
+  10.1093: MNRAS
+  10.1046: Geophysical Journal International
+  10.1175: American Meteorological Society
+  10.1083: Rockefeller University Press
+  10.1084: Rockefeller University Press
+  10.1085: Rockefeller University Press
   10.26508: Rockefeller University Press
-  10.1371:  PLOS
-  10.5194:  European Geosciences Union
-  10.1051:  EDP Sciences
-  10.2140:  Mathematical Sciences Publishers
-  10.1074:  ASBMB
-  10.1091:  ASCB
-  10.1523:  Society for Neuroscience
-  10.1101:  Cold Spring Harbor
-  10.1128:  American Society for Microbiology
-  10.1115:  ASME
-  10.1061:  ASCE
-  10.1038:  Nature
-  10.1126:  Science
-  10.1021:  American Chemical Society
-  10.1002:  Wiley
-  10.1016:  Elsevier
+  10.1371: PLOS
+  10.5194: European Geosciences Union
+  10.1051: EDP Sciences
+  10.2140: Mathematical Sciences Publishers
+  10.1074: ASBMB
+  10.1091: ASCB
+  10.1523: Society for Neuroscience
+  10.1101: Cold Spring Harbor
+  10.1128: American Society for Microbiology
+  10.1115: ASME
+  10.1061: ASCE
+  10.1038: Nature
+  10.1126: Science
+  10.1021: American Chemical Society
+  10.1002: Wiley
+  10.1016: Elsevier
 # Mapping ISSN prefixes to Publisher names (used to normalize publisher names)
 issn_publishers:
   0141-8130: Elsevier

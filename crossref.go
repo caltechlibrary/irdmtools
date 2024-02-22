@@ -456,7 +456,7 @@ func getApproved(work *crossrefapi.Works) *simplified.DateType {
 func normalizePublisherName(val string, work *crossrefapi.Works, options *Doi2RdmOptions) string {
 	doi := getDOI(work)
 	if doi != "" {
-		doiPrefix, _ := DoiPrefix(val)
+		doiPrefix, _ := DoiPrefix(doi)
 		if value, ok := options.DoiPrefixPublishers[doiPrefix]; ok {
 			return value
 		}
