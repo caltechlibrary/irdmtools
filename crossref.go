@@ -12,9 +12,9 @@ import (
 	"github.com/caltechlibrary/simplified"
 )
 
-func QueryCrossRefWork(cfg *Config, doi string, mailTo string, dotInitials bool, downloadDocument bool) (*crossrefapi.Works, error) {
+func QueryCrossRefWork(cfg *Config, doi string, options *Doi2RdmOptions) (*crossrefapi.Works, error) {
 	appName := path.Base(os.Args[0])
-	client, err := crossrefapi.NewCrossRefClient(appName, mailTo)
+	client, err := crossrefapi.NewCrossRefClient(appName, options.MailTo)
 	if err != nil {
 		return nil, err
 	}
@@ -27,23 +27,6 @@ func QueryCrossRefWork(cfg *Config, doi string, mailTo string, dotInitials bool,
 		fmt.Fprintf(os.Stderr, "works JSON:\n\n%s\n\n", src)
 	}
 	return works, nil
-}
-
-// normalizeCrossRefType converts content type from CrossRef
-// to Authors (e.g. "journal-article" to "publication-article")
-func normalizeCrossRefType(s string) string {
-	//FIXME: Ideally this should take a resource type map.
-	switch strings.ToLower(s) {
-	//	case "proceedings-article":
-	//		//FIXME: this mapping may not be correct, was book_section in EPrints CaltechAUTHORS
-	//		return "publication-section"
-	case "journal-article":
-		return "publication-article"
-	case "book-chapter":
-		return "publication-section"
-	default:
-		return s
-	}
 }
 
 // getResourceType retrives the resource type from works.message.type
@@ -468,17 +451,37 @@ func getApproved(work *crossrefapi.Works) *simplified.DateType {
 	return nil
 }
 
+// normalizePublisherName will check the publisher DOI and ISSN to see if we have
+// a preferred name in our options. If so it will return that.
+func normalizePublisherName(val string, work *crossrefapi.Works, options *Doi2RdmOptions) string {
+	doi := getDOI(work)
+	if doi != "" {
+		doiPrefix, _ := DoiPrefix(val)
+		if value, ok := options.DoiPrefixPublishers[doiPrefix]; ok {
+			return value
+		}
+	}
+	for _, issn := range getISSNs(work) {
+		if issn != "" {
+			if value, ok := options.ISSNPublishers[issn]; ok {
+				return value
+			}
+		}
+	}
+	return val
+}
+
 // CrosswalkCrossRefWork takes a Works object from the CrossRef API
 // and maps the fields into an simplified Record struct return a
 // new struct or error.
-func CrosswalkCrossRefWork(cfg *Config, work *crossrefapi.Works, resourceTypeMap map[string]string, contributorTypeMap map[string]string) (*simplified.Record, error) {
+func CrosswalkCrossRefWork(cfg *Config, work *crossrefapi.Works, options *Doi2RdmOptions) (*simplified.Record, error) {
 	if work == nil {
 		return nil, fmt.Errorf("crossref api works not populated")
 	}
 	rec := new(simplified.Record)
 	// .message.type -> .record.metadata.resource_type (via controlled vocabulary)
 	if value := getResourceType(work); value != "" {
-		if err := SetResourceType(rec, value, resourceTypeMap); err != nil {
+		if err := SetResourceType(rec, value, options.ResourceTypes); err != nil {
 			return nil, err
 		}
 	}
@@ -517,6 +520,8 @@ func CrosswalkCrossRefWork(cfg *Config, work *crossrefapi.Works, resourceTypeMap
 		}
 	}
 	if value := getPublisher(work); value != "" {
+		// FIXME: Setting the publisher name is going to be normalized via DOI prefix, maybe ISSN?
+		value := normalizePublisherName(value, work, options)
 		if err := SetPublisher(rec, value); err != nil {
 			return nil, err
 		}

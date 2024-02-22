@@ -54,7 +54,7 @@ var (
 
 # SYNOPSIS
 
-{app_name} [OPTIONS] DOI
+{app_name} [OPTIONS] [OPTIONS_YAML] DOI
 
 # DESCRIPTION
 
@@ -63,6 +63,15 @@ that takes a DOI, queries the CrossRef API then returns a JSON document
 suitable for import into Invenio RDM. The DOI can be in either their
 canonical form or URL form (e.g. "10.1021/acsami.7b15651" or
 "https://doi.org/10.1021/acsami.7b15651").
+
+# OPTIONS_YAML
+
+{app_name} can use an YAML options file to set the behavior of the
+crosswalk from CrossRef to RDM. This replaces many of the options
+previously required in prior implementations of this tool. See all the
+default options setting use the `+"`"+`-show-yaml`+"`"+` command line
+options. You can save this to disk, modify it, then use them for
+migrating content from CrossRef to RDM.
 
 # OPTIONS
 
@@ -78,38 +87,31 @@ canonical form or URL form (e.g. "10.1021/acsami.7b15651" or
 -diff JSON_FILENAME
 : compare the JSON_FILENAME contents with record generated from CrossRef works record
 
--dot-initials
-: Add period to initials in given name
-
--download
-: attempt to download the digital object if object URL provided
-
--mailto
-: (string) set the mailto value for CrossRef API access (default "helpdesk@library.caltech.edu")
-
--resource-map
-: Use this two column CSV file (no header row) to map resource types in CrossRef to RDM
-
--contributor-map
-: Use this two column CSV file (no header row) to map contributor types from CrossRef (e.g.
-"author", "translator", "editor", "chair") to RDM roles.
+-show-yaml
+: This will display the default YAML configuration file. You can save this and customize to suit your needs.
 
 # EXAMPLES
 
 Example generating a JSON document for a single DOI. The resulting
-text file is called "article.json".
+text file is called "article.json". In this example "options.yaml"
+is the configuration file for setup for your RDM instance.
 
 ~~~
-	{app_name} "10.1021/acsami.7b15651" >article.json
+	{app_name} options.yaml "10.1021/acsami.7b15651" >article.json
 ~~~
 
 Check to see the difference from the saved "article.json" and
 the current metadata retrieved from CrossRef.
 
 ~~~
-	{app_name} -diff article.json "10.1021/acsami.7b15651
+	{app_name} -diff article.json doi2rdm.yaml "10.1021/acsami.7b15651
 ~~~
 
+Save the default YAML options to a file. 
+
+~~~
+	{app_name} -show-yaml >options.yaml
+~~~
 `
 )
 
@@ -123,19 +125,13 @@ func main() {
 	fmtHelp := irdmtools.FmtHelp
 
 	showHelp, showVersion, showLicense := false, false, false
-	debug, downloadDocument := false, false
-	dotInitials := false
-	mailTo, diffFName := "", ""
-	resourceTypeFName, contributorTypeFName := "", ""
+	debug, showYAML := false, false
+	diffFName := ""
 	flag.BoolVar(&showHelp, "help", false, "display help")
 	flag.BoolVar(&showVersion, "version", false, "display version")
 	flag.BoolVar(&showLicense, "license", false, "display license")
+	flag.BoolVar(&showYAML, "show-yaml", false, "display the YAML configuration")
 	flag.StringVar(&diffFName, "diff", diffFName, "compare the JSON file with the current record generated from CrossRef")
-	flag.BoolVar(&dotInitials, "dot-initials", dotInitials, "Add period to initials in given name")
-	flag.BoolVar(&downloadDocument, "download", downloadDocument, "attempt to download the digital object if object URL provided")
-	flag.StringVar(&mailTo, "mailto", mailTo, "set the mail to value for CrossRef API access")
-	flag.StringVar(&resourceTypeFName, "resource-map", resourceTypeFName, "Use this CSV to map resource types from CrossREF to RDM")
-	flag.StringVar(&contributorTypeFName, "contributor-map", contributorTypeFName, "Use this CSV to map contributor types from CrossREF to RDM")
 	flag.BoolVar(&debug, "debug", debug, "display additional info to stderr")
 	flag.Parse()
 	args := flag.Args()
@@ -153,39 +149,30 @@ func main() {
 		fmt.Fprintf(os.Stdout, "%s\n", irdmtools.LicenseText)
 		os.Exit(0)
 	}
+	if showYAML {
+		fmt.Fprintf(os.Stdout, "%s\n", irdmtools.DefaultDoi2RdmOptionsYAML)
+		os.Exit(0)
+	}
 	// Create a appity object
 	app := new(irdmtools.Doi2Rdm)
 	app.Cfg = new(irdmtools.Config)
-	options := map[string]string{}
-	if resourceTypeFName != "" {
-		options["resource-map"] = resourceTypeFName
-	}
-	if contributorTypeFName != "" {
-		options["contributor-map"] = contributorTypeFName
-	}
-	if diffFName != "" {
-		options["diff"] = diffFName
-	}
-	if dotInitials {
-		options["dot_initials"] = "true"
-	}
-	if downloadDocument {
-		options["download_document"] = "true"
-	}
-	if mailTo != "" {
-		options["mailto"] = mailTo
-	}
 	if debug {
 		app.Cfg.Debug = true
 	} else {
 		app.Cfg.Debug = false
 	}
 
-	if len(args) != 1 {
+	if len(args) < 1 {
 		fmt.Fprintln(os.Stderr, "expected a single DOI on the command line")
 		os.Exit(1)
 	}
-	if err := app.Run(os.Stdin, os.Stdout, os.Stderr, options, args[0]); err != nil {
+	optionsFName, doi := "", ""
+	if len(args) > 1 {
+		optionsFName, doi = args[0], args[1]
+	} else {
+		doi = args[0]
+	}
+	if err := app.Run(os.Stdin, os.Stdout, os.Stderr, optionsFName, doi, diffFName); err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
 		os.Exit(1)
 	}

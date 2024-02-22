@@ -36,6 +36,8 @@ Bugs
 Next
 ----
 
+- [ ] Integrate a YAML options file into doi2rdm so that we can easily map our customized mapings via configuration instead of hard coding them.
+- [ ] irdmtools Go based commands should not use the RDM JSON API, they should all be used to directly access the Postgres database
 - [x] rdmutil get_all_ids needs a get_all_stale_ids counterpart, see issue #68 (implemented get_record_versions"`
 - [x] add put_record to rdmutil, actually done as many steps, new_record, new_draft, update_draft, ...
 - [x] Implement a CrossRef to Invenio RDM record
