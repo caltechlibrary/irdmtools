@@ -111,3 +111,7 @@ testdata
 problem_files/
 *.env
 htdocs
+file_info_query.sql
+t.json
+t.keys
+t.txt
