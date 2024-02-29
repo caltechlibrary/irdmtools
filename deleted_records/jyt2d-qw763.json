@@ -1,0 +1,262 @@
+{
+    "versions": {
+        "is_latest": true,
+        "index": 1
+    },
+    "is_published": true,
+    "is_draft": false,
+    "stats": {
+        "all_versions": {
+            "unique_downloads": 0,
+            "data_volume": 0.0,
+            "downloads": 0,
+            "views": 22,
+            "unique_views": 22
+        },
+        "this_version": {
+            "unique_downloads": 0,
+            "data_volume": 0.0,
+            "downloads": 0,
+            "views": 22,
+            "unique_views": 22
+        }
+    },
+    "id": "jyt2d-qw763",
+    "revision_id": 7,
+    "pids": {
+        "oai": {
+            "provider": "oai",
+            "identifier": "oai:authors.library.caltech.edu:jyt2d-qw763"
+        }
+    },
+    "updated": "2023-10-23T20:12:11.398741+00:00",
+    "parent": {
+        "id": "y4p3g-9pq32",
+        "communities": {
+            "default": "aedd135f-227e-4fdf-9476-5b3fd011bac6",
+            "ids": [
+                "aedd135f-227e-4fdf-9476-5b3fd011bac6"
+            ]
+        }
+    },
+    "created": "2023-08-22T17:39:39.101557+00:00",
+    "access": {
+        "status": "metadata-only",
+        "embargo": {
+            "active": false,
+            "reason": null
+        },
+        "record": "public",
+        "files": "public"
+    },
+    "metadata": {
+        "identifiers": [
+            {
+                "scheme": "pmcid",
+                "identifier": "PMC9457682"
+            },
+            {
+                "scheme": "eprintid",
+                "identifier": "117082"
+            },
+            {
+                "scheme": "doi",
+                "identifier": "10.7554/elife.65661"
+            },
+            {
+                "scheme": "resolverid",
+                "identifier": "CaltechAUTHORS:20220919-171422600"
+            }
+        ],
+        "dates": [
+            {
+                "date": "2022-09-23",
+                "description": "Created from EPrint's datestamp field",
+                "type": {
+                    "id": "created",
+                    "title": {
+                        "de": "Erstellt",
+                        "en": "Created"
+                    }
+                }
+            },
+            {
+                "date": "2022-09-23",
+                "description": "Created from EPrint's last_modified field",
+                "type": {
+                    "id": "updated",
+                    "title": {
+                        "de": "Aktualisiert",
+                        "en": "Updated"
+                    }
+                }
+            }
+        ],
+        "additional_descriptions": [
+            {
+                "description": "These studies were made possibly by grants from the Gordon and Betty Moore Foundation, the Lipper Foundation, the Economic Research Service of the US Department of Agriculture on Behavioral Health Economics Research on Dietary Choice and Obesity, an Agence Nationale de la Recherche Sorbonne Universite\u00b4s Emergence Grant, and a National Institute of Mental Health Silvio O Conte award (NIMH Conte Center 2P50 MH094258). The scientific results and conclusions reflect the authors' opinions and not the views of the granting entities. We gratefully acknowledge Antonio Rangel and Todd Hare for comments on earlier versions of this manuscript.",
+                "type": {
+                    "id": "additional",
+                    "title": {
+                        "de": "Sonstige",
+                        "en": "Additional Information"
+                    }
+                }
+            }
+        ],
+        "subjects": [
+            {
+                "subject": "General Immunology and Microbiology"
+            },
+            {
+                "subject": "General Biochemistry, Genetics and Molecular Biology"
+            },
+            {
+                "subject": "General Medicine"
+            },
+            {
+                "subject": "General Neuroscience"
+            }
+        ],
+        "version": "public",
+        "resource_type": {
+            "id": "publication-article",
+            "title": {
+                "de": "Zeitschriftenartikel",
+                "en": "Journal Article"
+            }
+        },
+        "title": "Evidence accumulation, not 'self-control', explains dorsolateral prefrontal activation during normative choice",
+        "publication_date": "2022-09-08",
+        "description": "What role do regions like the dorsolateral prefrontal cortex (dlPFC) play in normative behavior (e.g., generosity, healthy eating)? Some models suggest that dlPFC activation during normative choice reflects controlled inhibition or modulation of default hedonistic preferences. Here, we develop an alternative account, showing that evidence accumulation models predict trial-by-trial variation in dlPFC response across three fMRI paradigms and two self-control contexts (altruistic sacrifice and healthy eating). Using these models to simulate a variety of self-control dilemmas generated a novel prediction: although dlPFC activity might typically increase for norm-consistent choices, deliberate self-regulation focused on normative goals should decrease or even reverse this pattern (i.e., greater dlPFC response for hedonistic, self-interested choices). We confirmed these predictions in both altruistic and dietary choice contexts. Our results suggest that dlPFC response during normative choice may depend more on value-based evidence accumulation than inhibition of our baser instincts.",
+        "rights": [
+            {
+                "title": {
+                    "en": "Other"
+                },
+                "description": {
+                    "en": "No commercial reproduction, distribution, display or performance rights in this work are provided."
+                }
+            }
+        ],
+        "publisher": "eLife Sciences Publications",
+        "related_identifiers": [
+            {
+                "scheme": "doi",
+                "identifier": "10.7554/eLife.65661",
+                "relation_type": {
+                    "id": "describes",
+                    "title": {
+                        "de": "Beschreibt",
+                        "en": "Describes"
+                    }
+                }
+            }
+        ],
+        "funding": [
+            {
+                "funder": {
+                    "name": "Gordon and Betty Moore Foundation"
+                }
+            },
+            {
+                "funder": {
+                    "name": "Lipper Foundation"
+                }
+            },
+            {
+                "funder": {
+                    "name": "Department of Agriculture"
+                }
+            },
+            {
+                "funder": {
+                    "name": "Agence Nationale pour la Recherche (ANR)"
+                }
+            },
+            {
+                "award": {
+                    "number": "2P50 MH094258",
+                    "title": {
+                        "en": " "
+                    }
+                },
+                "funder": {
+                    "name": "NIH"
+                }
+            }
+        ],
+        "creators": [
+            {
+                "person_or_org": {
+                    "identifiers": [
+                        {
+                            "scheme": "clpid",
+                            "identifier": "Hutcherson-C-A"
+                        },
+                        {
+                            "scheme": "orcid",
+                            "identifier": "0000-0002-4441-4809"
+                        }
+                    ],
+                    "given_name": "Cendri A.",
+                    "family_name": "Hutcherson",
+                    "name": "Hutcherson, Cendri A.",
+                    "type": "personal"
+                }
+            },
+            {
+                "person_or_org": {
+                    "identifiers": [
+                        {
+                            "scheme": "clpid",
+                            "identifier": "Tusche-Anita"
+                        },
+                        {
+                            "scheme": "orcid",
+                            "identifier": "0000-0003-4180-8447"
+                        }
+                    ],
+                    "given_name": "Anita",
+                    "family_name": "Tusche",
+                    "name": "Tusche, Anita",
+                    "type": "personal"
+                }
+            }
+        ]
+    },
+    "status": "published",
+    "custom_fields": {
+        "journal:journal": {
+            "volume": "11",
+            "issn": "2050-084X",
+            "title": "eLife",
+            "issue": "",
+            "pages": "Art. No. 65661"
+        }
+    },
+    "files": {
+        "total_bytes": 0,
+        "order": [],
+        "enabled": false,
+        "entries": {},
+        "count": 0
+    },
+    "links": {
+        "self": "https://authors.library.caltech.edu/api/records/jyt2d-qw763",
+        "self_html": "https://authors.library.caltech.edu/records/jyt2d-qw763",
+        "self_iiif_manifest": "https://authors.library.caltech.edu/api/iiif/record:jyt2d-qw763/manifest",
+        "self_iiif_sequence": "https://authors.library.caltech.edu/api/iiif/record:jyt2d-qw763/sequence/default",
+        "files": "https://authors.library.caltech.edu/api/records/jyt2d-qw763/files",
+        "archive": "https://authors.library.caltech.edu/api/records/jyt2d-qw763/files-archive",
+        "latest": "https://authors.library.caltech.edu/api/records/jyt2d-qw763/versions/latest",
+        "latest_html": "https://authors.library.caltech.edu/records/jyt2d-qw763/latest",
+        "draft": "https://authors.library.caltech.edu/api/records/jyt2d-qw763/draft",
+        "versions": "https://authors.library.caltech.edu/api/records/jyt2d-qw763/versions",
+        "access_links": "https://authors.library.caltech.edu/api/records/jyt2d-qw763/access/links",
+        "reserve_doi": "https://authors.library.caltech.edu/api/records/jyt2d-qw763/draft/pids/doi",
+        "communities": "https://authors.library.caltech.edu/api/records/jyt2d-qw763/communities",
+        "communities-suggestions": "https://authors.library.caltech.edu/api/records/jyt2d-qw763/communities-suggestions",
+        "requests": "https://authors.library.caltech.edu/api/records/jyt2d-qw763/requests"
+    }
+}
