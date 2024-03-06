@@ -54,14 +54,14 @@ var (
 
 # SYNOPSIS
 
-{app_name} [OPTIONS] [OPTIONS_YAML] DOI
+{app_name} [OPTIONS] [OPTIONS_YAML] crossref|datacite DOI
 
 # DESCRIPTION
 
 {app_name} is a Caltech Library oriented command line application
-that takes a DOI, queries the CrossRef API then returns a JSON document
-suitable for import into Invenio RDM. The DOI can be in either their
-canonical form or URL form (e.g. "10.1021/acsami.7b15651" or
+that takes a DOI, queries the CrossRef or DataCite API then returns a
+JSON document suitable for import into Invenio RDM. The DOI can be
+in either their canonical form or URL form (e.g. "10.1021/acsami.7b15651" or
 "https://doi.org/10.1021/acsami.7b15651").
 
 # OPTIONS_YAML
@@ -85,7 +85,7 @@ migrating content from CrossRef to RDM.
 : display version
 
 -diff JSON_FILENAME
-: compare the JSON_FILENAME contents with record generated from CrossRef works record
+: compare the JSON_FILENAME contents with record generated from CrossRef or DataCite works record
 
 -show-yaml
 : This will display the default YAML configuration file. You can save this and customize to suit your needs.
@@ -97,14 +97,14 @@ text file is called "article.json". In this example "options.yaml"
 is the configuration file for setup for your RDM instance.
 
 ~~~
-	{app_name} options.yaml "10.1021/acsami.7b15651" >article.json
+	{app_name} options.yaml crossref "10.1021/acsami.7b15651" >article.json
 ~~~
 
 Check to see the difference from the saved "article.json" and
 the current metadata retrieved from CrossRef.
 
 ~~~
-	{app_name} -diff article.json doi2rdm.yaml "10.1021/acsami.7b15651
+	{app_name} -diff article.json crossref doi2rdm.yaml "10.1021/acsami.7b15651
 ~~~
 
 Save the default YAML options to a file. 
@@ -136,21 +136,25 @@ func main() {
 	flag.Parse()
 	args := flag.Args()
 
+	in := os.Stdin
+	out := os.Stdout
+	eout := os.Stderr
+
 	if showHelp {
-		fmt.Fprintf(os.Stdout, "%s\n", fmtHelp(helpText, appName, version, releaseDate, releaseHash))
+		fmt.Fprintf(out, "%s\n", fmtHelp(helpText, appName, version, releaseDate, releaseHash))
 		os.Exit(0)
 	}
 	if showVersion {
-		fmt.Fprintf(os.Stdout, "%s %s %s\n", appName, version, releaseHash)
+		fmt.Fprintf(out, "%s %s %s\n", appName, version, releaseHash)
 		os.Exit(0)
 	}
 	if showLicense {
-		fmt.Fprintf(os.Stdout, "%s %s\n", appName, version)
-		fmt.Fprintf(os.Stdout, "%s\n", irdmtools.LicenseText)
+		fmt.Fprintf(out, "%s %s\n", appName, version)
+		fmt.Fprintf(out, "%s\n", irdmtools.LicenseText)
 		os.Exit(0)
 	}
 	if showYAML {
-		fmt.Fprintf(os.Stdout, "%s\n", irdmtools.DefaultDoi2RdmOptionsYAML)
+		fmt.Fprintf(out, "%s\n", irdmtools.DefaultDoi2RdmOptionsYAML)
 		os.Exit(0)
 	}
 	// Create a appity object
@@ -162,18 +166,30 @@ func main() {
 		app.Cfg.Debug = false
 	}
 
-	if len(args) < 1 {
-		fmt.Fprintln(os.Stderr, "expected a single DOI on the command line")
+	if len(args) < 2 {
+		fmt.Fprintln(eout, "expected a 'crossref' or 'datacite' and single DOI on the command line")
 		os.Exit(1)
 	}
-	optionsFName, doi := "", ""
-	if len(args) > 1 {
-		optionsFName, doi = args[0], args[1]
+	optionsFName, dataSource, doi := "", "", ""
+	if len(args) > 2 {
+		optionsFName, dataSource, doi = args[0], args[1], args[2]
 	} else {
-		doi = args[0]
+		dataSource, doi = args[0], args[1]
 	}
-	if err := app.Run(os.Stdin, os.Stdout, os.Stderr, optionsFName, doi, diffFName); err != nil {
-		fmt.Fprintf(os.Stderr, "%s\n", err)
-		os.Exit(1)
+	switch dataSource {
+		case "crossref":
+			if err := app.RunCrossRefToRdm(in, out, eout, optionsFName, doi, diffFName); err != nil {
+				fmt.Fprintf(eout, "%s\n", err)
+				os.Exit(1)
+			}
+			/*
+		case "datacite":
+			if err := app.RunDataCiteToRdm(in, out, eout, optionsFName, doi, diffFName); err != nil {
+				fmt.Fprintf(eout, "%s\n", err)
+				os.Exit(1)
+			}
+			*/
+		default:
+			fmt.Fprintf(eout, "%q is not supported service to retrive DOI metadata\n", dataSource)
 	}
 }

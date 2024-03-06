@@ -44,6 +44,7 @@ import (
 
 	// Caltech Library packages
 	"github.com/caltechlibrary/crossrefapi"
+	//"github.com/caltechlibrary/dataciteapi"
 	"github.com/caltechlibrary/simplified"
 )
 
@@ -239,8 +240,8 @@ func (app *Doi2Rdm) Configure(configFName string, envPrefix string, debug bool) 
 	return nil
 }
 
-// Run implements the doi2rdm cli behaviors. With the exception of the
-// "setup" action you should call `app.LoadConfig()` before execute
+// RunCrossRefToRdm implements the doi2rdm cli behaviors using the CrossRef service.
+// With the exception of the "setup" action you should call `app.LoadConfig()` before execute
 // Run.
 //
 // ```
@@ -260,7 +261,7 @@ func (app *Doi2Rdm) Configure(configFName string, envPrefix string, debug bool) 
 //	fmt.Printf("%s\n", src)
 //
 // ```
-func (app *Doi2Rdm) Run(in io.Reader, out io.Writer, eout io.Writer, optionFName, doi string, diffFName string) error {
+func (app *Doi2Rdm) RunCrossRefToRdm(in io.Reader, out io.Writer, eout io.Writer, optionFName, doi string, diffFName string) error {
 	var (
 		err error
 		src []byte
@@ -320,3 +321,87 @@ func (app *Doi2Rdm) Run(in io.Reader, out io.Writer, eout io.Writer, optionFName
 	fmt.Fprintf(out, "%s\n", src)
 	return nil
 }
+
+/*
+// RunDataCiteToRdm implements the doi2rdm cli behaviors using the DataCite service.
+// With the exception of the "setup" action you should call `app.LoadConfig()` before execute
+// Run.
+//
+// ```
+//
+//	app := new(irdmtools.Doi2Rdm)
+//  // Load irdmtools settings
+//	if err := app.LoadConfig("irdmtools.json"); err != nil {
+//	   // ... handle error ...
+//	}
+//  // If options are provided then we need to set the filename
+//  optionsFName := "doi2rdm.yaml"
+//	doi := "10.48550/arXiv.2104.02480"
+//	src, err := app.RunDataCiteToRdm(os.Stdin, os.Stdout, os.Stderr, optionFName, doi, "", false)
+//	if err != nil {
+//	    // ... handle error ...
+//	}
+//	fmt.Printf("%s\n", src)
+//
+// ```
+func (app *Doi2Rdm) RunDataCiteToRdm(in io.Reader, out io.Writer, eout io.Writer, optionFName, doi string, diffFName string) error {
+	var (
+		err error
+		src []byte
+	)
+	src = DefaultDoi2RdmOptionsYAML
+	if optionFName != "" {
+		src, err = os.ReadFile(optionFName)
+		if err != nil {
+			return err
+		}
+	}
+	options := new(Doi2RdmOptions)
+	if err := yaml.Unmarshal(src, &options); err != nil {
+		return err
+	}
+	if app.Cfg.Debug {
+		options.Debug = app.Cfg.Debug
+	}
+	if options.MailTo == "" {
+		//mailTo = fmt.Sprintf("%s@%s", os.Getenv("USER"), os.Getenv("HOSTNAME"))
+		options.MailTo = "helpdesk@library.caltech.edu"
+	}
+	var (
+		oRecord *simplified.Record
+		nRecord *simplified.Record
+	)
+	if diffFName != "" {
+		oWork := new(dataciteapi.Works)
+		src, err := os.ReadFile(diffFName)
+		if err != nil {
+			return err
+		}
+		if err := JSONUnmarshal(src, &oWork); err != nil {
+			return err
+		}
+		oRecord, err = CrosswalkDataCiteWork(app.Cfg, oWork, options)
+		if err != nil {
+			return err
+		}
+	}
+	nWork, err := QueryDataCiteWork(app.Cfg, doi, options)
+	if err != nil {
+		return err
+	}
+	nRecord, err = CrosswalkDataCiteWork(app.Cfg, nWork, options)
+	if err != nil {
+		return err
+	}
+	if diffFName != "" {
+		src, err = oRecord.DiffAsJSON(nRecord)
+	} else {
+		src, err = JSONMarshalIndent(nRecord, "", "    ")
+	}
+	if err != nil {
+		return err
+	}
+	fmt.Fprintf(out, "%s\n", src)
+	return nil
+}
+*/

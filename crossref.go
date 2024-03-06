@@ -31,7 +31,7 @@ func QueryCrossRefWork(cfg *Config, doi string, options *Doi2RdmOptions) (*cross
 
 // getResourceType retrives the resource type from works.message.type
 // runs normalize
-func getResourceType(work *crossrefapi.Works) string {
+func getWorksResourceType(work *crossrefapi.Works) string {
 	if work.Message != nil && work.Message.Type != "" {
 		return work.Message.Type
 	}
@@ -41,7 +41,7 @@ func getResourceType(work *crossrefapi.Works) string {
 // getTitles retrieves an ordered list of titles from a CrossRef Works object.
 // The zero index is the primary document title, the remaining are alternative titles.
 // If no titles are found then the slice of string will be empty.
-func getTitles(work *crossrefapi.Works) []string {
+func getWorksTitles(work *crossrefapi.Works) []string {
 	if work.Message != nil && work.Message.Title != nil && len(work.Message.Title) > 0 {
 		return work.Message.Title[:]
 	}
@@ -49,7 +49,7 @@ func getTitles(work *crossrefapi.Works) []string {
 }
 
 // getAbstract retrieves the abstract from the CrossRef Works
-func getAbstract(work *crossrefapi.Works) string {
+func getWorksAbstract(work *crossrefapi.Works) string {
 	if work.Message != nil && work.Message.Abstract != "" {
 		return work.Message.Abstract
 	}
@@ -57,7 +57,7 @@ func getAbstract(work *crossrefapi.Works) string {
 }
 
 // getPublisher
-func getPublisher(work *crossrefapi.Works) string {
+func getWorksPublisher(work *crossrefapi.Works) string {
 	// FIXME: Need to know if publisher holds the publisher and container type holds publication based on work.Message.Type
 	if work.Message != nil && work.Message.Publisher != "" {
 		return work.Message.Publisher
@@ -66,15 +66,15 @@ func getPublisher(work *crossrefapi.Works) string {
 }
 
 // getPublication
-func getPublication(work *crossrefapi.Works) string {
+func getWorksPublication(work *crossrefapi.Works) string {
 	if work.Message != nil && len(work.Message.ContainerTitle) > 0 {
 		return work.Message.ContainerTitle[0]
 	}
 	return ""
 }
 
-// getSeries
-func getSeries(work *crossrefapi.Works) string {
+// getWorksSeries
+func getWorksSeries(work *crossrefapi.Works) string {
 	// FIXME: Need to know if publisher holds the publisher and container type holds publication based on work.Message.Type
 	if work.Message != nil && work.Message.ShortContainerTitle != nil && len(work.Message.ShortContainerTitle) > 0 {
 		return work.Message.ShortContainerTitle[0]
@@ -82,32 +82,32 @@ func getSeries(work *crossrefapi.Works) string {
 	return ""
 }
 
-// getVolume
-func getVolume(work *crossrefapi.Works) string {
+// getWorksVolume
+func getWorksVolume(work *crossrefapi.Works) string {
 	if work.Message != nil && work.Message.Volume != "" {
 		return work.Message.Volume
 	}
 	return ""
 }
 
-// getIssue
-func getIssue(work *crossrefapi.Works) string {
+// getWorksIssue
+func getWorksIssue(work *crossrefapi.Works) string {
 	if work.Message != nil && work.Message.Issue != "" {
 		return work.Message.Issue
 	}
 	return ""
 }
 
-// getPublisherLocation
-func getPublisherLocation(work *crossrefapi.Works) string {
+// getWorksPublisherLocation
+func getWorksPublisherLocation(work *crossrefapi.Works) string {
 	if work.Message != nil && work.Message.PublisherLocation != "" {
 		return work.Message.PublisherLocation
 	}
 	return ""
 }
 
-// getPageRange
-func getPageRange(work *crossrefapi.Works) string {
+// getWorksPageRange
+func getWorksPageRange(work *crossrefapi.Works) string {
 	/*
 		// FIXME: this needs to be article number, per migration committee
 		// PageRange
@@ -122,7 +122,7 @@ func getPageRange(work *crossrefapi.Works) string {
 }
 
 // getArticleNumber
-func getArticleNumber(work *crossrefapi.Works) string {
+func getWorksArticleNumber(work *crossrefapi.Works) string {
 	/* FIXME: Not sure where article numbers map from in the CrossRef API
 	- ComponentNumber
 	- PartNumber
@@ -134,7 +134,7 @@ func getArticleNumber(work *crossrefapi.Works) string {
 }
 
 // getISBNs
-func getISBNs(work *crossrefapi.Works) []string {
+func getWorksISBNs(work *crossrefapi.Works) []string {
 	isbns := []string{}
 	if work.Message != nil && work.Message.ISBN != nil {
 		for _, value := range work.Message.ISBN {
@@ -145,7 +145,7 @@ func getISBNs(work *crossrefapi.Works) []string {
 }
 
 // getISSNs
-func getISSNs(work *crossrefapi.Works) []string { 
+func getWorksISSNs(work *crossrefapi.Works) []string { 
 	issns := []string{}
 	if work.Message != nil && work.Message.ISSN != nil {
 		for _, value := range work.Message.ISSN {
@@ -156,7 +156,7 @@ func getISSNs(work *crossrefapi.Works) []string {
 }
 
 // getFunding
-func getFunding(work *crossrefapi.Works) []*simplified.Funder {
+func getWorksFunding(work *crossrefapi.Works) []*simplified.Funder {
 	funding := []*simplified.Funder{}
 	suffixToROR := map[string]string{}
 	if work.Message != nil && work.Message.Funder != nil && len(work.Message.Funder) > 0 {
@@ -209,7 +209,7 @@ func getFunding(work *crossrefapi.Works) []*simplified.Funder {
 }
 
 // getDOI
-func getDOI(work *crossrefapi.Works) string {
+func getWorksDOI(work *crossrefapi.Works) string {
 	if work.Message != nil && work.Message.DOI != "" {
 		return work.Message.DOI
 	}
@@ -217,7 +217,7 @@ func getDOI(work *crossrefapi.Works) string {
 }
 
 // getLinks
-func getLinks(work *crossrefapi.Works) []*simplified.Identifier {
+func getWorksLinks(work *crossrefapi.Works) []*simplified.Identifier {
 	identifiers := []*simplified.Identifier{}
 	if work.Message != nil && work.Message.Link != nil && len(work.Message.Link) > 0 {
 		for _, link := range work.Message.Link {
@@ -239,19 +239,19 @@ func makeIdentifiers(scheme string, identifierList []string) []*simplified.Ident
 	return identifiers
 }
 
-func mkSimpleRole(role string) *simplified.Role {
+func makeSimpleRole(role string) *simplified.Role {
 	return &simplified.Role{
 		ID: role,
 	}
 }
 
-func mkSimpleTitleDetail(title string) *simplified.TitleDetail {
+func makeSimpleTitleDetail(title string) *simplified.TitleDetail {
 	return &simplified.TitleDetail{
 		Title: title,
 	}
 }
 
-func crosswalkAuthorAffiliationToCreatorAffiliation(crAffiliation *crossrefapi.Organization) *simplified.Affiliation {
+func crosswalkWorksAuthorAffiliationToCreatorAffiliation(crAffiliation *crossrefapi.Organization) *simplified.Affiliation {
 	if crAffiliation.IDs != nil {
 		for _, id := range crAffiliation.IDs {
 			if id.IdType == "ROR" && id.AssertedBy == "publisher" {
@@ -265,7 +265,7 @@ func crosswalkAuthorAffiliationToCreatorAffiliation(crAffiliation *crossrefapi.O
 	return nil
 }
 
-func crossrefPersonToCreator(author *crossrefapi.Person, role string) *simplified.Creator {
+func crosswalkWorksPersonToCreator(author *crossrefapi.Person, role string) *simplified.Creator {
 	po := new(simplified.PersonOrOrg)
 	po.FamilyName = author.Family
 	po.GivenName = author.Given
@@ -284,13 +284,13 @@ func crossrefPersonToCreator(author *crossrefapi.Person, role string) *simplifie
 	creator := new(simplified.Creator)
 	creator.PersonOrOrg = po
 	if role != "" {
-		creator.Role = mkSimpleRole(role)
+		creator.Role = makeSimpleRole(role)
 	}
 
 	if author.Affiliation != nil && len(author.Affiliation) > 0 {
 		for _, crAffiliation := range author.Affiliation {
 
-			affiliation := crosswalkAuthorAffiliationToCreatorAffiliation(crAffiliation)
+			affiliation := crosswalkWorksAuthorAffiliationToCreatorAffiliation(crAffiliation)
 			if affiliation != nil && creator.HasAffiliation(affiliation) == false {
 				creator.Affiliations = append(creator.Affiliations, affiliation)
 			}
@@ -299,7 +299,7 @@ func crossrefPersonToCreator(author *crossrefapi.Person, role string) *simplifie
 	return creator
 }
 
-func crossrefLicenseToRight(license *crossrefapi.License) *simplified.Right {
+func crosswalkWorksLicenseToRight(license *crossrefapi.License) *simplified.Right {
 	if license.URL == "" {
 		return nil
 	}
@@ -323,7 +323,7 @@ func crossrefLicenseToRight(license *crossrefapi.License) *simplified.Right {
 	return right
 }
 
-func crosswalkDateObjectToDateType(do *crossrefapi.DateObject, description string) *simplified.DateType {
+func crosswalkWorksDateObjectToDateType(do *crossrefapi.DateObject, description string) *simplified.DateType {
 	dt := new(simplified.DateType)
 	ymd := []string{}
 	for _, aVal := range do.DateParts {
@@ -336,17 +336,17 @@ func crosswalkDateObjectToDateType(do *crossrefapi.DateObject, description strin
 	return dt
 }
 
-func getCreators(work *crossrefapi.Works) []*simplified.Creator {
+func getWorksCreators(work *crossrefapi.Works) []*simplified.Creator {
 	creators := []*simplified.Creator{}
 	if work.Message != nil && work.Message.Author != nil {
 		for _, person := range work.Message.Author {
-			creators = append(creators, crossrefPersonToCreator(person, ""))
+			creators = append(creators, crosswalkWorksPersonToCreator(person, ""))
 		}
 	}
 	return creators
 }
 
-func getContributors(work *crossrefapi.Works) []*simplified.Creator {
+func getWorksContributors(work *crossrefapi.Works) []*simplified.Creator {
 	creators := []*simplified.Creator{}
 	// NOTE: The works message object containers the related contributors as
 	// separate entries.
@@ -356,27 +356,27 @@ func getContributors(work *crossrefapi.Works) []*simplified.Creator {
 	// There is a reference to .contributor and .reviewer but not sure if they really exists in the scheme.
 	if work.Message != nil && work.Message.Translator != nil {
 		for _, person := range work.Message.Translator {
-			creators = append(creators, crossrefPersonToCreator(person, "translator"))
+			creators = append(creators, crosswalkWorksPersonToCreator(person, "translator"))
 		}
 	}
 	if work.Message != nil && work.Message.Editor != nil {
 		for _, person := range work.Message.Editor {
-			creators = append(creators, crossrefPersonToCreator(person, "editor"))
+			creators = append(creators, crosswalkWorksPersonToCreator(person, "editor"))
 		}
 	}
 	if work.Message != nil && work.Message.Chair != nil {
 		for _, person := range work.Message.Chair {
-			creators = append(creators, crossrefPersonToCreator(person, "chair"))
+			creators = append(creators, crosswalkWorksPersonToCreator(person, "chair"))
 		}
 	}
 	return creators
 }
 
-func getLicenses(work *crossrefapi.Works) []*simplified.Right {
+func getWorksLicenses(work *crossrefapi.Works) []*simplified.Right {
 	if work.Message != nil && work.Message.License != nil {
 		rights := []*simplified.Right{}
 		for _, license := range work.Message.License {
-			right := crossrefLicenseToRight(license)
+			right := crosswalkWorksLicenseToRight(license)
 			if right != nil {
 				rights = append(rights, right)
 			}
@@ -386,7 +386,7 @@ func getLicenses(work *crossrefapi.Works) []*simplified.Right {
 	return nil
 }
 
-func getSubjects(work *crossrefapi.Works) []*simplified.Subject {
+func getWorksSubjects(work *crossrefapi.Works) []*simplified.Subject {
 	if work.Message != nil && work.Message.Subject != nil {
 		subjects := []*simplified.Subject{}
 		for _, s := range work.Message.Subject {
@@ -401,23 +401,23 @@ func getSubjects(work *crossrefapi.Works) []*simplified.Subject {
 	return nil
 }
 
-func getPublishedPrint(work *crossrefapi.Works) *simplified.DateType {
+func getWorksPublishedPrint(work *crossrefapi.Works) *simplified.DateType {
 	if work.Message != nil && work.Message.PublishedPrint != nil {
-		return crosswalkDateObjectToDateType(work.Message.PublishedPrint, "published print")
+		return crosswalkWorksDateObjectToDateType(work.Message.PublishedPrint, "published print")
 	}
 	return nil
 }
 
-func getPublishedOnline(work *crossrefapi.Works) *simplified.DateType {
+func getWorksPublishedOnline(work *crossrefapi.Works) *simplified.DateType {
 	if work.Message != nil && work.Message.PublishedOnline != nil {
-		return crosswalkDateObjectToDateType(work.Message.PublishedOnline, "published online")
+		return crosswalkWorksDateObjectToDateType(work.Message.PublishedOnline, "published online")
 	}
 	return nil
 }
 
-func getPublicationDate(work *crossrefapi.Works) string {
-	printDate := getPublishedPrint(work)
-	onlineDate := getPublishedOnline(work)
+func getWorksPublicationDate(work *crossrefapi.Works) string {
+	printDate := getWorksPublishedPrint(work)
+	onlineDate := getWorksPublishedOnline(work)
 	if (printDate == nil || printDate.Date == "") && (onlineDate == nil || onlineDate.Date == "") {
 		return ""
 	}
@@ -437,31 +437,31 @@ func getPublicationDate(work *crossrefapi.Works) string {
 	return onlineDate.Date
 }
 
-func getAccepted(work *crossrefapi.Works) *simplified.DateType {
+func getWorksAccepted(work *crossrefapi.Works) *simplified.DateType {
 	if work.Message != nil && work.Message.Accepted != nil {
-		return crosswalkDateObjectToDateType(work.Message.Accepted, "accepted")
+		return crosswalkWorksDateObjectToDateType(work.Message.Accepted, "accepted")
 	}
 	return nil
 }
 
-func getApproved(work *crossrefapi.Works) *simplified.DateType {
+func getWorksApproved(work *crossrefapi.Works) *simplified.DateType {
 	if work.Message != nil && work.Message.Approved != nil {
-		return crosswalkDateObjectToDateType(work.Message.Approved, "approved")
+		return crosswalkWorksDateObjectToDateType(work.Message.Approved, "approved")
 	}
 	return nil
 }
 
-// normalizePublisherName will check the publisher DOI and ISSN to see if we have
+// normalizeWorksPublisherName will check the publisher DOI and ISSN to see if we have
 // a preferred name in our options. If so it will return that.
-func normalizePublisherName(val string, work *crossrefapi.Works, options *Doi2RdmOptions) string {
-	doi := getDOI(work)
+func normalizeWorksPublisherName(val string, work *crossrefapi.Works, options *Doi2RdmOptions) string {
+	doi := getWorksDOI(work)
 	if doi != "" {
 		doiPrefix, _ := DoiPrefix(doi)
 		if value, ok := options.DoiPrefixPublishers[doiPrefix]; ok {
 			return value
 		}
 	}
-	for _, issn := range getISSNs(work) {
+	for _, issn := range getWorksISSNs(work) {
 		if issn != "" {
 			if value, ok := options.ISSNPublishers[issn]; ok {
 				return value
@@ -480,53 +480,53 @@ func CrosswalkCrossRefWork(cfg *Config, work *crossrefapi.Works, options *Doi2Rd
 	}
 	rec := new(simplified.Record)
 	// .message.type -> .record.metadata.resource_type (via controlled vocabulary)
-	if value := getResourceType(work); value != "" {
+	if value := getWorksResourceType(work); value != "" {
 		if err := SetResourceType(rec, value, options.ResourceTypes); err != nil {
 			return nil, err
 		}
 	}
-	if value := getDOI(work); value != "" {
+	if value := getWorksDOI(work); value != "" {
 		if err := SetDOI(rec, value); err != nil {
 			return nil, err
 		}
 	}
-	if values := getTitles(work); len(values) > 0 {
+	if values := getWorksTitles(work); len(values) > 0 {
 		for i, val := range values {
 			if i == 0 {
 				if err := SetTitle(rec, val); err != nil {
 					return nil, err
 				}
 			} else {
-				if err := AddAdditionalTitles(rec, mkSimpleTitleDetail(val)); err != nil {
+				if err := AddAdditionalTitles(rec, makeSimpleTitleDetail(val)); err != nil {
 					return nil, err
 				}
 			}
 		}
 	}
 	// NOTE: Abstract becomes Description in simplified records
-	if value := getAbstract(work); value != "" {
+	if value := getWorksAbstract(work); value != "" {
 		if err := SetDescription(rec, value); err != nil {
 			return nil, err
 		}
 	}
-	if values := getCreators(work); values != nil && len(values) > 0 {
+	if values := getWorksCreators(work); values != nil && len(values) > 0 {
 		if err := SetCreators(rec, values); err != nil {
 			return nil, err
 		}
 	}
-	if values := getContributors(work); values != nil && len(values) > 0 {
+	if values := getWorksContributors(work); values != nil && len(values) > 0 {
 		if err := SetContributors(rec, values); err != nil {
 			return nil, err
 		}
 	}
-	if value := getPublisher(work); value != "" {
+	if value := getWorksPublisher(work); value != "" {
 		// FIXME: Setting the publisher name is going to be normalized via DOI prefix, maybe ISSN?
-		value := normalizePublisherName(value, work, options)
+		value := normalizeWorksPublisherName(value, work, options)
 		if err := SetPublisher(rec, value); err != nil {
 			return nil, err
 		}
 	}
-	if value := getPublication(work); value != "" {
+	if value := getWorksPublication(work); value != "" {
 		if err := SetPublication(rec, value); err != nil {
 			return nil, err
 		}
@@ -535,43 +535,43 @@ func CrosswalkCrossRefWork(cfg *Config, work *crossrefapi.Works, options *Doi2Rd
 	Also the data I fetch from CrossRef now looks like an alternate short
 	title so works.message["short-container-title"] may not be the right
 	place to fetch this data.
-	if value := getSeries(work); value != "" {
+	if value := getWorksSeries(work); value != "" {
 		if err := SetSeries(rec, value); err != nil {
 			return nil, err
 		}
 	}
 	*/
-	if value := getVolume(work); value != "" {
+	if value := getWorksVolume(work); value != "" {
 		if err := SetVolume(rec, value); err != nil {
 			return nil, err
 		}
 	}
-	if value := getIssue(work); value != "" {
+	if value := getWorksIssue(work); value != "" {
 		if err := SetIssue(rec, value); err != nil {
 			return nil, err
 		}
 	}
-	if value := getPublisherLocation(work); value != "" {
+	if value := getWorksPublisherLocation(work); value != "" {
 		if err := SetPublisherLocation(rec, value); err != nil {
 			return nil, err
 		}
 	}
-	if value := getPageRange(work); value != "" {
+	if value := getWorksPageRange(work); value != "" {
 		if err := SetPageRange(rec, value); err != nil {
 			return nil, err
 		}
 	}
-	if value := getArticleNumber(work); value != "" {
+	if value := getWorksArticleNumber(work); value != "" {
 		if err := SetArticleNumber(rec, value); err != nil {
 			return nil, err
 		}
 	}
-	if values := getISBNs(work); values != nil && len(values) > 0 {
+	if values := getWorksISBNs(work); values != nil && len(values) > 0 {
 		if err := SetImprintField(rec, "isbn", values); err != nil {
 			return nil, err
 		}
 	}
-	if values := getISSNs(work); len(values) > 0 {
+	if values := getWorksISSNs(work); len(values) > 0 {
 		if err := SetJournalField(rec, "issn", values[0]); err != nil {
 			return nil, err
 		}
@@ -581,44 +581,44 @@ func CrosswalkCrossRefWork(cfg *Config, work *crossrefapi.Works, options *Doi2Rd
 			}
 		}
 	}
-	if values := getFunding(work); values != nil && len(values) > 0 {
+	if values := getWorksFunding(work); values != nil && len(values) > 0 {
 		if err := SetFunding(rec, values); err != nil {
 			return nil, err
 		}
 	}
-	if values := getLicenses(work); values != nil {
+	if values := getWorksLicenses(work); values != nil {
 		if err := AddRights(rec, values); err != nil {
 			return nil, err
 		}
 	}
-	if values := getSubjects(work); values != nil {
+	if values := getWorksSubjects(work); values != nil {
 		if err := AddSubjects(rec, values); err != nil {
 			return nil, err
 		}
 	}
 	// NOTE: Crossref has many dates, e.g. publised print, published online
-	if value := getPublishedPrint(work); value != nil {
+	if value := getWorksPublishedPrint(work); value != nil {
 		if err := AddDate(rec, value); err != nil {
 			return nil, err
 		}
 	}
-	if value := getPublishedOnline(work); value != nil {
+	if value := getWorksPublishedOnline(work); value != nil {
 		if err := AddDate(rec, value); err != nil {
 			return nil, err
 		}
 	}
-	if value := getAccepted(work); value != nil {
+	if value := getWorksAccepted(work); value != nil {
 		if err := AddDate(rec, value); err != nil {
 			return nil, err
 		}
 	}
-	if value := getApproved(work); value != nil {
+	if value := getWorksApproved(work); value != nil {
 		if err := AddDate(rec, value); err != nil {
 			return nil, err
 		}
 	}
 	// NOTE: Publication Date should be the earlier of print or online
-	if value := getPublicationDate(work); value != "" {
+	if value := getWorksPublicationDate(work); value != "" {
 		if err := SetPublicationDate(rec, value); err != nil {
 			return nil, err
 		}
