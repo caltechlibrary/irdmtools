@@ -20,6 +20,7 @@ require (
 	github.com/caltechlibrary/dsv1 v0.0.0-20220817192039-7c2741c5699d // indirect
 	github.com/caltechlibrary/semver v0.0.0-20220817184719-a504da2d5c6a // indirect
 	github.com/glebarez/go-sqlite v1.18.1 // indirect
+	github.com/gofrs/uuid v4.4.0+incompatible // indirect
 	github.com/google/uuid v1.3.0 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20200410134404-eec4a21b6bb0 // indirect

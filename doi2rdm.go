@@ -44,7 +44,7 @@ import (
 
 	// Caltech Library packages
 	"github.com/caltechlibrary/crossrefapi"
-	//"github.com/caltechlibrary/dataciteapi"
+	"github.com/caltechlibrary/dataciteapi"
 	"github.com/caltechlibrary/simplified"
 )
 
@@ -322,7 +322,6 @@ func (app *Doi2Rdm) RunCrossRefToRdm(in io.Reader, out io.Writer, eout io.Writer
 	return nil
 }
 
-/*
 // RunDataCiteToRdm implements the doi2rdm cli behaviors using the DataCite service.
 // With the exception of the "setup" action you should call `app.LoadConfig()` before execute
 // Run.
@@ -404,4 +403,3 @@ func (app *Doi2Rdm) RunDataCiteToRdm(in io.Reader, out io.Writer, eout io.Writer
 	fmt.Fprintf(out, "%s\n", src)
 	return nil
 }
-*/

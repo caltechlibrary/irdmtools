@@ -5,28 +5,23 @@
 Institutional Repository Data Management Tools
 ==============================================
 
-This is a proof of concept set tools for working with Invenio RDM
-and migrating content from EPrints to RDM. It consists of a small
-set of Go based command line programs along with Python scripts and a
-wrapping irdm Python module.
+This is a proof of concept set tools for working with Invenio RDM and migrating content from EPrints to RDM. It consists of a small set of Go based command line programs along with Python scripts and a wrapping irdm Python module. The Go based tooling is designed to work directory with a copy of you repositories' database (e.g. Postgres for RDM or MySQL for EPrints). 
 
-The proof of concept is being developed around RDM's web services 
-(e.g. REST API and OAI-PMH), PostgreSQL database and external metadata
-services (e.g. CrossRef, DataCite). 
+The proof of concept is being developed around RDM's web services (e.g. REST API and OAI-PMH), PostgreSQL database and external metadata services (e.g. CrossRef, DataCite). 
 
-Caltech Library is using irdmtools to migrate content from our legacy
-EPrints 3.3 repositories (heavily customized) to RDM. Post migration the
-core Go tools will remain useful for curation at the collection level
-(e.g. [rdmutil](rdmutil.1.md))
+Caltech Library is using irdmtools to migrate content from our legacy EPrints 3.3 repositories (heavily customized) to RDM. Post migration the core Go tools will remain useful for curation at the collection level (e.g. [rdmutil](rdmutil.1.md))
 
-## Tools
+## Featured Tools
 
 ### `rdmutil`
 
-This tool is for interacting with an Invenio RDM repository via RDM's
-REST and OAI-PMH API. It covers most the JSON API documented at <https://inveniordm.docs.cern.ch/>. This includes listing, submitting and managing records and draft records.
+This tool is for interacting with an Invenio RDM repository via RDM's REST and OAI-PMH API. It covers most the JSON API documented at <https://inveniordm.docs.cern.ch/>. This includes listing, submitting and managing records and draft records.
 
 `rdmutil` configuration is read either from the environment or a JSON formatted configuration file.  See the [man page](rdmutil.1.md) for details.
+
+### `ep3util`
+
+This tool is used for migrating data out of EPrints. It can be used on a copy of your EPrints MySQL database. It parallels `rdmutil` and is an evolution of our tooling developed in [eprinttools](https://github.com/caltechlibrary/eprinttools). See the [man page](ep3util.1.md) for details.
 
 ### `eprint2rdm`
 
@@ -34,7 +29,16 @@ This tool is migrating content from an EPrints repository via the EPrint REST AP
 
 ### `doi2rdm`
 
-This tool will query the CrossRef API and convert a works record into a JSON structure compatible with an RDM record (e.g. to be inserted via an RDM API call).  See the [man page](eprint2rdm.1.md) for details.
+This tool will query the CrossRef or DataCite API and convert a works record into a JSON structure compatible with an RDM record (e.g. to be inserted via an RDM API call).  See the [man page](doi2rdm.1.md) for details
+
+### `rdm2citeproc`
+
+This tools takes an RDM record and returns an abbreviated record inspired by [citeproc](https://en.wikipedia.org/wiki/CiteProc). It also supports harvesting selected RDM records into a dataset collection using the `-harvest` and `-ids` options. We use this feature to facilate creating <https://feeds.library.caltech.edu>. See the [man page](rdm2citeproc.1.md) for details.
+
+### `eprint2citeproc`
+
+This tools take an EPrint record and returns an abbreviated record inspired by [citeproc](https://en.wikipedia.org/wiki/CiteProc). It also supports harvesting select EPrint records into a dataset collection using the `-harvest` and `-ids` options. We use this feature to facilate creating <https://feeds.library.caltech.edu>. See the [man page](eprint2citeproc.1.md) for details.
+
 
 ## Requirements
 

@@ -29,7 +29,7 @@ func QueryCrossRefWork(cfg *Config, doi string, options *Doi2RdmOptions) (*cross
 	return works, nil
 }
 
-// getResourceType retrives the resource type from works.message.type
+// getWorksResourceType retrives the resource type from works.message.type
 // runs normalize
 func getWorksResourceType(work *crossrefapi.Works) string {
 	if work.Message != nil && work.Message.Type != "" {
@@ -38,7 +38,7 @@ func getWorksResourceType(work *crossrefapi.Works) string {
 	return ""
 }
 
-// getTitles retrieves an ordered list of titles from a CrossRef Works object.
+// getWorksTitles retrieves an ordered list of titles from a CrossRef Works object.
 // The zero index is the primary document title, the remaining are alternative titles.
 // If no titles are found then the slice of string will be empty.
 func getWorksTitles(work *crossrefapi.Works) []string {
@@ -48,7 +48,7 @@ func getWorksTitles(work *crossrefapi.Works) []string {
 	return []string{}
 }
 
-// getAbstract retrieves the abstract from the CrossRef Works
+// getWorksAbstract retrieves the abstract from the CrossRef Works
 func getWorksAbstract(work *crossrefapi.Works) string {
 	if work.Message != nil && work.Message.Abstract != "" {
 		return work.Message.Abstract
@@ -56,7 +56,7 @@ func getWorksAbstract(work *crossrefapi.Works) string {
 	return ""
 }
 
-// getPublisher
+// getWorksPublisher
 func getWorksPublisher(work *crossrefapi.Works) string {
 	// FIXME: Need to know if publisher holds the publisher and container type holds publication based on work.Message.Type
 	if work.Message != nil && work.Message.Publisher != "" {
@@ -65,7 +65,7 @@ func getWorksPublisher(work *crossrefapi.Works) string {
 	return ""
 }
 
-// getPublication
+// getWorksPublication
 func getWorksPublication(work *crossrefapi.Works) string {
 	if work.Message != nil && len(work.Message.ContainerTitle) > 0 {
 		return work.Message.ContainerTitle[0]
@@ -73,7 +73,7 @@ func getWorksPublication(work *crossrefapi.Works) string {
 	return ""
 }
 
-// getWorksSeries
+// getWorksWorksSeries
 func getWorksSeries(work *crossrefapi.Works) string {
 	// FIXME: Need to know if publisher holds the publisher and container type holds publication based on work.Message.Type
 	if work.Message != nil && work.Message.ShortContainerTitle != nil && len(work.Message.ShortContainerTitle) > 0 {
@@ -82,7 +82,7 @@ func getWorksSeries(work *crossrefapi.Works) string {
 	return ""
 }
 
-// getWorksVolume
+// getWorksWorksVolume
 func getWorksVolume(work *crossrefapi.Works) string {
 	if work.Message != nil && work.Message.Volume != "" {
 		return work.Message.Volume
@@ -90,7 +90,7 @@ func getWorksVolume(work *crossrefapi.Works) string {
 	return ""
 }
 
-// getWorksIssue
+// getWorksWorksIssue
 func getWorksIssue(work *crossrefapi.Works) string {
 	if work.Message != nil && work.Message.Issue != "" {
 		return work.Message.Issue
@@ -98,7 +98,7 @@ func getWorksIssue(work *crossrefapi.Works) string {
 	return ""
 }
 
-// getWorksPublisherLocation
+// getWorksWorksPublisherLocation
 func getWorksPublisherLocation(work *crossrefapi.Works) string {
 	if work.Message != nil && work.Message.PublisherLocation != "" {
 		return work.Message.PublisherLocation
@@ -106,7 +106,7 @@ func getWorksPublisherLocation(work *crossrefapi.Works) string {
 	return ""
 }
 
-// getWorksPageRange
+// getWorksWorksPageRange
 func getWorksPageRange(work *crossrefapi.Works) string {
 	/*
 		// FIXME: this needs to be article number, per migration committee
@@ -121,7 +121,7 @@ func getWorksPageRange(work *crossrefapi.Works) string {
 	return ""
 }
 
-// getArticleNumber
+// getWorksArticleNumber
 func getWorksArticleNumber(work *crossrefapi.Works) string {
 	/* FIXME: Not sure where article numbers map from in the CrossRef API
 	- ComponentNumber
@@ -133,7 +133,7 @@ func getWorksArticleNumber(work *crossrefapi.Works) string {
 	return ""
 }
 
-// getISBNs
+// getWorksISBNs
 func getWorksISBNs(work *crossrefapi.Works) []string {
 	isbns := []string{}
 	if work.Message != nil && work.Message.ISBN != nil {
@@ -144,7 +144,7 @@ func getWorksISBNs(work *crossrefapi.Works) []string {
 	return isbns
 }
 
-// getISSNs
+// getWorksISSNs
 func getWorksISSNs(work *crossrefapi.Works) []string { 
 	issns := []string{}
 	if work.Message != nil && work.Message.ISSN != nil {
@@ -155,7 +155,7 @@ func getWorksISSNs(work *crossrefapi.Works) []string {
 	return issns
 }
 
-// getFunding
+// getWorksFunding
 func getWorksFunding(work *crossrefapi.Works) []*simplified.Funder {
 	funding := []*simplified.Funder{}
 	suffixToROR := map[string]string{}
@@ -208,7 +208,7 @@ func getWorksFunding(work *crossrefapi.Works) []*simplified.Funder {
 	return funding
 }
 
-// getDOI
+// getWorksDOI
 func getWorksDOI(work *crossrefapi.Works) string {
 	if work.Message != nil && work.Message.DOI != "" {
 		return work.Message.DOI
@@ -216,7 +216,7 @@ func getWorksDOI(work *crossrefapi.Works) string {
 	return ""
 }
 
-// getLinks
+// getWorksLinks
 func getWorksLinks(work *crossrefapi.Works) []*simplified.Identifier {
 	identifiers := []*simplified.Identifier{}
 	if work.Message != nil && work.Message.Link != nil && len(work.Message.Link) > 0 {
