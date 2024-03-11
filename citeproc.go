@@ -1,7 +1,14 @@
 package irdmtools
 
 import (
+	"fmt"
+	
+	// Caltech Library Packages
+	"github.com/caltechlibrary/simplified"
+	
+	// 3rd Party Packages
 	"github.com/gofrs/uuid"
+	
 )
 
 // irdmtools provides a means of turning an EPrint or RDM record into a datastructure suitable
@@ -14,7 +21,7 @@ import (
 // - <https://github.com/Sett17/citeproc-js-go>
 // - <https://github.com/Juris-M/citeproc-js>
 // - <https://github.com/citation-style-language/schema>, <https://citeproc-js.readthedocs.io/en/latest/>
-// - <https://juris-m.github.io/>, 
+// - <https://juris-m.github.io/>,
 // - <http://fbennett.github.io/z2csl/>
 // - <https://aurimasv.github.io/z2csl/typeMap.xml>
 // - <https://github.com/citation-style-language/schema>
@@ -22,6 +29,7 @@ import (
 // - <https://github.com/citation-style-language/schema/blob/master/schemas/input/csl-citation.json>
 // - <https://github.com/citation-style-language/schema/blob/master/schemas/input/csl-data.json>
 //
+
 
 // CiteProcItem implements the data structure for CiteProc's Item representing a single
 // bibliographic citation.
@@ -36,7 +44,7 @@ type CiteProcItem struct {
 	// AlternateId a list of Item identifies, not in the CiteProc spec but useful to me and likely useful
 	// in fielded searching, e.g. looking up a citation with a given ISBN ir ISSN
 	AlternateId []*CiteProcIdentifier `json:"alternate_id,omitempty" xml:"alternate_di,omitempty" yaml:"alternate_id,omitempty"`
-	
+
 	// Type holds the citeproc "type" of bibliographic record. In DataCite records
 	// this would be found in `.access.types.citeproc`.
 	Type string `json:"type,omitempty" xml:"type,omitempty" yaml:"type,omitempty"`
@@ -48,7 +56,7 @@ type CiteProcItem struct {
 	// useful for search purposes.
 	AlternateTitle []string `json:"alternate_title,omitempty" xml:"alternate_title,omitempty" yaml:"alternate_title,omitempty"`
 
-	// Author holds a list of "author" objects. 
+	// Author holds a list of "author" objects.
 	Author []*CiteProcAgent `json:"author,omitempty" xml:"author,omitempty" yaml:"author,omitempty"`
 
 	// Date holds a map to related citeproc item dates.
@@ -64,6 +72,14 @@ type CiteProcItem struct {
 	Suffix string `json:"suffix,omitempty" xml:"suffix,omitempty" yaml:"suffix,omitempty"`
 }
 
+// CiteProcIdentifier is a minimal object to identify a type of identifier, e.g. ISBN, ISSN, ROR, ORCID, etc.
+type CiteProcIdentifier struct {
+	// Type holds the identifier type, e.g. ISSN, ISBN, ROR, ORCID
+	Type string `json:"type,omitempty" yaml:"type,omitempty"`
+	// Value holds an identifier value.
+	Value string `json:"id,omitempty" yaml:"id,omitempty"`
+}
+
 // CiteProcAgent this describes a person or organization for the purposes of CiteProc item data.
 // This is based on https://citeproc-js.readthedocs.io/en/latest/csl-json/markup.html, reviewed 2024-03-06.
 type CiteProcAgent struct {
@@ -75,8 +91,8 @@ type CiteProcAgent struct {
 	// Family holds a person's family name
 	Family string `json:"family,omitempty" xml:"family,omitempty" yaml:"family,omitempty"`
 
-	// Lived holds a person's given or lived name. It is express encoded as "given" for
-	// to becompatible with historical records not at a justication for that "given" implies
+	// Lived holds a person's lived or given. It is express encoded as "given" in JSON, XML and YAML for
+	// to becompatible with historical records not as a justication for that "given" implies
 	// in 2024 in the United States.
 	Lived string `json:"given,omitempty" xml:"given,omitempty" yaml:"given,omitempty"`
 
@@ -86,7 +102,7 @@ type CiteProcAgent struct {
 	// DroppingParticle holds the list of particles that can be dropped.
 	DroppingParticle string `json:"dropping-particle,omitempty" xml:"dropping-particle,omitempty" yaml:"dropping-particle,omitempty"`
 
-	// Prefix (FIXME: verify this exists in a CiteProc person reference), because they can exist ... 
+	// Prefix (FIXME: verify this exists in a CiteProc person reference), because they can exist ...
 	Prefix string `json:"prefix,omitempty" xml:"prefix,omitempty" yaml:"prefix,omitempty"`
 
 	// Suffix, e.g. Jr., PhD. etc.
@@ -102,4 +118,9 @@ type CiteProcDate struct {
 	DateParts [][]int `json:"date-parts,omitempty" xml:"date-parts,omitempty" yaml:"date-parts,omitempty"`
 	// Raw holds the raw string from a bibiographic source, e.g. publisher
 	Raw string `json:"raw,omitempty" xml:"raw,omitempty" yaml:"raw,omitempty"`
+}
+
+// CrosswalkRecord takes a simplified record and return maps the values into the CiteProcItem.
+func (item *CiteProcItem) CrosswalkRecord(rec *simplified.Record) error {
+	return fmt.Errorf("CrosswalkRecord() not implemented")	
 }

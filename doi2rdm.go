@@ -44,7 +44,6 @@ import (
 
 	// Caltech Library packages
 	"github.com/caltechlibrary/crossrefapi"
-	"github.com/caltechlibrary/dataciteapi"
 	"github.com/caltechlibrary/simplified"
 )
 
@@ -371,24 +370,24 @@ func (app *Doi2Rdm) RunDataCiteToRdm(in io.Reader, out io.Writer, eout io.Writer
 		nRecord *simplified.Record
 	)
 	if diffFName != "" {
-		oWork := new(dataciteapi.Works)
+		object := map[string]interface{}{}
 		src, err := os.ReadFile(diffFName)
 		if err != nil {
 			return err
 		}
-		if err := JSONUnmarshal(src, &oWork); err != nil {
+		if err := JSONUnmarshal(src, &object); err != nil {
 			return err
 		}
-		oRecord, err = CrosswalkDataCiteWork(app.Cfg, oWork, options)
+		oRecord, err = CrosswalkDataCiteObject(app.Cfg, object, options)
 		if err != nil {
 			return err
 		}
 	}
-	nWork, err := QueryDataCiteWork(app.Cfg, doi, options)
+	nWork, err := QueryDataCiteObject(app.Cfg, doi, options)
 	if err != nil {
 		return err
 	}
-	nRecord, err = CrosswalkDataCiteWork(app.Cfg, nWork, options)
+	nRecord, err = CrosswalkDataCiteObject(app.Cfg, nWork, options)
 	if err != nil {
 		return err
 	}

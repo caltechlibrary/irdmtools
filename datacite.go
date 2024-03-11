@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"strings"
 	"time"
 
 	// Caltech Library Packages
@@ -12,7 +11,7 @@ import (
 	"github.com/caltechlibrary/simplified"
 )
 
-func QueryDataCiteObject(cfg *Config, doi string, options *Doi2RdmOptions) (*dataciteapi.Object, error) {
+func QueryDataCiteObject(cfg *Config, doi string, options *Doi2RdmOptions) (map[string]interface{}, error) {
 	appName := path.Base(os.Args[0])
 	client, err := dataciteapi.NewDataCiteClient(appName, options.MailTo)
 	if err != nil {
@@ -22,17 +21,23 @@ func QueryDataCiteObject(cfg *Config, doi string, options *Doi2RdmOptions) (*dat
 	if err != nil {
 		return nil, err
 	}
+	src, _ := JSONMarshalIndent(objects, "", "    ")
 	if cfg.Debug {
-		src, _ := JSONMarshalIndent(objects, "", "    ")
 		fmt.Fprintf(os.Stderr, "objects JSON:\n\n%s\n\n", src)
 	}
-	return &objects, nil
+    m := map[string]interface{}{}
+    if err := JSONUnmarshal(src, &m); err != nil {
+		return nil, fmt.Errorf("problem encoding/decoding DataCite object, %s", err)
+    }
+	return m, nil
 }
 
 // getObjectData retrieves the `.access` from the DateCite `.object`
-func getObjectData(object *dataciteapi.Object) (map[string]interface{}, bool) {
-	data, ok := object["data"].(map[string]interface{})
-	return data, ok
+func getObjectData(object map[string]interface{}) (map[string]interface{}, bool) {
+	if data, ok := object["data"].(map[string]interface{}); ok {
+		return data, ok	
+	}
+	return nil, false
 }
 
 func getObjectDataAttributes(data map[string]interface{}) (map[string]interface{}, bool) {
@@ -44,7 +49,7 @@ func getObjectDataAttributes(data map[string]interface{}) (map[string]interface{
 func getObjectCiteProcType(data map[string]interface{}) string {
 		if attributes, ok := getObjectDataAttributes(data); ok {
 			if types, ok := attributes["types"].(map[string]string); ok {
-				if citeproc, ok := types["citeproc"].(string); ok {
+				if citeproc, ok := types["citeproc"]; ok {
 					return citeproc
 				}
 			}
@@ -54,22 +59,20 @@ func getObjectCiteProcType(data map[string]interface{}) string {
 
 // getObjectResourceType retrives the resource type from objects.message.type
 // runs normalize
-func getObjectResourceType(object *dataciteapi.Object) string {
+func getObjectResourceType(object map[string]interface{}) string {
 	// The path to type informaiton is .access.types, this has a map of types
 	// for various formats (e.g. .bibtex, .citeproc, .schemeOrg, .resourceType, .resourceTypeGeneral.
 	// I think using the .citeproc value makes the most sense here.
 	if data, ok := getObjectData(object); ok {
-		if resourceType, ok := getObjectCiteProcType(data); ok {
-			return resourceType
-		}
+		return getObjectCiteProcType(data)
 	}
 	return ""
 }
 
 // getObjcetDataTitles extracts a list of titles from a list of title objects.
-func getObjectDataTitles(data map[string]interface{}) ([]map[string]interface{}, bool) {
-	if aatributes, ok := getObjectDataAttributes(data); ok {
-		if titles, ok := data["titles"].([]map[string]string); ok {
+func getObjectDataTitles(data map[string]interface{}) ([]map[string]string, bool) {
+	if attributes, ok := getObjectDataAttributes(data); ok {
+		if titles, ok := attributes["titles"].([]map[string]string); ok {
 			return titles, ok
 		}
 	}
@@ -79,7 +82,7 @@ func getObjectDataTitles(data map[string]interface{}) ([]map[string]interface{},
 // getObjectTitles retrieves an ordered list of titles from a DataCite Object object.
 // The zero index is the primary document title, the remaining are alternative titles.
 // If no titles are found then the slice of string will be empty.
-func getObjectTitles(object *dataciteapi.Object) []string {
+func getObjectTitles(object map[string]interface{}) []string {
 	if data, ok := getObjectData(object); ok {
 		if titleList, ok := getObjectDataTitles(data); ok {
 			titles := []string {}
@@ -96,7 +99,7 @@ func getObjectTitles(object *dataciteapi.Object) []string {
 
 // getObjectAbstract retrieves the abstract from the DataCite Object
 // See example JSON <https://api.test.datacite.org/dois/10.82433/q54d-pf76?publisher=true&affiliation=true>
-func getObjectAbstract(object *dataciteapi.Object) string {
+func getObjectAbstract(object map[string]interface{}) string {
 	/* abstract doesn't seem to exist in Schema
 	if data, ok := getObjectData(object); ok {
 		if abstract, ok := data["abstract"]; ok {
@@ -109,13 +112,13 @@ func getObjectAbstract(object *dataciteapi.Object) string {
 
 // getObjectPublisher
 // See example JSON <https://api.test.datacite.org/dois/10.82433/q54d-pf76?publisher=true&affiliation=true>
-func getObjectPublisher(object *dataciteapi.Object) string {
+func getObjectPublisher(object map[string]interface{}) string {
 	// FIXME: Need to know if publisher holds the publisher and container type holds publication based on object.Message.Type
 	if data, ok := getObjectData(object); ok {
 		if attributes, ok := getObjectDataAttributes(data); ok {
-			if publisher, ok := attributes["publisher"]; ok {
+			if publisher, ok := attributes["publisher"].(map[string]string); ok {
 				if name, ok := publisher["name"]; ok {
-					return publisher
+					return name
 				}
 			}
 		}
@@ -125,13 +128,13 @@ func getObjectPublisher(object *dataciteapi.Object) string {
 
 // getObjectPublication
 // See example JSON <https://api.test.datacite.org/dois/10.82433/q54d-pf76?publisher=true&affiliation=true>
-func getObjectPublication(object *dataciteapi.Object) string {
+func getObjectPublication(object map[string]interface{}) string {
 	if data, ok := getObjectData(object); ok {
 		if attributes, ok := getObjectDataAttributes(data); ok {
-			if items, ok := attributes["relatedItems"].([]map[string]intereface{}); ok {
+			if items, ok := attributes["relatedItems"].([]map[string]interface{}); ok {
 				for _, item := range items {
-					if relationType, ok := items["relationType"]; ok && relationType == "IsPublishedIn" {
-						if titles, ok := items["titles"].([]map[string]interface{}); ok {
+					if relationType, ok := item["relationType"]; ok && relationType == "IsPublishedIn" {
+						if titles, ok := item["titles"].([]map[string]interface{}); ok {
 							for _, title := range titles {
 								if val, ok := title["title"].(string); ok {
 									return val
@@ -147,12 +150,12 @@ func getObjectPublication(object *dataciteapi.Object) string {
 }
 
 // getObjectObjectSeries
-func getObjectSeries(object *dataciteapi.Object) string {
+func getObjectSeries(object map[string]interface{}) string {
 	if data, ok := getObjectData(object); ok {
 		if attributes, ok := getObjectDataAttributes(data); ok {
 			if items, ok := attributes["relatedItems"].([]map[string]interface{}); ok {
 				for _, item := range items {
-					if issue, ok := items["issue"].(string); ok {
+					if issue, ok := item["issue"].(string); ok {
 						return issue
 					}
 				}
@@ -163,12 +166,12 @@ func getObjectSeries(object *dataciteapi.Object) string {
 }
 
 // getObjectObjectVolume
-func getObjectVolume(object *dataciteapi.Object) string {
+func getObjectVolume(object map[string]interface{}) string {
 	if data, ok := getObjectData(object); ok {
 		if attributes, ok := getObjectDataAttributes(data); ok {
 			if items, ok := attributes["relatedItems"].([]map[string]interface{}); ok {
 				for _, item := range items {
-					if issue, ok := items["volume"].(string); ok {
+					if issue, ok := item["volume"].(string); ok {
 						return issue
 					}
 				}
@@ -179,12 +182,12 @@ func getObjectVolume(object *dataciteapi.Object) string {
 }
 
 // getObjectObjectIssue
-func getObjectIssue(object *dataciteapi.Object) string {
+func getObjectIssue(object map[string]interface{}) string {
 	if data, ok := getObjectData(object); ok {
 		if attributes, ok := getObjectDataAttributes(data); ok {
 			if items, ok := attributes["relatedItems"].([]map[string]interface{}); ok {
 				for _, item := range items {
-					if issue, ok := items["issue"].(string); ok {
+					if issue, ok := item["issue"].(string); ok {
 						return issue
 					}
 				}
@@ -195,13 +198,13 @@ func getObjectIssue(object *dataciteapi.Object) string {
 }
 
 // getObjectObjectPublisherLocation
-func getObjectPublisherLocation(object *dataciteapi.Object) string {
+func getObjectPublisherLocation(object map[string]interface{}) string {
 	/* Note sure where to find this.  */
 	return ""
 }
 
 // getObjectObjectPageRange
-func getObjectPageRange(object *dataciteapi.Object) string {
+func getObjectPageRange(object map[string]interface{}) string {
 	if data, ok := getObjectData(object); ok {
 		if attributes, ok := getObjectDataAttributes(data); ok {
 			if items, ok := attributes["relatedItems"].([]map[string]interface{}); ok {
@@ -220,21 +223,21 @@ func getObjectPageRange(object *dataciteapi.Object) string {
 }
 
 // getObjectArticleNumber
-func getObjectArticleNumber(object *dataciteapi.Object) string {
+func getObjectArticleNumber(object map[string]interface{}) string {
 	/* FIXME: Not sure where article numbers map from in the DataCite API
 	*/
 	return ""
 }
 
 // getObjectISBNs
-func getObjectISBNs(object *dataciteapi.Object) []string {
+func getObjectISBNs(object map[string]interface{}) []string {
 	isbns := []string{}
 	if data, ok := getObjectData(object); ok {
 		if attributes, ok := getObjectDataAttributes(data); ok {
 			if identifiers, ok := attributes["relatedIdentifiers"]; ok {
-				for _, identifier := range identifiers {
+				for _, identifier := range identifiers.([]map[string]interface{}) {
 					if identifierType, ok := identifier["relatedIdentifierType"]; ok && identifierType == "ISBN" {
-						if val, ok := identifier["relatedIdentifier"]; ok {
+						if val, ok := identifier["relatedIdentifier"].(string); ok {
 							isbns = append(isbns, val)
 						}
 					}
@@ -246,15 +249,15 @@ func getObjectISBNs(object *dataciteapi.Object) []string {
 }
 
 // getObjectISSNs
-func getObjectISSNs(object *dataciteapi.Object) []string { 
+func getObjectISSNs(object map[string]interface{}) []string { 
 	issns := []string{}
 	if data, ok := getObjectData(object); ok {
 		if attributes, ok := getObjectDataAttributes(data); ok {
 			if identifiers, ok := attributes["relatedIdentifiers"]; ok {
-				for _, identifier := range identifiers {
+				for _, identifier := range identifiers.([]map[string]interface{}) {
 					if identifierType, ok := identifier["relatedIdentifierType"]; ok && identifierType == "ISSN" {
-						if val, ok := identifier["relatedIdentifier"]; ok {
-							isbns = append(isbns, val)
+						if val, ok := identifier["relatedIdentifier"].(string); ok {
+							issns = append(issns, val)
 						}
 					}
 				}
@@ -265,16 +268,16 @@ func getObjectISSNs(object *dataciteapi.Object) []string {
 }
 
 // getObjectFunding
-func getObjectFunding(object *dataciteapi.Object) []*simplified.Funder {
+func getObjectFunding(object map[string]interface{}) []*simplified.Funder {
 	/* FIXME: Need to find example of where this is in DataCite JSON */
 	return nil
 }
 
 // getObjectDOI
-func getObjectDOI(object *dataciteapi.Object) string {
+func getObjectDOI(object map[string]interface{}) string {
 	if data, ok := getObjectData(object); ok {
 		if attributes, ok := getObjectDataAttributes(data); ok {
-			if doi, ok := attributes["doi"]; ok {
+			if doi, ok := attributes["doi"].(string); ok {
 				return doi
 			}
 		}
@@ -283,81 +286,71 @@ func getObjectDOI(object *dataciteapi.Object) string {
 }
 
 // getObjectLinks
-func getObjectLinks(object *dataciteapi.Object) []*simplified.Identifier {
+func getObjectLinks(object map[string]interface{}) []*simplified.Identifier {
 	/* FIXME: Need to find an example of where this is in DataCite JSON */
 	return nil
 }
 
-func crosswalkObjectAuthorAffiliationToCreatorAffiliation(object *dataciteapi.Object) *simplified.Affiliation {
+func crosswalkObjectAuthorAffiliationToCreatorAffiliation(object map[string]interface{}) *simplified.Affiliation {
 	/* FIXME: NEed to find an example of where this is in DataCite JSON */
 	return nil
 }
 
-func crosswalkObjectPersonToCreator(object *dataciteapi.Object) *simplified.Creator {
+func crosswalkObjectPersonToCreator(object map[string]interface{}) *simplified.Creator {
 	/* FIXME: Need to figure this in DataCite JSON */
 	return nil
 }
 
-func crosswalkObjectLicenseToRight(license *dataciteapi.License) *simplified.Right {
-	/* FIXME: Need to figure this out in DataCite JSON */
-	return nil
-}
-
-func crosswalkObjectDateObjectToDateType(do *dataciteapi.DateObject, description string) *simplified.DateType {
-	/* FIXME: Need to figure this out in DataCite JSON */
-	return nil
-}
-
-func getObjectCreators(object *dataciteapi.Object) []*simplified.Creator {
+func getObjectCreators(object map[string]interface{}) []*simplified.Creator {
 	creators := []*simplified.Creator{}
 	/* FIXME: Need to figure this out in DataCite JSON */
 	return creators
 }
 
-func getObjectContributors(object *dataciteapi.Object) []*simplified.Creator {
+func getObjectContributors(object map[string]interface{}) []*simplified.Creator {
 	creators := []*simplified.Creator{}
 	/* FIXME: Need to figure this out in DataCITE JSON */
 	return creators
 }
 
-func getObjectLicenses(object *dataciteapi.Object) []*simplified.Right {
+func getObjectLicenses(object map[string]interface{}) []*simplified.Right {
 	/* FIXME: Need ot figure this out in DataCite JSON */
 	return nil
 }
 
-func getObjectSubjects(object *dataciteapi.Object) []*simplified.Subject {
+func getObjectSubjects(object map[string]interface{}) []*simplified.Subject {
 	/* FIXME: Need to figure this out in DataCite JSON */
 	return nil
 }
 
-func getObjectPublishedPrint(object *dataciteapi.Object) *simplified.DateType {
+func getObjectPublishedPrint(object map[string]interface{}) *simplified.DateType {
 	/* FIXME: Need to figure this out in DataCite JSON */
 	return nil
 }
 
-func getObjectPublishedOnline(object *dataciteapi.Object) *simplified.DateType {
+func getObjectPublishedOnline(object map[string]interface{}) *simplified.DateType {
 	/* FIXME: Need to figure this out in DataCite JSON */
 	return nil
 }
 
-func getObjectPublicationDate(object *dataciteapi.Object) string {
+func getObjectPublicationDate(object map[string]interface{}) string {
 	/* FIXME: Need to figure this out in DataCite JSON */
 	return ""
 }
 
-func getObjectAccepted(object *dataciteapi.Object) *simplified.DateType {
+func getObjectAccepted(object map[string]interface{}) *simplified.DateType {
 	/* FIXME: Need to figure this out in DataCite JSON */
 	return nil
 }
 
-func getObjectApproved(object *dataciteapi.Object) *simplified.DateType {
+func getObjectApproved(object map[string]interface{}) *simplified.DateType {
 	/* FIXME: Need to figure this out in DataCite JSON */
 	return nil
 }
 
 // normalizeObjectPublisherName will check the publisher DOI and ISSN to see if we have
 // a preferred name in our options. If so it will return that.
-func normalizeObjectPublisherName(val string, object *dataciteapi.Object, options *Doi2RdmOptions) string {
+func normalizeObjectPublisherName(val string, object map[string]interface{}, options *Doi2RdmOptions) string {
 	doi := getObjectDOI(object)
 	if doi != "" {
 		doiPrefix, _ := DoiPrefix(doi)
@@ -378,7 +371,7 @@ func normalizeObjectPublisherName(val string, object *dataciteapi.Object, option
 // CrosswalkDataCiteObject takes a Object object from the DataCite API
 // and maps the fields into an simplified Record struct return a
 // new struct or error.
-func CrosswalkDataCiteObject(cfg *Config, object *dataciteapi.Object, options *Doi2RdmOptions) (*simplified.Record, error) {
+func CrosswalkDataCiteObject(cfg *Config, object map[string]interface{}, options *Doi2RdmOptions) (*simplified.Record, error) {
 	if object == nil {
 		return nil, fmt.Errorf("crossref api objects not populated")
 	}
