@@ -31,9 +31,9 @@ import (
 //
 
 
-// CiteProcItem implements the data structure for CiteProc's Item representing a single
+// Citation implements the data structure for CiteProc's Item representing a single
 // bibliographic citation.
-type CiteProcItem struct {
+type Citation struct {
 	// Uuid isn't part of CiteProc's spec but it can be handly when dealing with records aggregated from various
 	// sources that don't have something like a DOI.
 	Uuid uuid.UUID `json:"uuid,omitempty" xml:"uuid,omitempty" yaml:"uuid,omitempty"`
@@ -43,7 +43,7 @@ type CiteProcItem struct {
 
 	// AlternateId a list of Item identifies, not in the CiteProc spec but useful to me and likely useful
 	// in fielded searching, e.g. looking up a citation with a given ISBN ir ISSN
-	AlternateId []*CiteProcIdentifier `json:"alternate_id,omitempty" xml:"alternate_di,omitempty" yaml:"alternate_id,omitempty"`
+	AlternateId []*CitationIdentifier `json:"alternate_id,omitempty" xml:"alternate_di,omitempty" yaml:"alternate_id,omitempty"`
 
 	// Type holds the citeproc "type" of bibliographic record. In DataCite records
 	// this would be found in `.access.types.citeproc`.
@@ -57,10 +57,10 @@ type CiteProcItem struct {
 	AlternateTitle []string `json:"alternate_title,omitempty" xml:"alternate_title,omitempty" yaml:"alternate_title,omitempty"`
 
 	// Author holds a list of "author" objects.
-	Author []*CiteProcAgent `json:"author,omitempty" xml:"author,omitempty" yaml:"author,omitempty"`
+	Author []*CitationAgent `json:"author,omitempty" xml:"author,omitempty" yaml:"author,omitempty"`
 
 	// Date holds a map to related citeproc item dates.
-	Date map[string]*CiteProcDate `json:"dates,omitempty" xml:"dates,omitempty" yaml:"dates,omitempty"`
+	Date map[string]*CitationDate `json:"dates,omitempty" xml:"dates,omitempty" yaml:"dates,omitempty"`
 
 	// Abstract holds the abstract, useful for search applications, not needed fir CiteProc
 	Abstract string `json:"abstract,omitempty" xml:"abstract,omitempty" yaml:"abstract,omitempty"`
@@ -72,17 +72,17 @@ type CiteProcItem struct {
 	Suffix string `json:"suffix,omitempty" xml:"suffix,omitempty" yaml:"suffix,omitempty"`
 }
 
-// CiteProcIdentifier is a minimal object to identify a type of identifier, e.g. ISBN, ISSN, ROR, ORCID, etc.
-type CiteProcIdentifier struct {
+// CitationIdentifier is a minimal object to identify a type of identifier, e.g. ISBN, ISSN, ROR, ORCID, etc.
+type CitationIdentifier struct {
 	// Type holds the identifier type, e.g. ISSN, ISBN, ROR, ORCID
 	Type string `json:"type,omitempty" yaml:"type,omitempty"`
 	// Value holds an identifier value.
 	Value string `json:"id,omitempty" yaml:"id,omitempty"`
 }
 
-// CiteProcAgent this describes a person or organization for the purposes of CiteProc item data.
+// CitationAgent this describes a person or organization for the purposes of CiteProc item data.
 // This is based on https://citeproc-js.readthedocs.io/en/latest/csl-json/markup.html, reviewed 2024-03-06.
-type CiteProcAgent struct {
+type CitationAgent struct {
 	// Uuid isn't part of CiteProc's person object but if you're storing lists of
 	// people like when you aggregate publications by people then a UUID is handy. Not
 	// everyone has an ORCID, ISNI, Viaf, etc.
@@ -112,15 +112,15 @@ type CiteProcAgent struct {
 	Literal string `json:"literal,omitempty" xml:"literal,omitempty" yaml:"literal,omitempty"`
 }
 
-// CiteProcDate holds date information, this includes support for partial dates (e.g. year, year-month).
-type CiteProcDate struct {
+// CitationDate holds date information, this includes support for partial dates (e.g. year, year-month).
+type CitationDate struct {
 	// DateParts holds the data parts expressed as array of an array of integers
 	DateParts [][]int `json:"date-parts,omitempty" xml:"date-parts,omitempty" yaml:"date-parts,omitempty"`
 	// Raw holds the raw string from a bibiographic source, e.g. publisher
 	Raw string `json:"raw,omitempty" xml:"raw,omitempty" yaml:"raw,omitempty"`
 }
 
-// CrosswalkRecord takes a simplified record and return maps the values into the CiteProcItem.
-func (item *CiteProcItem) CrosswalkRecord(rec *simplified.Record) error {
+// CrosswalkRecord takes a simplified record and return maps the values into the Citation.
+func (item *Citation) CrosswalkRecord(rec *simplified.Record) error {
 	return fmt.Errorf("CrosswalkRecord() not implemented")	
 }
