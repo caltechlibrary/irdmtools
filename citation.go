@@ -2,13 +2,14 @@ package irdmtools
 
 import (
 	"fmt"
-	
+	"log"
+	"strings"
+
 	// Caltech Library Packages
 	"github.com/caltechlibrary/simplified"
-	
+
 	// 3rd Party Packages
 	"github.com/gofrs/uuid"
-	
 )
 
 // irdmtools provides a means of turning an EPrint or RDM record into a datastructure suitable
@@ -30,13 +31,21 @@ import (
 // - <https://github.com/citation-style-language/schema/blob/master/schemas/input/csl-data.json>
 //
 
-
 // Citation implements the data structure for CiteProc's Item representing a single
 // bibliographic citation.
 type Citation struct {
 	// Uuid isn't part of CiteProc's spec but it can be handly when dealing with records aggregated from various
 	// sources that don't have something like a DOI.
 	Uuid uuid.UUID `json:"uuid,omitempty" xml:"uuid,omitempty" yaml:"uuid,omitempty"`
+
+	// Repository holds the name of the repository holding the record, e.g. caltechauthors, caltechdata, caltechthesis
+	Repository string `json:"repository,omitempty" xml:"repository,omitemmpty" yaml:"repository,omitempty"`
+
+	// RepositoryRecordID holds the id used in the repository for the record (E.g. a number for EPrints, a string for RDM)
+	RepositoryRecordID string `json:"repo_record_id,omitempty" xml:"repo_record_id,omitempty" yaml:"repo_record_id"`
+
+	// ResourceType is the string from the repository that identifies the type of resource the record is about
+	ResourceType string `json:"resource_type,omitempty" xml:"resource_type,omitempty" yaml:"resource_type,omitempty"`
 
 	// Id holds the primary unique identifier for a given citation. In BibTeX this is the string after the opening "{".
 	Id string `json:"id,omitempty" xml:"id,omitempty" yaml:"id,omitempty"`
@@ -56,8 +65,26 @@ type Citation struct {
 	// useful for search purposes.
 	AlternateTitle []string `json:"alternate_title,omitempty" xml:"alternate_title,omitempty" yaml:"alternate_title,omitempty"`
 
-	// Author holds a list of "author" objects.
+	// Author holds a list of author as CitationAgent objects.
 	Author []*CitationAgent `json:"author,omitempty" xml:"author,omitempty" yaml:"author,omitempty"`
+
+	// Editor holds a list of editor as CitationAgent objects
+	Editor []*CitationAgent `json:"editor,omitempty" xml:"editor,omitempty" yaml:"editor,omitempty"`
+
+	// Reviewer holds a list of reviewer as CitationAgent objects
+	Reviewer []*CitationAgent `json:"reviewer,omitempty" xml:"reviewer,omitempty" yaml:"reviewer,omitempty"`
+
+	// ThesisAdvisors holds a list of thesis advisors as CitationAgent objects
+	ThesisAdvisor []*CitationAgent `json:"thesis_advisor,omitempty" xml:"thesis_advisor,omitempty" yaml:"thesis_advisor,omitempty"`
+
+	// ThesisCommittee holds a list of thesis committee members as CitationAgent objects
+	ThesisCommittee []*CitationAgent `json:"thesis_committee,omitempty" xml:"thesis_committee,omitempty" yaml:"thesis_committee,omitempty"`
+
+	// Contributor holds a list of contributors (people who contributed but are not authors, editors, reviewers, thesis advisors, etc)
+	Contributor []*CitationAgent `json:"contributor,omitempty" xml:"contributor,omitempty" yaml:"contributor,omitempty"`
+
+	// Translator  holds a list of people who translated the work
+	Translator []*CitationAgent `json:"translator,omitempty" xml:"translator,omitempty" yaml:"translator,omitempty"`
 
 	// Date holds a map to related citeproc item dates.
 	Date map[string]*CitationDate `json:"dates,omitempty" xml:"dates,omitempty" yaml:"dates,omitempty"`
@@ -65,11 +92,38 @@ type Citation struct {
 	// Abstract holds the abstract, useful for search applications, not needed fir CiteProc
 	Abstract string `json:"abstract,omitempty" xml:"abstract,omitempty" yaml:"abstract,omitempty"`
 
-	// Prefix would appear before the citation item.
-	Prefix string `json:"prefix,omitempty" xml:"prefix,omitempty" yaml:"prefix,omitempty"`
+	// DOI of object
+	DOI string `json:"doi,omitempty" xml:"doi,omitempty" yaml:"doi,omitempty"`
 
-	// Suffix would appear after the citation, e.g. "see ..."
-	Suffix string `json:"suffix,omitempty" xml:"suffix,omitempty" yaml:"suffix,omitempty"`
+	// CiteUsingURL holds the URL the citation will use to reach the object.
+	// This is normally the URL of the item in your repository. You could map this to the DOI or other
+	// resolver system.
+	CiteUsingURL string `json:"cite_using_url,omitempty" xml:"cite_using_url,omitempty" yaml:"cite_using_url,omitempty"`
+
+	// Publisher holds the publisher's name
+	Publisher string `json:"publisher,omitempty" xml:"publisher,omitempty" yaml:"publisher,omitempty"`
+
+	// PublisherLocation holds the address or location description of the publiser (e.g. Los Angeles, CA)
+	PublisherLocation string `json:"publisher_location,omitempty" xml:"publisher_location,omitempty" yaml:"publisher_location,omitempty"`
+
+	// Publication holds the name of the journal or publication, e.g. "Journal of Olympic Thumb Wrestling"
+	Publication string `json:"publication,omitempty" xml:"publication,omitempty" yaml:"publication,omitempty"`
+
+	// PublicationDate is a string, can be an approximate date. It's the date used to sort citations by in terms of record availabilty
+	// E.g. for Thesis this would be the graduation year, for monographs and internal reports this might be the date made publically
+	// available.
+	PublicationDate string `json:"publication_date,omitempty" xml:"publication_date,omitempty" yaml:"publication_date,omitempty"`
+
+	// Series/SeriesNumber values from CaltechAUTHORS (mapped from custom fields)
+	Series       string `json:"series,omitempty" xml:"series,omitempty" yaml:"series,omitempty"`
+	SeriesNumber string `json:"series_number,omitempty" xml:"series_number,omitempty" yaml:"series_number,omitempty"`
+
+	// Volume/Issue values mapped from CrossRef/DataCite data models
+	Volume string `json:"volume,omitempty" xml:"volume,omitempty" yaml:"volume,omitempty"`
+	Issue  string `json:"issue,omitempty" xml:"issue,omitempty" yaml:"issue,omitempty"`
+
+	// Pages range
+	Pages string `json:"pages,omitempty" xml:"pages,omitempty" yaml:"pages,omitempty"`
 }
 
 // CitationIdentifier is a minimal object to identify a type of identifier, e.g. ISBN, ISSN, ROR, ORCID, etc.
@@ -88,13 +142,13 @@ type CitationAgent struct {
 	// everyone has an ORCID, ISNI, Viaf, etc.
 	Uuid uuid.UUID `json:"uuid,omitemtpy" xml:"uuid,omitempty" yaml:"uuid,omitempty"`
 
-	// Family holds a person's family name
-	Family string `json:"family,omitempty" xml:"family,omitempty" yaml:"family,omitempty"`
+	// FamilyName holds a person's family name
+	FamilyName string `json:"family_name,omitempty" xml:"family_name,omitempty" yaml:"family_name,omitempty"`
 
-	// Lived holds a person's lived or given. It is express encoded as "given" in JSON, XML and YAML for
+	// LivedName holds a person's lived or given. It is express encoded as "given" in JSON, XML and YAML for
 	// to becompatible with historical records not as a justication for that "given" implies
 	// in 2024 in the United States.
-	Lived string `json:"given,omitempty" xml:"given,omitempty" yaml:"given,omitempty"`
+	LivedName string `json:"given_name,omitempty" xml:"given_name,omitempty" yaml:"given_name,omitempty"`
 
 	// NonDroppingParticle holds non dropping particles that should not be dropped from a name, e.g. "de las"
 	NonDroppingParticle string `json:"non-dropping-particle,omitempty" xml:"non-dropping-particle,omitempty" yaml:"non-dropping-particle,omitempty"`
@@ -102,7 +156,7 @@ type CitationAgent struct {
 	// DroppingParticle holds the list of particles that can be dropped.
 	DroppingParticle string `json:"dropping-particle,omitempty" xml:"dropping-particle,omitempty" yaml:"dropping-particle,omitempty"`
 
-	// Prefix (FIXME: verify this exists in a CiteProc person reference), because they can exist ...
+	// Prefix, e.g. Mr., Mrs, Prof.
 	Prefix string `json:"prefix,omitempty" xml:"prefix,omitempty" yaml:"prefix,omitempty"`
 
 	// Suffix, e.g. Jr., PhD. etc.
@@ -110,6 +164,15 @@ type CitationAgent struct {
 
 	// Literal would be use for a group or organization, e.g. "ACME Widgets and Gadgets, Inc."
 	Literal string `json:"literal,omitempty" xml:"literal,omitempty" yaml:"literal,omitempty"`
+
+	// ORCID identifier
+	ORCID string `json:"orcid,omitempty" xml:"orcid,omitempty" yaml:"orcid,omitempty"`
+
+	// ISNI
+	ISNI string `json:"isni,omitempty" xml:"isni,omitempty" yaml:"isni,omitempty"`
+
+	// clpid - Caltech Library Person Identifier
+	CLpid string `json:"clpid,omitempty" xml:"clpid,omitempty" yaml:"clpid,omitempty"`
 }
 
 // CitationDate holds date information, this includes support for partial dates (e.g. year, year-month).
@@ -121,6 +184,152 @@ type CitationDate struct {
 }
 
 // CrosswalkRecord takes a simplified record and return maps the values into the Citation.
-func (item *Citation) CrosswalkRecord(rec *simplified.Record) error {
-	return fmt.Errorf("CrosswalkRecord() not implemented")	
+func (item *Citation) CrosswalkRecord(repository string, repositoryRecordID string, citeUsingURL string, rec *simplified.Record) error {
+	// map repository name and repository id
+	item.Repository = repository
+	item.RepositoryRecordID = repositoryRecordID
+	item.CiteUsingURL = citeUsingURL
+	if rec.Metadata != nil {
+		// map title of simplified record
+		item.Title = rec.Metadata.Title
+		// map resource type from simplified record
+		if rec.Metadata.ResourceType != nil {
+			if resourceType, ok := rec.Metadata.ResourceType["id"].(string); ok {
+				item.ResourceType = resourceType
+			}
+		}
+		// map authors, contributors, editors, thesis advisors, committee members from simplified record
+		for i, creator := range rec.Metadata.Creators {
+			agent, _, err := CrosswalkCreatorToCitationAgent(creator)
+			if err != nil {
+				log.Printf("skipping author (%d), %s", i, err)
+				continue
+			}
+			item.Author = append(item.Author, agent)
+		}
+		for i, contributor := range rec.Metadata.Contributors {
+			agent, role, err := CrosswalkCreatorToCitationAgent(contributor)
+			if err != nil {
+				log.Printf("skipping contributor (%d), %s", i, err)
+				continue
+			}
+			switch role {
+			case "editor":
+				item.Editor = append(item.Editor, agent)
+			case "reviewer":
+				item.Reviewer = append(item.Reviewer, agent)
+			case "thesis_advisor":
+				item.ThesisAdvisor = append(item.ThesisAdvisor, agent)
+			case "thesis_committee":
+				item.ThesisCommittee = append(item.ThesisCommittee, agent)
+			case "translator":
+				item.Translator = append(item.Translator, agent)
+			default:
+				item.Contributor = append(item.Contributor, agent)
+			}
+		}
+		// map publisher from simplified record
+		item.Publisher = rec.Metadata.Publisher
+		// map publication date
+		item.PublicationDate = rec.Metadata.PublicationDate
+	}
+	// DataCite doesn't provide some commonly used fields. These are getting mapped
+	// into the CustomFields namespace in the object.
+	if rec.CustomFields != nil {
+		if journalInfo, ok := rec.CustomFields["journal:journal"].(map[string]string); ok {
+			if publication, ok := journalInfo["title"]; ok {
+				// map publication from simplified record
+				// FIXME: DataCite/RDM do not provide an explicit publication field for some reason.
+				// We use a custom field, `.custom_fields["journal:joural"].title` to identify publishers ...
+				item.Publication = publication
+			}
+			// map series/number from simplified record
+			if series, ok := journalInfo["series"]; ok {
+				item.Series = series
+			}
+			if seriesNumber, ok := journalInfo["number"]; ok {
+				item.SeriesNumber = seriesNumber
+			}
+			// map volume/issue from simplified record
+			if volume, ok := journalInfo["volume"]; ok {
+				item.Volume = volume
+			}
+			if issue, ok := journalInfo["issue"]; ok {
+				item.Issue = issue
+			}
+			if pages, ok := journalInfo["pages"]; ok {
+				item.Pages = pages
+			}
+		}
+	}
+
+	// map CiteUsingURL from simplified record
+	// map doi from simplified record
+	if rec.ExternalPIDs != nil {
+		if doi, ok := rec.ExternalPIDs["doi"]; ok {
+			item.DOI = doi.Identifier
+		}
+	}
+	if citeUsingURL == "" {
+		item.CiteUsingURL = "https://doi.org/" + strings.TrimPrefix(item.DOI, "https://doi.org/")
+	}
+	return nil
+}
+
+// CrosswalkCreatorToCitationAgent takes a simplified.Cretor and returns a CitationAgent, role (e.g. "author", "editor", "thesis_advisor", "thesis_committee", "reviewer", "contributor"), and an error value
+func CrosswalkCreatorToCitationAgent(creator *simplified.Creator) (*CitationAgent, string, error) {
+	if creator.PersonOrOrg == nil {
+		return nil, "", fmt.Errorf("create.PersonOrOrg is nil")
+	}
+	citationAgent, err := CrosswalkPersonOrOrgToCitationAgent(creator.PersonOrOrg)
+	if err != nil {
+		return nil, "", err
+	}
+	return citationAgent, "", nil
+}
+
+// CrosswalkPersonOrOrgToCitationAgent takes a simplified.PersonOrOrg and returns a CitationAgent
+func CrosswalkPersonOrOrgToCitationAgent(personOrOrg *simplified.PersonOrOrg) (*CitationAgent, error) {
+	citationAgent := new(CitationAgent)
+	if personOrOrg.FamilyName != "" {
+		citationAgent.FamilyName = personOrOrg.FamilyName
+	}
+	if personOrOrg.GivenName != "" {
+		citationAgent.LivedName = personOrOrg.GivenName
+	}
+	if personOrOrg.Name != "" {
+		citationAgent.Literal = personOrOrg.Name
+	}
+	// Map personOrOrg identifiers
+	for _, identifier := range personOrOrg.Identifiers {
+		switch identifier.Scheme {
+		case "clpid":
+			citationAgent.CLpid = identifier.Identifier
+		case "orcid":
+			citationAgent.ORCID = identifier.Identifier
+		case "isni":
+			citationAgent.ISNI = identifier.Identifier
+		}
+	}
+	return citationAgent, nil
+}
+
+// ToString convert a CitationAgent to a string representation
+func (ca *CitationAgent) ToString() string {
+	return fmt.Sprintf("%s, %s", ca.FamilyName, ca.LivedName)
+}
+
+// Markdown displays the citation as a Markdown text with links back to the record.
+func (c *Citation) Markdown() string {
+	return "not implemented"
+}
+
+// ToHTML returns HTML rendition of a Citation
+func (c *Citation) ToHTML() string {
+	return `<div class="citation">Not implemented</div>`
+}
+
+// ToString returns a text rendering of the Citation
+func (c *Citation) ToString() string {
+	return "not implemented"
 }
