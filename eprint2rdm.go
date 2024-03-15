@@ -822,7 +822,7 @@ func dateTypeFromTimestamp(dtType string, tstamp string, description string) *si
 		"en": dtType,
 	}
 	dt.Description = description
-	if len(timestamp) > 9 {
+	if len(tstamp) > 9 {
 		dt.Date = tstamp[0:10]
 	} else {
 		dt.Date = tstamp

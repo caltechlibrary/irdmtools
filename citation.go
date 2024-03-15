@@ -3,13 +3,11 @@ package irdmtools
 import (
 	"fmt"
 	"log"
+	"path"
 	"strings"
 
 	// Caltech Library Packages
 	"github.com/caltechlibrary/simplified"
-
-	// 3rd Party Packages
-	"github.com/gofrs/uuid"
 )
 
 // irdmtools provides a means of turning an EPrint or RDM record into a datastructure suitable
@@ -34,21 +32,27 @@ import (
 // Citation implements the data structure for CiteProc's Item representing a single
 // bibliographic citation.
 type Citation struct {
-	// Uuid isn't part of CiteProc's spec but it can be handly when dealing with records aggregated from various
-	// sources that don't have something like a DOI.
-	Uuid uuid.UUID `json:"uuid,omitempty" xml:"uuid,omitempty" yaml:"uuid,omitempty"`
+	//
+	// The first four properties are requred. Without them they don't make sense in a dataset collection of citations.
+	//
 
-	// Repository holds the name of the repository holding the record, e.g. caltechauthors, caltechdata, caltechthesis
-	Repository string `json:"repository,omitempty" xml:"repository,omitemmpty" yaml:"repository,omitempty"`
+	// ID holds a citation id. This is formed from the originating collection (e.g. repository) and that collection's id, i.e. {REPO_ID}:{RECORD_ID}.
+	ID string `json:"id,required" xml:"id,required" yaml:"id,required"`
 
-	// RepositoryRecordID holds the id used in the repository for the record (E.g. a number for EPrints, a string for RDM)
-	RepositoryRecordID string `json:"repo_record_id,omitempty" xml:"repo_record_id,omitempty" yaml:"repo_record_id"`
+	// Collection is the dataset collection the citation came from or the Repository collection name (E.g. authors, caltechauthors)
+	Collection string `json:"collection,required" xml:"collection,required" yaml:"collection,required"`
+
+	// CollectionID is the id used in the originating collection
+	CollectionID string `json:"collection_id,required" xml:"collection_id,required" yaml:"collection_id,required"`
+
+	// CiteUsingURL holds the URL the citation will use to reach the object.
+	// This is normally the URL of the item in your repository. You could map this to the DOI or other
+	// resolver system.
+	CiteUsingURL string `json:"cite_using_url,required" xml:"cite_using_url,required" yaml:"cite_using_url,required"`
+
 
 	// ResourceType is the string from the repository that identifies the type of resource the record is about
 	ResourceType string `json:"resource_type,omitempty" xml:"resource_type,omitempty" yaml:"resource_type,omitempty"`
-
-	// Id holds the primary unique identifier for a given citation. In BibTeX this is the string after the opening "{".
-	Id string `json:"id,omitempty" xml:"id,omitempty" yaml:"id,omitempty"`
 
 	// AlternateId a list of Item identifies, not in the CiteProc spec but useful to me and likely useful
 	// in fielded searching, e.g. looking up a citation with a given ISBN ir ISSN
@@ -95,11 +99,6 @@ type Citation struct {
 	// DOI of object
 	DOI string `json:"doi,omitempty" xml:"doi,omitempty" yaml:"doi,omitempty"`
 
-	// CiteUsingURL holds the URL the citation will use to reach the object.
-	// This is normally the URL of the item in your repository. You could map this to the DOI or other
-	// resolver system.
-	CiteUsingURL string `json:"cite_using_url,omitempty" xml:"cite_using_url,omitempty" yaml:"cite_using_url,omitempty"`
-
 	// Publisher holds the publisher's name
 	Publisher string `json:"publisher,omitempty" xml:"publisher,omitempty" yaml:"publisher,omitempty"`
 
@@ -137,11 +136,6 @@ type CitationIdentifier struct {
 // CitationAgent this describes a person or organization for the purposes of CiteProc item data.
 // This is based on https://citeproc-js.readthedocs.io/en/latest/csl-json/markup.html, reviewed 2024-03-06.
 type CitationAgent struct {
-	// Uuid isn't part of CiteProc's person object but if you're storing lists of
-	// people like when you aggregate publications by people then a UUID is handy. Not
-	// everyone has an ORCID, ISNI, Viaf, etc.
-	Uuid uuid.UUID `json:"uuid,omitemtpy" xml:"uuid,omitempty" yaml:"uuid,omitempty"`
-
 	// FamilyName holds a person's family name
 	FamilyName string `json:"family_name,omitempty" xml:"family_name,omitempty" yaml:"family_name,omitempty"`
 
@@ -184,18 +178,22 @@ type CitationDate struct {
 }
 
 // CrosswalkRecord takes a simplified record and return maps the values into the Citation.
-func (item *Citation) CrosswalkRecord(repository string, repositoryRecordID string, citeUsingURL string, rec *simplified.Record) error {
-	// map repository name and repository id
-	item.Repository = repository
-	item.RepositoryRecordID = repositoryRecordID
-	item.CiteUsingURL = citeUsingURL
+func (cite *Citation) CrosswalkRecord(cName string, cID string, citeUsingURL string, rec *simplified.Record) error {
+	// map repository required fields, everything else is derived from crosswalk
+	cName = path.Base(strings.TrimSuffix(cName, ".ds"))
+	cite.ID = strings.ToLower(fmt.Sprintf("%s:%s", cName, cID))
+	cite.Collection = cName
+	cite.CollectionID = cID
+	cite.CiteUsingURL = citeUsingURL
+
+	// Now crosswalk the rest of the citation from the simplified record.
 	if rec.Metadata != nil {
 		// map title of simplified record
-		item.Title = rec.Metadata.Title
+		cite.Title = rec.Metadata.Title
 		// map resource type from simplified record
 		if rec.Metadata.ResourceType != nil {
 			if resourceType, ok := rec.Metadata.ResourceType["id"].(string); ok {
-				item.ResourceType = resourceType
+				cite.ResourceType = resourceType
 			}
 		}
 		// map authors, contributors, editors, thesis advisors, committee members from simplified record
@@ -205,7 +203,7 @@ func (item *Citation) CrosswalkRecord(repository string, repositoryRecordID stri
 				log.Printf("skipping author (%d), %s", i, err)
 				continue
 			}
-			item.Author = append(item.Author, agent)
+			cite.Author = append(cite.Author, agent)
 		}
 		for i, contributor := range rec.Metadata.Contributors {
 			agent, role, err := CrosswalkCreatorToCitationAgent(contributor)
@@ -215,23 +213,23 @@ func (item *Citation) CrosswalkRecord(repository string, repositoryRecordID stri
 			}
 			switch role {
 			case "editor":
-				item.Editor = append(item.Editor, agent)
+				cite.Editor = append(cite.Editor, agent)
 			case "reviewer":
-				item.Reviewer = append(item.Reviewer, agent)
+				cite.Reviewer = append(cite.Reviewer, agent)
 			case "thesis_advisor":
-				item.ThesisAdvisor = append(item.ThesisAdvisor, agent)
+				cite.ThesisAdvisor = append(cite.ThesisAdvisor, agent)
 			case "thesis_committee":
-				item.ThesisCommittee = append(item.ThesisCommittee, agent)
+				cite.ThesisCommittee = append(cite.ThesisCommittee, agent)
 			case "translator":
-				item.Translator = append(item.Translator, agent)
+				cite.Translator = append(cite.Translator, agent)
 			default:
-				item.Contributor = append(item.Contributor, agent)
+				cite.Contributor = append(cite.Contributor, agent)
 			}
 		}
 		// map publisher from simplified record
-		item.Publisher = rec.Metadata.Publisher
+		cite.Publisher = rec.Metadata.Publisher
 		// map publication date
-		item.PublicationDate = rec.Metadata.PublicationDate
+		cite.PublicationDate = rec.Metadata.PublicationDate
 	}
 	// DataCite doesn't provide some commonly used fields. These are getting mapped
 	// into the CustomFields namespace in the object.
@@ -241,24 +239,24 @@ func (item *Citation) CrosswalkRecord(repository string, repositoryRecordID stri
 				// map publication from simplified record
 				// FIXME: DataCite/RDM do not provide an explicit publication field for some reason.
 				// We use a custom field, `.custom_fields["journal:joural"].title` to identify publishers ...
-				item.Publication = publication
+				cite.Publication = publication
 			}
 			// map series/number from simplified record
 			if series, ok := journalInfo["series"]; ok {
-				item.Series = series
+				cite.Series = series
 			}
 			if seriesNumber, ok := journalInfo["number"]; ok {
-				item.SeriesNumber = seriesNumber
+				cite.SeriesNumber = seriesNumber
 			}
 			// map volume/issue from simplified record
 			if volume, ok := journalInfo["volume"]; ok {
-				item.Volume = volume
+				cite.Volume = volume
 			}
 			if issue, ok := journalInfo["issue"]; ok {
-				item.Issue = issue
+				cite.Issue = issue
 			}
 			if pages, ok := journalInfo["pages"]; ok {
-				item.Pages = pages
+				cite.Pages = pages
 			}
 		}
 	}
@@ -267,11 +265,11 @@ func (item *Citation) CrosswalkRecord(repository string, repositoryRecordID stri
 	// map doi from simplified record
 	if rec.ExternalPIDs != nil {
 		if doi, ok := rec.ExternalPIDs["doi"]; ok {
-			item.DOI = doi.Identifier
+			cite.DOI = doi.Identifier
+			if citeUsingURL == "" && cite.DOI != "" {
+				cite.CiteUsingURL = "https://doi.org/" + strings.TrimPrefix(cite.DOI, "https://doi.org/")
+			}
 		}
-	}
-	if citeUsingURL == "" {
-		item.CiteUsingURL = "https://doi.org/" + strings.TrimPrefix(item.DOI, "https://doi.org/")
 	}
 	return nil
 }
@@ -319,17 +317,3 @@ func (ca *CitationAgent) ToString() string {
 	return fmt.Sprintf("%s, %s", ca.FamilyName, ca.LivedName)
 }
 
-// Markdown displays the citation as a Markdown text with links back to the record.
-func (c *Citation) Markdown() string {
-	return "not implemented"
-}
-
-// ToHTML returns HTML rendition of a Citation
-func (c *Citation) ToHTML() string {
-	return `<div class="citation">Not implemented</div>`
-}
-
-// ToString returns a text rendering of the Citation
-func (c *Citation) ToString() string {
-	return "not implemented"
-}

@@ -15,7 +15,7 @@
     <li><a href="index.html">README</a></li>
     <li><a href="LICENSE">LICENSE</a></li>
     <li><a href="INSTALL.html">INSTALL</a></li>
-    <li><a href="user-manual.html">User Manual</a></li>
+    <li><a href="user_manual.html">User Manual</a></li>
     <li><a href="search.html">Search Docs</a></li>
     <li><a href="about.html">About</a></li>
     <li><a href="https://github.com/caltechlibrary/irdmtools">GitHub</a></li>
@@ -31,7 +31,9 @@ Repository Data Management Tools</h1>
 <p>This is a proof of concept set tools for working with Invenio RDM and
 migrating content from EPrints to RDM. It consists of a small set of Go
 based command line programs along with Python scripts and a wrapping
-irdm Python module.</p>
+irdm Python module. The Go based tooling is designed to work directory
+with a copy of you repositories’ database (e.g. Postgres for RDM or
+MySQL for EPrints).</p>
 <p>The proof of concept is being developed around RDM’s web services
 (e.g. REST API and OAI-PMH), PostgreSQL database and external metadata
 services (e.g. CrossRef, DataCite).</p>
@@ -39,7 +41,7 @@ services (e.g. CrossRef, DataCite).</p>
 EPrints 3.3 repositories (heavily customized) to RDM. Post migration the
 core Go tools will remain useful for curation at the collection level
 (e.g. <a href="rdmutil.1.html">rdmutil</a>)</p>
-<h2 id="tools">Tools</h2>
+<h2 id="featured-tools">Featured Tools</h2>
 <h3 id="rdmutil"><code>rdmutil</code></h3>
 <p>This tool is for interacting with an Invenio RDM repository via RDM’s
 REST and OAI-PMH API. It covers most the JSON API documented at <a
@@ -49,6 +51,12 @@ submitting and managing records and draft records.</p>
 <p><code>rdmutil</code> configuration is read either from the
 environment or a JSON formatted configuration file. See the <a
 href="rdmutil.1.html">man page</a> for details.</p>
+<h3 id="ep3util"><code>ep3util</code></h3>
+<p>This tool is used for migrating data out of EPrints. It can be used
+on a copy of your EPrints MySQL database. It parallels
+<code>rdmutil</code> and is an evolution of our tooling developed in <a
+href="https://github.com/caltechlibrary/eprinttools">eprinttools</a>.
+See the <a href="ep3util.1.html">man page</a> for details.</p>
 <h3 id="eprint2rdm"><code>eprint2rdm</code></h3>
 <p>This tool is migrating content from an EPrints repository via the
 EPrint REST API. It will retrieve an EPrint XML representation of the
@@ -56,10 +64,29 @@ EPrint record and transform it into a JSON encoded simplified record
 nearly compatible with Invenio RDM. See the <a
 href="eprint2rdm.1.html">man page</a> for details.</p>
 <h3 id="doi2rdm"><code>doi2rdm</code></h3>
-<p>This tool will query the CrossRef API and convert a works record into
-a JSON structure compatible with an RDM record (e.g. to be inserted via
-an RDM API call). See the <a href="eprint2rdm.1.html">man page</a> for
-details.</p>
+<p>This tool will query the CrossRef or DataCite API and convert a works
+record into a JSON structure compatible with an RDM record (e.g. to be
+inserted via an RDM API call). See the <a href="doi2rdm.1.html">man
+page</a> for details</p>
+<h3 id="rdm2citeproc"><code>rdm2citeproc</code></h3>
+<p>This tools takes an RDM record and returns an abbreviated record
+inspired by <a
+href="https://en.wikipedia.org/wiki/CiteProc">citeproc</a>. It also
+supports harvesting selected RDM records into a dataset collection using
+the <code>-harvest</code> and <code>-ids</code> options. We use this
+feature to facilate creating <a href="https://feeds.library.caltech.edu"
+class="uri">https://feeds.library.caltech.edu</a>. See the <a
+href="rdm2citeproc.1.html">man page</a> for details.</p>
+<h3 id="eprint2citeproc"><code>eprint2citeproc</code></h3>
+<p>This tools take an EPrint record and returns an abbreviated record
+inspired by <a
+href="https://en.wikipedia.org/wiki/CiteProc">citeproc</a>. It also
+supports harvesting select EPrint records into a dataset collection
+using the <code>-harvest</code> and <code>-ids</code> options. We use
+this feature to facilate creating <a
+href="https://feeds.library.caltech.edu"
+class="uri">https://feeds.library.caltech.edu</a>. See the <a
+href="eprint2citeproc.1.html">man page</a> for details.</p>
 <h2 id="requirements">Requirements</h2>
 <ul>
 <li>An Invenio RDM deployment</li>

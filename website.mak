@@ -3,13 +3,22 @@
 #
 PROJECT = irdmtools
 
+
+BASE_URL =
+ifneq ($(base_url),)
+  BASE_URL = $(base_url)
+endif
+
 PANDOC = $(shell which pandoc)
 
 MD_PAGES = $(shell ls -1 *.md | grep -v 'nav.md')
 
 HTML_PAGES = $(shell ls -1 *.md | grep -v 'nav.md' | sed -E 's/.md/.html/g')
 
-build: $(HTML_PAGES) $(MD_PAGES) pagefind
+build: search.md $(HTML_PAGES) $(MD_PAGES) pagefind
+
+search.md: search.md.tmpl .FORCE
+	echo "" | pandoc --metadata base_url=$(base_url) -s --to markdown -o search.md --template=search.md.tmpl; git add search.md
 
 $(HTML_PAGES): $(MD_PAGES) .FORCE
 	if [ -f $(PANDOC) ]; then $(PANDOC) --metadata title=$(basename $@) -s --to html5 $(basename $@).md -o $(basename $@).html \

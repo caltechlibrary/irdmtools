@@ -24,36 +24,61 @@
 
 <section>
 <h1 id="name">NAME</h1>
-<p>migrate_record.py</p>
+<p>ep3ds2citations</p>
 <h1 id="synopsis">SYNOPSIS</h1>
-<p>migrate_record.py <a href="#options">OPTIONS</a></p>
+<p>ep3ds2citations <a href="#options">OPTIONS</a> EPRINT_DS CITATION_DS
+[RECORD_ID]</p>
 <h1 id="description">DESCRIPTION</h1>
-<p>migrate_record.py is a filter program. It reads from standard input
-and writes fixed up RDM records to standard output. It is intended to be
-used in a pipe line with eprint2rdm and rdmutil.</p>
+<p>ep3ds2citations is a Caltech Library oriented command line
+application that takes an dataset collection of eprint records and
+converts then to a citations dataset collection. It can do so for a
+single record id or read a JSON list of record ids to migrate.</p>
+<p>EPRINT_DS is the dataset collection holding the eprint records.</p>
+<p>CITATION_DS is the dataset collection where the citation formatted
+objects will be written.</p>
 <h1 id="options">OPTIONS</h1>
 <dl>
-<dt>-h, –help</dt>
-<dd>
-show this help message and exit
-</dd>
 <dt>-help</dt>
 <dd>
-display help details
+display help
 </dd>
 <dt>-license</dt>
 <dd>
-display license details
+display license
 </dd>
 <dt>-version</dt>
 <dd>
 display version
 </dd>
+<dt>-config</dt>
+<dd>
+provide a path to an alternate configuration file
+(e.g. “irdmtools.json”)
+</dd>
+<dt>-ids JSON_ID_FILE</dt>
+<dd>
+read ids from a file.
+</dd>
+<dt>-host</dt>
+<dd>
+Set the base url to use for the records
+(e.g. authors.library.caltech.edu)
+</dd>
+<dt>-resource-types</dt>
+<dd>
+Use YAML file to map resouce types
+</dd>
+<dt>-contributor-types</dt>
+<dd>
+Use YAML file to map contributor types
+</dd>
 </dl>
-<h1 id="examples">EXAMPLES</h1>
-<p>Retrieves record 85542 from caltechauthors.ds and return a JSON
-object as an Invenio-RDM structure.</p>
-<pre><code>    eprint2rdm authors.library.caltech.edu 85542 |      migrate_record.py | rdmutil new_record</code></pre>
+<h1 id="example">EXAMPLE</h1>
+<p>Example of a dataset collection called “authors.ds” of EPrint records
+and a “citations.ds” target that will hold citation records.</p>
+<pre class="shell"><code>REPO_HOST=&quot;__HOST_NAME_OF_REPOSITORY__&quot;
+ep3ds2citations authors.ds citations.ds k3tpc-ga970
+ep3ds2citations thesis.ds citations.ds 1233</code></pre>
 </section>
 
 <footer>

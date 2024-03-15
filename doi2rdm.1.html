@@ -15,7 +15,7 @@
     <li><a href="index.html">README</a></li>
     <li><a href="LICENSE">LICENSE</a></li>
     <li><a href="INSTALL.html">INSTALL</a></li>
-    <li><a href="user-manual.html">User Manual</a></li>
+    <li><a href="user_manual.html">User Manual</a></li>
     <li><a href="search.html">Search Docs</a></li>
     <li><a href="about.html">About</a></li>
     <li><a href="https://github.com/caltechlibrary/irdmtools">GitHub</a></li>
@@ -27,12 +27,12 @@
 <p>doi2rdm</p>
 <h1 id="synopsis">SYNOPSIS</h1>
 <p>doi2rdm <a href="#options">OPTIONS</a> <a
-href="#options_yaml">OPTIONS_YAML</a> DOI</p>
+href="#options_yaml">OPTIONS_YAML</a> crossref|datacite DOI</p>
 <h1 id="description">DESCRIPTION</h1>
 <p>doi2rdm is a Caltech Library oriented command line application that
-takes a DOI, queries the CrossRef API then returns a JSON document
-suitable for import into Invenio RDM. The DOI can be in either their
-canonical form or URL form (e.g. “10.1021/acsami.7b15651” or
+takes a DOI, queries the CrossRef or DataCite API then returns a JSON
+document suitable for import into Invenio RDM. The DOI can be in either
+their canonical form or URL form (e.g. “10.1021/acsami.7b15651” or
 “https://doi.org/10.1021/acsami.7b15651”).</p>
 <h1 id="options_yaml">OPTIONS_YAML</h1>
 <p>doi2rdm can use an YAML options file to set the behavior of the
@@ -58,7 +58,7 @@ display version
 <dt>-diff JSON_FILENAME</dt>
 <dd>
 compare the JSON_FILENAME contents with record generated from CrossRef
-works record
+or DataCite works record
 </dd>
 <dt>-show-yaml</dt>
 <dd>
@@ -70,10 +70,10 @@ and customize to suit your needs.
 <p>Example generating a JSON document for a single DOI. The resulting
 text file is called “article.json”. In this example “options.yaml” is
 the configuration file for setup for your RDM instance.</p>
-<pre><code>    doi2rdm options.yaml &quot;10.1021/acsami.7b15651&quot; &gt;article.json</code></pre>
+<pre><code>    doi2rdm options.yaml crossref &quot;10.1021/acsami.7b15651&quot; &gt;article.json</code></pre>
 <p>Check to see the difference from the saved “article.json” and the
 current metadata retrieved from CrossRef.</p>
-<pre><code>    doi2rdm -diff article.json doi2rdm.yaml &quot;10.1021/acsami.7b15651</code></pre>
+<pre><code>    doi2rdm -diff article.json crossref doi2rdm.yaml &quot;10.1021/acsami.7b15651</code></pre>
 <p>Save the default YAML options to a file.</p>
 <pre><code>    doi2rdm -show-yaml &gt;options.yaml</code></pre>
 </section>

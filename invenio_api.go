@@ -671,6 +671,9 @@ func GetRecordIds(cfg *Config) ([]string, error) {
 	if cfg.InvenioDbHost != "" && cfg.InvenioDbUser != "" {
 		return getRecordIdsFromPg(cfg)
 	}
+	return nil, fmt.Errorf("requires direct Postgres access")
+
+	/* The original approach of using the REST API is depreciated.
 	ids := []string{}
 	resumptionToken := "     "
 	t0 := time.Now()
@@ -728,6 +731,7 @@ func GetRecordIds(cfg *Config) ([]string, error) {
 	}
 	log.Printf("%d total retrieved in %s", len(ids), time.Since(t0).Round(time.Second))
 	return ids, nil
+	*/
 }
 
 // GetRecordStaleIds takes a configuration object, contacts am RDM
@@ -769,6 +773,8 @@ func GetModifiedRecordIds(cfg *Config, start string, end string) ([]string, erro
 	if cfg.InvenioDbHost != "" && cfg.InvenioDbUser != "" {
 		return getModifiedRecordIdsFromPg(cfg, start, end)
 	}
+	return nil, fmt.Errorf("database access to Postgres not configured")
+	/* REST API is depricated. 
 	debug := cfg.Debug
 	ids := []string{}
 	resumptionToken := "     "
@@ -834,6 +840,7 @@ func GetModifiedRecordIds(cfg *Config, start string, end string) ([]string, erro
 	}
 	log.Printf("%d total retrieved in %s", len(ids), time.Since(t0).Round(time.Second))
 	return ids, nil
+	*/
 }
 
 // GetRawRecord takes a configuration object and record id,
@@ -1082,6 +1089,8 @@ func GetRecord(cfg *Config, id string, draft bool) (*simplified.Record, error) {
 	if cfg.InvenioDbHost != "" && cfg.InvenioDbUser != "" {
 		return getRecordFromPg(cfg, id, draft)
 	}
+	return nil, fmt.Errorf("database access to Postgres not configured")
+	/* REST API access is deprecated
 	// Make sure we have a valid URL
 	u, err := url.Parse(cfg.InvenioAPI)
 	if err != nil {
@@ -1103,6 +1112,7 @@ func GetRecord(cfg *Config, id string, draft bool) (*simplified.Record, error) {
 	}
 	fmt.Fprintf(os.Stderr, "DEBUG got record ExternalPIDs -> %+v\n", rec.ExternalPIDs)
 	return rec, nil
+	*/
 }
 
 // GetRecordVersions takes a configuration object and record id,
@@ -1219,6 +1229,8 @@ func RetrieveFile(cfg *Config, id string, fName string) ([]byte, error) {
 //
 // ```
 func GetVersions(cfg *Config, id string) (map[string]interface{}, error) {
+	// FIXME: Need to figure out how to get versions via database access.
+
 	// Make sure we have a valid URL
 	u, err := url.Parse(cfg.InvenioAPI)
 	if err != nil {
@@ -1256,6 +1268,8 @@ func GetVersions(cfg *Config, id string) (map[string]interface{}, error) {
 //
 // ```
 func GetVersionLatest(cfg *Config, id string) (map[string]interface{}, error) {
+	// FIXME: Need to figure out how to get latest version via database access
+
 	// Make sure we have a valid URL
 	u, err := url.Parse(cfg.InvenioAPI)
 	if err != nil {
@@ -1376,6 +1390,8 @@ func NewRecordVersion(cfg *Config, recordId string) (map[string]interface{}, err
 // fmt.Printf("%+v\n", record)
 // ```
 func PublishRecordVersion(cfg *Config, recordId string, version string, pubDate string, debug bool) (map[string]interface{}, error) {
+	// FIXME: Need to have this happen directly via Database accees
+
 	// Make sure we have a valid URL
 	u, err := url.Parse(cfg.InvenioAPI)
 	if err != nil {
@@ -1442,6 +1458,8 @@ func PublishRecordVersion(cfg *Config, recordId string, version string, pubDate 
 // fmt.Printf("%+v\n", draft)
 // ```
 func NewDraft(cfg *Config, recordId string) (map[string]interface{}, error) {
+	// FIXME: Need to figure out how to do this with direct database access
+
 	// Make sure we have a valid URL
 	u, err := url.Parse(cfg.InvenioAPI)
 	if err != nil {
@@ -1479,6 +1497,8 @@ func NewDraft(cfg *Config, recordId string) (map[string]interface{}, error) {
 // fmt.Printf("%+v\n", draft)
 // ```
 func GetDraft(cfg *Config, id string) (map[string]interface{}, error) {
+	// FIXME: Need to figure out how to do this with direct database access
+
 	// Make sure we have a valid URL
 	u, err := url.Parse(cfg.InvenioAPI)
 	if err != nil {
@@ -1530,6 +1550,8 @@ func GetDraft(cfg *Config, id string) (map[string]interface{}, error) {
 // fmt.Printf("%+v\n", draft)
 // ```
 func UpdateDraft(cfg *Config, recordId string, payloadSrc []byte, debug bool) (map[string]interface{}, error) {
+	// FIXME: Need to figure out how to do this with direct database access
+
 	// Make sure we have a valid URL
 	u, err := url.Parse(cfg.InvenioAPI)
 	if err != nil {
@@ -1566,6 +1588,8 @@ func UpdateDraft(cfg *Config, recordId string, payloadSrc []byte, debug bool) (m
 // }
 // ```
 func DiscardDraft(cfg *Config, recordId string, debug bool) (map[string]interface{}, error) {
+	// FIXME: Need to figure out how to do this with direct database access
+
 	// Make sure we have a valid URL
 	u, err := url.Parse(cfg.InvenioAPI)
 	if err != nil {
@@ -1594,6 +1618,8 @@ func DiscardDraft(cfg *Config, recordId string, debug bool) (map[string]interfac
 // }
 // ```
 func SetFilesEnable(cfg *Config, recordId string, enable bool, debug bool) (map[string]interface{}, error) {
+	// FIXME: Need to figure out how to do this with direct database access
+
 	m, err := GetDraft(cfg, recordId)
 	if err != nil {
 		return nil, err
@@ -1643,6 +1669,8 @@ func SetFilesEnable(cfg *Config, recordId string, enable bool, debug bool) (map[
 // }
 // ```
 func SetVersion(cfg *Config, recordId string, version string, debug bool) (map[string]interface{}, error) {
+	// FIXME: Need to figure out how to do this with direct database access
+
 	m, err := GetDraft(cfg, recordId)
 	if err != nil {
 		return nil, err
@@ -1676,6 +1704,8 @@ func SetVersion(cfg *Config, recordId string, version string, debug bool) (map[s
 // }
 // ```
 func SetPubDate(cfg *Config, recordId string, pubDate string, debug bool) (map[string]interface{}, error) {
+	// FIXME: Need to figure out how to do this with direct database access
+
 	m, err := GetDraft(cfg, recordId)
 	if err != nil {
 		return nil, err
@@ -1713,6 +1743,8 @@ func SetPubDate(cfg *Config, recordId string, pubDate string, debug bool) (map[s
 // }
 // ```
 func GetDraftFiles(cfg *Config, recordId string, debug bool) (map[string]interface{}, error) {
+	// FIXME: Need to figure out how to do this with direct database access
+
 	// Make sure we have a valid URL
 	u, err := url.Parse(cfg.InvenioAPI)
 	if err != nil {
@@ -1748,6 +1780,8 @@ func GetDraftFiles(cfg *Config, recordId string, debug bool) (map[string]interfa
 // }
 // ```
 func GetFiles(cfg *Config, recordId string, debug bool) (map[string]interface{}, error) {
+	// FIXME: Need to figure out how to do this with direct database access
+
 	// Make sure we have a valid URL
 	u, err := url.Parse(cfg.InvenioAPI)
 	if err != nil {
@@ -1785,6 +1819,8 @@ func GetFiles(cfg *Config, recordId string, debug bool) (map[string]interface{},
 // fmt.Printf("%+v\n", draft)
 // ```
 func UploadFiles(cfg *Config, recordId string, filenames []string, debug bool) (map[string]interface{}, error) {
+	// FIXME: Need to figure out how to do this with direct database access
+
 	// Make sure we have a valid URL
 	u, err := url.Parse(cfg.InvenioAPI)
 	if err != nil {
@@ -1854,6 +1890,8 @@ func UploadFiles(cfg *Config, recordId string, filenames []string, debug bool) (
 // fmt.Printf("%+v\n", draft)
 // ```
 func DeleteFiles(cfg *Config, recordId string, filenames []string, debug bool) ([]byte, error) {
+	// FIXME: Need to figure out how to do this with direct database access
+
 	// Make sure we have a valid URL
 	u, err := url.Parse(cfg.InvenioAPI)
 	if err != nil {
@@ -1940,6 +1978,7 @@ func SetAccess(cfg *Config, recordId string, accessType string, accessValue stri
 	var (
 		src []byte
 	)
+	// FIXME: Need to figure out how to do this with direct database access
 		
 	// Make sure we have a URL
 	u, err := url.Parse(cfg.InvenioAPI)
@@ -2021,6 +2060,7 @@ func SetAccess(cfg *Config, recordId string, accessType string, accessValue stri
 // }
 // ```
 func SendToCommunity(cfg *Config, recordId string, communityId string, debug bool) (map[string]interface{}, error) {
+	// FIXME: Need to figure out how to do this with direct database access
 	appName := path.Base(os.Args[0])
 	// Make sure we have a URL
 	u, err := url.Parse(cfg.InvenioAPI)
@@ -2106,6 +2146,7 @@ func SendToCommunity(cfg *Config, recordId string, communityId string, debug boo
 // getReviewCommunity takes a review record as map[string]interface{} and
 // returns the comminuty uuid is found.
 func getReviewCommunity(m map[string]interface{}) (string, bool) {
+	// FIXME: Need to figure out how to do this with direct database access
 	if elem, ok := m["reciever"]; ok {
 		data := elem.(map[string]interface{})
 		if elem, ok = data["community"]; ok {
@@ -2119,6 +2160,7 @@ func getReviewCommunity(m map[string]interface{}) (string, bool) {
 // GetReview takes a configuration object, record id and
 // returns an review object (which includes a request id) and error code.
 func GetReview(cfg *Config, recordId string, debug  bool) (map[string]interface{}, error) {
+	// FIXME: Need to figure out how to do this with direct database access
 	// Make sure we have a URL
 	u, err := url.Parse(cfg.InvenioAPI)
 	if err != nil {
@@ -2156,6 +2198,7 @@ func GetReview(cfg *Config, recordId string, debug  bool) (map[string]interface{
 // }
 // ```
 func ReviewRequest(cfg *Config, recordId string, decision string, comment string, debug bool) (map[string]interface{}, error) {
+	// FIXME: Need to figure out how to do this with direct database access
 	// Make sure we have a URL
 	u, err := url.Parse(cfg.InvenioAPI)
 	if err != nil {
@@ -2235,6 +2278,7 @@ func ReviewRequest(cfg *Config, recordId string, decision string, comment string
 // fmt.Printf("%s\n", src)
 // ```
 func GetEndpoint(cfg *Config, p string) ([]byte, error) {
+	// FIXME: Need to figure out how to do this with direct database access
 	// Make sure we have a URL
 	u, err := url.Parse(cfg.InvenioAPI)
 	if err != nil {
@@ -2266,6 +2310,7 @@ func GetEndpoint(cfg *Config, p string) ([]byte, error) {
 // fmt.Printf("%s\n", src)
 // ```
 func PostEndpoint(cfg *Config, p string, payload []byte) ([]byte, error) {
+	// FIXME: Need to figure out how to do this with direct database access
 	// Make sure we have a URL
 	u, err := url.Parse(cfg.InvenioAPI)
 	if err != nil {
@@ -2297,6 +2342,7 @@ func PostEndpoint(cfg *Config, p string, payload []byte) ([]byte, error) {
 // fmt.Printf("%s\n", src)
 // ```
 func PutEndpoint(cfg *Config, p string, payload []byte) ([]byte, error) {
+	// FIXME: Need to figure out how to do this with direct database access
 	// Make sure we have a URL
 	u, err := url.Parse(cfg.InvenioAPI)
 	if err != nil {
@@ -2329,6 +2375,7 @@ func PutEndpoint(cfg *Config, p string, payload []byte) ([]byte, error) {
 // fmt.Printf("%s\n", src)
 // ```
 func PatchEndpoint(cfg *Config, p string, payload []byte) ([]byte, error) {
+	// FIXME: Need to figure out how to do this with direct database access
 	// Make sure we have a URL
 	u, err := url.Parse(cfg.InvenioAPI)
 	if err != nil {
@@ -2360,6 +2407,7 @@ func PatchEndpoint(cfg *Config, p string, payload []byte) ([]byte, error) {
 // fmt.Printf("%s\n", src)
 // ```
 func DeleteEndpoint(cfg *Config, p string) ([]byte, error) {
+	// FIXME: Need to figure out how to do this with direct database access
 	// Make sure we have a URL
 	u, err := url.Parse(cfg.InvenioAPI)
 	if err != nil {
