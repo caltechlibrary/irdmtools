@@ -34,11 +34,14 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"path"
+	"strings"
 
 	// Caltech Library packages
 	"github.com/caltechlibrary/irdmtools"
@@ -89,6 +92,9 @@ objects will be written.
 -ids JSON_ID_FILE
 : read ids from a file.
 
+-keys
+: works from a key list, one per line. Maybe file or standard input (use filename as "-")
+
 -host
 : Set the base url to use for the records (e.g. authors.library.caltech.edu)
 
@@ -116,7 +122,7 @@ REPO_HOST="__HOST_NAME_OF_REPOSITORY__"
 // input or a JSON file.
 func getDSIds(idsFName string) ([]string, error) {
 	var err error
- 	in := os.Stdin
+	in := os.Stdin
   	if idsFName != "-" {
    		in, err = os.Open(idsFName)
    		if err != nil {
@@ -135,6 +141,36 @@ func getDSIds(idsFName string) ([]string, error) {
 	return ids, nil
 }
 
+// getKeyList will read in a list if keys one per line and return an array of keys from
+// a dataset collectiojn to migrate.
+func getKeyList(keysFName string) ([]string, error) {
+	var err error
+	in := os.Stdin
+  	if keysFName != "-" {
+   		in, err = os.Open(keysFName)
+   		if err != nil {
+   			return nil, err
+   		}
+   		defer in.Close()
+   	}
+	keys := []string{}
+	r := bufio.NewReader(in)
+	i := 0
+	for {
+		s, err := r.ReadString('\n')
+		if s != "" {
+			keys = append(keys, strings.TrimSpace(s))
+		}
+		i++
+		if err != nil {
+			break
+		}
+	}
+	log.Printf("%d keys to process, %d lines read", len(keys), i)
+	return keys, nil
+}
+
+
 func main() {
 	appName := path.Base(os.Args[0])
 	// NOTE: The following are set when version.go is generated
@@ -144,11 +180,12 @@ func main() {
 	fmtHelp := irdmtools.FmtHelp
 
 	showHelp, showVersion, showLicense := false, false, false
-	idsFName, repoHost, resourceFName, contributorFName := "", "", "", ""
+	idsFName, keysFName, repoHost, resourceFName, contributorFName := "", "-", "", "", ""
 	flag.BoolVar(&showHelp, "help", false, "display help")
 	flag.BoolVar(&showVersion, "version", false, "display version")
 	flag.BoolVar(&showLicense, "license", false, "display license")
 	flag.StringVar(&idsFName, "ids", idsFName, "read ids from a file")
+	flag.StringVar(&keysFName, "keys", keysFName, "read keys from a file or standard input")
 	flag.StringVar(&repoHost, "host", repoHost, "repository hostname")
 	flag.StringVar(&resourceFName, "resource-types", resourceFName, "resource types map in YAML")
 	flag.StringVar(&contributorFName, "contributor-types", contributorFName, "contributor types map in YAML")
@@ -178,6 +215,13 @@ func main() {
 	)
 	if idsFName != "" {
 		dsIds, err = getDSIds(idsFName)
+		if err != nil {
+   			fmt.Fprintf(eout, "%s\n", err)
+   			os.Exit(1)
+		}
+	}
+	if keysFName != "" {
+		dsIds, err = getKeyList(keysFName)
 		if err != nil {
    			fmt.Fprintf(eout, "%s\n", err)
    			os.Exit(1)

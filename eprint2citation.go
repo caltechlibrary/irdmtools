@@ -38,7 +38,7 @@ func EPrintToCitation(repoName string, key string, eprint *eprinttools.EPrint, r
 		eprint.Collection = repoName
 	}
     err := citation.CrosswalkRecord(eprint.Collection, key, eprintURL, rec)
-	log.Printf("DEBUG cite -> %q -> repository %q, id %q", citation.ID, citation.Collection, citation.CollectionID)
+	//log.Printf("DEBUG cite -> %q -> repository %q, id %q", citation.ID, citation.Collection, citation.CollectionID)
     return citation, err
 }
 
@@ -55,6 +55,8 @@ func MigrateEPrintDatasetToCitationDataset(ep3CName string, ids []string, repoHo
 		return err
 	}
 	defer cite.Close()
+	tot := len(ids)
+    log.Printf("%d/%d citations processed", 0, tot)
 	for i, id := range ids {
 		eprint := new(eprinttools.EPrint)
 		if err := ep3.ReadObject(id, eprint); err != nil {
@@ -77,7 +79,11 @@ func MigrateEPrintDatasetToCitationDataset(ep3CName string, ids []string, repoHo
 		if err != nil {
 			log.Printf("failed to save citation for %s (%d), %s", id, i, err)
 		}
+		if (i % 100) == 0 {
+			log.Printf("%d/%d citations processed", i+1, tot)
+		}
 	}
+	log.Printf("%d/%d citations processed", tot, tot)
 	return nil
 }
 

@@ -36,6 +36,7 @@ Bugs
 Next
 ----
 
+- [ ] ep3ds2citation needs to be able to work from a key list or JSON list of keys. When working from key list it should read the entire keylist in then start processing them and display progress
 - [ ] irdmtools Go based commands should not use the RDM JSON API, they should all be used to directly access the Postgres database
 - [x] Integrate a YAML options file into doi2rdm so that we can easily map our customized mapings via configuration instead of hard coding them.
 - [x] rdmutil get_all_ids needs a get_all_stale_ids counterpart, see issue #68 (implemented get_record_versions"`

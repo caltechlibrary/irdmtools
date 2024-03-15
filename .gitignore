@@ -115,3 +115,4 @@ file_info_query.sql
 t.json
 t.keys
 t.txt
+man/*

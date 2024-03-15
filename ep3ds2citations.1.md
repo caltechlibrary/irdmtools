@@ -1,4 +1,4 @@
-%ep3ds2citations(1) irdmtools user manual | version 0.0.71 f03d3547
+%ep3ds2citations(1) irdmtools user manual | version 0.0.71 601fb5b5
 % R. S. Doiel and Tom Morrell
 % 2024-03-14
 
@@ -38,6 +38,9 @@ objects will be written.
 
 -ids JSON_ID_FILE
 : read ids from a file.
+
+-keys
+: works from a key list, one per line. Maybe file or standard input (use filename as "-")
 
 -host
 : Set the base url to use for the records (e.g. authors.library.caltech.edu)
