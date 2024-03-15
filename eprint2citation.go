@@ -28,11 +28,11 @@ func EPrintToCitation(repoName string, key string, eprint *eprinttools.EPrint, r
    	eprintURL := fmt.Sprintf("http://%s/%d", repoHost, eprint.EPrintID)
     // NOTE: We're dealing with a squirly situation of URLs to use during our migration and
     // before the feeds v2.0 implementation.
-    if strings.HasPrefix(eprint.ID, "http") || strings.HasPrefix(eprint.ID, "/") {
+    if strings.HasPrefix(eprint.ID, "http") {
     	eprintURL = eprint.ID
     } else if eprint.OfficialURL != "" {
     	eprintURL = eprint.OfficialURL
-    }
+	}
     citation := new(Citation)
 	if eprint.Collection == "" {
 		eprint.Collection = repoName
