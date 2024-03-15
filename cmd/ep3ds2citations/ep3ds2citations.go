@@ -45,9 +45,6 @@ import (
 
 	// Caltech Library packages
 	"github.com/caltechlibrary/irdmtools"
-
-	// 3rd Party Packages
-	"gopkg.in/yaml.v3"
 )
 
 var (
@@ -97,12 +94,6 @@ objects will be written.
 
 -host
 : Set the base url to use for the records (e.g. authors.library.caltech.edu)
-
--resource-types
-: Use YAML file to map resouce types
-
--contributor-types
-: Use YAML file to map contributor types
 
 # EXAMPLE
 
@@ -180,15 +171,13 @@ func main() {
 	fmtHelp := irdmtools.FmtHelp
 
 	showHelp, showVersion, showLicense := false, false, false
-	idsFName, keysFName, repoHost, resourceFName, contributorFName := "", "-", "", "", ""
+	idsFName, keysFName, repoHost := "", "-", ""
 	flag.BoolVar(&showHelp, "help", false, "display help")
 	flag.BoolVar(&showVersion, "version", false, "display version")
 	flag.BoolVar(&showLicense, "license", false, "display license")
 	flag.StringVar(&idsFName, "ids", idsFName, "read ids from a file")
 	flag.StringVar(&keysFName, "keys", keysFName, "read keys from a file or standard input")
 	flag.StringVar(&repoHost, "host", repoHost, "repository hostname")
-	flag.StringVar(&resourceFName, "resource-types", resourceFName, "resource types map in YAML")
-	flag.StringVar(&contributorFName, "contributor-types", contributorFName, "contributor types map in YAML")
 
 	flag.Parse()
 	args := flag.Args()
@@ -227,34 +216,5 @@ func main() {
    			os.Exit(1)
 		}
 	}
-	resourceTypes := map[string]string{}
-	if resourceFName != "" {
-		rt, err := os.Open(resourceFName)
-		if err != nil {
-			fmt.Fprintf(eout, "failed to open %q, %s\n", resourceFName)
-			os.Exit(1)
-		}
-		defer rt.Close()
-		decoder := yaml.NewDecoder(rt)
-		if err := decoder.Decode(resourceTypes); err != nil {
-			fmt.Fprintf(eout, "failed to parse %q, %s\n", resourceFName, err)
-			os.Exit(1)
-		}
-	}
-
-	contributorTypes := map[string]string{}
-	if contributorFName != "" {
-		ct, err := os.Open(contributorFName)
-		if err != nil {
-			fmt.Fprintf(eout, "failed to open %q, %s\n", contributorFName)
-			os.Exit(1)
-		}
-		defer ct.Close()
-		decoder := yaml.NewDecoder(ct)
-		if err := decoder.Decode(contributorTypes); err != nil {
-			fmt.Fprintf(eout, "failed to parse %q, %s\n", contributorFName, err)
-			os.Exit(1)
-		}
-	}
-	os.Exit(irdmtools.RunEPrintDSToCitationDS(in, out, eout, args, repoHost, dsIds, resourceTypes, contributorTypes))
+	os.Exit(irdmtools.RunEPrintDSToCitationDS(in, out, eout, args, repoHost, dsIds))
 }

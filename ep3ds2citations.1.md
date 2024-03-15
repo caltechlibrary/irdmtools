@@ -1,6 +1,6 @@
-%ep3ds2citations(1) irdmtools user manual | version 0.0.71 601fb5b5
+%ep3ds2citations(1) irdmtools user manual | version 0.0.71 6139a5bf
 % R. S. Doiel and Tom Morrell
-% 2024-03-14
+% 2024-03-15
 
 # NAME
 
@@ -44,12 +44,6 @@ objects will be written.
 
 -host
 : Set the base url to use for the records (e.g. authors.library.caltech.edu)
-
--resource-types
-: Use YAML file to map resouce types
-
--contributor-types
-: Use YAML file to map contributor types
 
 # EXAMPLE
 

@@ -6,6 +6,7 @@ import (
 	"log"
 	"path"
 	"strings"
+	"time"
 	
 	// Caltech Library packages
 	"github.com/caltechlibrary/dataset/v2"
@@ -44,7 +45,7 @@ func EPrintToCitation(repoName string, key string, eprint *eprinttools.EPrint, r
 
 // MigrateEPrintDatasetToCitationsDataset takes a dataset of EPrint objects and migrates the ones in the
 // id list to a citation dataset collection.
-func MigrateEPrintDatasetToCitationDataset(ep3CName string, ids []string, repoHost string, resourceTypes map[string]string, contributorTypes map[string]string, citeCName string) error {
+func MigrateEPrintDatasetToCitationDataset(ep3CName string, ids []string, repoHost string, citeCName string) error {
 	ep3, err := dataset.Open(ep3CName)
 	if err != nil {
 		return err
@@ -55,9 +56,13 @@ func MigrateEPrintDatasetToCitationDataset(ep3CName string, ids []string, repoHo
 		return err
 	}
 	defer cite.Close()
+	resourceTypes := map[string]string{}
+	contributorTypes := map[string]string{}
 	tot := len(ids)
-    log.Printf("%d/%d citations processed", 0, tot)
-	for i, id := range ids {
+	start := time.Now()
+	i := 0
+	log.Printf("%d/%d citations processed in %s", i, tot, time.Since(start).Truncate(time.Second).String())
+	for _, id := range ids {
 		eprint := new(eprinttools.EPrint)
 		if err := ep3.ReadObject(id, eprint); err != nil {
 			log.Printf("failed to get %s (%d), %s", id, i, err)
@@ -67,9 +72,17 @@ func MigrateEPrintDatasetToCitationDataset(ep3CName string, ids []string, repoHo
 		if repoName == "" {
 			repoName = path.Base(strings.TrimSuffix(ep3CName, ".ds"))
 		}
+		// NOTE: we want to maintain the contributor type and resource type maps in the existing
+		// EPrints dataset collection. We do that by acrueing resourceTypes and contributorTypes from
+		// the eprint record retrieved.
+		if _, ok := resourceTypes[eprint.Type]; ! ok {
+			resourceTypes[eprint.Type] = eprint.Type
+		}
+
 		citation, err := EPrintToCitation(repoName, id, eprint, repoHost, resourceTypes, contributorTypes)
 		if err != nil {
-			log.Printf("failed to convert %s (%d) to citation, %s", id, i, err)
+			log.Printf("failed to convert (%d) id %s from %s to citation, %s", i, id, repoName, err)
+			continue
 		}
 		if cite.HasKey(citation.ID) {
 			err = cite.UpdateObject(citation.ID, citation)
@@ -79,17 +92,18 @@ func MigrateEPrintDatasetToCitationDataset(ep3CName string, ids []string, repoHo
 		if err != nil {
 			log.Printf("failed to save citation for %s (%d), %s", id, i, err)
 		}
-		if (i % 100) == 0 {
-			log.Printf("%d/%d citations processed", i+1, tot)
+		i++
+		if (i % 5000) == 0 {
+			log.Printf("%d/%d citations processed in %s", i, tot, time.Since(start).Truncate(time.Second).String())
 		}
 	}
-	log.Printf("%d/%d citations processed", tot, tot)
+	log.Printf("%d/%d citations processed in %s", i, tot, time.Since(start).Truncate(time.Second).String())
 	return nil
 }
 
 // RunEPrintDSToCitationDS migrates contents from an EPrint dataset collection to a citation dataset collection for
 // a give list of ids and repostiory hostname.
-func RunEPrintDSToCitationDS(in io.Reader, out io.Writer, eout io.Writer, args []string, repoHost string, ids []string, resourceTypes map[string]string, contributorTypes map[string]string) int {
+func RunEPrintDSToCitationDS(in io.Reader, out io.Writer, eout io.Writer, args []string, repoHost string, ids []string) int {
 	var (
 		ep3CName string
 		citeCName string
@@ -116,7 +130,7 @@ func RunEPrintDSToCitationDS(in io.Reader, out io.Writer, eout io.Writer, args [
 		fmt.Fprintf(eout, "no ids to process, aborting\n")
 		return 1
 	}
-	if err := MigrateEPrintDatasetToCitationDataset(ep3CName, keys, repoHost, resourceTypes, contributorTypes, citeCName); err != nil  {
+	if err := MigrateEPrintDatasetToCitationDataset(ep3CName, keys, repoHost, citeCName); err != nil  {
 		fmt.Fprintf(eout,  "%s\n", err)
 		return 1
 	}
