@@ -133,7 +133,7 @@ func Harvest(cfg *Config, fName string, debug bool) error {
 		}
 		// The rest API seems to have two rate limits, 5000 requests per hour and 500 requests per minute
 		if iTime, reportProgress = CheckWaitInterval(iTime, time.Minute); reportProgress || i == 0 {
-			log.Printf("%s last id %q (%d/%d) %s", cName, id, i, tot, ProgressETA(t0, i, tot))
+			log.Printf("%s last id %q (%d/%d) %s: %s", cName, id, i, tot, time.Since(t0).Round(time.Second), ProgressETA(t0, i, tot))
 		}
 		// NOTE: We need to respect rate limits of RDM API if we're using it!
 		if cfg.rl != nil {
@@ -204,7 +204,7 @@ func harvestEPrintRecordsFromMySQL(cfg *Config, recordIds []int, debug bool) err
 		}
 		// The rest API seems to have two rate limits, 5000 requests per hour and 500 requests per minute
 		if iTime, reportProgress = CheckWaitInterval(iTime, time.Minute); reportProgress || i == 0 {
-			l.Printf("%s last id %d (%d/%d) %s", cName, eprintid, i, tot, ProgressETA(t0, i, tot))
+			l.Printf("%s last id %d (%d/%d) %s: %s", cName, eprintid, i, tot, time.Since(t0).Round(time.Second), ProgressETA(t0, i, tot))
 		}
 	}
 	l.Printf("%d harvested, %d errors, running time %s", hCnt, eCnt, time.Since(t0).Round(time.Second))
@@ -270,10 +270,10 @@ func HarvestEPrintRecords(cfg *Config, recordIds []int, debug bool) error {
 		}
 		// The rest API seems to have two rate limits, 5000 requests per hour and 500 requests per minute
 		if iTime, reportProgress = CheckWaitInterval(iTime, time.Minute); reportProgress || i == 0 {
-			l.Printf("%s last id %q (%d/%d) %s", cName, id, i, tot, ProgressETA(t0, i, tot))
+			l.Printf("%s last id %q (%d/%d) %s: %s", cName, id, i, tot, time.Since(t0).Round(time.Second).String(), ProgressETA(t0, i, tot))
 		}
 	}
-	l.Printf("%d harvested, %d errors, running time %s", hCnt, eCnt, time.Since(t0).Round(time.Second))
+	l.Printf("%d harvested, %d errors, running time %s", hCnt, eCnt, time.Since(t0).Round(time.Second).String())
 	return nil
 }
 
@@ -340,7 +340,7 @@ func HarvestEPrints(cfg *Config, fName string, debug bool) error {
 		}
 		// The rest API seems to have two rate limits, 5000 requests per hour and 500 requests per minute
 		if iTime, reportProgress = CheckWaitInterval(iTime, time.Minute); reportProgress || i == 0 {
-			log.Printf("%s last id %q (%d/%d) %s", cName, id, i, tot, ProgressETA(t0, i, tot))
+			log.Printf("%s last id %q (%d/%d) %s: %s", cName, id, i, tot, time.Since(t0).Round(time.Second), ProgressETA(t0, i, tot))
 		}
 	}
 	log.Printf("%d harvested, %d errors, running time %s", hCnt, eCnt, time.Since(t0).Round(time.Second))

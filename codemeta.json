@@ -8,7 +8,7 @@
 	"dateModified": "2024-03-15",
     "issueTracker": "https://github.com/caltechlibrary/irdmtools/issues",
     "name": "irdmtools",
-    "version": "0.0.72",
+    "version": "0.0.73",
     "description": "Tools for working with institutional repositories and data management systems. Current implementation targets Invenio-RDM.",
     "applicationCategory": "library science",
     "releaseNotes": "Proof of concept and refinements, piloting in production",
@@ -86,6 +86,16 @@
                 "@type": "Organization",
                 "name": "Caltech Library, Caltech"
             }
-        }
+        },
+		{
+			"@type": "Person",
+			"@id": "https://orcid.org/0000-0002-0102-996X",
+			"givenName": "Cynthia",
+			"familyName": "Kiser",
+			"affiliation": {
+                "@type": "Organization",
+                "name": "Caltech IMSS, Caltech"
+			}
+		}
     ]
 }

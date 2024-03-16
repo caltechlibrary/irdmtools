@@ -11,7 +11,6 @@ import (
 	// Caltech Library packages
 	"github.com/caltechlibrary/dataset/v2"
 	"github.com/caltechlibrary/eprinttools"
-	"github.com/caltechlibrary/simplified"
 )
 
 // This will talk to a EPrints3 database and retrieve an EPrint record
@@ -20,11 +19,6 @@ import (
 // EPrintToCitation takes a single EPrint records and returns a single
 // Citation struct
 func EPrintToCitation(repoName string, key string, eprint *eprinttools.EPrint, repoHost string, resourceTypes map[string]string, contributorTypes map[string]string) (*Citation, error) {
-	rec := &simplified.Record{}
-    if err := CrosswalkEPrintToRecord(eprint, rec, resourceTypes, contributorTypes); err != nil {
-    	return nil, err
-    }
-
    	// This is the way an EPrint URL is actually formed.
    	eprintURL := fmt.Sprintf("http://%s/%d", repoHost, eprint.EPrintID)
     // NOTE: We're dealing with a squirly situation of URLs to use during our migration and
@@ -38,8 +32,7 @@ func EPrintToCitation(repoName string, key string, eprint *eprinttools.EPrint, r
 	if eprint.Collection == "" {
 		eprint.Collection = repoName
 	}
-    err := citation.CrosswalkRecord(eprint.Collection, key, eprintURL, rec)
-	//log.Printf("DEBUG cite -> %q -> repository %q, id %q", citation.ID, citation.Collection, citation.CollectionID)
+    err := citation.CrosswalkEPrint(eprint.Collection, key, eprintURL, eprint)
     return citation, err
 }
 
@@ -60,12 +53,18 @@ func MigrateEPrintDatasetToCitationDataset(ep3CName string, ids []string, repoHo
 	contributorTypes := map[string]string{}
 	tot := len(ids)
 	start := time.Now()
+	iTime := time.Now()
+	reportProgress := false
 	i := 0
-	log.Printf("%d/%d citations processed in %s", i, tot, time.Since(start).Truncate(time.Second).String())
+	log.Printf("%d/%d citations processed %s: %s", i, tot, time.Since(start).Truncate(time.Second).String(), ProgressETA(start, i, tot))
 	for _, id := range ids {
 		eprint := new(eprinttools.EPrint)
 		if err := ep3.ReadObject(id, eprint); err != nil {
 			log.Printf("failed to get %s (%d), %s", id, i, err)
+			continue
+		}
+		if eprint.EPrintStatus != "archive" {
+			log.Printf("skipping, status = %q, %s (%d)", eprint.EPrintStatus, id, i)
 			continue
 		}
 		repoName := eprint.Collection
@@ -93,11 +92,11 @@ func MigrateEPrintDatasetToCitationDataset(ep3CName string, ids []string, repoHo
 			log.Printf("failed to save citation for %s (%d), %s", id, i, err)
 		}
 		i++
-		if (i % 5000) == 0 {
-			log.Printf("%d/%d citations processed in %s", i, tot, time.Since(start).Truncate(time.Second).String())
+		if iTime, reportProgress = CheckWaitInterval(iTime, time.Minute); reportProgress || (i % 10000) == 0 {
+			log.Printf("%d/%d citations processed %s: %s", i, tot, time.Since(start).Truncate(time.Second).String(), ProgressETA(start, i, tot))
 		}
 	}
-	log.Printf("%d/%d citations processed in %s", i, tot, time.Since(start).Truncate(time.Second).String())
+	log.Printf("%d/%d citations processed %s: completed", i, tot, time.Since(start).Truncate(time.Second).String())
 	return nil
 }
 

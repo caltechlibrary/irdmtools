@@ -8,6 +8,7 @@ import (
 
 	// Caltech Library Packages
 	"github.com/caltechlibrary/simplified"
+	"github.com/caltechlibrary/eprinttools"
 )
 
 // irdmtools provides a means of turning an EPrint or RDM record into a datastructure suitable
@@ -50,7 +51,6 @@ type Citation struct {
 	// resolver system.
 	CiteUsingURL string `json:"cite_using_url,required" xml:"cite_using_url,required" yaml:"cite_using_url,required"`
 
-
 	// ResourceType is the string from the repository that identifies the type of resource the record is about
 	ResourceType string `json:"resource_type,omitempty" xml:"resource_type,omitempty" yaml:"resource_type,omitempty"`
 
@@ -64,6 +64,9 @@ type Citation struct {
 
 	// Title holds the title used for the citation.
 	Title string `json:"title,omitempty" xml:"title,omitempty" yaml:"title,omitempty"`
+
+	// BookTitle holds a book title when the citation is a chapter contribution
+	BookTitle string `json:"book_title,omitempty" xml:"book_title,omitempty" yaml:"book_title,omitempty"`
 
 	// AlternateTitle holds additional titles refering to this item. Not part of the CiteProc item description but
 	// useful for search purposes.
@@ -90,7 +93,10 @@ type Citation struct {
 	// Translator  holds a list of people who translated the work
 	Translator []*CitationAgent `json:"translator,omitempty" xml:"translator,omitempty" yaml:"translator,omitempty"`
 
-	// Date holds a map to related citeproc item dates.
+	// LocalGroup holds information about Caltech affiliated groups
+	LocalGroup []*CitationAgent `json:"local_group,omitempty" xml:"local_group,omitempty" yaml:"local_group,omitempty"`
+
+	// Date holds a map to related citeproc item dates. Currently unused.
 	Date map[string]*CitationDate `json:"dates,omitempty" xml:"dates,omitempty" yaml:"dates,omitempty"`
 
 	// Abstract holds the abstract, useful for search applications, not needed fir CiteProc
@@ -99,11 +105,20 @@ type Citation struct {
 	// DOI of object
 	DOI string `json:"doi,omitempty" xml:"doi,omitempty" yaml:"doi,omitempty"`
 
+	// PMCID
+	PMCID string `json:"pmcid,omitempty" xml:"pmcid,omitempty" yaml:"pmcid,omitempty"`
+
+	// ISSN
+	ISSN string `json:"issn,omitempty" xml:"issn,omitempty" yaml:"issn,omitempty"`
+
+	// ISBN
+	ISBN string `json:"isbn,omitempty" xml:"isbn,omitempty" yaml:"isbn,omitempty"`
+
 	// Publisher holds the publisher's name
 	Publisher string `json:"publisher,omitempty" xml:"publisher,omitempty" yaml:"publisher,omitempty"`
 
-	// PublisherLocation holds the address or location description of the publiser (e.g. Los Angeles, CA)
-	PublisherLocation string `json:"publisher_location,omitempty" xml:"publisher_location,omitempty" yaml:"publisher_location,omitempty"`
+	// PlaceOfPublication holds the address or location description of the publiser (e.g. Los Angeles, CA)
+	PlaceOfPublication string `json:"place_of_publication,omitempty" xml:"place_of_publication,omitempty" yaml:"place_of_publication,omitempty"`
 
 	// Publication holds the name of the journal or publication, e.g. "Journal of Olympic Thumb Wrestling"
 	Publication string `json:"publication,omitempty" xml:"publication,omitempty" yaml:"publication,omitempty"`
@@ -113,6 +128,15 @@ type Citation struct {
 	// available.
 	PublicationDate string `json:"publication_date,omitempty" xml:"publication_date,omitempty" yaml:"publication_date,omitempty"`
 
+	// Book related
+
+	// Edition of book
+	Edition string `json:"edition,omitempty" xml:"edition,omitempty" yaml:"edition,omitempty"`
+
+	// Chapters from book
+	Chapters string `json:"chapters,omitempty" xml:"chapters,omitempty" yaml:"chapters,omitempty"`
+
+
 	// Series/SeriesNumber values from CaltechAUTHORS (mapped from custom fields)
 	Series       string `json:"series,omitempty" xml:"series,omitempty" yaml:"series,omitempty"`
 	SeriesNumber string `json:"series_number,omitempty" xml:"series_number,omitempty" yaml:"series_number,omitempty"`
@@ -121,8 +145,23 @@ type Citation struct {
 	Volume string `json:"volume,omitempty" xml:"volume,omitempty" yaml:"volume,omitempty"`
 	Issue  string `json:"issue,omitempty" xml:"issue,omitempty" yaml:"issue,omitempty"`
 
-	// Pages range
+	// Pages
 	Pages string `json:"pages,omitempty" xml:"pages,omitempty" yaml:"pages,omitempty"`
+
+	// ThesisDegree for thesis types
+	ThesisDegree string `json:"thesis_degree,omitempty" xml:"thesis_degree,omitempty" yaml:"thesis_degree,omitempty"`
+
+	// Thesis Type
+	ThesisType string `json:"thesis_type,omitempty" xml:"thesis_type,omitempty" yaml:"thesis_type,omitempty"`
+
+	// Patent citation data
+	PatentApplication string `json:"patent_applicant,omitempty" xml:"patent_applicatant,omitempty" yaml:"patent_applicant,omitempty"`
+
+	// Patent Assignee
+	PatentAssignee string `json:"patent_assignee,omitempty" xml:"patent_assignee,omitempty" yaml:"patent_assignee,omitempty"`
+
+	// Patent Number
+	PatentNumber string `json:"patent_number,omitempty" xml:"patent_number,omitempty" yaml:"patent_number,omitempty"`
 }
 
 // CitationIdentifier is a minimal object to identify a type of identifier, e.g. ISBN, ISSN, ROR, ORCID, etc.
@@ -167,6 +206,9 @@ type CitationAgent struct {
 
 	// clpid - Caltech Library Person Identifier
 	CLpid string `json:"clpid,omitempty" xml:"clpid,omitempty" yaml:"clpid,omitempty"`
+
+	// clgid - Caltech Library Group Indentifier
+	CLgid string `json:"clgid,omitempty" xml:"clgid,omitempty" yaml:"clgid,omitempty"`
 }
 
 // CitationDate holds date information, this includes support for partial dates (e.g. year, year-month).
@@ -193,7 +235,7 @@ func (cite *Citation) CrosswalkRecord(cName string, cID string, citeUsingURL str
 		// map resource type from simplified record
 		if rec.Metadata.ResourceType != nil {
 			if resourceType, ok := rec.Metadata.ResourceType["id"].(string); ok {
-				cite.ResourceType = resourceType
+				cite.Type = resourceType
 			}
 		}
 		// map authors, contributors, editors, thesis advisors, committee members from simplified record
@@ -259,6 +301,77 @@ func (cite *Citation) CrosswalkRecord(cName string, cID string, citeUsingURL str
 				cite.Pages = pages
 			}
 		}
+		if imprintInfo, ok := rec.CustomFields["imprint:imprint"].(map[string]interface{}); ok {
+			if title, ok := imprintInfo["title"].(string); ok {
+				cite.BookTitle = title
+			}
+			if chapters, ok := imprintInfo["chapters"].(string); ok {
+				cite.Chapters = chapters
+			}
+			if isbn, ok := imprintInfo["isbn"].(string); ok {
+				cite.ISBN = isbn
+			}
+			if pages, ok := imprintInfo["pages"].(string); ok {
+				cite.Pages = pages
+			}
+			if place, ok := imprintInfo["place"].(string); ok {
+				cite.PlaceOfPublication = place
+			}
+			if edition, ok := imprintInfo["edition"].(string); ok {
+				cite.Edition = edition
+			}
+		}
+		if caltechPlaceOfPubs, ok := rec.CustomFields["caltech:place_of_publication"].(map[string]interface{}); ok {
+			if place, ok := caltechPlaceOfPubs["place"]; ok {
+				cite.PlaceOfPublication = place.(string)
+			}
+		}
+		if caltechSeries, ok := rec.CustomFields["caltech:series"].(map[string]interface{}); ok {
+			if series, ok := caltechSeries["series"]; ok {
+				cite.Series = series.(string)
+			}
+		}
+
+		if caltechGroups, ok := rec.CustomFields["caltech:groups"].([]interface{}); ok {
+			if len(caltechGroups) > 0 {
+				groupList := []*CitationAgent{}
+				for _, groups := range caltechGroups {
+					if group, ok := groups.(map[string]interface{}); ok {
+						addItem := false
+						agent := new(CitationAgent)
+						if id, ok := group["id"]; ok {
+							addItem = true
+							agent.CLgid = id.(string)
+						}
+						// FIXME: title is populated from translating the vocabulary against
+						// and group id attribute so this is always empty.
+						if title, ok := group["title"].(map[string]interface{}); ok {
+							if en, ok := title["en"]; ok {
+								addItem = true
+								agent.Literal = en.(string)
+							}
+						}
+						//NOTE: Need to make sure we're not adding a duplicate groups
+						for i := 0; i < len(groupList); i++ {
+							grp := groupList[i]
+							if grp.CLgid == agent.CLgid {
+								addItem = false
+								break
+							}
+							if agent.Literal != "" && (grp.Literal == agent.Literal) {
+								addItem = false
+							}
+						}
+						if addItem {
+							groupList = append(groupList, agent)
+						}
+					}
+				}
+				if len(groupList) > 0 {
+					cite.LocalGroup = groupList
+				}
+			}
+		}
 	}
 
 	// map CiteUsingURL from simplified record
@@ -269,6 +382,15 @@ func (cite *Citation) CrosswalkRecord(cName string, cID string, citeUsingURL str
 			if citeUsingURL == "" && cite.DOI != "" {
 				cite.CiteUsingURL = "https://doi.org/" + strings.TrimPrefix(cite.DOI, "https://doi.org/")
 			}
+		}
+		if pmcid, ok := rec.ExternalPIDs["pmcid"]; ok {
+			cite.PMCID = pmcid.Identifier
+		}
+		if isbn, ok := rec.ExternalPIDs["isbn"]; ok {
+			cite.ISBN = isbn.Identifier
+		}
+		if issn, ok := rec.ExternalPIDs["issn"]; ok {
+			cite.ISSN = issn.Identifier
 		}
 	}
 	return nil
@@ -317,3 +439,178 @@ func (ca *CitationAgent) ToString() string {
 	return fmt.Sprintf("%s, %s", ca.FamilyName, ca.LivedName)
 }
 
+
+// CrosswalkEPrint takes an eprinttools.EPrint record and return maps the values into the Citation.
+func (cite *Citation) CrosswalkEPrint(cName string, cID string, citeUsingURL string, eprint *eprinttools.EPrint) error {
+	// map repository required fields, everything else is derived from crosswalk
+	cName = path.Base(strings.TrimSuffix(cName, ".ds"))
+	cite.ID = strings.ToLower(fmt.Sprintf("%s:%s", cName, cID))
+	cite.Collection = cName
+	cite.CollectionID = cID
+	cite.CiteUsingURL = citeUsingURL
+
+	// from the eprint table
+	cite.Title = eprint.Title
+	cite.Type = eprint.Type
+	cite.Abstract = eprint.Abstract
+	cite.Publisher = eprint.Publisher
+	cite.Publication = eprint.Publication
+	cite.BookTitle = eprint.BookTitle
+	// Not sure where to find the chapter information in EPrints record.
+	//cite.Chapters = eprint.Chapters
+	cite.PlaceOfPublication = eprint.PlaceOfPub
+	cite.Edition = eprint.Edition
+	cite.Series = eprint.Series
+	cite.SeriesNumber = eprint.Number
+	cite.Volume = eprint.Volume
+	cite.Issue = eprint.Number
+	cite.Pages = eprint.PageRange
+	cite.ISBN = eprint.ISBN
+	cite.ISSN = eprint.ISSN
+	cite.DOI = eprint.DOI
+	cite.PMCID = eprint.PMCID
+	
+	if eprint.ThesisType != "" {
+		cite.ThesisType = eprint.ThesisType
+	}
+	if eprint.ThesisDegreeDateYear > 0 {
+		cite.PublicationDate = fmt.Sprintf("%d", eprint.ThesisDegreeDateYear)
+	}
+	if eprint.OfficialURL != "" {
+		cite.CiteUsingURL = eprint.OfficialURL
+	}
+
+	// map authors, contributors, editors, thesis advisors, committee members from eprint_*
+	if eprint.Creators.Length() > 0 {
+		for i := 0; i < eprint.Creators.Length(); i++ {
+			creator := eprint.Creators.IndexOf(i)
+			if creator.Name != nil {
+				agent := new(CitationAgent)
+				agent.FamilyName = creator.Name.Family
+				agent.LivedName = creator.Name.Given
+				agent.CLpid = creator.Name.ID
+				agent.ORCID = creator.Name.ORCID
+				agent.Prefix = creator.Name.Honourific
+				agent.Suffix = creator.Name.Lineage
+				cite.Author = append(cite.Author, agent)
+			}
+		}
+	}
+
+	// Map in corporate authors
+	if eprint.CorpCreators.Length() > 0 {
+		for i := 0; i < eprint.CorpCreators.Length(); i++ {
+			creator := eprint.CorpCreators.IndexOf(i)
+			if creator.Value != "" {
+				agent := new(CitationAgent)
+				agent.Literal = creator.Value
+				cite.Author = append(cite.Author, agent)
+			}
+		}
+	}
+
+	// Map in editors
+	if eprint.Editors.Length() > 0 {
+		for i := 0; i < eprint.Editors.Length(); i++ {
+			creator := eprint.Editors.IndexOf(i)
+			if creator.Name != nil {
+				agent := new(CitationAgent)
+				agent.FamilyName = creator.Name.Family
+				agent.LivedName = creator.Name.Given
+				agent.CLpid = creator.Name.ID
+				agent.ORCID = creator.Name.ORCID
+				agent.Prefix = creator.Name.Honourific
+				agent.Suffix = creator.Name.Lineage
+				cite.Editor = append(cite.Editor, agent)
+			}
+		}
+	}
+
+	// Map in contributors
+	if eprint.Contributors.Length() > 0 {
+		for i := 0; i < eprint.Contributors.Length(); i++ {
+			creator := eprint.Contributors.IndexOf(i)
+			if creator.Name != nil {
+				agent := new(CitationAgent)
+				agent.FamilyName = creator.Name.Family
+				agent.LivedName = creator.Name.Given
+				agent.CLpid = creator.Name.ID
+				agent.ORCID = creator.Name.ORCID
+				agent.Prefix = creator.Name.Honourific
+				agent.Suffix = creator.Name.Lineage
+				cite.Contributor = append(cite.Contributor, agent)
+			}
+		}
+	}
+
+	// Map in corporate contributors
+	if eprint.CorpContributors.Length() > 0 {
+		for i := 0; i < eprint.CorpContributors.Length(); i++ {
+			creator := eprint.CorpContributors.IndexOf(i)
+			if creator.Value != "" {
+				agent := new(CitationAgent)
+				agent.Literal = creator.Value
+				cite.Contributor = append(cite.Contributor, agent)
+			}
+		}
+	}	
+
+	// map in Thesis Adivors 
+	if eprint.ThesisAdvisor.Length() > 0 {
+		for i := 0; i < eprint.ThesisAdvisor.Length(); i++ {
+			creator := eprint.ThesisAdvisor.IndexOf(i)
+			if creator.Name != nil {
+				agent := new(CitationAgent)
+				agent.FamilyName = creator.Name.Family
+				agent.LivedName = creator.Name.Given
+				agent.CLpid = creator.Name.ID
+				agent.ORCID = creator.Name.ORCID
+				agent.Prefix = creator.Name.Honourific
+				agent.Suffix = creator.Name.Lineage
+				cite.ThesisAdvisor = append(cite.ThesisAdvisor, agent)
+			}
+		}
+	}
+
+	// map in Thesis committee
+	if eprint.ThesisCommittee.Length() > 0 {
+		for i := 0; i < eprint.ThesisCommittee.Length(); i++ {
+			creator := eprint.ThesisCommittee.IndexOf(i)
+			if creator.Name != nil {
+				agent := new(CitationAgent)
+				agent.FamilyName = creator.Name.Family
+				agent.LivedName = creator.Name.Given
+				agent.CLpid = creator.Name.ID
+				agent.ORCID = creator.Name.ORCID
+				agent.Prefix = creator.Name.Honourific
+				agent.Suffix = creator.Name.Lineage
+				cite.ThesisCommittee = append(cite.ThesisCommittee, agent)
+			}
+		}
+	}
+
+	// map local groups from eprint_local_group table
+	for i := 0; i < eprint.LocalGroup.Length(); i++ {
+		group := eprint.LocalGroup.IndexOf(i)
+		if group != nil && group.Value != "" {
+			agent := new(CitationAgent)
+			agent.Literal = group.Value
+			///NOTE: CLgid can't be mapped directly from EPrints as there is no group id field of any type.
+			cite.LocalGroup = append(cite.LocalGroup, agent)
+		}
+	}
+
+	// If we are processing thesis then we can merge division list in with Groups
+	if eprint.Divisions.Length() > 0 {
+		for i := 0; i < eprint.Divisions.Length(); i++ {
+			group := eprint.Divisions.IndexOf(i)
+			if group != nil && group.Value != "" {
+				agent := new(CitationAgent)
+				agent.Literal = group.Value
+				// NOTE: CLgid can't be mapped directly from EPrint Divisions
+				cite.LocalGroup = append(cite.LocalGroup, agent)
+			}
+		}
+	}
+	return nil
+}
