@@ -455,6 +455,7 @@ func (cite *Citation) CrosswalkEPrint(cName string, cID string, citeUsingURL str
 	cite.Abstract = eprint.Abstract
 	cite.Publisher = eprint.Publisher
 	cite.Publication = eprint.Publication
+	cite.PublicationDate = eprint.PubDate()
 	cite.BookTitle = eprint.BookTitle
 	// Not sure where to find the chapter information in EPrints record.
 	//cite.Chapters = eprint.Chapters

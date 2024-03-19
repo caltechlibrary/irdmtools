@@ -1,6 +1,6 @@
-%ep3ds2citations(1) irdmtools user manual | version 0.0.73 d749e555
+%ep3ds2citations(1) irdmtools user manual | version 0.0.73 a0479527
 % R. S. Doiel and Tom Morrell
-% 2024-03-15
+% 2024-03-18
 
 # NAME
 
@@ -42,18 +42,22 @@ objects will be written.
 -keys
 : works from a key list, one per line. Maybe file or standard input (use filename as "-")
 
+-prefix
+: Applies a prefix before the provided key when saving a record. E.g. `-prefix caltechauthors"
+
 -host
 : Set the base url to use for the records (e.g. authors.library.caltech.edu)
 
 # EXAMPLE
 
-Example of a dataset collection called "authors.ds" of EPrint records
-and a "citations.ds" target that will hold citation records.
+Example of a dataset collection called "authors.ds", "data.ds" and
+"thesis.ds" of EPrint records aggregated into a "citation.ds" dataset
+colelction using prefixes and the source repository ids.
 
 ~~~shell
-REPO_HOST="__HOST_NAME_OF_REPOSITORY__"
-ep3ds2citations authors.ds citations.ds k3tpc-ga970
-ep3ds2citations thesis.ds citations.ds 1233
+ep3ds2citations -prefix caltechauthors authors.ds citation.ds k3tpc-ga970
+ep3ds2citations -prefix caltechdata data.ds citation.ds zzj7r-61978
+ep3ds2citations -prefix caltechthesis thesis.ds citation.ds 1233
 ~~~
 
 

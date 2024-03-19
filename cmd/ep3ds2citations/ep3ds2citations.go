@@ -92,18 +92,22 @@ objects will be written.
 -keys
 : works from a key list, one per line. Maybe file or standard input (use filename as "-")
 
+-prefix
+: Applies a prefix before the provided key when saving a record. E.g. `+"`"+`-prefix caltechauthors`+`"`+`
+
 -host
 : Set the base url to use for the records (e.g. authors.library.caltech.edu)
 
 # EXAMPLE
 
-Example of a dataset collection called "authors.ds" of EPrint records
-and a "citations.ds" target that will hold citation records.
+Example of a dataset collection called "authors.ds", "data.ds" and
+"thesis.ds" of EPrint records aggregated into a "citation.ds" dataset
+colelction using prefixes and the source repository ids.
 
 ~~~shell
-REPO_HOST="__HOST_NAME_OF_REPOSITORY__"
-{app_name} authors.ds citations.ds k3tpc-ga970
-{app_name} thesis.ds citations.ds 1233
+{app_name} -prefix caltechauthors authors.ds citation.ds k3tpc-ga970
+{app_name} -prefix caltechdata data.ds citation.ds zzj7r-61978
+{app_name} -prefix caltechthesis thesis.ds citation.ds 1233
 ~~~
 
 `
@@ -171,13 +175,14 @@ func main() {
 	fmtHelp := irdmtools.FmtHelp
 
 	showHelp, showVersion, showLicense := false, false, false
-	idsFName, keysFName, repoHost := "", "-", ""
+	idsFName, keysFName, repoHost, prefix := "", "-", "", ""
 	flag.BoolVar(&showHelp, "help", false, "display help")
 	flag.BoolVar(&showVersion, "version", false, "display version")
 	flag.BoolVar(&showLicense, "license", false, "display license")
 	flag.StringVar(&idsFName, "ids", idsFName, "read ids from a file")
 	flag.StringVar(&keysFName, "keys", keysFName, "read keys from a file or standard input")
-	flag.StringVar(&repoHost, "host", repoHost, "repository hostname")
+	flag.StringVar(&prefix, "prefix", prefix, "apply this prefix to keys being imported before saving")
+	flag.StringVar(&repoHost, "host", repoHost, "repository hostname, used to form URL to original record")
 
 	flag.Parse()
 	args := flag.Args()
@@ -216,5 +221,5 @@ func main() {
    			os.Exit(1)
 		}
 	}
-	os.Exit(irdmtools.RunEPrintDSToCitationDS(in, out, eout, args, repoHost, dsIds))
+	os.Exit(irdmtools.RunEPrintDSToCitationDS(in, out, eout, args, repoHost, prefix, dsIds))
 }
