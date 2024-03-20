@@ -227,10 +227,10 @@ type CitationDate struct {
 func (cite *Citation) CrosswalkRecord(cName string, cID string, citeUsingURL string, rec *simplified.Record) error {
 	// map repository required fields, everything else is derived from crosswalk
 	cName = path.Base(strings.TrimSuffix(cName, ".ds"))
-	cite.ID = strings.ToLower(fmt.Sprintf("%s:%s", cName, cID))
+	cite.ID = fmt.Sprintf("%s:%s", cName, cID)
 	cite.Collection = cName
-	cite.CollectionID = cID
 	cite.CiteUsingURL = citeUsingURL
+	cite.CollectionID = rec.ID
 
 	// Now crosswalk the rest of the citation from the simplified record.
 	if rec.Metadata != nil {
@@ -448,9 +448,14 @@ func (ca *CitationAgent) ToString() string {
 func (cite *Citation) CrosswalkEPrint(cName string, cID string, citeUsingURL string, eprint *eprinttools.EPrint) error {
 	// map repository required fields, everything else is derived from crosswalk
 	cName = path.Base(strings.TrimSuffix(cName, ".ds"))
-	cite.ID = strings.ToLower(fmt.Sprintf("%s:%s", cName, cID))
+	cite.ID = fmt.Sprintf("%s:%s", cName, cID)
 	cite.Collection = cName
-	cite.CollectionID = cID
+	if strings.HasPrefix(eprint.ID, "http") || strings.HasPrefix(eprint.ID, "/") {
+		parts := strings.Split(eprint.ID, "/")
+		cite.CollectionID = parts[len(parts)-1]
+	} else {
+		cite.CollectionID = eprint.ID
+	}
 	cite.CiteUsingURL = citeUsingURL
 
 	// from the eprint table
@@ -494,8 +499,8 @@ func (cite *Citation) CrosswalkEPrint(cName string, cID string, citeUsingURL str
 				agent := new(CitationAgent)
 				agent.FamilyName = creator.Name.Family
 				agent.LivedName = creator.Name.Given
-				agent.CLpid = creator.Name.ID
-				agent.ORCID = creator.Name.ORCID
+				agent.CLpid = creator.ID
+				agent.ORCID = creator.ORCID
 				agent.Prefix = creator.Name.Honourific
 				agent.Suffix = creator.Name.Lineage
 				cite.Author = append(cite.Author, agent)
@@ -540,8 +545,8 @@ func (cite *Citation) CrosswalkEPrint(cName string, cID string, citeUsingURL str
 				agent := new(CitationAgent)
 				agent.FamilyName = creator.Name.Family
 				agent.LivedName = creator.Name.Given
-				agent.CLpid = creator.Name.ID
-				agent.ORCID = creator.Name.ORCID
+				agent.CLpid = creator.ID
+				agent.ORCID = creator.ORCID
 				agent.Prefix = creator.Name.Honourific
 				agent.Suffix = creator.Name.Lineage
 				cite.Contributor = append(cite.Contributor, agent)
@@ -569,8 +574,8 @@ func (cite *Citation) CrosswalkEPrint(cName string, cID string, citeUsingURL str
 				agent := new(CitationAgent)
 				agent.FamilyName = creator.Name.Family
 				agent.LivedName = creator.Name.Given
-				agent.CLpid = creator.Name.ID
-				agent.ORCID = creator.Name.ORCID
+				agent.CLpid = creator.ID
+				agent.ORCID = creator.ORCID
 				agent.Prefix = creator.Name.Honourific
 				agent.Suffix = creator.Name.Lineage
 				cite.ThesisAdvisor = append(cite.ThesisAdvisor, agent)
@@ -586,8 +591,8 @@ func (cite *Citation) CrosswalkEPrint(cName string, cID string, citeUsingURL str
 				agent := new(CitationAgent)
 				agent.FamilyName = creator.Name.Family
 				agent.LivedName = creator.Name.Given
-				agent.CLpid = creator.Name.ID
-				agent.ORCID = creator.Name.ORCID
+				agent.CLpid = creator.ID
+				agent.ORCID = creator.ORCID
 				agent.Prefix = creator.Name.Honourific
 				agent.Suffix = creator.Name.Lineage
 				cite.ThesisCommittee = append(cite.ThesisCommittee, agent)

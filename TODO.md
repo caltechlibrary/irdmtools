@@ -5,8 +5,6 @@ Action Items
 Bugs
 ----
 
-- [ ] ep3ds2citation, publication_date isn't showing up in JSON stored
-- [x] Need an ability to apply an explicit prefix to keys ingested by ep3ds2citation, this avoids the problem where some record pickup an EPrint collection name versus the dataset collection name fallback
 - [ ] eprint2rdm missing metadata attributes
 	- [x] journal related fields (e.g. journal:journal) in custom fields
 	- [ ] thesis related fields
@@ -33,6 +31,10 @@ Bugs
 	- [x] Migrate monographs from CrossRef more effectively, see issue #40
 	- [x] figure out how to transform mml markup, issue #36
 - [x] rdm2eprint should always populate official URL, in some cases is showing up `/records/{rdmid}` but in others it is populated, when I checked authors record efd3g-p2669 it isn't populated in the JSON output
+- [x] ep3ds2citations, authors array isn't including orcid and clpid as found in authors.ds, thesis.ds and data.ds
+- [x] citation record 'id' is winding up with keys like 'authors:authors:XXXXX-XXXXX' for CaltechAUTHORS, CaltechDATA and then 'caltechthesis:thesis:XXXX' for CaltechTHESIS.
+- [x] ep3ds2citations, publication_date isn't showing up in JSON stored
+- [x] Need an ability to apply an explicit prefix to keys ingested by ep3ds2citation, this avoids the problem where some record pickup an EPrint collection name versus the dataset collection name fallback
 
 
 Next

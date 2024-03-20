@@ -175,7 +175,7 @@ func main() {
 	fmtHelp := irdmtools.FmtHelp
 
 	showHelp, showVersion, showLicense := false, false, false
-	idsFName, keysFName, repoHost, prefix := "", "-", "", ""
+	idsFName, keysFName, repoHost, prefix := "", "", "", ""
 	flag.BoolVar(&showHelp, "help", false, "display help")
 	flag.BoolVar(&showVersion, "version", false, "display version")
 	flag.BoolVar(&showLicense, "license", false, "display license")
@@ -207,7 +207,7 @@ func main() {
 		dsIds []string
 		err error
 	)
-	if idsFName != "" {
+	if idsFName != ""  {
 		dsIds, err = getDSIds(idsFName)
 		if err != nil {
    			fmt.Fprintf(eout, "%s\n", err)

@@ -29,10 +29,7 @@ func EPrintToCitation(repoName string, key string, eprint *eprinttools.EPrint, r
     	eprintURL = eprint.OfficialURL
 	}
     citation := new(Citation)
-	if eprint.Collection == "" {
-		eprint.Collection = repoName
-	}
-    err := citation.CrosswalkEPrint(eprint.Collection, key, eprintURL, eprint)
+    err := citation.CrosswalkEPrint(repoName, key, eprintURL, eprint)
     return citation, err
 }
 
@@ -67,26 +64,21 @@ func MigrateEPrintDatasetToCitationDataset(ep3CName string, ids []string, repoHo
 			log.Printf("skipping, status = %q, %s (%d)", eprint.EPrintStatus, id, i)
 			continue
 		}
-		repoName := eprint.Collection
-		if repoName == "" {
-			repoName = path.Base(strings.TrimSuffix(ep3CName, ".ds"))
-		}
+		repoName := path.Base(strings.TrimSuffix(ep3CName, ".ds"))
 		// NOTE: we want to maintain the contributor type and resource type maps in the existing
 		// EPrints dataset collection. We do that by acrueing resourceTypes and contributorTypes from
 		// the eprint record retrieved.
 		if _, ok := resourceTypes[eprint.Type]; ! ok {
 			resourceTypes[eprint.Type] = eprint.Type
 		}
+		key := id
+		if prefix != "" {
+			key = fmt.Sprintf("%s:%s", repoName, id) // the key we will use as the suffix in citation.ds
+		}
 		citation, err := EPrintToCitation(repoName, id, eprint, repoHost, resourceTypes, contributorTypes)
 		if err != nil {
 			log.Printf("failed to convert (%d) id %s from %s to citation, %s", i, id, repoName, err)
 			continue
-		}
-		key := citation.ID
-		if prefix != "" {
-			if ! strings.HasPrefix(key, prefix) {
-				key = prefix + ":" + citation.ID
-			}
 		}
 		if cite.HasKey(key) {
 			err = cite.UpdateObject(key, citation)
