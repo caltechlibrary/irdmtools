@@ -64,6 +64,11 @@ read ids from a file.
 works from a key list, one per line. Maybe file or standard input (use
 filename as “-”)
 </dd>
+<dt>-prefix</dt>
+<dd>
+Applies a prefix before the provided key when saving a record. E.g.
+`-prefix caltechauthors”
+</dd>
 <dt>-host</dt>
 <dd>
 Set the base url to use for the records
@@ -71,11 +76,12 @@ Set the base url to use for the records
 </dd>
 </dl>
 <h1 id="example">EXAMPLE</h1>
-<p>Example of a dataset collection called “authors.ds” of EPrint records
-and a “citations.ds” target that will hold citation records.</p>
-<pre class="shell"><code>REPO_HOST=&quot;__HOST_NAME_OF_REPOSITORY__&quot;
-ep3ds2citations authors.ds citations.ds k3tpc-ga970
-ep3ds2citations thesis.ds citations.ds 1233</code></pre>
+<p>Example of a dataset collection called “authors.ds”, “data.ds” and
+“thesis.ds” of EPrint records aggregated into a “citation.ds” dataset
+colelction using prefixes and the source repository ids.</p>
+<pre class="shell"><code>ep3ds2citations -prefix caltechauthors authors.ds citation.ds k3tpc-ga970
+ep3ds2citations -prefix caltechdata data.ds citation.ds zzj7r-61978
+ep3ds2citations -prefix caltechthesis thesis.ds citation.ds 1233</code></pre>
 </section>
 
 <footer>

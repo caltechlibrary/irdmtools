@@ -148,11 +148,15 @@ type Citation struct {
 	// Pages
 	Pages string `json:"pages,omitempty" xml:"pages,omitempty" yaml:"pages,omitempty"`
 
+
 	// ThesisDegree for thesis types
 	ThesisDegree string `json:"thesis_degree,omitempty" xml:"thesis_degree,omitempty" yaml:"thesis_degree,omitempty"`
 
 	// Thesis Type
 	ThesisType string `json:"thesis_type,omitempty" xml:"thesis_type,omitempty" yaml:"thesis_type,omitempty"`
+
+	// ThesisYear for thesis types, year degree granted
+	ThesisYear string `json:"thesis_year,omitempty" xml:"thesis_year,omitempty" yaml:"thesis_year,omitempty"`
 
 	// Patent citation data
 	PatentApplication string `json:"patent_applicant,omitempty" xml:"patent_applicatant,omitempty" yaml:"patent_applicant,omitempty"`
@@ -474,8 +478,9 @@ func (cite *Citation) CrosswalkEPrint(cName string, cID string, citeUsingURL str
 	if eprint.ThesisType != "" {
 		cite.ThesisType = eprint.ThesisType
 	}
-	if eprint.ThesisDegreeDateYear > 0 {
-		cite.PublicationDate = fmt.Sprintf("%d", eprint.ThesisDegreeDateYear)
+	if eprint.DateType == "degree" {
+		cite.PublicationDate = eprint.Date
+		cite.ThesisYear = eprint.Date[0:4]
 	}
 	if eprint.OfficialURL != "" {
 		cite.CiteUsingURL = eprint.OfficialURL
