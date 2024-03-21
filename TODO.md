@@ -5,6 +5,7 @@ Action Items
 Bugs
 ----
 
+- [ ] ep3ds2citations, citations from CaltechDATA seem to be missing orcid even when present in the data.ds record.
 - [ ] eprint2rdm missing metadata attributes
 	- [x] journal related fields (e.g. journal:journal) in custom fields
 	- [ ] thesis related fields
