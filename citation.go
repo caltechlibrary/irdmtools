@@ -51,6 +51,9 @@ type Citation struct {
 	// resolver system.
 	CiteUsingURL string `json:"cite_using_url,required" xml:"cite_using_url,required" yaml:"cite_using_url,required"`
 
+	// PrimaryObject holds a pointers (e.g. URLs) to the primary digital object this citation record refers to.
+	PrimaryObject map[string]interface{} `json:"primary_object_url,omitempty" xml:"primary_object_url,omitempty" yaml:"primary_object_url,omitempty"`
+
 	// ResourceType is the string from the repository that identifies the type of resource the record is about
 	ResourceType string `json:"resource_type,omitempty" xml:"resource_type,omitempty" yaml:"resource_type,omitempty"`
 
@@ -224,13 +227,30 @@ type CitationDate struct {
 }
 
 // CrosswalkRecord takes a simplified record and return maps the values into the Citation.
-func (cite *Citation) CrosswalkRecord(cName string, cID string, citeUsingURL string, rec *simplified.Record) error {
+func (cite *Citation) CrosswalkRecord(cName string, cID string, citeUsingURL string, repoURL string, rec *simplified.Record) error {
 	// map repository required fields, everything else is derived from crosswalk
 	cName = path.Base(strings.TrimSuffix(cName, ".ds"))
 	cite.ID = fmt.Sprintf("%s:%s", cName, cID)
 	cite.Collection = cName
 	cite.CiteUsingURL = citeUsingURL
 	cite.CollectionID = rec.ID
+	if rec.Files != nil {
+		// In RDM the "default preview" is the primary document (e.g. article, thesis, etc) of record.
+		defaultPreview := rec.Files.DefaultPreview
+        for _, entry := range rec.Files.Entries {
+			// Handle the case where default preview isn't set and treat the first file as the one
+			// serving as a default.
+            if defaultPreview == "" {
+               defaultPreview = entry.Key
+            }
+            if defaultPreview == entry.Key {
+               cite.PrimaryObject = map[string]interface{}{
+                   "basename": defaultPreview,
+                   "url": fmt.Sprintf("%s/records/%s/files/%s", repoURL, rec.ID, defaultPreview),
+               }
+            }
+        }
+	}
 
 	// Now crosswalk the rest of the citation from the simplified record.
 	if rec.Metadata != nil {
@@ -457,6 +477,15 @@ func (cite *Citation) CrosswalkEPrint(cName string, cID string, citeUsingURL str
 		cite.CollectionID = eprint.ID
 	}
 	cite.CiteUsingURL = citeUsingURL
+	eprint.SyntheticFields()
+
+	if eprint.PrimaryObject != nil {
+		cite.PrimaryObject = map[string]interface{}{}
+		for k, v := range eprint.PrimaryObject {
+			cite.PrimaryObject[k] = v
+		}
+	}
+
 
 	// from the eprint table
 	cite.Title = eprint.Title
