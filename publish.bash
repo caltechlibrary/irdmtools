@@ -20,7 +20,7 @@ else
 		git commit -am "Merge from $WORKING_BRANCH to gh-pages"
 		echo "Building website in gh-pages branch"
 		make installer.sh man
-		make -f website.mak
+		make -f website.mak base_url="/irdmtools"
 		echo "Commiting changes after website/installer.sh build"
 		git commit -am "Merging site updates in gh-pages"
 		echo "Pushing changes up to gh-pages"

@@ -1,6 +1,6 @@
-%doi2rdm(1) irdmtools user manual | version 0.0.70 f764f62d
+%doi2rdm(1) irdmtools user manual | version 0.0.76 3085e93c
 % R. S. Doiel and Tom Morrell
-% 2024-02-22
+% 2024-03-25
 
 # NAME
 
@@ -8,14 +8,14 @@ doi2rdm
 
 # SYNOPSIS
 
-doi2rdm [OPTIONS] [OPTIONS_YAML] DOI
+doi2rdm [OPTIONS] [OPTIONS_YAML] crossref|datacite DOI
 
 # DESCRIPTION
 
 doi2rdm is a Caltech Library oriented command line application
-that takes a DOI, queries the CrossRef API then returns a JSON document
-suitable for import into Invenio RDM. The DOI can be in either their
-canonical form or URL form (e.g. "10.1021/acsami.7b15651" or
+that takes a DOI, queries the CrossRef or DataCite API then returns a
+JSON document suitable for import into Invenio RDM. The DOI can be
+in either their canonical form or URL form (e.g. "10.1021/acsami.7b15651" or
 "https://doi.org/10.1021/acsami.7b15651").
 
 # OPTIONS_YAML
@@ -39,7 +39,7 @@ migrating content from CrossRef to RDM.
 : display version
 
 -diff JSON_FILENAME
-: compare the JSON_FILENAME contents with record generated from CrossRef works record
+: compare the JSON_FILENAME contents with record generated from CrossRef or DataCite works record
 
 -show-yaml
 : This will display the default YAML configuration file. You can save this and customize to suit your needs.
@@ -51,14 +51,14 @@ text file is called "article.json". In this example "options.yaml"
 is the configuration file for setup for your RDM instance.
 
 ~~~
-	doi2rdm options.yaml "10.1021/acsami.7b15651" >article.json
+	doi2rdm options.yaml crossref "10.1021/acsami.7b15651" >article.json
 ~~~
 
 Check to see the difference from the saved "article.json" and
 the current metadata retrieved from CrossRef.
 
 ~~~
-	doi2rdm -diff article.json doi2rdm.yaml "10.1021/acsami.7b15651
+	doi2rdm -diff article.json crossref doi2rdm.yaml "10.1021/acsami.7b15651
 ~~~
 
 Save the default YAML options to a file. 

@@ -15,7 +15,7 @@
     <li><a href="index.html">README</a></li>
     <li><a href="LICENSE">LICENSE</a></li>
     <li><a href="INSTALL.html">INSTALL</a></li>
-    <li><a href="user-manual.html">User Manual</a></li>
+    <li><a href="user_manual.html">User Manual</a></li>
     <li><a href="search.html">Search Docs</a></li>
     <li><a href="about.html">About</a></li>
     <li><a href="https://github.com/caltechlibrary/irdmtools">GitHub</a></li>
@@ -26,16 +26,9 @@
 <h1 id="action-items">Action Items</h1>
 <h2 id="bugs">Bugs</h2>
 <ul class="task-list">
-<li><label><input type="checkbox" />rdm2eprint should always populate
-official URL, in some cases is showing up <code>/records/{rdmid}</code>
-but in others it is populated, when I checked authors record efd3g-p2669
-it isn’t populated in the JSON output</label></li>
-<li><label><input type="checkbox" checked="" />Local group items are
-including an empty “{}” as an entry when retrieved with ep3util
-(e.g. thesis repository, ep3util get_record 7320)</label></li>
-<li><label><input type="checkbox" checked="" />progress.go is producing
-non-sensical estamates of the time remaining, need to review my math
-(this was a really bad SQL query on my part)</label></li>
+<li><label><input type="checkbox" />ep3ds2citations, citations from
+CaltechDATA seem to be missing orcid even when present in the data.ds
+record.</label></li>
 <li><label><input type="checkbox" />eprint2rdm missing metadata
 attributes</label>
 <ul class="task-list">
@@ -46,55 +39,84 @@ attributes</label>
 fields</label></li>
 <li><label><input type="checkbox" checked="" />migrate resolver id
 (eprint.IDNumber) to metadata.identifiers</label></li>
-<li><label><input type="checkbox" />Map CaltechTHESIS custom fields,
-issue #44</label></li>
-<li><label><input type="checkbox" />Group transfer problem, see issue
-#42</label></li>
+<li><label><input type="checkbox" checked="" />Map CaltechTHESIS custom
+fields, issue #44</label></li>
+<li><label><input type="checkbox" checked="" />Group transfer problem,
+see issue #42</label></li>
 </ul></li>
-<li><label><input type="checkbox" />rdmuil</label>
+<li><label><input type="checkbox" checked="" />Local group items are
+including an empty “{}” as an entry when retrieved with ep3util
+(e.g. thesis repository, ep3util get_record 7320)</label></li>
+<li><label><input type="checkbox" checked="" />progress.go is producing
+non-sensical estamates of the time remaining, need to review my math
+(this was a really bad SQL query on my part)</label></li>
+<li><label><input type="checkbox" checked="" />rdmutil</label>
 <ul class="task-list">
-<li><label><input type="checkbox" />Send to Cummunity not
+<li><label><input type="checkbox" checked="" />Send to Cummunity not
 working</label></li>
-<li><label><input type="checkbox" />Submit Draft not
+<li><label><input type="checkbox" checked="" />Submit Draft not
 working</label></li>
-<li><label><input type="checkbox" />Review Drafft not
+<li><label><input type="checkbox" checked="" />Review Drafft not
 wokring</label></li>
-<li><label><input type="checkbox" />Submit Publish not
+<li><label><input type="checkbox" checked="" />Submit Publish not
 working</label></li>
 <li><label><input type="checkbox" checked="" />Upload files to
 Draft</label></li>
 <li><label><input type="checkbox" checked="" />Delete files from
 Draft</label></li>
-<li><label><input type="checkbox" />Import Files to Draft</label></li>
-<li><label><input type="checkbox" />Put eprints ‘suggests’ private notes
-into review comments, see issue #16</label></li>
-<li><label><input type="checkbox" />Do file mapping, see issue
-#3</label></li>
+<li><label><input type="checkbox" checked="" />Import Files to
+Draft</label></li>
+<li><label><input type="checkbox" checked="" />Put eprints ‘suggests’
+private notes into review comments, see issue #16</label></li>
+<li><label><input type="checkbox" checked="" />Do file mapping, see
+issue #3</label></li>
 </ul></li>
-<li><label><input type="checkbox" />migrate_record.py (running Python
-Fixup code)</label>
+<li><label><input type="checkbox" checked="" />migrate_record.py
+(running Python Fixup code)</label>
 <ul class="task-list">
 <li><label><input type="checkbox" checked="" />resolver id
 migrated</label></li>
-<li><label><input type="checkbox" />migrate DOI to metadata.identifiers
-if already in repository, issue #15</label></li>
+<li><label><input type="checkbox" checked="" />migrate DOI to
+metadata.identifiers if already in repository, issue #15</label></li>
 </ul></li>
-<li><label><input type="checkbox" />doi2rdm</label>
+<li><label><input type="checkbox" checked="" />doi2rdm</label>
 <ul class="task-list">
-<li><label><input type="checkbox" />Migrate monographs from CrossRef
-more effectively, see issue #40</label></li>
-<li><label><input type="checkbox" />figure out how to transform mml
-markup, issue #36</label></li>
+<li><label><input type="checkbox" checked="" />Migrate monographs from
+CrossRef more effectively, see issue #40</label></li>
+<li><label><input type="checkbox" checked="" />figure out how to
+transform mml markup, issue #36</label></li>
 </ul></li>
+<li><label><input type="checkbox" checked="" />rdm2eprint should always
+populate official URL, in some cases is showing up
+<code>/records/{rdmid}</code> but in others it is populated, when I
+checked authors record efd3g-p2669 it isn’t populated in the JSON
+output</label></li>
+<li><label><input type="checkbox" checked="" />ep3ds2citations, authors
+array isn’t including orcid and clpid as found in authors.ds, thesis.ds
+and data.ds</label></li>
+<li><label><input type="checkbox" checked="" />citation record ‘id’ is
+winding up with keys like ‘authors:authors:XXXXX-XXXXX’ for
+CaltechAUTHORS, CaltechDATA and then ‘caltechthesis:thesis:XXXX’ for
+CaltechTHESIS.</label></li>
+<li><label><input type="checkbox" checked="" />ep3ds2citations,
+publication_date isn’t showing up in JSON stored</label></li>
+<li><label><input type="checkbox" checked="" />Need an ability to apply
+an explicit prefix to keys ingested by ep3ds2citation, this avoids the
+problem where some record pickup an EPrint collection name versus the
+dataset collection name fallback</label></li>
 </ul>
 <h2 id="next">Next</h2>
 <ul class="task-list">
-<li><label><input type="checkbox" />Integrate a YAML options file into
-doi2rdm so that we can easily map our customized mapings via
-configuration instead of hard coding them.</label></li>
 <li><label><input type="checkbox" />irdmtools Go based commands should
-not use the RDM JSON API, they should all be used to directly access the
-Postgres database</label></li>
+not use the RDM JSON API, they should always go direct to the Postgres
+database</label></li>
+<li><label><input type="checkbox" checked="" />ep3ds2citation needs to
+be able to work from a key list or JSON list of keys. When working from
+key list it should read the entire keylist in then start processing them
+and display progress</label></li>
+<li><label><input type="checkbox" checked="" />Integrate a YAML options
+file into doi2rdm so that we can easily map our customized mapings via
+configuration instead of hard coding them.</label></li>
 <li><label><input type="checkbox" checked="" />rdmutil get_all_ids needs
 a get_all_stale_ids counterpart, see issue #68 (implemented
 get_record_versions”`</label></li>
@@ -113,6 +135,11 @@ stored in Postgres</li>
 </ul></li>
 </ul>
 <h2 id="someday-maybe">Someday, maybe</h2>
+<ul class="task-list">
+<li><label><input type="checkbox" />figure out a faster way to backup
+stats in RDM other than <code>elasticdump</code> which takes a very long
+time (single three, single CPU)</label></li>
+</ul>
 </section>
 
 <footer>

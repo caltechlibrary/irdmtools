@@ -71,7 +71,7 @@ func ProgressETA(t0 time.Time, i int, tot int) string {
 //
 //	for i, key := range records {
 //	    // ... process stuff ...
-//	    if iTime, reportProgress = CheckWaitInterval(rptTime, (30 * time.Second)); reportProgress || i = 0 {
+//	    if iTime, reportProgress = CheckWaitInterval(iTime, (30 * time.Second)); reportProgress || i = 0 {
 //	        log.Printf("%s", ProgressIPS(t0, i, time.Second))
 //	    }
 //	}

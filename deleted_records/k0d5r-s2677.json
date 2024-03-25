@@ -1,0 +1,249 @@
+{
+    "links": {
+        "self": "https://authors.library.caltech.edu/api/records/k0d5r-s2677",
+        "self_html": "https://authors.library.caltech.edu/records/k0d5r-s2677",
+        "self_iiif_manifest": "https://authors.library.caltech.edu/api/iiif/record:k0d5r-s2677/manifest",
+        "self_iiif_sequence": "https://authors.library.caltech.edu/api/iiif/record:k0d5r-s2677/sequence/default",
+        "files": "https://authors.library.caltech.edu/api/records/k0d5r-s2677/files",
+        "archive": "https://authors.library.caltech.edu/api/records/k0d5r-s2677/files-archive",
+        "latest": "https://authors.library.caltech.edu/api/records/k0d5r-s2677/versions/latest",
+        "latest_html": "https://authors.library.caltech.edu/records/k0d5r-s2677/latest",
+        "draft": "https://authors.library.caltech.edu/api/records/k0d5r-s2677/draft",
+        "versions": "https://authors.library.caltech.edu/api/records/k0d5r-s2677/versions",
+        "access_links": "https://authors.library.caltech.edu/api/records/k0d5r-s2677/access/links",
+        "reserve_doi": "https://authors.library.caltech.edu/api/records/k0d5r-s2677/draft/pids/doi",
+        "communities": "https://authors.library.caltech.edu/api/records/k0d5r-s2677/communities",
+        "communities-suggestions": "https://authors.library.caltech.edu/api/records/k0d5r-s2677/communities-suggestions",
+        "requests": "https://authors.library.caltech.edu/api/records/k0d5r-s2677/requests"
+    },
+    "stats": {
+        "all_versions": {
+            "unique_downloads": 0,
+            "views": 0,
+            "unique_views": 0,
+            "data_volume": 0.0,
+            "downloads": 0
+        },
+        "this_version": {
+            "unique_downloads": 0,
+            "views": 0,
+            "unique_views": 0,
+            "data_volume": 0.0,
+            "downloads": 0
+        }
+    },
+    "custom_fields": {
+        "caltech:series_number": "02-2002",
+        "caltech:series": "U.S. Geological Survey Open-File Report"
+    },
+    "revision_id": 11,
+    "metadata": {
+        "publisher": "U.S. Geological Survey",
+        "identifiers": [
+            {
+                "identifier": "64365",
+                "scheme": "eprintid"
+            },
+            {
+                "identifier": "CaltechAUTHORS:20160209-165631707",
+                "scheme": "resolverid"
+            }
+        ],
+        "description": "[no abstract]",
+        "rights": [
+            {
+                "description": {
+                    "en": "No commercial reproduction, distribution, display or performance rights in this work are provided."
+                },
+                "title": {
+                    "en": "Other"
+                }
+            }
+        ],
+        "version": "public",
+        "title": "Earthquake data report for LARSE II \u2013 High Resolution, Santa Monica, California",
+        "resource_type": {
+            "title": {
+                "de": "Technische Anmerkung",
+                "en": "Technical Report"
+            },
+            "id": "publication-technicalnote"
+        },
+        "publication_date": "2016-03-01",
+        "dates": [
+            {
+                "type": {
+                    "title": {
+                        "de": "Erstellt",
+                        "en": "Created"
+                    },
+                    "id": "created"
+                },
+                "description": "Created from EPrint's datestamp field",
+                "date": "2016-03-01"
+            },
+            {
+                "type": {
+                    "title": {
+                        "de": "Aktualisiert",
+                        "en": "Updated"
+                    },
+                    "id": "updated"
+                },
+                "description": "Created from EPrint's last_modified field",
+                "date": "2019-10-03"
+            }
+        ],
+        "creators": [
+            {
+                "person_or_org": {
+                    "identifiers": [
+                        {
+                            "identifier": "Baher-S",
+                            "scheme": "clpid"
+                        }
+                    ],
+                    "type": "personal",
+                    "family_name": "Baher",
+                    "given_name": "S.",
+                    "name": "Baher, S."
+                }
+            },
+            {
+                "person_or_org": {
+                    "identifiers": [
+                        {
+                            "identifier": "Davis-P",
+                            "scheme": "clpid"
+                        }
+                    ],
+                    "type": "personal",
+                    "family_name": "Davis",
+                    "given_name": "P.",
+                    "name": "Davis, P."
+                }
+            },
+            {
+                "person_or_org": {
+                    "identifiers": [
+                        {
+                            "identifier": "Fuis-G",
+                            "scheme": "clpid"
+                        }
+                    ],
+                    "type": "personal",
+                    "family_name": "Fuis",
+                    "given_name": "G.",
+                    "name": "Fuis, G."
+                }
+            },
+            {
+                "person_or_org": {
+                    "identifiers": [
+                        {
+                            "identifier": "Rubinstein-J",
+                            "scheme": "clpid"
+                        }
+                    ],
+                    "type": "personal",
+                    "family_name": "Rubinstein",
+                    "given_name": "J.",
+                    "name": "Rubinstein, J."
+                }
+            },
+            {
+                "person_or_org": {
+                    "identifiers": [
+                        {
+                            "identifier": "Kohler-M-D",
+                            "scheme": "clpid"
+                        },
+                        {
+                            "identifier": "0000-0002-4703-190X",
+                            "scheme": "orcid"
+                        }
+                    ],
+                    "type": "personal",
+                    "family_name": "Kohler",
+                    "given_name": "M.",
+                    "name": "Kohler, M."
+                },
+                "affiliations": [
+                    {
+                        "id": "05dxps055",
+                        "name": "California Institute of Technology"
+                    }
+                ]
+            },
+            {
+                "person_or_org": {
+                    "identifiers": [
+                        {
+                            "identifier": "Persh-S",
+                            "scheme": "clpid"
+                        }
+                    ],
+                    "type": "personal",
+                    "family_name": "Persh",
+                    "given_name": "S.",
+                    "name": "Persh, S."
+                }
+            },
+            {
+                "person_or_org": {
+                    "identifiers": [
+                        {
+                            "identifier": "Provost-A-S",
+                            "scheme": "clpid"
+                        }
+                    ],
+                    "type": "personal",
+                    "family_name": "Provost",
+                    "given_name": "A-S.",
+                    "name": "Provost, A-S."
+                }
+            }
+        ]
+    },
+    "status": "published",
+    "versions": {
+        "is_latest": true,
+        "index": 1
+    },
+    "pids": {
+        "oai": {
+            "identifier": "oai:authors.library.caltech.edu:k0d5r-s2677",
+            "provider": "oai"
+        }
+    },
+    "is_published": true,
+    "files": {
+        "total_bytes": 0,
+        "order": [],
+        "count": 0,
+        "entries": {},
+        "enabled": false
+    },
+    "updated": "2024-03-12T00:51:47.167797+00:00",
+    "access": {
+        "status": "metadata-only",
+        "files": "public",
+        "record": "public",
+        "embargo": {
+            "reason": null,
+            "active": false
+        }
+    },
+    "parent": {
+        "communities": {
+            "ids": [
+                "aedd135f-227e-4fdf-9476-5b3fd011bac6"
+            ],
+            "default": "aedd135f-227e-4fdf-9476-5b3fd011bac6"
+        },
+        "id": "nzgss-knh72"
+    },
+    "id": "k0d5r-s2677",
+    "is_draft": false,
+    "created": "2023-08-19T08:47:28.525553+00:00"
+}

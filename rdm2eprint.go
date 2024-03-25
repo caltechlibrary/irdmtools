@@ -725,10 +725,12 @@ func (app *Rdm2EPrint) RunHarvest(in io.Reader, out io.Writer, eout io.Writer, c
 	for i, rdmid := range rdmids {
 		rec, err := GetRecord(app.Cfg, rdmid, false)
 		if err != nil {
+			log.Printf("Aborting, failed to get record (%d) %s, %s", i, rdmid, err)
 			return err
 		}
 		eprint := new(eprinttools.EPrint)
 		if err := CrosswalkRdmToEPrint(app.Cfg, rec, eprint); err != nil {
+			log.Printf("Aborting, failed to crosswalk record (%d) %s, %s", i, rdmid, err)
 			return err
 		}
 		if ds.HasKey(rec.ID) {
@@ -746,11 +748,12 @@ func (app *Rdm2EPrint) RunHarvest(in io.Reader, out io.Writer, eout io.Writer, c
 				cCnt++
 			}
 		}
-		if rptTime, reportProgress = CheckWaitInterval(rptTime, (30 * time.Second)); reportProgress {
-			log.Printf("%s (%d/%d) %s", cName, i, tot, ProgressETA(t0, i, tot))
+		if rptTime, reportProgress = CheckWaitInterval(rptTime, (30 * time.Second)); reportProgress || (i % 10000) == 0 {
+			log.Printf("%s %s (%d/%d) %s", cName, time.Since(t0).Round(time.Second), i, tot, ProgressETA(t0, i, tot))
 		}
 	}
 	log.Printf("Finished %s, processed %d records in %s", cName, tot, time.Since(t0).Round(time.Second))
+	log.Printf("%d errors encountered, %d processsed successfully", eCnt, cCnt)
 	return nil
 }
 

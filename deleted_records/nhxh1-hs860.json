@@ -1,0 +1,341 @@
+{
+    "links": {
+        "self": "https://authors.library.caltech.edu/api/records/nhxh1-hs860",
+        "self_html": "https://authors.library.caltech.edu/records/nhxh1-hs860",
+        "self_iiif_manifest": "https://authors.library.caltech.edu/api/iiif/record:nhxh1-hs860/manifest",
+        "self_iiif_sequence": "https://authors.library.caltech.edu/api/iiif/record:nhxh1-hs860/sequence/default",
+        "files": "https://authors.library.caltech.edu/api/records/nhxh1-hs860/files",
+        "archive": "https://authors.library.caltech.edu/api/records/nhxh1-hs860/files-archive",
+        "latest": "https://authors.library.caltech.edu/api/records/nhxh1-hs860/versions/latest",
+        "latest_html": "https://authors.library.caltech.edu/records/nhxh1-hs860/latest",
+        "draft": "https://authors.library.caltech.edu/api/records/nhxh1-hs860/draft",
+        "versions": "https://authors.library.caltech.edu/api/records/nhxh1-hs860/versions",
+        "access_links": "https://authors.library.caltech.edu/api/records/nhxh1-hs860/access/links",
+        "reserve_doi": "https://authors.library.caltech.edu/api/records/nhxh1-hs860/draft/pids/doi",
+        "communities": "https://authors.library.caltech.edu/api/records/nhxh1-hs860/communities",
+        "communities-suggestions": "https://authors.library.caltech.edu/api/records/nhxh1-hs860/communities-suggestions",
+        "requests": "https://authors.library.caltech.edu/api/records/nhxh1-hs860/requests"
+    },
+    "stats": {
+        "all_versions": {
+            "unique_downloads": 0,
+            "views": 0,
+            "unique_views": 0,
+            "data_volume": 0.0,
+            "downloads": 0
+        },
+        "this_version": {
+            "unique_downloads": 0,
+            "views": 0,
+            "unique_views": 0,
+            "data_volume": 0.0,
+            "downloads": 0
+        }
+    },
+    "custom_fields": {
+        "journal:journal": {
+            "pages": "87-101",
+            "issn": "1527-1404",
+            "issue": "1",
+            "volume": "17",
+            "title": "Journal of Sedimentary Research"
+        }
+    },
+    "revision_id": 7,
+    "metadata": {
+        "publisher": "Society for Sedimentary Geology",
+        "subjects": [
+            {
+                "subject": "submarine canyon, submarine channel, California Borderland, seep, mass transport"
+            }
+        ],
+        "identifiers": [
+            {
+                "identifier": "104014",
+                "scheme": "eprintid"
+            },
+            {
+                "identifier": "10.2110/sepmsp.111.14",
+                "scheme": "doi"
+            },
+            {
+                "identifier": "CaltechAUTHORS:20200624-131552522",
+                "scheme": "resolverid"
+            }
+        ],
+        "description": "The Arguello submarine canyon/channel system extends over 300 km from the continental shelf off Point Arguello and Point Conception in southern California westward onto the oceanic crust of the Pacific plate. In the northernmost reaches where the canyon system originates, all stages in the evolution of seafloor morphologic fluid flow features\u2014from pockmarks to gullies to converging rills\u2014are observed, similar to what has been described for the Ascension slope, north of Monterey Bay. These features appear to be active today and are linked to fluid leakage from the underlying hydrocarbon basin. The channel dissects a continental slope that exhibits features consistent with large-scale mass wasting. Upslope scarps may be the source of the morphological feature at the base of the slope previously referred to as the \"Arguello submarine fan,\" with topographic expressions (e.g., large channel meanders, ridges) that are more consistent with mass transport deposits than with deep-sea fan depositional lobes. The modern canyon crosscuts these deposits and parallels an older, meandering channel/canyon to the west. Modern seismicity along the shelf and slope may have, and potentially still can, trigger landslides on the slope. Seismicity associated with seamount volcanism, past subduction, and Borderland transrotational and extensional processes most likely played a role in stimulating mass wasting. The presence of abundant nearby petroleum suggests that gas venting and hydrate dissociation cannot be ruled out as a triggering mechanism for the slope destabilization occurring today. The canyon/channel continues due south on a path possibly determined by the structural grain of north\u2013south-aligned abyssal hills underlying oceanic basement. At latitude 33deg 18min N, the channel makes a 90deg turn (bend) to the west at the E\u2013W-striking Arguello transform fault wall and develops into a meandering channel system that crosses over abyssal hill crustal fabric. The system ultimately straightens as it continues west before veering north, curving around a thickened crustal bulge at a corner offset in the Arguello fracture zone in complex basement structure, and then finally empties into an 800-m-deep basin depocenter.",
+        "related_identifiers": [
+            {
+                "identifier": "10.2110/sepmsp.111.14",
+                "relation_type": {
+                    "title": {
+                        "de": "Beschreibt",
+                        "en": "Describes"
+                    },
+                    "id": "describes"
+                },
+                "scheme": "doi"
+            },
+            {
+                "identifier": "https://resolver.caltech.edu/CaltechAUTHORS:20200624-115948489",
+                "relation_type": {
+                    "title": {
+                        "de": "Beschreibt",
+                        "en": "Describes"
+                    },
+                    "id": "describes"
+                },
+                "scheme": "url"
+            }
+        ],
+        "rights": [
+            {
+                "description": {
+                    "en": "No commercial reproduction, distribution, display or performance rights in this work are provided."
+                },
+                "title": {
+                    "en": "Other"
+                }
+            }
+        ],
+        "version": "Published + Accepted Version",
+        "title": "Tracing the Arguello Submarine Canyon System from Shelf Origins to an Abyssal Sink",
+        "funding": [
+            {
+                "funder": {
+                    "name": "California State University"
+                }
+            },
+            {
+                "funder": {
+                    "name": "NSF"
+                },
+                "award": {
+                    "title": {
+                        "en": " "
+                    },
+                    "number": "OCE-0825254"
+                }
+            },
+            {
+                "funder": {
+                    "name": "NSF"
+                },
+                "award": {
+                    "title": {
+                        "en": " "
+                    },
+                    "number": "OCE-0824982"
+                }
+            },
+            {
+                "funder": {
+                    "name": "NSF"
+                },
+                "award": {
+                    "title": {
+                        "en": " "
+                    },
+                    "number": "EAR-1151941"
+                }
+            }
+        ],
+        "additional_descriptions": [
+            {
+                "description": "\u00a9 2019 SEPM Society for Sedimentary Geology. \n\nThis work was supported by a grant to B. Rodriguez from the California State University Council on Ocean Affairs, Science and Technology (COAST) Undergraduate Research Support Program. Bathymetry data collection and processing were supported by National Science Foundation (NSF) OCE 0825254 and #0824982 research grants to M.D. Kohler (Caltech and the University of California, Los Angeles) and D.S. Weeraratne (California State University, Northridge) utilizing UNOLS research vessel and OBSIP instrumentation facilities at the Scripps Institution of Oceanography and NSF-CAREER EAR and the CSUN GEM program grant 1151941 to D.S. Weeraratne. We wish to thank the University of Alaska\u2013Fairbanks and the NSF for collecting an MBES line across our area of interest using the R/V Sikuliaq and Pacific Gas &amp; Electric Co. for providing data on channel development in San Luis Obispo Bay. Norman Maher assisted in the construction of figures. Reviewers Katie Maier and Peter Dartnell and editors Rick Behl and Jon Schwalbach provided insightful comments. We thank them all for their assistance.",
+                "type": {
+                    "title": {
+                        "de": "Sonstige",
+                        "en": "Additional Information"
+                    },
+                    "id": "additional"
+                }
+            },
+            {
+                "description": "<p>Published - <a href=\"/records/nhxh1-hs860/files/i1527-1404-17-1-87.pdf?download=1\">i1527-1404-17-1-87.pdf</a></p><p>Accepted Version - <a href=\"/records/nhxh1-hs860/files/Marsaglia_etal_Arguello_InPress_SEPM.pdf?download=1\">Marsaglia_etal_Arguello_InPress_SEPM.pdf</a></p>",
+                "type": {
+                    "title": {
+                        "de": "Sonstige",
+                        "en": "Attached Files"
+                    },
+                    "id": "attached-files"
+                }
+            }
+        ],
+        "resource_type": {
+            "title": {
+                "de": "Zeitschriftenartikel",
+                "en": "Journal Article"
+            },
+            "id": "publication-article"
+        },
+        "publication_date": "2019-01-01",
+        "dates": [
+            {
+                "type": {
+                    "title": {
+                        "de": "Erstellt",
+                        "en": "Created"
+                    },
+                    "id": "created"
+                },
+                "description": "Created from EPrint's datestamp field",
+                "date": "2020-06-24"
+            },
+            {
+                "type": {
+                    "title": {
+                        "de": "Aktualisiert",
+                        "en": "Updated"
+                    },
+                    "id": "updated"
+                },
+                "description": "Created from EPrint's last_modified field",
+                "date": "2021-11-16"
+            }
+        ],
+        "creators": [
+            {
+                "person_or_org": {
+                    "identifiers": [
+                        {
+                            "identifier": "Marsaglia-K-M",
+                            "scheme": "clpid"
+                        }
+                    ],
+                    "type": "personal",
+                    "family_name": "Marsaglia",
+                    "given_name": "K. M.",
+                    "name": "Marsaglia, K. M."
+                }
+            },
+            {
+                "person_or_org": {
+                    "identifiers": [
+                        {
+                            "identifier": "Rodriguez-B",
+                            "scheme": "clpid"
+                        }
+                    ],
+                    "type": "personal",
+                    "family_name": "Rodriguez",
+                    "given_name": "B.",
+                    "name": "Rodriguez, B."
+                }
+            },
+            {
+                "person_or_org": {
+                    "identifiers": [
+                        {
+                            "identifier": "Weeraratne-D-S",
+                            "scheme": "clpid"
+                        }
+                    ],
+                    "type": "personal",
+                    "family_name": "Weeraratne",
+                    "given_name": "D. S.",
+                    "name": "Weeraratne, D. S."
+                }
+            },
+            {
+                "person_or_org": {
+                    "identifiers": [
+                        {
+                            "identifier": "Greene-H-G",
+                            "scheme": "clpid"
+                        }
+                    ],
+                    "type": "personal",
+                    "family_name": "Greene",
+                    "given_name": "H. G.",
+                    "name": "Greene, H. G."
+                }
+            },
+            {
+                "person_or_org": {
+                    "identifiers": [
+                        {
+                            "identifier": "Shintaku-N",
+                            "scheme": "clpid"
+                        }
+                    ],
+                    "type": "personal",
+                    "family_name": "Shintaku",
+                    "given_name": "N.",
+                    "name": "Shintaku, N."
+                }
+            },
+            {
+                "person_or_org": {
+                    "identifiers": [
+                        {
+                            "identifier": "Kohler-M-D",
+                            "scheme": "clpid"
+                        }
+                    ],
+                    "type": "personal",
+                    "family_name": "Kohler",
+                    "given_name": "M. D.",
+                    "name": "Kohler, M. D."
+                }
+            }
+        ]
+    },
+    "status": "published",
+    "versions": {
+        "is_latest": true,
+        "index": 1
+    },
+    "pids": {
+        "oai": {
+            "identifier": "oai:authors.library.caltech.edu:nhxh1-hs860",
+            "provider": "oai"
+        }
+    },
+    "is_published": true,
+    "files": {
+        "total_bytes": 20609389,
+        "default_preview": "i1527-1404-17-1-87.pdf",
+        "order": [],
+        "count": 2,
+        "entries": {
+            "Marsaglia_etal_Arguello_InPress_SEPM.pdf": {
+                "metadata": null,
+                "ext": "pdf",
+                "size": 1769569,
+                "key": "Marsaglia_etal_Arguello_InPress_SEPM.pdf",
+                "mimetype": "application/pdf"
+            },
+            "i1527-1404-17-1-87.pdf": {
+                "metadata": null,
+                "ext": "pdf",
+                "size": 18839820,
+                "key": "i1527-1404-17-1-87.pdf",
+                "mimetype": "application/pdf"
+            }
+        },
+        "enabled": true
+    },
+    "updated": "2024-03-13T20:53:59.428773+00:00",
+    "access": {
+        "status": "open",
+        "files": "public",
+        "record": "public",
+        "embargo": {
+            "reason": null,
+            "active": false
+        }
+    },
+    "parent": {
+        "communities": {
+            "ids": [
+                "aedd135f-227e-4fdf-9476-5b3fd011bac6"
+            ],
+            "default": "aedd135f-227e-4fdf-9476-5b3fd011bac6"
+        },
+        "id": "f08z2-8c071"
+    },
+    "id": "nhxh1-hs860",
+    "is_draft": false,
+    "created": "2023-08-19T13:46:12.833878+00:00"
+}

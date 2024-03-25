@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Institutional Repository Data Management</title>
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" href="https://caltechlibrary.github.io/css/site.css">
+</head>
+<body>
+<header>
+<a href="http://library.caltech.edu" title="link to Caltech Library Homepage"><img src="https://caltechlibrary.github.io/assets/liblogo.gif" alt="Caltech Library logo"></a>
+</header>
+<nav>
+<ul>
+    <li><a href="/">Home</a></li>
+    <li><a href="index.html">README</a></li>
+    <li><a href="LICENSE">LICENSE</a></li>
+    <li><a href="INSTALL.html">INSTALL</a></li>
+    <li><a href="user_manual.html">User Manual</a></li>
+    <li><a href="search.html">Search Docs</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="https://github.com/caltechlibrary/irdmtools">GitHub</a></li>
+</ul>
+</nav>
+
+<section>
+<h1 id="name">NAME</h1>
+<p>ep3ds2citations</p>
+<h1 id="synopsis">SYNOPSIS</h1>
+<p>ep3ds2citations <a href="#options">OPTIONS</a> EPRINT_DS CITATION_DS
+[RECORD_ID]</p>
+<h1 id="description">DESCRIPTION</h1>
+<p>ep3ds2citations is a Caltech Library oriented command line
+application that takes an dataset collection of eprint records and
+converts then to a citations dataset collection. It can do so for a
+single record id or read a JSON list of record ids to migrate.</p>
+<p>EPRINT_DS is the dataset collection holding the eprint records.</p>
+<p>CITATION_DS is the dataset collection where the citation formatted
+objects will be written.</p>
+<h1 id="options">OPTIONS</h1>
+<dl>
+<dt>-help</dt>
+<dd>
+display help
+</dd>
+<dt>-license</dt>
+<dd>
+display license
+</dd>
+<dt>-version</dt>
+<dd>
+display version
+</dd>
+<dt>-config</dt>
+<dd>
+provide a path to an alternate configuration file
+(e.g. “irdmtools.json”)
+</dd>
+<dt>-ids JSON_ID_FILE</dt>
+<dd>
+read ids from a file.
+</dd>
+<dt>-keys</dt>
+<dd>
+works from a key list, one per line. Maybe file or standard input (use
+filename as “-”)
+</dd>
+<dt>-prefix</dt>
+<dd>
+Applies a prefix before the provided key when saving a record. E.g.
+`-prefix caltechauthors”
+</dd>
+<dt>-host</dt>
+<dd>
+Set the base url to use for the records
+(e.g. authors.library.caltech.edu)
+</dd>
+</dl>
+<h1 id="example">EXAMPLE</h1>
+<p>Example of a dataset collection called “authors.ds”, “data.ds” and
+“thesis.ds” of EPrint records aggregated into a “citation.ds” dataset
+colelction using prefixes and the source repository ids.</p>
+<pre class="shell"><code>ep3ds2citations -prefix caltechauthors authors.ds citation.ds k3tpc-ga970
+ep3ds2citations -prefix caltechdata data.ds citation.ds zzj7r-61978
+ep3ds2citations -prefix caltechthesis thesis.ds citation.ds 1233</code></pre>
+</section>
+
+<footer>
+<span>&copy; 2023 <a href="https://www.library.caltech.edu/copyright">Caltech Library</a></span>
+<address>1200 E California Blvd, Mail Code 1-32, Pasadena, CA 91125-3200</address>
+<span><a href="mailto:library@caltech.edu">Email Us</a></span>
+<span>Phone: <a href="tel:+1-626-395-3405">(626)395-3405</a></span>
+</footer>
+</body>
+</html>
