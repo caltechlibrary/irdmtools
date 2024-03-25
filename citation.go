@@ -216,6 +216,24 @@ type CitationAgent struct {
 
 	// clgid - Caltech Library Group Indentifier
 	CLgid string `json:"clgid,omitempty" xml:"clgid,omitempty" yaml:"clgid,omitempty"`
+
+	// ArachivesSpaceID holds the local ArachivesSpace instance id for the person or org
+	ArchivesSpaceID string `json:"archivesspace_id,omitempty" xml:"archivesspace_id,omitempty" yaml:"archivesspace_id,omitempty"`
+
+	// Viaf holds the viaf id for a person
+	Viaf string `json:"viaf,omitempty" xml:"viaf,omitempty" yaml:"viaf,omitempty"`
+
+	// Lcnaf holds the lcnaf id for a person
+	Lcnaf string `json:"lcnaf,omitempty" xml:"lcnaf,omitempty" yaml:"lcnaf,omitempty"`
+
+	// Snac holds teh snac id for a person
+	Snac string `json:"snac,omitempty" xml:"snac,omitempty" yaml:"snac,omitempty"`
+
+	// Wikidata holds the wikidata id for a person or org
+	Wikidata string `json:"wikidata,omitempty" xml:"wikidata,omitempty" yaml:"wikidata,omitempty"`
+
+	// DirectoryID holds the local directory identifier for a person
+	DirectoryID string `json:"directory_id,omitempty" xml:"directory_id,omitempty" yaml:"directory_id,omitempty"`
 }
 
 // CitationDate holds date information, this includes support for partial dates (e.g. year, year-month).
@@ -557,8 +575,8 @@ func (cite *Citation) CrosswalkEPrint(cName string, cID string, citeUsingURL str
 				agent := new(CitationAgent)
 				agent.FamilyName = creator.Name.Family
 				agent.LivedName = creator.Name.Given
-				agent.CLpid = creator.Name.ID
-				agent.ORCID = creator.Name.ORCID
+				agent.CLpid = creator.ID
+				agent.ORCID = creator.ORCID
 				agent.Prefix = creator.Name.Honourific
 				agent.Suffix = creator.Name.Lineage
 				cite.Editor = append(cite.Editor, agent)
