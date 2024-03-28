@@ -31,13 +31,9 @@ This tool is migrating content from an EPrints repository via the EPrint REST AP
 
 This tool will query the CrossRef or DataCite API and convert a works record into a JSON structure compatible with an RDM record (e.g. to be inserted via an RDM API call).  See the [man page](doi2rdm.1.md) for details
 
-### `rdm2citeproc`
+### `ep3ds2citations`
 
-This tools takes an RDM record and returns an abbreviated record inspired by [citeproc](https://en.wikipedia.org/wiki/CiteProc). It also supports harvesting selected RDM records into a dataset collection using the `-harvest` and `-ids` options. We use this feature to facilate creating <https://feeds.library.caltech.edu>. See the [man page](rdm2citeproc.1.md) for details.
-
-### `eprint2citeproc`
-
-This tools take an EPrint record and returns an abbreviated record inspired by [citeproc](https://en.wikipedia.org/wiki/CiteProc). It also supports harvesting select EPrint records into a dataset collection using the `-harvest` and `-ids` options. We use this feature to facilate creating <https://feeds.library.caltech.edu>. See the [man page](eprint2citeproc.1.md) for details.
+This tools take an EPrint record in a dataset collection and returns an abbreviated record inspired by [citeproc](https://en.wikipedia.org/wiki/CiteProc). It also supports harvesting select EPrint records into a dataset collection using the `-harvest` and `-ids` options. We use this feature to facilate creating <https://feeds.library.caltech.edu>. See the [man page](ep3ds2citations.1.md) for details.
 
 
 ## Requirements
