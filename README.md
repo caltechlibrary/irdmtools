@@ -41,7 +41,7 @@ This tools take an EPrint record in a dataset collection and returns an abbrevia
 - An Invenio RDM deployment
 - To building the Go based software and documentation
     - git
-    - Go >= 1.20.7
+    - Go >= 1.22.1
     - Make (e.g. GNU Make)
     - Pandoc >= 3
 - For harvesting content
