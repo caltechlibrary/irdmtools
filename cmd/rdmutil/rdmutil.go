@@ -60,19 +60,9 @@ var (
 # DESCRIPTION
 
 __{app_name}__ is way of interacting with Invenio-RDM through its Postgres
-database (or a copy of that database) or web API (JSON and OAI-PMH).
-It was inspired the RDM JSON API but was implemented as a way of quickly
-processing data without the hinderance of rate limits (needed when RDM is
-public facing).  If Postgres access is configured then it'll use SQL to
-retrieve the JSON data. It still uses the JSON
-API for update operations.  {app_name} uses environment variables for
-configuration. For accessing the JSON API it uses the following.
-
-RDM_URL
-: the URL of the Invenio RDM API and OAI-PMH services
-
-RDMTOK
-: the token needed to access the Invenio RDM API and OAI-PMH services
+database. It does NOT use the OAI-PMH API since that is far too slow.
+{app_name} uses environment variables for configuration. For accessing the
+JSON API it uses the following.
 
 dataset related environment variables (i.e. for harvest action) 
 
@@ -129,11 +119,8 @@ for id retrieval. It is rate limited.  Start and end dates are inclusive
 and should be specific in YYYY-MM-DD format.
 
 get_all_ids
-: Returns a list of all repository record ids latest versions. The method uses
-OAI-PMH for id retrieval is Postgress access is not configure. That can be
-terribly slow and rate limited. A test instance took 11 minutes to retrieve
-24000 record ids. If direct Postgres access is setup it queries the database
-directly (much much faster).
+: Returns a list of all repository record ids latest versions. The method
+requires Postgres database access.
 
 get_all_stale_ids
 : Returns a list of public record ids that are NOT the latest version of the
