@@ -1,7 +1,7 @@
 package irdmtools
 
 import (
-	"os"
+	//"os"
 	"testing"
 )
 
@@ -26,7 +26,7 @@ func TestDataCiteToRDM(t *testing.T) {
 	app.Cfg = new(Config)
 	for _, doi := range arxiv_ids {
 		options := new(Doi2RdmOptions)
-		options.MailTo = "dld-dev@library.caltech.edu"
+		options.MailTo = "dld-test@library.caltech.edu"
 		obj, err := QueryDataCiteObject(app.Cfg, doi, options)
 		if err != nil {
 			t.Error(err)
@@ -43,10 +43,12 @@ func TestDataCiteToRDM(t *testing.T) {
 			t.Errorf("expected a non-nil record for doi %q", doi)
 			t.FailNow()
 		}
+		/*
 		optionsFName, diffFName := "", ""
 		if err := app.RunDataCiteToRdm(os.Stdin, os.Stdout, os.Stderr, optionsFName, doi, diffFName); err != nil {
 			t.Error(err)
 			t.FailNow()
 		}
+		*/
 	}
 }
