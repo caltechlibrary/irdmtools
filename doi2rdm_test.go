@@ -44,11 +44,11 @@ func TestDataCiteToRDM(t *testing.T) {
 			t.FailNow()
 		}
 		/*
-		optionsFName, diffFName := "", ""
-		if err := app.RunDataCiteToRdm(os.Stdin, os.Stdout, os.Stderr, optionsFName, doi, diffFName); err != nil {
-			t.Error(err)
-			t.FailNow()
-		}
+			optionsFName, diffFName := "", ""
+			if err := app.RunDataCiteToRdm(os.Stdin, os.Stdout, os.Stderr, optionsFName, doi, diffFName); err != nil {
+				t.Error(err)
+				t.FailNow()
+			}
 		*/
 	}
 }

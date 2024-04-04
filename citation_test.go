@@ -208,17 +208,17 @@ func TestCrosswalkCreatorToCitationAgent(t *testing.T) {
 	contributorList := []*simplified.Creator{
 		&simplified.Creator{
 			PersonOrOrg: &simplified.PersonOrOrg{
-				Name: "Nielsen, Lars Holm",
+				Name:       "Nielsen, Lars Holm",
 				FamilyName: "Nielsen",
-				GivenName: "Lars Holm",
-				Type: "person",
+				GivenName:  "Lars Holm",
+				Type:       "person",
 				Identifiers: []*simplified.Identifier{
 					&simplified.Identifier{
-						Scheme: "orcid",
+						Scheme:     "orcid",
 						Identifier: "0000-0001-8135-3489",
 					},
 					&simplified.Identifier{
-						Scheme: "clpid",
+						Scheme:     "clpid",
 						Identifier: "Nielsen-Lars-Holm",
 					},
 				},
@@ -228,7 +228,7 @@ func TestCrosswalkCreatorToCitationAgent(t *testing.T) {
 			},
 			Affiliations: []*simplified.Affiliation{
 				&simplified.Affiliation{
-					ID: "01ggx415",
+					ID:   "01ggx415",
 					Name: "CERN",
 				},
 			},
@@ -238,8 +238,8 @@ func TestCrosswalkCreatorToCitationAgent(t *testing.T) {
 		&CitationAgent{
 			FamilyName: "Nielsen",
 			LivedName:  "Lars Holm",
-			ORCID:  "0000-0001-8135-3489",
-			CLpid:  "Nielsen-Lars-Holm",
+			ORCID:      "0000-0001-8135-3489",
+			CLpid:      "Nielsen-Lars-Holm",
 		},
 	}
 	expectedRole := "editor"

@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	// Caltech Library Packages
-	"github.com/caltechlibrary/simplified"
 	"github.com/caltechlibrary/eprinttools"
+	"github.com/caltechlibrary/simplified"
 )
 
 // irdmtools provides a means of turning an EPrint or RDM record into a datastructure suitable
@@ -139,7 +139,6 @@ type Citation struct {
 	// Chapters from book
 	Chapters string `json:"chapters,omitempty" xml:"chapters,omitempty" yaml:"chapters,omitempty"`
 
-
 	// Series/SeriesNumber values from CaltechAUTHORS (mapped from custom fields)
 	Series       string `json:"series,omitempty" xml:"series,omitempty" yaml:"series,omitempty"`
 	SeriesNumber string `json:"series_number,omitempty" xml:"series_number,omitempty" yaml:"series_number,omitempty"`
@@ -150,7 +149,6 @@ type Citation struct {
 
 	// Pages
 	Pages string `json:"pages,omitempty" xml:"pages,omitempty" yaml:"pages,omitempty"`
-
 
 	// ThesisDegree for thesis types
 	ThesisDegree string `json:"thesis_degree,omitempty" xml:"thesis_degree,omitempty" yaml:"thesis_degree,omitempty"`
@@ -255,19 +253,19 @@ func (cite *Citation) CrosswalkRecord(cName string, cID string, citeUsingURL str
 	if rec.Files != nil {
 		// In RDM the "default preview" is the primary document (e.g. article, thesis, etc) of record.
 		defaultPreview := rec.Files.DefaultPreview
-        for _, entry := range rec.Files.Entries {
+		for _, entry := range rec.Files.Entries {
 			// Handle the case where default preview isn't set and treat the first file as the one
 			// serving as a default.
-            if defaultPreview == "" {
-               defaultPreview = entry.Key
-            }
-            if defaultPreview == entry.Key {
-               cite.PrimaryObject = map[string]interface{}{
-                   "basename": defaultPreview,
-                   "url": fmt.Sprintf("%s/records/%s/files/%s", repoURL, rec.ID, defaultPreview),
-               }
-            }
-        }
+			if defaultPreview == "" {
+				defaultPreview = entry.Key
+			}
+			if defaultPreview == entry.Key {
+				cite.PrimaryObject = map[string]interface{}{
+					"basename": defaultPreview,
+					"url":      fmt.Sprintf("%s/records/%s/files/%s", repoURL, rec.ID, defaultPreview),
+				}
+			}
+		}
 	}
 
 	// Now crosswalk the rest of the citation from the simplified record.
@@ -481,7 +479,6 @@ func (ca *CitationAgent) ToString() string {
 	return fmt.Sprintf("%s, %s", ca.FamilyName, ca.LivedName)
 }
 
-
 // CrosswalkEPrint takes an eprinttools.EPrint record and return maps the values into the Citation.
 func (cite *Citation) CrosswalkEPrint(cName string, cID string, citeUsingURL string, eprint *eprinttools.EPrint) error {
 	// map repository required fields, everything else is derived from crosswalk
@@ -504,7 +501,6 @@ func (cite *Citation) CrosswalkEPrint(cName string, cID string, citeUsingURL str
 		}
 	}
 
-
 	// from the eprint table
 	cite.Title = eprint.Title
 	cite.Type = eprint.Type
@@ -526,7 +522,7 @@ func (cite *Citation) CrosswalkEPrint(cName string, cID string, citeUsingURL str
 	cite.ISSN = eprint.ISSN
 	cite.DOI = eprint.DOI
 	cite.PMCID = eprint.PMCID
-	
+
 	if eprint.ThesisType != "" {
 		cite.ThesisType = eprint.ThesisType
 	}
@@ -611,9 +607,9 @@ func (cite *Citation) CrosswalkEPrint(cName string, cID string, citeUsingURL str
 				cite.Contributor = append(cite.Contributor, agent)
 			}
 		}
-	}	
+	}
 
-	// map in Thesis Adivors 
+	// map in Thesis Adivors
 	if eprint.ThesisAdvisor.Length() > 0 {
 		for i := 0; i < eprint.ThesisAdvisor.Length(); i++ {
 			creator := eprint.ThesisAdvisor.IndexOf(i)

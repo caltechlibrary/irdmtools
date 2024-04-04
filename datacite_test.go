@@ -55,9 +55,9 @@ func TestQueryDatasetDOI(t *testing.T) {
 				},
 			},
 			"description": "This release is primarily implementing fixes.",
-			"doi": "10.22002/d1.868",
-			"identifier": "https://doi.org/10.22002/d1.868",
-			"published": "2018",
+			"doi":         "10.22002/d1.868",
+			"identifier":  "https://doi.org/10.22002/d1.868",
+			"published":   "2018",
 		},
 	}
 
@@ -87,7 +87,7 @@ func TestQueryDatasetDOI(t *testing.T) {
 				if creator.PersonOrOrg == nil {
 					t.Errorf("creator.PersonOrOrg is nil")
 				} else if creator.PersonOrOrg.Name != "Robert Doiel" {
-					t.Errorf("expected \"Robert Doiel\", got %q", creator.PersonOrOrg.Name)	
+					t.Errorf("expected \"Robert Doiel\", got %q", creator.PersonOrOrg.Name)
 				}
 			}
 		} else {

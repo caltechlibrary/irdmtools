@@ -53,14 +53,14 @@ type Doi2Rdm struct {
 }
 
 type Doi2RdmOptions struct {
-	MailTo string `json:"mailto,omitempty" yaml:"mailto"`
-	Download bool `json:"download,omitempty" yaml:"download"`
-	DotInitials bool `json:"dot_initials,omitempty" yaml:"dot_initials"`
-	ContributorTypes map[string]string `json:"contributor_types,omitemptpy" yaml:"contributor_types"`
-	ResourceTypes map[string]string `json:"resource_types,omitempty" yaml:"resource_types"`
+	MailTo              string            `json:"mailto,omitempty" yaml:"mailto"`
+	Download            bool              `json:"download,omitempty" yaml:"download"`
+	DotInitials         bool              `json:"dot_initials,omitempty" yaml:"dot_initials"`
+	ContributorTypes    map[string]string `json:"contributor_types,omitemptpy" yaml:"contributor_types"`
+	ResourceTypes       map[string]string `json:"resource_types,omitempty" yaml:"resource_types"`
 	DoiPrefixPublishers map[string]string `json:"doi_prefix_publishers,omitempty" yaml:"doi_prefix_publishers"`
-	ISSNPublishers map[string]string `json:"issn_publishers,omitempty" yaml:"issn_publishers"`
-	Debug bool `json:"debug,omitempty" yaml:"debug"`
+	ISSNPublishers      map[string]string `json:"issn_publishers,omitempty" yaml:"issn_publishers"`
+	Debug               bool              `json:"debug,omitempty" yaml:"debug"`
 }
 
 var (
@@ -245,19 +245,19 @@ func (app *Doi2Rdm) Configure(configFName string, envPrefix string, debug bool) 
 //
 // ```
 //
-//	app := new(irdmtools.Doi2Rdm)
-//  // Load irdmtools settings
-//	if err := app.LoadConfig("irdmtools.json"); err != nil {
-//	   // ... handle error ...
-//	}
-//  // If options are provided then we need to set the filename
-//  optionsFName := "doi2rdm.yaml"
-//	doi := "10.48550/arXiv.2104.02480"
-//	src, err := app.Run(os.Stdin, os.Stdout, os.Stderr, optionFName, doi, "", false)
-//	if err != nil {
-//	    // ... handle error ...
-//	}
-//	fmt.Printf("%s\n", src)
+//		app := new(irdmtools.Doi2Rdm)
+//	 // Load irdmtools settings
+//		if err := app.LoadConfig("irdmtools.json"); err != nil {
+//		   // ... handle error ...
+//		}
+//	 // If options are provided then we need to set the filename
+//	 optionsFName := "doi2rdm.yaml"
+//		doi := "10.48550/arXiv.2104.02480"
+//		src, err := app.Run(os.Stdin, os.Stdout, os.Stderr, optionFName, doi, "", false)
+//		if err != nil {
+//		    // ... handle error ...
+//		}
+//		fmt.Printf("%s\n", src)
 //
 // ```
 func (app *Doi2Rdm) RunCrossRefToRdm(in io.Reader, out io.Writer, eout io.Writer, optionFName, doi string, diffFName string) error {
@@ -327,19 +327,19 @@ func (app *Doi2Rdm) RunCrossRefToRdm(in io.Reader, out io.Writer, eout io.Writer
 //
 // ```
 //
-//	app := new(irdmtools.Doi2Rdm)
-//  // Load irdmtools settings
-//	if err := app.LoadConfig("irdmtools.json"); err != nil {
-//	   // ... handle error ...
-//	}
-//  // If options are provided then we need to set the filename
-//  optionsFName := "doi2rdm.yaml"
-//	doi := "10.48550/arXiv.2104.02480"
-//	src, err := app.RunDataCiteToRdm(os.Stdin, os.Stdout, os.Stderr, optionFName, doi, "", false)
-//	if err != nil {
-//	    // ... handle error ...
-//	}
-//	fmt.Printf("%s\n", src)
+//		app := new(irdmtools.Doi2Rdm)
+//	 // Load irdmtools settings
+//		if err := app.LoadConfig("irdmtools.json"); err != nil {
+//		   // ... handle error ...
+//		}
+//	 // If options are provided then we need to set the filename
+//	 optionsFName := "doi2rdm.yaml"
+//		doi := "10.48550/arXiv.2104.02480"
+//		src, err := app.RunDataCiteToRdm(os.Stdin, os.Stdout, os.Stderr, optionFName, doi, "", false)
+//		if err != nil {
+//		    // ... handle error ...
+//		}
+//		fmt.Printf("%s\n", src)
 //
 // ```
 func (app *Doi2Rdm) RunDataCiteToRdm(in io.Reader, out io.Writer, eout io.Writer, optionFName, doi string, diffFName string) error {
