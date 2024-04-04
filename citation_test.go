@@ -27,16 +27,16 @@ func TestCitationCrosswalkRecord(t *testing.T) {
 	}
 
 	item := &Citation{}
-	if err := item.CrosswalkRecord("rdm_website", "10.5281-inveniordm.1234", "", rec); err != nil {
+	if err := item.CrosswalkRecord("rdm_website", "10.5281-inveniordm.1234", "", "", rec); err != nil {
 		t.Error(err)
 	}
 	expectedS := "rdm_website"
-	if item.Repository != expectedS {
-		t.Errorf("incorrect repository, expected %q, got %q", expectedS, item.Repository)
+	if item.Collection != expectedS {
+		t.Errorf("incorrect repository, expected %q, got %q", expectedS, item.Collection)
 	}
 	expectedS = "10.5281-inveniordm.1234"
-	if item.RepositoryRecordID != expectedS {
-		t.Errorf("incorrect repo. rec. id, expected %q, got %q", expectedS, item.RepositoryRecordID)
+	if item.CollectionID != expectedS {
+		t.Errorf("incorrect repo. rec. id, expected %q, got %q", expectedS, item.CollectionID)
 	}
 	expectedS = "InvenioRDM"
 	if item.Title != expectedS {

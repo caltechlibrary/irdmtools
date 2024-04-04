@@ -668,7 +668,7 @@ func (app *Rdm2EPrint) Run(in io.Reader, out io.Writer, eout io.Writer, rdmids [
 			return err
 		}
 		if latestVersions {
-			fmt.Fprint(os.Stderr, "DEBUG check src->'versions'->'is_latests' before migrating %+v\n", rec.Versions)
+			fmt.Fprintf(os.Stderr, "DEBUG check src->'versions'->'is_latests' before migrating %+v\n", rec.Versions)
 		}
 		if latestVersions {
 			if rec.Versions == nil {
