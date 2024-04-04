@@ -4,7 +4,7 @@ go 1.22.1
 
 require (
 	github.com/caltechlibrary/crossrefapi v1.0.7
-	github.com/caltechlibrary/dataciteapi v1.0.2
+	github.com/caltechlibrary/dataciteapi v1.0.3
 	github.com/caltechlibrary/dataset/v2 v2.1.10
 	github.com/caltechlibrary/eprinttools v1.3.7
 	github.com/caltechlibrary/pairtree v1.0.3

@@ -9,10 +9,6 @@ func TestDataCiteToRDM(t *testing.T) {
 	//FIXME: Need an arxiv DOI to look up at DataCite
 	arxiv_ids := []string{
 		"10.22002/D1.868",
-		"arXiv:2402.12335v1",
-		"arXiv:2401.12460v1",
-		/* these arXiv ids don't seem to have data at DataCite ...
-		"arXiv:2204.13532v2",
 		"arXiv:2312.07215",
 		"arXiv:2305.06519",
 		"arXiv:2312.03791",
@@ -21,7 +17,10 @@ func TestDataCiteToRDM(t *testing.T) {
 		"arXiv:2305.07673",
 		"arXiv:2111.03606",
 		"arXiv:2112.06016",
-		*/
+		/* these arXiv ids don't seem to have data at DataCite ...  */
+		//"arXiv:2402.12335v1",
+		//"arXiv:2401.12460v1",
+		//"arXiv:2204.13532v2",
 	}
 	app := new(Doi2Rdm)
 	app.Cfg = new(Config)
