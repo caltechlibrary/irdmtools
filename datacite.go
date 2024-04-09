@@ -293,36 +293,39 @@ func crosswalkObjectPersonToCreator(object map[string]interface{}) *simplified.C
 	return nil
 }
 
-func getObjectCreators(object map[string]interface{}) []*simplified.Creator {
+func getObjectAgents(object map[string]interface{}, agentType string) []*simplified.Creator {
 	if attrs, ok := getObjectDataAttributes(object); ok {
-		if authors, ok := attrs["author"].([]interface{}); ok {
-			creators := []*simplified.Creator{}
-			for _, item := range authors {
-				author := item.(map[string]interface{})
-				creator := new(simplified.Creator)
-				creator.PersonOrOrg = new(simplified.PersonOrOrg)
-				if literal, ok := author["literal"].(string); ok {
-					creator.PersonOrOrg.Name = literal
+		if peopleOrGroups, ok := attrs[agentType].([]interface{}); ok {
+			agents := []*simplified.Creator{}
+			for _, item := range peopleOrGroups {
+				entity := item.(map[string]interface{})
+				agent := new(simplified.Creator)
+				agent.PersonOrOrg = new(simplified.PersonOrOrg)
+				if literal, ok := entity["literal"].(string); ok {
+					agent.PersonOrOrg.Name = literal
 				}
-				if family, ok := author["family_name"].(string); ok {
-					creator.PersonOrOrg.FamilyName = family
+				if family, ok := entity["family_name"].(string); ok {
+					agent.PersonOrOrg.FamilyName = family
 				}
-				if given, ok := author["given_name"].(string); ok {
-					creator.PersonOrOrg.GivenName = given
+				if given, ok := entity["given_name"].(string); ok {
+					agent.PersonOrOrg.GivenName = given
 				}
-				if creator.PersonOrOrg.Name != "" || creator.PersonOrOrg.FamilyName != "" {
-					creators = append(creators, creator)
+				if agent.PersonOrOrg.Name != "" || agent.PersonOrOrg.FamilyName != "" {
+					agents = append(agents, agent)
 				}
 			}
-			return creators
-		}
+			return agents			
+		}		
 	}
 	return nil
 }
 
+func getObjectCreators(object map[string]interface{}) []*simplified.Creator {
+	return getObjectAgents(object, "author")
+}
+
 func getObjectContributors(object map[string]interface{}) []*simplified.Creator {
-	/* FIXME: Need to figure this out in DataCite JSON */
-	return nil
+	return getObjectAgents(object, "contributors")
 }
 
 func getObjectLicenses(object map[string]interface{}) []*simplified.Right {
