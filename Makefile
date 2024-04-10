@@ -118,6 +118,7 @@ install: build
 	@echo ""
 	@echo "Make sure $(PREFIX)/bin is in your PATH"
 	@echo "Installing man page in $(PREFIX)/man"
+	@mkdir -p $(PREFIX)/man/man1
 	@for FNAME in $(MAN_PAGES); do if [ -f "./man/man1/$${FNAME}" ]; then cp -v "./man/man1/$${FNAME}" "$(PREFIX)/man/man1/$${FNAME}"; fi; done
 	@echo ""
 	@echo "Make sure $(PREFIX)/man is in your MANPATH"

@@ -76,13 +76,22 @@ func Test01Config(t *testing.T) {
 		t.Errorf("tests are not configured")
 		t.FailNow()
 	}
+	if err := cfg.LoadEnv("TEST_"); err != nil  {
+		t.Error(err)
+	}
+	// For go tooling all Invenio RDM through DB.
+	/*
 	if cfg.InvenioAPI != "" && cfg.InvenioToken == "" {
 		t.Errorf("missing an Invenio API Token")
-	} else if cfg.InvenioAPI == "" && cfg.InvenioDbHost == "" {
-		t.Errorf("expected either Ivenio API or Db Host to be set")
+	}
+	*/
+	if cfg.InvenioDbHost == "" && cfg.InvenioDSN == "" {
+		src, _ := JSONMarshalIndent(cfg, "", "    ")
+		t.Errorf("expected either Invenio Db Host or DSN to be set via TEST_* environment variables, %s", src)
 	}
 }
 
+/* NOTE: I am abondoning the Invenio RDM API in favor of direct Postgres access do to rate limiting challenges.
 func Test01Query(t *testing.T) {
 	if useQuery == "" {
 		useQuery = "gravity"
@@ -116,6 +125,7 @@ func Test01Query(t *testing.T) {
 		}
 	}
 }
+*/
 
 func Test01GetModifiedRecordIds(t *testing.T) {
 	if cfg == nil {
