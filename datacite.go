@@ -21,6 +21,9 @@ func QueryDataCiteObject(cfg *Config, doi string, options *Doi2RdmOptions) (map[
 	if err != nil {
 		return nil, err
 	}
+	if len(objects) == 0 {
+		return nil, fmt.Errorf("no data returned for %q", doi)
+	}
 	src, _ := JSONMarshalIndent(objects, "", "    ")
 	if cfg.Debug {
 		fmt.Fprintf(os.Stderr, "objects JSON:\n\n%s\n\n", src)

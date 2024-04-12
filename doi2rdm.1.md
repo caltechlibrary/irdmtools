@@ -1,6 +1,6 @@
-%doi2rdm(1) irdmtools user manual | version 0.0.77 9b3393bc
+%doi2rdm(1) irdmtools user manual | version 0.0.77 0a4e4568
 % R. S. Doiel and Tom Morrell
-% 2024-04-09
+% 2024-04-11
 
 # NAME
 
@@ -8,7 +8,7 @@ doi2rdm
 
 # SYNOPSIS
 
-doi2rdm [OPTIONS] [OPTIONS_YAML] crossref|datacite DOI
+doi2rdm [OPTIONS] [OPTIONS_YAML] [crossref|datacite] DOI
 
 # DESCRIPTION
 

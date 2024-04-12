@@ -54,7 +54,7 @@ var (
 
 # SYNOPSIS
 
-{app_name} [OPTIONS] [OPTIONS_YAML] crossref|datacite DOI
+{app_name} [OPTIONS] [OPTIONS_YAML] [crossref|datacite] DOI
 
 # DESCRIPTION
 
@@ -166,12 +166,15 @@ func main() {
 		app.Cfg.Debug = false
 	}
 
-	if len(args) < 2 {
-		fmt.Fprintln(eout, "expected a 'crossref' or 'datacite' and single DOI on the command line")
-		os.Exit(1)
-	}
 	optionsFName, dataSource, doi := "", "", ""
-	if len(args) > 2 {
+	if len(args) < 1 {
+		fmt.Fprintln(eout, "expected a least a single DOI on the command line")
+		os.Exit(1)
+	} else if len(args) == 1 {
+		optionsFName, dataSource, doi = "", "", args[0]
+	} else if len(args) == 2 {
+		optionsFName, dataSource, doi = args[0], "", args[1]
+	} else if len(args) > 2 {
 		optionsFName, dataSource, doi = args[0], args[1], args[2]
 	} else {
 		dataSource, doi = args[0], args[1]
@@ -182,14 +185,15 @@ func main() {
 				fmt.Fprintf(eout, "%s\n", err)
 				os.Exit(1)
 			}
-			/*
 		case "datacite":
 			if err := app.RunDataCiteToRdm(in, out, eout, optionsFName, doi, diffFName); err != nil {
 				fmt.Fprintf(eout, "%s\n", err)
 				os.Exit(1)
 			}
-			*/
 		default:
-			fmt.Fprintf(eout, "%q is not supported service to retrive DOI metadata\n", dataSource)
+			if err := app.RunDoiToRdmCombined(in, out, eout, optionsFName, doi, diffFName); err != nil {
+				fmt.Fprintf(eout, "%s\n", err)
+				os.Exit(1)
+			}
 	}
 }
