@@ -27,16 +27,16 @@ func TestCitationCrosswalkRecord(t *testing.T) {
 	}
 
 	item := &Citation{}
-	if err := item.CrosswalkRecord("rdm_website", "10.5281-inveniordm.1234", "", rec); err != nil {
+	if err := item.CrosswalkRecord("rdm_website", "10.5281-inveniordm.1234", "", "", rec); err != nil {
 		t.Error(err)
 	}
 	expectedS := "rdm_website"
-	if item.Repository != expectedS {
-		t.Errorf("incorrect repository, expected %q, got %q", expectedS, item.Repository)
+	if item.Collection != expectedS {
+		t.Errorf("incorrect repository, expected %q, got %q", expectedS, item.Collection)
 	}
 	expectedS = "10.5281-inveniordm.1234"
-	if item.RepositoryRecordID != expectedS {
-		t.Errorf("incorrect repo. rec. id, expected %q, got %q", expectedS, item.RepositoryRecordID)
+	if item.CollectionID != expectedS {
+		t.Errorf("incorrect repo. rec. id, expected %q, got %q", expectedS, item.CollectionID)
 	}
 	expectedS = "InvenioRDM"
 	if item.Title != expectedS {
@@ -208,17 +208,17 @@ func TestCrosswalkCreatorToCitationAgent(t *testing.T) {
 	contributorList := []*simplified.Creator{
 		&simplified.Creator{
 			PersonOrOrg: &simplified.PersonOrOrg{
-				Name: "Nielsen, Lars Holm",
+				Name:       "Nielsen, Lars Holm",
 				FamilyName: "Nielsen",
-				GivenName: "Lars Holm",
-				Type: "person",
+				GivenName:  "Lars Holm",
+				Type:       "person",
 				Identifiers: []*simplified.Identifier{
 					&simplified.Identifier{
-						Scheme: "orcid",
+						Scheme:     "orcid",
 						Identifier: "0000-0001-8135-3489",
 					},
 					&simplified.Identifier{
-						Scheme: "clpid",
+						Scheme:     "clpid",
 						Identifier: "Nielsen-Lars-Holm",
 					},
 				},
@@ -228,7 +228,7 @@ func TestCrosswalkCreatorToCitationAgent(t *testing.T) {
 			},
 			Affiliations: []*simplified.Affiliation{
 				&simplified.Affiliation{
-					ID: "01ggx415",
+					ID:   "01ggx415",
 					Name: "CERN",
 				},
 			},
@@ -238,8 +238,8 @@ func TestCrosswalkCreatorToCitationAgent(t *testing.T) {
 		&CitationAgent{
 			FamilyName: "Nielsen",
 			LivedName:  "Lars Holm",
-			ORCID:  "0000-0001-8135-3489",
-			CLpid:  "Nielsen-Lars-Holm",
+			ORCID:      "0000-0001-8135-3489",
+			CLpid:      "Nielsen-Lars-Holm",
 		},
 	}
 	expectedRole := "editor"

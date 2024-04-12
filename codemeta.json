@@ -5,10 +5,10 @@
     "codeRepository": "https://github.com/caltechlibrary/irdmtools",
     "dateCreated": "2022-10-27",
 	"dateRelease": "2024-01-24",
-	"dateModified": "2024-03-25",
+	"dateModified": "2024-04-12",
     "issueTracker": "https://github.com/caltechlibrary/irdmtools/issues",
     "name": "irdmtools",
-    "version": "0.0.76",
+    "version": "0.0.78",
     "description": "Tools for working with institutional repositories and data management systems. Current implementation targets Invenio-RDM.",
     "applicationCategory": "library science",
     "releaseNotes": "Proof of concept and refinements, piloting in production",
@@ -29,7 +29,7 @@
         "Windows"
     ],
     "softwareRequirements": [
-        "Go >= 1.22",
+        "Go >= 1.22.1",
 		"PostgreSQL >= 16",
 		"PostgREST >= 12",
 		"Pandoc >= 3",

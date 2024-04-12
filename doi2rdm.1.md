@@ -1,6 +1,6 @@
-%doi2rdm(1) irdmtools user manual | version 0.0.76 1203a801
+%doi2rdm(1) irdmtools user manual | version 0.0.78 95ba3295
 % R. S. Doiel and Tom Morrell
-% 2024-03-28
+% 2024-04-12
 
 # NAME
 
@@ -8,7 +8,7 @@ doi2rdm
 
 # SYNOPSIS
 
-doi2rdm [OPTIONS] [OPTIONS_YAML] crossref|datacite DOI
+doi2rdm [OPTIONS] [OPTIONS_YAML] [crossref|datacite] DOI
 
 # DESCRIPTION
 
@@ -46,24 +46,33 @@ migrating content from CrossRef to RDM.
 
 # EXAMPLES
 
-Example generating a JSON document for a single DOI. The resulting
-text file is called "article.json". In this example "options.yaml"
-is the configuration file for setup for your RDM instance.
-
-~~~
-	doi2rdm options.yaml crossref "10.1021/acsami.7b15651" >article.json
-~~~
-
-Check to see the difference from the saved "article.json" and
-the current metadata retrieved from CrossRef.
-
-~~~
-	doi2rdm -diff article.json crossref doi2rdm.yaml "10.1021/acsami.7b15651
-~~~
-
-Save the default YAML options to a file. 
+Save the default YAML options to a file. You can customize this to match your
+vocabulary requirements in your RDM deployment.
 
 ~~~
 	doi2rdm -show-yaml >options.yaml
 ~~~
+
+Example generating a JSON document for a single DOI. The resulting
+text file is called "article.json". In this example "options.yaml"
+is the configuration file for setup for your RDM instance. It'll first
+check CrossRef then DataCite.
+
+~~~
+	doi2rdm options.yaml "10.1021/acsami.7b15651" >article.json
+~~~
+
+Check to see the difference from the saved "article.json" and
+the current metadata retrieved from CrossRef or DataCite.
+
+~~~
+	doi2rdm -diff article.json options.yaml "10.1021/acsami.7b15651"
+~~~
+
+Example getting metadata for an arXiv record from DataCite
+
+~~~
+	doi2rdm options.yaml "arXiv:2312.07215"
+~~~
+
 

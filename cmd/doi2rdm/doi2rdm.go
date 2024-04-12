@@ -54,7 +54,7 @@ var (
 
 # SYNOPSIS
 
-{app_name} [OPTIONS] [OPTIONS_YAML] crossref|datacite DOI
+{app_name} [OPTIONS] [OPTIONS_YAML] [crossref|datacite] DOI
 
 # DESCRIPTION
 
@@ -92,26 +92,35 @@ migrating content from CrossRef to RDM.
 
 # EXAMPLES
 
-Example generating a JSON document for a single DOI. The resulting
-text file is called "article.json". In this example "options.yaml"
-is the configuration file for setup for your RDM instance.
-
-~~~
-	{app_name} options.yaml crossref "10.1021/acsami.7b15651" >article.json
-~~~
-
-Check to see the difference from the saved "article.json" and
-the current metadata retrieved from CrossRef.
-
-~~~
-	{app_name} -diff article.json crossref doi2rdm.yaml "10.1021/acsami.7b15651
-~~~
-
-Save the default YAML options to a file. 
+Save the default YAML options to a file. You can customize this to match your
+vocabulary requirements in your RDM deployment.
 
 ~~~
 	{app_name} -show-yaml >options.yaml
 ~~~
+
+Example generating a JSON document for a single DOI. The resulting
+text file is called "article.json". In this example "options.yaml"
+is the configuration file for setup for your RDM instance. It'll first
+check CrossRef then DataCite.
+
+~~~
+	{app_name} options.yaml "10.1021/acsami.7b15651" >article.json
+~~~
+
+Check to see the difference from the saved "article.json" and
+the current metadata retrieved from CrossRef or DataCite.
+
+~~~
+	{app_name} -diff article.json options.yaml "10.1021/acsami.7b15651"
+~~~
+
+Example getting metadata for an arXiv record from DataCite
+
+~~~
+	{app_name} options.yaml "arXiv:2312.07215"
+~~~
+
 `
 )
 
@@ -166,12 +175,15 @@ func main() {
 		app.Cfg.Debug = false
 	}
 
-	if len(args) < 2 {
-		fmt.Fprintln(eout, "expected a 'crossref' or 'datacite' and single DOI on the command line")
-		os.Exit(1)
-	}
 	optionsFName, dataSource, doi := "", "", ""
-	if len(args) > 2 {
+	if len(args) < 1 {
+		fmt.Fprintln(eout, "expected a least a single DOI on the command line")
+		os.Exit(1)
+	} else if len(args) == 1 {
+		optionsFName, dataSource, doi = "", "", args[0]
+	} else if len(args) == 2 {
+		optionsFName, dataSource, doi = args[0], "", args[1]
+	} else if len(args) > 2 {
 		optionsFName, dataSource, doi = args[0], args[1], args[2]
 	} else {
 		dataSource, doi = args[0], args[1]
@@ -182,14 +194,15 @@ func main() {
 				fmt.Fprintf(eout, "%s\n", err)
 				os.Exit(1)
 			}
-			/*
 		case "datacite":
 			if err := app.RunDataCiteToRdm(in, out, eout, optionsFName, doi, diffFName); err != nil {
 				fmt.Fprintf(eout, "%s\n", err)
 				os.Exit(1)
 			}
-			*/
 		default:
-			fmt.Fprintf(eout, "%q is not supported service to retrive DOI metadata\n", dataSource)
+			if err := app.RunDoiToRdmCombined(in, out, eout, optionsFName, doi, diffFName); err != nil {
+				fmt.Fprintf(eout, "%s\n", err)
+				os.Exit(1)
+			}
 	}
 }

@@ -95,6 +95,9 @@ specified by C_NAME.
 -pipeline
 : read from standard input and write crosswalk to standard out.
 
+-latest
+: only convert record(s) if latest version.
+
 # EXAMPLE
 
 Example generating a EPRINT JSON document from RDM would use the following
@@ -146,6 +149,7 @@ func main() {
 	releaseDate := irdmtools.ReleaseDate
 	releaseHash := irdmtools.ReleaseHash
 	fmtHelp := irdmtools.FmtHelp
+	latestVersions := false
 
 	showHelp, showVersion, showLicense := false, false, false
 	configFName, debug, asXML := "", false, false
@@ -159,6 +163,7 @@ func main() {
 	flag.StringVar(&idsFName, "ids", idsFName, "read ids from a file")
 	flag.StringVar(&cName, "harvest", cName, "harvest JSON eprint records into the dataset collection.")
 	flag.BoolVar(&pipeline, "pipeline", pipeline, "read from standard input, crosswalk and write to standard out")
+	flag.BoolVar(&latestVersions, "latest", latestVersions, "only convert record if the latest version")
 
 	flag.Parse()
 	rdmids := flag.Args()
@@ -196,20 +201,20 @@ func main() {
 		os.Exit(1)
 	}
 	if cName != "" {
-		if err := app.RunHarvest(os.Stdin, os.Stdout, os.Stderr, cName, rdmids); err != nil {
+		if err := app.RunHarvest(os.Stdin, os.Stdout, os.Stderr, cName, rdmids, latestVersions); err != nil {
 			fmt.Fprintf(os.Stderr, "%s\n", err)
 			os.Exit(1)
 		}
 		os.Exit(0)
 	}
 	if pipeline {
-		if err := app.RunPipeline(os.Stdin, os.Stdout, os.Stderr, asXML); err != nil {
+		if err := app.RunPipeline(os.Stdin, os.Stdout, os.Stderr, asXML, latestVersions); err != nil {
 			fmt.Fprintf(os.Stderr, "%s\n", err)
 			os.Exit(1)
 		}
 		os.Exit(0)
 	}
-	if err := app.Run(os.Stdin, os.Stdout, os.Stderr, rdmids, asXML); err != nil {
+	if err := app.Run(os.Stdin, os.Stdout, os.Stderr, rdmids, asXML, latestVersions); err != nil {
 		fmt.Fprintf(os.Stderr, "%s\n", err)
 		os.Exit(1)
 	}

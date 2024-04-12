@@ -77,12 +77,14 @@ func TestMain(m *testing.M) {
 		l.Fatal(err)
 	}
 	cfg.Debug = true
+	/* InvenioAPI and Token no longer needed when switching to direct DB access
 	if cfg.InvenioAPI == "" {
 		l.Printf("invenio api not configured")
 	}
 	if cfg.InvenioToken == "" {
 		l.Printf("invenio troken not configured")
 	}
+	*/
 	if idsFName == "" {
 		idsFName = path.Join("testdata", "test_record_ids.json")
 	}

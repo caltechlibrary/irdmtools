@@ -418,23 +418,29 @@ func getWorksPublishedOnline(work *crossrefapi.Works) *simplified.DateType {
 func getWorksPublicationDate(work *crossrefapi.Works) string {
 	printDate := getWorksPublishedPrint(work)
 	onlineDate := getWorksPublishedOnline(work)
-	if (printDate == nil || printDate.Date == "") && (onlineDate == nil || onlineDate.Date == "") {
+	acceptedDate := getWorksAccepted(work)
+	if (printDate == nil || printDate.Date == "") && (onlineDate == nil || onlineDate.Date == "") && (acceptedDate == nil || acceptedDate.Date == ""){
 		return ""
 	}
-	if printDate == nil || printDate.Date == "" {
+	if (printDate != nil && printDate.Date != "") && (onlineDate != nil && onlineDate.Date != "") {
+		// NOTE: If we get this far we need to compare dates' date strings.
+		// This is a naive compare it assumes the date string formats are
+		// alphabetical.
+		i := strings.Compare(printDate.Date, onlineDate.Date)
+		if i < 0 || i == 0 {
+			return printDate.Date
+		}
+	}
+	if printDate != nil && printDate.Date != "" {
+		return printDate.Date
+	}
+	if onlineDate != nil && onlineDate.Date != "" {
 		return onlineDate.Date
 	}
-	if onlineDate == nil || onlineDate.Date == "" {
-		return printDate.Date
+	if acceptedDate != nil && acceptedDate.Date != "" {
+		return acceptedDate.Date
 	}
-	// NOTE: If we get this far we need to compare dates' date strings.
-	// This is a naive compare it assumes the date string formats are
-	// alphabetical.
-	i := strings.Compare(printDate.Date, onlineDate.Date)
-	if i < 0 || i == 0 {
-		return printDate.Date
-	}
-	return onlineDate.Date
+	return ""
 }
 
 func getWorksAccepted(work *crossrefapi.Works) *simplified.DateType {

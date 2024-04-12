@@ -1,6 +1,6 @@
-%rdm2eprint(1) irdmtools user manual | version 0.0.76 1203a801
+%rdm2eprint(1) irdmtools user manual | version 0.0.78 95ba3295
 % R. S. Doiel and Tom Morrell
-% 2024-03-28
+% 2024-04-12
 
 # NAME
 
@@ -47,6 +47,9 @@ specified by C_NAME.
 
 -pipeline
 : read from standard input and write crosswalk to standard out.
+
+-latest
+: only convert record(s) if latest version.
 
 # EXAMPLE
 

@@ -39,6 +39,7 @@ import (
 	"fmt"
 	"os"
 	"database/sql"
+	"strings"
 
 	// Caltech Library packages
 	"github.com/caltechlibrary/dataset/v2"
@@ -52,6 +53,7 @@ type Config struct {
 	// Repository Name, e.g. CaltechAUTHORS, CaltechTHESIS, CaltechDATA
 	RepoName string `json:"repo_name,omitempty"`
 	// Repository ID, e.g. caltechauthors, caltechthesis, caltechdata (usually the db name for repository)
+	// NOTE: It should also match the Postgres DB name used by RDM
 	RepoID string `json:"repo_id,omitempty"`
 	// InvenioAPI holds the URL to the InvenioAPI
 	InvenioAPI string `json:"rdm_url,omitempty"`
@@ -109,6 +111,43 @@ func NewConfig() *Config {
 	cfg := new(Config)
 	cfg.rl = new(RateLimit)
 	return cfg
+}
+
+// MakeDSN will return the value set for cfg.InvenioDSN or set and return it if
+// enough data is provided in the config.
+func (cfg *Config) MakeDSN() string {
+	if cfg.InvenioDSN == "" {
+   		parts := []string{
+   			"postgres://",
+   		}
+   		username := []string{}
+   		if cfg.InvenioDbUser != "" {
+   			username = append(username, cfg.InvenioDbUser)
+   		}
+   		if cfg.InvenioDbPassword != "" {
+   			username = append(username, cfg.InvenioDbPassword)
+   		}
+   		if len(username) > 0 {
+   			parts = append(parts, strings.Join(username, ":") + "@")
+   		} else {
+   			parts = append(parts, "")
+   		}
+   		if cfg.InvenioDbHost != "" {
+   			parts = append(parts, cfg.InvenioDbHost)
+   		}
+   		if cfg.RepoID != "" {
+   			parts = append(parts, "/" + cfg.RepoID)
+   		}
+   		if strings.HasPrefix(cfg.InvenioDbHost, "localhost") {
+   			parts = append(parts, "?sslmode=disable")
+   		} else {
+   			parts = append(parts, "?sslmode=require")
+   		}
+   		if len(parts) > 1 {
+   			return strings.Join(parts, "")
+   		}
+	}
+	return cfg.InvenioDSN
 }
 
 // LoadEnv checks the environment for configuration values if not
@@ -173,6 +212,12 @@ func (cfg *Config) LoadEnv(prefix string) error {
 	if rdmDbPassword := os.Getenv(prefixVar("RDM_DB_PASSWORD", prefix)); rdmDbPassword != "" {
 		cfg.InvenioDbPassword = rdmDbPassword
 	}
+	// Build our InvenioDSN
+	if rdmDSN := os.Getenv(prefixVar("RDM_DSN", prefix)); rdmDSN != "" {
+		cfg.InvenioDSN = rdmDSN
+	} else {
+		cfg.InvenioDSN = cfg.MakeDSN()
+	}
 	return nil
 }
 
@@ -209,6 +254,10 @@ func (cfg *Config) LoadConfig(configFName string) error {
 	}
 	if err := JSONUnmarshal(src, &cfg); err != nil {
 		return err
+	}
+	// Build our DSN if not set.
+	if cfg.InvenioDSN == "" {
+		cfg.InvenioDSN = cfg.MakeDSN()
 	}
 	return nil
 }

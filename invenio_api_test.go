@@ -76,13 +76,22 @@ func Test01Config(t *testing.T) {
 		t.Errorf("tests are not configured")
 		t.FailNow()
 	}
+	if err := cfg.LoadEnv("TEST_"); err != nil  {
+		t.Error(err)
+	}
+	// For go tooling all Invenio RDM through DB.
+	/*
 	if cfg.InvenioAPI != "" && cfg.InvenioToken == "" {
 		t.Errorf("missing an Invenio API Token")
-	} else if cfg.InvenioAPI == "" && cfg.InvenioDbHost == "" {
-		t.Errorf("expected either Ivenio API or Db Host to be set")
+	}
+	*/
+	if cfg.InvenioDbHost == "" && cfg.InvenioDSN == "" {
+		src, _ := JSONMarshalIndent(cfg, "", "    ")
+		t.Errorf("expected either Invenio Db Host or DSN to be set via TEST_* environment variables, %s", src)
 	}
 }
 
+/* NOTE: I am abondoning the Invenio RDM API in favor of direct Postgres access do to rate limiting challenges.
 func Test01Query(t *testing.T) {
 	if useQuery == "" {
 		useQuery = "gravity"
@@ -116,6 +125,7 @@ func Test01Query(t *testing.T) {
 		}
 	}
 }
+*/
 
 func Test01GetModifiedRecordIds(t *testing.T) {
 	if cfg == nil {
@@ -170,6 +180,10 @@ func Test02GetRecord(t *testing.T) {
 	if cfg == nil || idsFName == "" {
 		t.Skipf("Not configured for testing")
 	}
+	cfg := new(Config)
+	if err := cfg.LoadEnv("TEST_"); err != nil {
+		t.Error(err)
+	}
 	src, err := os.ReadFile(idsFName)
 	if err != nil {
 		t.Errorf("failed to read ids from file %q, %s", idsFName, err)
@@ -181,18 +195,23 @@ func Test02GetRecord(t *testing.T) {
 		t.FailNow()
 	}
 	/*
-		// Randomize the order of the ids before running GetRecord test.
-		rand.Shuffle(len(ids), func(i int, j int) {
-			ids[i], ids[j] = ids[j], ids[i]
-		})
+	// Randomize the order of the ids before running GetRecord test.
+	rand.Shuffle(len(ids), func(i int, j int) {
+		ids[i], ids[j] = ids[j], ids[i]
+	})
 	*/
+	t0 := time.Now()
+	iTime := time.Now()
+	tot := len(ids)
+	reportProgress := false
 	for i, id := range ids {
 		_, err := GetRecord(cfg, id, false)
 		if err != nil {
 			t.Errorf("(%d) GetRecord(cfg, %q, false) %s\n%s", i, id, err, cfg.rl)
 			t.FailNow()
 		}
-		//cfg.rl.Fprintf(os.Stderr)
-		cfg.rl.Throttle(i, len(ids))
+		if iTime, reportProgress = CheckWaitInterval(iTime, (15 * time.Second)); reportProgress || i == 0 {
+			fmt.Fprintf(os.Stderr, "%s %s\n", ProgressIPS(t0, i, time.Second), ProgressETA(t0, i, tot))
+		}
 	}
 }

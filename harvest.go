@@ -77,22 +77,14 @@ func Harvest(cfg *Config, fName string, debug bool) error {
 	t0 := time.Now()
 	iTime, reportProgress := time.Now(), false
 	//fmt.Printf("DEBUG are we using the RDM REST API? %t\n", (cfg.InvenioDbHost == ""))
-	if cfg.InvenioDbHost == "" {
+	connStr := cfg.MakeDSN()
+	if connStr == "" {
+		fmt.Printf("WARNING: harvesting through JSON API, extremely slow")
 		cfg.rl = new(RateLimit)
 	} else {
 		cfg.rl = nil
 		// Need to open our Postgres connection and defer the closing of it.
 		if cfg.pgDB == nil {
-			sslmode := "?sslmode=require"
-			if strings.HasPrefix(cfg.InvenioDbHost, "localhost") {
-				sslmode = "?sslmode=disable"
-			}
-			connStr := fmt.Sprintf("postgres://%s@%s/%s%s", 
-			cfg.InvenioDbUser, cfg.InvenioDbHost, cfg.RepoID, sslmode)
-			if cfg.InvenioDbPassword != "" {
-				connStr = fmt.Sprintf("postgres://%s:%s@%s/%s%s", 
-					cfg.InvenioDbUser, cfg.InvenioDbPassword, cfg.InvenioDbHost, cfg.RepoID, sslmode)
-			}
 			db, err := sql.Open("postgres", connStr)
 			if err != nil {
 				return  err
@@ -137,7 +129,7 @@ func Harvest(cfg *Config, fName string, debug bool) error {
 		}
 		// NOTE: We need to respect rate limits of RDM API if we're using it!
 		if cfg.rl != nil {
-			fmt.Println("DEBUG we are throttling API access")
+			fmt.Println("WARNING: You we are throttling for the JSON API access. It should use directory Postgres access!")
 			cfg.rl.Throttle(i, tot)
 		}
 	}

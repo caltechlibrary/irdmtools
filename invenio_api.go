@@ -529,17 +529,7 @@ func Query(cfg *Config, q string, sort string) ([]map[string]interface{}, error)
 // getRecordIdsFromPg will return all record ids found by querying Invenio RDM's Postgres
 // database.
 func getRecordIdsFromPg(cfg *Config) ([]string, error) {
-	
-	sslmode := "?sslmode=require"
-	if strings.HasPrefix(cfg.InvenioDbHost, "localhost") {
-		sslmode = "?sslmode=disable"
-	}
-	connStr := fmt.Sprintf("postgres://%s@%s/%s%s", 
-		cfg.InvenioDbUser, cfg.InvenioDbHost, cfg.RepoID, sslmode)
-	if cfg.InvenioDbPassword != "" {
-		connStr = fmt.Sprintf("postgres://%s:%s@%s/%s%s", 
-			cfg.InvenioDbUser, cfg.InvenioDbPassword, cfg.InvenioDbHost, cfg.RepoID, sslmode)
-	}
+	connStr := cfg.MakeDSN()
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		return nil, err
@@ -569,17 +559,7 @@ WHERE json->'access'->>'record' = 'public'
 // getRecordStaleIdsFromPg will return all record ids found by querying Invenio RDM's Postgres
 // database.
 func getRecordStaleIdsFromPg(cfg *Config) ([]string, error) {
-	
-	sslmode := "?sslmode=require"
-	if strings.HasPrefix(cfg.InvenioDbHost, "localhost") {
-		sslmode = "?sslmode=disable"
-	}
-	connStr := fmt.Sprintf("postgres://%s@%s/%s%s", 
-		cfg.InvenioDbUser, cfg.InvenioDbHost, cfg.RepoID, sslmode)
-	if cfg.InvenioDbPassword != "" {
-		connStr = fmt.Sprintf("postgres://%s:%s@%s/%s%s", 
-			cfg.InvenioDbUser, cfg.InvenioDbPassword, cfg.InvenioDbHost, cfg.RepoID, sslmode)
-	}
+    connStr := cfg.MakeDSN()	
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		return nil, err
@@ -605,19 +585,11 @@ WHERE json->'access'->>'record' = 'public'
 	err = rows.Err()
 	return keys, err
 }
+
 // getModifiedRecordIdsFromPg will return of record ids found in date range by querying
 // Invenio RDM's Postgres database.
 func getModifiedRecordIdsFromPg(cfg *Config, startDate string, endDate string) ([]string, error) {
-	sslmode := "?sslmode=require"
-	if strings.HasPrefix(cfg.InvenioDbHost, "localhost") {
-		sslmode = "?sslmode=disable"
-	}
-	connStr := fmt.Sprintf("postgres://%s@%s/%s%s", 
-		cfg.InvenioDbUser, cfg.InvenioDbHost, cfg.RepoID, sslmode)
-	if cfg.InvenioDbPassword != "" {
-		connStr = fmt.Sprintf("postgres://%s:%s@%s/%s%s", 
-			cfg.InvenioDbUser, cfg.InvenioDbPassword, cfg.InvenioDbHost, cfg.RepoID, sslmode)
-	}
+	connStr := cfg.MakeDSN()
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		return nil, err
@@ -668,7 +640,8 @@ WHERE json->'access'->>'record' = 'public' AND (updated between $1 AND $2)`
 // NOTE: This method relies on OAI-PMH, this is a rate limited process
 // so results can take quiet some time.
 func GetRecordIds(cfg *Config) ([]string, error) {
-	if cfg.InvenioDbHost != "" && cfg.InvenioDbUser != "" {
+	connStr := cfg.MakeDSN()
+	if connStr != "" {
 		return getRecordIdsFromPg(cfg)
 	}
 	return nil, fmt.Errorf("requires direct Postgres access")
@@ -747,7 +720,8 @@ func GetRecordIds(cfg *Config) ([]string, error) {
 // NOTE: This method relies on OAI-PMH, this is a rate limited process
 // so results can take quiet some time.
 func GetRecordStaleIds(cfg *Config) ([]string, error) {
-	if cfg.InvenioDbHost != "" && cfg.InvenioDbUser != "" {
+	connStr := cfg.MakeDSN()
+	if connStr != "" {
 		return getRecordStaleIdsFromPg(cfg)
 	}
 	return nil, fmt.Errorf("requires direct Postgres access")
@@ -770,7 +744,8 @@ func GetModifiedRecordIds(cfg *Config, start string, end string) ([]string, erro
 	if end == "" {
 		end = time.Now().Format("2006-01-02")
 	}
-	if cfg.InvenioDbHost != "" && cfg.InvenioDbUser != "" {
+	connStr := cfg.MakeDSN()
+	if connStr != "" {
 		return getModifiedRecordIdsFromPg(cfg, start, end)
 	}
 	return nil, fmt.Errorf("database access to Postgres not configured")
@@ -884,23 +859,14 @@ func getRecordFromPg(cfg *Config, rdmID string, draft bool) (*simplified.Record,
 	)
 	if cfg.pgDB != nil {
 		db = cfg.pgDB
-	} else if cfg.pgDB == nil && cfg.InvenioDbHost != "" && cfg.InvenioDbUser != ""{
-		sslmode := "?sslmode=require"
-		if strings.HasPrefix(cfg.InvenioDbHost, "localhost") {
-			sslmode = "?sslmode=disable"
-		}
-		connStr := fmt.Sprintf("postgres://%s@%s/%s%s", 
-		cfg.InvenioDbUser, cfg.InvenioDbHost, cfg.RepoID, sslmode)
-		if cfg.InvenioDbPassword != "" {
-			connStr = fmt.Sprintf("postgres://%s:%s@%s/%s%s", 
-				cfg.InvenioDbUser, cfg.InvenioDbPassword, cfg.InvenioDbHost, cfg.RepoID, sslmode)
-		}
+	} else if cfg.pgDB == nil {
+		connStr := cfg.MakeDSN()
 		db, err = sql.Open("postgres", connStr)
 		if err != nil {
 			return nil, err
 		}
 		defer db.Close()
-	 }
+	}
 	stmt := `SELECT jsonb_strip_nulls(jsonb_build_object(
     'created', created::timestamp (0) with time zone, 
     'updated', updated::timestamp (0) with time zone,
@@ -1011,23 +977,14 @@ func getRecordVersionsFromPg(cfg *Config, rdmID string) ([]*map[string]interface
 	)
 	if cfg.pgDB != nil {
 		db = cfg.pgDB
-	} else if cfg.pgDB == nil && cfg.InvenioDbHost != "" && cfg.InvenioDbUser != ""{
-		sslmode := "?sslmode=require"
-		if strings.HasPrefix(cfg.InvenioDbHost, "localhost") {
-			sslmode = "?sslmode=disable"
-		}
-		connStr := fmt.Sprintf("postgres://%s@%s/%s%s", 
-		cfg.InvenioDbUser, cfg.InvenioDbHost, cfg.RepoID, sslmode)
-		if cfg.InvenioDbPassword != "" {
-			connStr = fmt.Sprintf("postgres://%s:%s@%s/%s%s", 
-				cfg.InvenioDbUser, cfg.InvenioDbPassword, cfg.InvenioDbHost, cfg.RepoID, sslmode)
-		}
+	} else if cfg.pgDB == nil {
+		connStr := cfg.MakeDSN()
 		db, err = sql.Open("postgres", connStr)
 		if err != nil {
 			return nil, err
 		}
 		defer db.Close()
-	 }
+	}
 	stmt := `SELECT jsonb_strip_nulls(jsonb_build_object(
 	'id', json->>'id',
 	'metadata', json,
@@ -1086,7 +1043,8 @@ ORDER BY version_id`
 // }
 // ```
 func GetRecord(cfg *Config, id string, draft bool) (*simplified.Record, error) {
-	if cfg.InvenioDbHost != "" && cfg.InvenioDbUser != "" {
+	connstr := cfg.MakeDSN()
+	if connstr != "" {
 		return getRecordFromPg(cfg, id, draft)
 	}
 	return nil, fmt.Errorf("database access to Postgres not configured")
@@ -1128,7 +1086,8 @@ func GetRecord(cfg *Config, id string, draft bool) (*simplified.Record, error) {
 // }
 // ```
 func GetRecordVersions(cfg *Config, id string) ([]*map[string]interface{}, error) {
-	if cfg.InvenioDbHost != "" && cfg.InvenioDbUser != "" {
+	connstr := cfg.MakeDSN()
+	if connstr != "" {
 		return getRecordVersionsFromPg(cfg, id)
 	}
 	return nil, fmt.Errorf("requires Postgres access support")

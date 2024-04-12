@@ -78,9 +78,9 @@ installer.sh: .FORCE
 test: $(PACKAGE)
 	#go test -timeout 120h
 	go test -test.v -run Test01Config
-	go test -test.v -run Test01Query
-	go test -timeout 2h -ids testdata/test_record_ids.json -run Test02GetRecord
-	go test -timeout 2h -ids testdata/test_record_ids.json -run Test03Harvest
+	#go test -test.v -run Test01Query
+	#go test -timeout 2h -ids testdata/test_record_ids.json -run Test02GetRecord
+	#go test -timeout 2h -ids testdata/test_record_ids.json -run Test03Harvest
 	go test -timeout 2h -run Test01GetRecordIds
 	go test -timeout 2h -run Test01GetModifiedIds
 
@@ -117,6 +117,7 @@ install: build
 	@echo ""
 	@echo "Make sure $(PREFIX)/bin is in your PATH"
 	@echo "Installing man page in $(PREFIX)/man"
+	@mkdir -p $(PREFIX)/man/man1
 	@for FNAME in $(MAN_PAGES); do if [ -f "./man/man1/$${FNAME}" ]; then cp -v "./man/man1/$${FNAME}" "$(PREFIX)/man/man1/$${FNAME}"; fi; done
 	@echo ""
 	@echo "Make sure $(PREFIX)/man is in your MANPATH"

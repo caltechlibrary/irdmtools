@@ -40,6 +40,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -640,7 +641,7 @@ func usePostgresDB(cfg *Config) bool {
 	return false
 }
 
-func (app *Rdm2EPrint) Run(in io.Reader, out io.Writer, eout io.Writer, rdmids []string, asXML bool) error {
+func (app *Rdm2EPrint) Run(in io.Reader, out io.Writer, eout io.Writer, rdmids []string, asXML bool, latestVersions bool) error {
 	eprints := new(eprinttools.EPrints)
 	if usePostgresDB(app.Cfg) {
 		cfg := app.Cfg
@@ -666,6 +667,17 @@ func (app *Rdm2EPrint) Run(in io.Reader, out io.Writer, eout io.Writer, rdmids [
 		if err != nil {
 			return err
 		}
+		if latestVersions {
+			fmt.Fprintf(os.Stderr, "DEBUG check src->'versions'->'is_latests' before migrating %+v\n", rec.Versions)
+		}
+		if latestVersions {
+			if rec.Versions == nil {
+				continue
+			} 
+			if ! rec.Versions.IsLatest {
+				continue
+			}
+		}
 		eprint := new(eprinttools.EPrint)
 		if err := CrosswalkRdmToEPrint(app.Cfg, rec, eprint); err != nil {
 			return err
@@ -688,7 +700,7 @@ func (app *Rdm2EPrint) Run(in io.Reader, out io.Writer, eout io.Writer, rdmids [
 	return nil
 }
 
-func (app *Rdm2EPrint) RunHarvest(in io.Reader, out io.Writer, eout io.Writer, cName string, rdmids []string) error {
+func (app *Rdm2EPrint) RunHarvest(in io.Reader, out io.Writer, eout io.Writer, cName string, rdmids []string, latestVersions bool) error {
 	if len(rdmids) == 0 {
 		return fmt.Errorf("no RDM ids to process")
 	}
@@ -728,6 +740,14 @@ func (app *Rdm2EPrint) RunHarvest(in io.Reader, out io.Writer, eout io.Writer, c
 			log.Printf("Aborting, failed to get record (%d) %s, %s", i, rdmid, err)
 			return err
 		}
+		if latestVersions {
+			if rec.Versions == nil {
+				continue
+			} 
+			if ! rec.Versions.IsLatest {
+				continue
+			}
+		}
 		eprint := new(eprinttools.EPrint)
 		if err := CrosswalkRdmToEPrint(app.Cfg, rec, eprint); err != nil {
 			log.Printf("Aborting, failed to crosswalk record (%d) %s, %s", i, rdmid, err)
@@ -759,7 +779,7 @@ func (app *Rdm2EPrint) RunHarvest(in io.Reader, out io.Writer, eout io.Writer, c
 
 // Run in pipline mode, e.g. `eprint2rdm XXXXX-XXXXX | rdm2eprint` should round trip the EPrint record
 // to RDM then back again. It reads from standard input and writes to standard out.
-func (app *Rdm2EPrint) RunPipeline(in io.Reader, out io.Writer, eout io.Writer, asXML bool) error {
+func (app *Rdm2EPrint) RunPipeline(in io.Reader, out io.Writer, eout io.Writer, asXML bool, latestVersions bool) error {
 	eprint := new(eprinttools.EPrint)
 	eprints := new(eprinttools.EPrints)
 	rec := new(simplified.Record)
@@ -769,6 +789,16 @@ func (app *Rdm2EPrint) RunPipeline(in io.Reader, out io.Writer, eout io.Writer, 
 	}
 	if err := JSONUnmarshal(src, &rec); err != nil {
 		return err
+	}
+	if latestVersions {
+		if rec.Versions == nil {
+			fmt.Fprintf(out, "\n")
+			return nil
+		}
+		if ! rec.Versions.IsLatest {
+			fmt.Fprintf(out, "\n")
+			return nil
+		}
 	}
 	if err := CrosswalkRdmToEPrint(app.Cfg, rec, eprint); err != nil {
 		return err
