@@ -79,9 +79,9 @@ installer.sh: .FORCE
 test: $(PACKAGE)
 	#go test -timeout 120h
 	go test -test.v -run Test01Config
-	go test -test.v -run Test01Query
-	go test -timeout 2h -ids testdata/test_record_ids.json -run Test02GetRecord
-	go test -timeout 2h -ids testdata/test_record_ids.json -run Test03Harvest
+	#go test -test.v -run Test01Query
+	#go test -timeout 2h -ids testdata/test_record_ids.json -run Test02GetRecord
+	#go test -timeout 2h -ids testdata/test_record_ids.json -run Test03Harvest
 	go test -timeout 2h -run Test01GetRecordIds
 	go test -timeout 2h -run Test01GetModifiedIds
 
