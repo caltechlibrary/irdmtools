@@ -325,6 +325,9 @@ func getObjectAgents(object map[string]interface{}, agentType string) []*simplif
 				entity := item.(map[string]interface{})
 				agent := new(simplified.Creator)
 				agent.PersonOrOrg = new(simplified.PersonOrOrg)
+				if nameType, ok := entity["nameType"].(string); ok {
+					agent.PersonOrOrg.Type = strings.ToLower(nameType)
+				}
 				if name, ok := entity["name"].(string); ok {
 					agent.PersonOrOrg.Name = name
 				}

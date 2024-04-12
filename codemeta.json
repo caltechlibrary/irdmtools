@@ -8,7 +8,7 @@
 	"dateModified": "2024-04-12",
     "issueTracker": "https://github.com/caltechlibrary/irdmtools/issues",
     "name": "irdmtools",
-    "version": "0.0.78",
+    "version": "0.0.79",
     "description": "Tools for working with institutional repositories and data management systems. Current implementation targets Invenio-RDM.",
     "applicationCategory": "library science",
     "releaseNotes": "Proof of concept and refinements, piloting in production",
