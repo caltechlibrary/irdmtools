@@ -94,17 +94,18 @@ migrating content from CrossRef to RDM.
 
 Example generating a JSON document for a single DOI. The resulting
 text file is called "article.json". In this example "options.yaml"
-is the configuration file for setup for your RDM instance.
+is the configuration file for setup for your RDM instance. It'll first
+check CrossRef then DataCite.
 
 ~~~
-	{app_name} options.yaml crossref "10.1021/acsami.7b15651" >article.json
+	{app_name} options.yaml "10.1021/acsami.7b15651" >article.json
 ~~~
 
 Check to see the difference from the saved "article.json" and
-the current metadata retrieved from CrossRef.
+the current metadata retrieved from CrossRef or DataCite.
 
 ~~~
-	{app_name} -diff article.json crossref doi2rdm.yaml "10.1021/acsami.7b15651
+	{app_name} -diff article.json doi2rdm.yaml "10.1021/acsami.7b15651
 ~~~
 
 Save the default YAML options to a file. 
@@ -112,6 +113,13 @@ Save the default YAML options to a file.
 ~~~
 	{app_name} -show-yaml >options.yaml
 ~~~
+
+Example getting metadata for an arXiv record from DataCite
+
+~~~
+	{app_name} arXiv:2312.07215
+~~~
+
 `
 )
 

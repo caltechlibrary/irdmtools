@@ -30,23 +30,9 @@
 …]</p>
 <h1 id="description">DESCRIPTION</h1>
 <p><strong>rdmutil</strong> is way of interacting with Invenio-RDM
-through its Postgres database (or a copy of that database) or web API
-(JSON and OAI-PMH). It was inspired the RDM JSON API but was implemented
-as a way of quickly processing data without the hinderance of rate
-limits (needed when RDM is public facing). If Postgres access is
-configured then it’ll use SQL to retrieve the JSON data. It still uses
-the JSON API for update operations. rdmutil uses environment variables
-for configuration. For accessing the JSON API it uses the following.</p>
-<dl>
-<dt>RDM_URL</dt>
-<dd>
-the URL of the Invenio RDM API and OAI-PMH services
-</dd>
-<dt>RDMTOK</dt>
-<dd>
-the token needed to access the Invenio RDM API and OAI-PMH services
-</dd>
-</dl>
+through its Postgres database. It does NOT use the OAI-PMH API since
+that is far too slow. rdmutil uses environment variables for
+configuration. For accessing the JSON API it uses the following.</p>
 <p>dataset related environment variables (i.e. for harvest action)</p>
 <p><strong>rdmutil</strong> environment variable for storing harvested
 content.</p>
@@ -118,10 +104,7 @@ inclusive and should be specific in YYYY-MM-DD format.
 <dt>get_all_ids</dt>
 <dd>
 Returns a list of all repository record ids latest versions. The method
-uses OAI-PMH for id retrieval is Postgress access is not configure. That
-can be terribly slow and rate limited. A test instance took 11 minutes
-to retrieve 24000 record ids. If direct Postgres access is setup it
-queries the database directly (much much faster).
+requires Postgres database access.
 </dd>
 <dt>get_all_stale_ids</dt>
 <dd>

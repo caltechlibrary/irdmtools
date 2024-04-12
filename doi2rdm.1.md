@@ -1,4 +1,4 @@
-%doi2rdm(1) irdmtools user manual | version 0.0.77 1b4c61da
+%doi2rdm(1) irdmtools user manual | version 0.0.78 d674cf69
 % R. S. Doiel and Tom Morrell
 % 2024-04-12
 
@@ -48,17 +48,18 @@ migrating content from CrossRef to RDM.
 
 Example generating a JSON document for a single DOI. The resulting
 text file is called "article.json". In this example "options.yaml"
-is the configuration file for setup for your RDM instance.
+is the configuration file for setup for your RDM instance. It'll first
+check CrossRef then DataCite.
 
 ~~~
-	doi2rdm options.yaml crossref "10.1021/acsami.7b15651" >article.json
+	doi2rdm options.yaml "10.1021/acsami.7b15651" >article.json
 ~~~
 
 Check to see the difference from the saved "article.json" and
-the current metadata retrieved from CrossRef.
+the current metadata retrieved from CrossRef or DataCite.
 
 ~~~
-	doi2rdm -diff article.json crossref doi2rdm.yaml "10.1021/acsami.7b15651
+	doi2rdm -diff article.json doi2rdm.yaml "10.1021/acsami.7b15651
 ~~~
 
 Save the default YAML options to a file. 
@@ -66,4 +67,11 @@ Save the default YAML options to a file.
 ~~~
 	doi2rdm -show-yaml >options.yaml
 ~~~
+
+Example getting metadata for an arXiv record from DataCite
+
+~~~
+	doi2rdm arXiv:2312.07215
+~~~
+
 
