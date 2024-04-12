@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path"
+	"strings"
 	"time"
 
 	// Caltech Library Packages
@@ -93,39 +94,17 @@ func getObjectResourceType(object map[string]interface{}) string {
 	return ""
 }
 
-// getObjectTitleList get a title list from `.data.attributes["titles"]`.
-func getObjectTitleList(object map[string]interface{}) ([]map[string]string, bool) {
-	if attrs, ok := getObjectDataAttributes(object); ok {
-		if titleList, ok := attrs["titles"].([]map[string]string); ok {
-			return titleList, ok
-		}
-	}
-	return nil, false
-}
-
-// getObjectTitles retrieves an ordered list of titles from a DataCite Object object.
-// The zero index is the primary document title, the remaining are alternative titles.
-// If no titles are found then the slice of string will be empty.
-func getObjectTitles(object map[string]interface{}) []string {
-	if titleList, ok := getObjectTitleList(object); ok {
-		titles := []string{}
-		for _, tObj := range titleList {
-			if title, ok := tObj["title"]; ok {
-				titles = append(titles, title)
-			}
-		}
-		return titles
-	}
-	return []string{}
-}
-
 // getObjectDescription retrieves the description (a.k.a. abstract) from the DataCite Object
 // See example JSON <https://api.test.datacite.org/dois/10.82433/q54d-pf76?publisher=true&affiliation=true>
 func getObjectDescription(object map[string]interface{}) string {
-	fmt.Printf("DEBUG running getObjectDescription(object)\n")
 	if attrs, ok := getObjectDataAttributes(object); ok {
-		if description, ok := attrs["description"].(string); ok {
-			return description
+		if descriptions, ok := attrs["descriptions"]; ok {
+			for _, item := range descriptions.([]interface{}) {
+				m := item.(map[string]interface{})
+				if values, ok := m["description"]; ok {
+					return fmt.Sprintf("%s", values)
+				}
+			}
 		}
 	}
 	return ""
@@ -152,12 +131,14 @@ func getObjectPublisher(object map[string]interface{}) string {
 func getObjectPublication(object map[string]interface{}) string {
 	if data, ok := getObjectData(object); ok {
 		if attributes, ok := getObjectDataAttributes(data); ok {
-			if items, ok := attributes["relatedItems"].([]map[string]interface{}); ok {
+			if items, ok := attributes["relatedItems"].([]interface{}); ok {
 				for _, item := range items {
-					if relationType, ok := item["relationType"]; ok && relationType == "IsPublishedIn" {
-						if titles, ok := item["titles"].([]map[string]interface{}); ok {
+					m := item.(map[string]interface{})
+					if relationType, ok := m["relationType"].(string); ok && relationType == "IsPublishedIn" {
+						if titles, ok := m["titles"].([]interface{}); ok {
 							for _, title := range titles {
-								if val, ok := title["title"].(string); ok {
+								m := title.(map[string]interface{})
+								if val, ok := m["title"].(string); ok {
 									return val
 								}
 							}
@@ -173,9 +154,10 @@ func getObjectPublication(object map[string]interface{}) string {
 // getObjectSeries
 func getObjectSeries(object map[string]interface{}) string {
 	if attrs, ok := getObjectDataAttributes(object); ok {
-		if items, ok := attrs["relatedItems"].([]map[string]interface{}); ok {
+		if items, ok := attrs["relatedItems"].([]interface{}); ok {
 			for _, item := range items {
-				if issue, ok := item["issue"].(string); ok {
+				m := item.(map[string]interface{})
+				if issue, ok := m["issue"].(string); ok {
 					return issue
 				}
 			}
@@ -187,9 +169,10 @@ func getObjectSeries(object map[string]interface{}) string {
 // getObjectVolume
 func getObjectVolume(object map[string]interface{}) string {
 	if attrs, ok := getObjectDataAttributes(object); ok {
-		if items, ok := attrs["relatedItems"].([]map[string]interface{}); ok {
+		if items, ok := attrs["relatedItems"].([]interface{}); ok {
 			for _, item := range items {
-				if issue, ok := item["volume"].(string); ok {
+				m := item.(map[string]interface{})
+				if issue, ok := m["volume"].(string); ok {
 					return issue
 				}
 			}
@@ -201,9 +184,10 @@ func getObjectVolume(object map[string]interface{}) string {
 // getObjectIssue
 func getObjectIssue(object map[string]interface{}) string {
 	if attrs, ok := getObjectDataAttributes(object); ok {
-		if items, ok := attrs["relatedItems"].([]map[string]interface{}); ok {
+		if items, ok := attrs["relatedItems"].([]interface{}); ok {
 			for _, item := range items {
-				if issue, ok := item["issue"].(string); ok {
+				m := item.(map[string]interface{})
+				if issue, ok := m["issue"].(string); ok {
 					return issue
 				}
 			}
@@ -221,10 +205,11 @@ func getObjectPublisherLocation(object map[string]interface{}) string {
 // getObjectPageRange
 func getObjectPageRange(object map[string]interface{}) string {
 	if attrs, ok := getObjectDataAttributes(object); ok {
-		if items, ok := attrs["relatedItems"].([]map[string]interface{}); ok {
+		if items, ok := attrs["relatedItems"].([]interface{}); ok {
 			for _, item := range items {
-				if firstPage, ok := item["firstPage"]; ok {
-					if lastPage, ok := item["lastPage"]; ok {
+				m := item.(map[string]interface{})
+				if firstPage, ok := m["firstPage"].(string); ok {
+					if lastPage, ok := m["lastPage"].(string); ok {
 						return fmt.Sprintf("%s - %s", firstPage, lastPage)
 					}
 					return fmt.Sprintf("%s - %s", firstPage, firstPage)
@@ -246,9 +231,10 @@ func getObjectISBNs(object map[string]interface{}) []string {
 	isbns := []string{}
 	if attrs, ok := getObjectDataAttributes(object); ok {
 		if identifiers, ok := attrs["relatedIdentifiers"]; ok {
-			for _, identifier := range identifiers.([]map[string]interface{}) {
-				if identifierType, ok := identifier["relatedIdentifierType"]; ok && identifierType == "ISBN" {
-					if val, ok := identifier["relatedIdentifier"].(string); ok {
+			for _, item := range identifiers.([]interface{}) {
+				m := item.(map[string]interface{})
+				if identifierType, ok := m["relatedIdentifierType"].(string); ok && identifierType == "ISBN" {
+					if val, ok := m["relatedIdentifier"].(string); ok {
 						isbns = append(isbns, val)
 					}
 				}
@@ -262,10 +248,11 @@ func getObjectISBNs(object map[string]interface{}) []string {
 func getObjectISSNs(object map[string]interface{}) []string {
 	issns := []string{}
 	if attrs, ok := getObjectDataAttributes(object); ok {
-		if identifiers, ok := attrs["relatedIdentifiers"]; ok {
-			for _, identifier := range identifiers.([]map[string]interface{}) {
-				if identifierType, ok := identifier["relatedIdentifierType"]; ok && identifierType == "ISSN" {
-					if val, ok := identifier["relatedIdentifier"].(string); ok {
+		if identifiers, ok := attrs["relatedIdentifiers"].([]interface{}); ok {
+			for _, item := range identifiers {
+				m := item.(map[string]interface{})
+				if identifierType, ok := m["relatedIdentifierType"].(string); ok && identifierType == "ISSN" {
+					if val, ok := m["relatedIdentifier"].(string); ok {
 						issns = append(issns, val)
 					}
 				}
@@ -277,7 +264,29 @@ func getObjectISSNs(object map[string]interface{}) []string {
 
 // getObjectFunding
 func getObjectFunding(object map[string]interface{}) []*simplified.Funder {
-	/* FIXME: Need to find example of where this is in DataCite JSON */
+	if attrs, ok := getObjectDataAttributes(object); ok {
+		funders := []*simplified.Funder{}
+		if fundingReferences, ok := attrs["fundingReferences"].([]interface{}); ok {
+			for _, item := range fundingReferences {
+				m := item.(map[string]interface{})
+				funder := new(simplified.Funder)
+				if funderName, ok := m["funderName"].(string); ok {
+					funder.Funder = new(simplified.FunderIdentifier)
+					funder.Funder.Name = funderName
+				}
+				if awardNumber, ok := m["awardNumber"].(string); ok {
+					funder.Award = new(simplified.AwardIdentifier)
+					funder.Award.Number = awardNumber
+				}
+				if funder.Funder != nil || funder.Award != nil {
+					funders = append(funders, funder)
+				}
+			}
+		}
+		if len(funders) > 0 {
+			return funders
+		}
+	}
 	return nil
 }
 
@@ -294,16 +303,17 @@ func getObjectDOI(object map[string]interface{}) string {
 // getObjectLinks
 func getObjectLinks(object map[string]interface{}) []*simplified.Identifier {
 	/* FIXME: Need to find an example of where this is in DataCite JSON */
-	return nil
-}
-
-func crosswalkObjectAuthorAffiliationToCreatorAffiliation(object map[string]interface{}) *simplified.Affiliation {
-	/* FIXME: Need to find an example of where this is in DataCite JSON */
-	return nil
-}
-
-func crosswalkObjectPersonToCreator(object map[string]interface{}) *simplified.Creator {
-	/* FIXME: Need to figure this in DataCite JSON */
+	if attrs, ok := getObjectDataAttributes(object); ok {
+		links := []*simplified.Identifier{}
+		if url, ok := attrs["contentUrl"].(string); ok {
+			identifier := new(simplified.Identifier)
+			identifier.Scheme = "url"
+			identifier.Identifier = url
+		}
+		if len(links) > 0 {
+			return links
+		}
+	}
 	return nil
 }
 
@@ -363,13 +373,43 @@ func getObjectContributors(object map[string]interface{}) []*simplified.Creator 
 }
 
 func getObjectLicenses(object map[string]interface{}) []*simplified.Right {
-	/* FIXME: Need ot figure this out in DataCite JSON */
+	if attrs, ok := getObjectDataAttributes(object); ok {
+		if rightsList, ok := attrs["rightsList"].([]interface{}); ok {
+			licenses := []*simplified.Right{}
+			for _, item := range rightsList {
+				license := new(simplified.Right)
+				license.Title = map[string]string{}
+				m := item.(map[string]interface{})
+				if title, ok := m["rights"].(string); ok {
+					license.Title["en"] = title
+				}
+				if identifier, ok := m["rightsIdentifier"].(string); ok {
+					license.ID = identifier
+				}
+				if license.ID != "" || len(license.Title) > 0 {
+					licenses = append(licenses, license)
+				}
+			}
+			if len(licenses) > 0 {
+				return licenses
+			}
+		}
+	}
 	return nil
 }
 
 func getObjectSubjects(object map[string]interface{}) []*simplified.Subject {
 	if attrs, ok := getObjectDataAttributes(object); ok {
-		if subjects, ok := attrs["subjects"].([]*simplified.Subject); ok {
+		if items, ok := attrs["subjects"].([]interface{}); ok {
+			subjects := []*simplified.Subject{}
+			for _, item := range items {
+				m := item.(map[string]interface{})
+				if s, ok := m["subject"]; ok {
+					subject := new(simplified.Subject)
+					subject.Subject = s.(string)
+					subjects = append(subjects, subject)
+				}
+			}
 			return subjects
 		}
 	}
@@ -386,10 +426,39 @@ func getObjectPublishedOnline(object map[string]interface{}) *simplified.DateTyp
 	return nil
 }
 
+// take a list of dates and map by their types.
+func mapDatesToType(items []interface{}) map[string]string {
+	dtMap := map[string]string{}
+	for _, item := range items {
+		m := item.(map[string]interface{})
+		if dateType, ok := m["dateType"].(string); ok {
+			dateType = strings.ToLower(dateType)
+			if val, ok := m["date"].(string); ok {
+				// Always take the first version of the provides types (no overwriting)
+				if _, conflict := m[dateType]; ! conflict {
+					dtMap[dateType] = val
+				}
+			}
+		}
+	}
+	return dtMap
+}
 func getObjectPublicationDate(object map[string]interface{}) string {
 	if attrs, ok := getObjectDataAttributes(object); ok {
-		if publicationDate, ok := attrs["published"].(string); ok {
-			return publicationDate
+		if published, ok := attrs["published"].(string); ok {
+			return published
+		}
+		if items, ok := attrs["dates"].([]interface{}); ok {
+			// First look for "published" date
+			dates := mapDatesToType(items)
+			for _, dateType := range []string{"published", "issued", "accepted"} {
+				if val, ok := dates[dateType]; ok {
+					return val
+				}
+			}
+		}
+		if publicationYear, ok := attrs["publicationYear"].(int); ok {
+			return fmt.Sprintf("%d", publicationYear)
 		}
 	}
 	return ""
@@ -460,7 +529,6 @@ func CrosswalkDataCiteObject(cfg *Config, object map[string]interface{}, options
 			return nil, err
 		}
 	}
-	// NOTE: Description becomes Abstract in EPrint records
 	if val := getObjectDescription(object); val != "" {
 		if err := SetDescription(rec, val); err != nil {
 			return nil, err
@@ -491,9 +559,8 @@ func CrosswalkDataCiteObject(cfg *Config, object map[string]interface{}, options
 			return nil, err
 		}
 	}
-	/*FIXME: problem with Set ... 
 	if val := getObjectPublisher(object); val != "" {
-		// NOTE: Setting the publisher name is going to be normalized via DOI prefix and ISSN.
+		// NOTE: Setting the publisher name is going to be normalized via DOI prefix for records with ISSN.
 		val = normalizeObjectPublisherName(val, object, options)
 		if err := SetPublisher(rec, val); err != nil {
 			return nil, err
@@ -514,7 +581,6 @@ func CrosswalkDataCiteObject(cfg *Config, object map[string]interface{}, options
 			}
 		}
 	}
-	*/
 	if value := getObjectPublication(object); value != "" {
 		if err := SetPublication(rec, value); err != nil {
 			return nil, err

@@ -8,7 +8,9 @@ import (
 
 func TestQueryDataCiteObject(t *testing.T) {
 	ids := []string{
+		"10.22002/36sg9-yhj98",
 		"10.22002/D1.868",
+		"arXiv.2404.01326",
 		"arXiv:2312.07215",
 		"arXiv:2305.06519",
 		"arXiv:2312.03791",
