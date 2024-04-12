@@ -17,7 +17,7 @@ func QueryDataCiteObject(cfg *Config, doi string, options *Doi2RdmOptions) (map[
 	if err != nil {
 		return nil, err
 	}
-	objects, err := client.Works(doi)
+	objects, err := client.Dois(doi)
 	if err != nil {
 		return nil, err
 	}
@@ -51,12 +51,19 @@ func getObjectDataAttributes(object map[string]interface{}) (map[string]interfac
 	return nil, false
 }
 
-// getObjectTitle retrieves `.data.attributes["title"]`
+// getObjectTitle retrieves `.data.attributes["titles"]`
 func getObjectTitle(object map[string]interface{}) string {
-	attrs, ok := getObjectDataAttributes(object)
-	if ok {
-		if title, ok := attrs["title"]; ok {
-			return fmt.Sprintf("%s", title)
+	if attrs, ok := getObjectDataAttributes(object); ok {
+		if title, ok := attrs["title"].(string); ok && (title != "") {
+			return title
+		}
+		if values, ok := attrs["titles"].([]interface{}); ok {
+			for _, val := range values {
+				m := val.(map[string]interface{})
+				if title, ok := m["title"].(string); ok {
+					return title
+				}
+			}
 		}
 	}
 	return ""
@@ -115,6 +122,7 @@ func getObjectTitles(object map[string]interface{}) []string {
 // getObjectDescription retrieves the description (a.k.a. abstract) from the DataCite Object
 // See example JSON <https://api.test.datacite.org/dois/10.82433/q54d-pf76?publisher=true&affiliation=true>
 func getObjectDescription(object map[string]interface{}) string {
+	fmt.Printf("DEBUG running getObjectDescription(object)\n")
 	if attrs, ok := getObjectDataAttributes(object); ok {
 		if description, ok := attrs["description"].(string); ok {
 			return description
@@ -127,6 +135,9 @@ func getObjectDescription(object map[string]interface{}) string {
 // See example JSON <https://api.test.datacite.org/dois/10.82433/q54d-pf76?publisher=true&affiliation=true>
 func getObjectPublisher(object map[string]interface{}) string {
 	if attrs, ok := getObjectDataAttributes(object); ok {
+		if publisher, ok := attrs["publisher"].(string); ok {
+			return publisher
+		}
 		if publisher, ok := attrs["publisher"].(map[string]string); ok {
 			if name, ok := publisher["name"]; ok {
 				return name
@@ -304,14 +315,34 @@ func getObjectAgents(object map[string]interface{}, agentType string) []*simplif
 				entity := item.(map[string]interface{})
 				agent := new(simplified.Creator)
 				agent.PersonOrOrg = new(simplified.PersonOrOrg)
-				if literal, ok := entity["literal"].(string); ok {
-					agent.PersonOrOrg.Name = literal
+				if name, ok := entity["name"].(string); ok {
+					agent.PersonOrOrg.Name = name
 				}
-				if family, ok := entity["family_name"].(string); ok {
+				if family, ok := entity["familyName"].(string); ok {
 					agent.PersonOrOrg.FamilyName = family
 				}
-				if given, ok := entity["given_name"].(string); ok {
+				if given, ok := entity["givenName"].(string); ok {
 					agent.PersonOrOrg.GivenName = given
+				}
+				if nameIdentifiers, ok := entity["nameIdentifiers"].([]interface{}); ok {
+					agent.PersonOrOrg.Identifiers = []*simplified.Identifier{}
+					for _, value := range nameIdentifiers {
+						if m, ok := value.(map[string]interface{}); ok {
+							id := &simplified.Identifier{}
+							if val, ok := m["nameIdentifier"].(string); ok {
+								if scheme, ok := m["nameIdentifierScheme"].(string); ok {
+									id.Scheme = scheme
+									if scheme == "ROR" {
+										id.ID = val
+									} else {
+										id.Identifier = val
+									}
+									agent.PersonOrOrg.Identifiers = append(agent.PersonOrOrg.Identifiers, id)
+								}
+							}
+						}
+					}
+
 				}
 				if agent.PersonOrOrg.Name != "" || agent.PersonOrOrg.FamilyName != "" {
 					agents = append(agents, agent)
@@ -324,7 +355,7 @@ func getObjectAgents(object map[string]interface{}, agentType string) []*simplif
 }
 
 func getObjectCreators(object map[string]interface{}) []*simplified.Creator {
-	return getObjectAgents(object, "author")
+	return getObjectAgents(object, "creators")
 }
 
 func getObjectContributors(object map[string]interface{}) []*simplified.Creator {
@@ -337,7 +368,11 @@ func getObjectLicenses(object map[string]interface{}) []*simplified.Right {
 }
 
 func getObjectSubjects(object map[string]interface{}) []*simplified.Subject {
-	/* FIXME: Need to figure this out in DataCite JSON */
+	if attrs, ok := getObjectDataAttributes(object); ok {
+		if subjects, ok := attrs["subjects"].([]*simplified.Subject); ok {
+			return subjects
+		}
+	}
 	return nil
 }
 
@@ -441,6 +476,22 @@ func CrosswalkDataCiteObject(cfg *Config, object map[string]interface{}, options
 			return nil, err
 		}
 	}
+	if values := getObjectLicenses(object); values != nil {
+		if err := AddRights(rec, values); err != nil {
+			return nil, err
+		}
+	}
+	if values := getObjectSubjects(object); values != nil {
+		if err := AddSubjects(rec, values); err != nil {
+			return nil, err
+		}
+	}
+	if values := getObjectFunding(object); values != nil && len(values) > 0 {
+		if err := SetFunding(rec, values); err != nil {
+			return nil, err
+		}
+	}
+	/*FIXME: problem with Set ... 
 	if val := getObjectPublisher(object); val != "" {
 		// NOTE: Setting the publisher name is going to be normalized via DOI prefix and ISSN.
 		val = normalizeObjectPublisherName(val, object, options)
@@ -448,21 +499,27 @@ func CrosswalkDataCiteObject(cfg *Config, object map[string]interface{}, options
 			return nil, err
 		}
 	}
+	if values := getObjectISBNs(object); values != nil && len(values) > 0 {
+		if err := SetImprintField(rec, "isbn", values); err != nil {
+			return nil, err
+		}
+	}
+	if values := getObjectISSNs(object); len(values) > 0 {
+		if err := SetJournalField(rec, "issn", values[0]); err != nil {
+			return nil, err
+		}
+		if len(values) > 1 {
+			for i := 1; i < len(values); i++ {
+				AddIdentifier(rec, "issn", values[i])
+			}
+		}
+	}
+	*/
 	if value := getObjectPublication(object); value != "" {
 		if err := SetPublication(rec, value); err != nil {
 			return nil, err
 		}
 	}
-	/* FIXME: Need to know where this it's assigned in simplified model.
-	   Also the data I fetch from DataCite now looks like an alternate short
-	   title so objects.message["short-container-title"] may not be the right
-	   place to fetch this data.
-	   if value := getObjectSeries(object); value != "" {
-	       if err := SetSeries(rec, value); err != nil {
-	           return nil, err
-	       }
-	   }
-	*/
 	if value := getObjectVolume(object); value != "" {
 		if err := SetVolume(rec, value); err != nil {
 			return nil, err
@@ -485,36 +542,6 @@ func CrosswalkDataCiteObject(cfg *Config, object map[string]interface{}, options
 	}
 	if value := getObjectArticleNumber(object); value != "" {
 		if err := SetArticleNumber(rec, value); err != nil {
-			return nil, err
-		}
-	}
-	if values := getObjectISBNs(object); values != nil && len(values) > 0 {
-		if err := SetImprintField(rec, "isbn", values); err != nil {
-			return nil, err
-		}
-	}
-	if values := getObjectISSNs(object); len(values) > 0 {
-		if err := SetJournalField(rec, "issn", values[0]); err != nil {
-			return nil, err
-		}
-		if len(values) > 1 {
-			for i := 1; i < len(values); i++ {
-				AddIdentifier(rec, "issn", values[i])
-			}
-		}
-	}
-	if values := getObjectFunding(object); values != nil && len(values) > 0 {
-		if err := SetFunding(rec, values); err != nil {
-			return nil, err
-		}
-	}
-	if values := getObjectLicenses(object); values != nil {
-		if err := AddRights(rec, values); err != nil {
-			return nil, err
-		}
-	}
-	if values := getObjectSubjects(object); values != nil {
-		if err := AddSubjects(rec, values); err != nil {
 			return nil, err
 		}
 	}

@@ -4,6 +4,8 @@ github.com/caltechlibrary/dataciteapi v1.0.2 h1:9TIcndMXW2atdLbpPu9yQGPnUAZxlLBA
 github.com/caltechlibrary/dataciteapi v1.0.2/go.mod h1:UmHR9MjWJ0jurkwWPlx2CN6GX92MlEPmUB1oL3QOGrs=
 github.com/caltechlibrary/dataciteapi v1.0.3 h1:ti+wpguAnkowKGfMBkZtCdbqoi1qRqY0HNwbD0YB618=
 github.com/caltechlibrary/dataciteapi v1.0.3/go.mod h1:ybVNJ+lO3RAAQK0X9G/fLs90+YjUHVani7BmqtOd2zg=
+github.com/caltechlibrary/dataciteapi v1.1.0 h1:w2AUa6w4KnZOrXUp5J8/BvalgoDUhEuB+EnG482GeLg=
+github.com/caltechlibrary/dataciteapi v1.1.0/go.mod h1:ybVNJ+lO3RAAQK0X9G/fLs90+YjUHVani7BmqtOd2zg=
 github.com/caltechlibrary/dataset/v2 v2.1.10 h1:LUMPioJEsWSqQZgabljSClQIFvRUsx8Y97RCojCRk6w=
 github.com/caltechlibrary/dataset/v2 v2.1.10/go.mod h1:drSS08cTl4KGhHvsT/kUZO0PghyBCAF/UpRZnm7INHk=
 github.com/caltechlibrary/doitools v0.0.2 h1:bGFbvEo9scKlYHCAgZCrQO63GwZZDTL7siT0rVTYwmc=
