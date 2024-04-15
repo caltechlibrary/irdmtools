@@ -70,26 +70,21 @@ func getObjectTitle(object map[string]interface{}) string {
 	return ""
 }
 
-// getObjectCiteProcType retrieves the `.access.types.citeproc` value if exists.
-func getObjectCiteProcType(object map[string]interface{}) string {
+// getObjectResourceType retrieves the `.data.types.resourceTypeGeneral` value if exists.
+//
+// ```
+// resourceType := getObjectResourceType(object)
+// ```
+func getObjectResourceType(object map[string]interface{}) string {
 	if attrs, ok := getObjectDataAttributes(object); ok {
-		if types, ok := attrs["types"].(map[string]string); ok {
-			if citeproc, ok := types["citeproc"]; ok {
-				return citeproc
+		if types, ok := attrs["types"].(map[string]interface{}); ok {
+			// The path to type informaiton is .access.types, this has a map of types
+			// for various formats (e.g. .bibtex, .citeproc, .schemeOrg, .resourceType, .resourceTypeGeneral.
+			// Tom says `.resourceTypeGeneral` makes the most sense here.
+			if resourceType, ok := types["resourceTypeGeneral"].(string); ok {
+				return resourceType
 			}
 		}
-	}
-	return ""
-}
-
-// getObjectResourceType retrives the resource type from objects.message.type
-// runs normalize
-func getObjectResourceType(object map[string]interface{}) string {
-	// The path to type informaiton is .access.types, this has a map of types
-	// for various formats (e.g. .bibtex, .citeproc, .schemeOrg, .resourceType, .resourceTypeGeneral.
-	// I think using the .citeproc value makes the most sense here.
-	if data, ok := getObjectData(object); ok {
-		return getObjectCiteProcType(data)
 	}
 	return ""
 }
