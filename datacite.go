@@ -337,6 +337,10 @@ func getObjectAgents(object map[string]interface{}, agentType string) []*simplif
 				if given, ok := entity["givenName"].(string); ok {
 					agent.PersonOrOrg.GivenName = given
 				}
+				// This is a fallback to make sure the Person.OrOrg.Type gets set.
+				if agent.PersonOrOrg.Type == "" && agent.PersonOrOrg.GivenName != "" && agent.PersonOrOrg.FamilyName != "" {
+					agent.PersonOrOrg.Type = "personal"
+				}
 				if nameIdentifiers, ok := entity["nameIdentifiers"].([]interface{}); ok {
 					agent.PersonOrOrg.Identifiers = []*simplified.Identifier{}
 					for _, value := range nameIdentifiers {
@@ -401,6 +405,15 @@ func getObjectLicenses(object map[string]interface{}) []*simplified.Right {
 	return nil
 }
 
+func isDuplicateSubject(subject *simplified.Subject, subjectList []*simplified.Subject) bool {
+	for _, item := range subjectList {
+		if subject.Subject == item.Subject {
+			return true
+		}
+	}
+	return false
+}
+
 func getObjectSubjects(object map[string]interface{}) []*simplified.Subject {
 	if attrs, ok := getObjectDataAttributes(object); ok {
 		if items, ok := attrs["subjects"].([]interface{}); ok {
@@ -410,7 +423,9 @@ func getObjectSubjects(object map[string]interface{}) []*simplified.Subject {
 				if s, ok := m["subject"]; ok {
 					subject := new(simplified.Subject)
 					subject.Subject = s.(string)
-					subjects = append(subjects, subject)
+					if ! isDuplicateSubject(subject, subjects) {
+						subjects = append(subjects, subject)		
+					}
 				}
 			}
 			return subjects
