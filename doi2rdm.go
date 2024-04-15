@@ -91,6 +91,8 @@ contributor_types:
 # Map the CrossRef resource type to the RDM type
 resource_types:
   article: publication-article
+  Preprint: publication-preprint
+  preprint: publication-preprint
   journal-article: publication-article
   book: publication-book
   book_section: publication-section
