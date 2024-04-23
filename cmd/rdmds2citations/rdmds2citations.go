@@ -1,4 +1,4 @@
-// ep3ds2citations is a command line program that will convert a dataset collection of EPrint 3.3 records into a citations dataset collection
+// rdmds2citations is a command line program that will convert a dataset collection of EPrint 3.3 records into a citations dataset collection
 //
 // @author R. S. Doiel, <rsdoiel@caltech.edu>
 // @author Tom Morrell, <tmorrell@caltech.edu>
@@ -58,16 +58,17 @@ var (
 
 # SYNOPSIS
 
-{app_name} [OPTIONS] EPRINT_DS CITATION_DS [RECORD_ID]
+{app_name} [OPTIONS] RDM_DS CITATION_DS [RECORD_ID]
 
 # DESCRIPTION
 
 {app_name} is a Caltech Library oriented command line application
-that takes an dataset collection of eprint records and converts then
+that takes an dataset collection of RDM records and converts then
 to a citations dataset collection. It can do so for a single record id
 or read a JSON list of record ids to migrate.
 
-EPRINT_DS is the dataset collection holding the eprint records.
+
+RDM_DS is the dataset collection holding the eprint records.
 
 CITATION_DS is the dataset collection where the citation formatted
 objects will be written.
@@ -96,24 +97,28 @@ objects will be written.
 : Applies a prefix before the provided key when saving a record. E.g. `+"`"+`-prefix caltechauthors`+`"`+`
 
 -host
-: Set the base url to use for the records (e.g. authors.library.caltech.edu)
+: Set the hostname of base url to for reference records (e.g. authors.library.caltech.edu). Can also be set via the environment as RDM_URL.
+
+# ENVIRONMENT 
+
+Some settings can be picked from the environment.
+
+RDM_URL
+: Sets the URL to the RDM is installed (e.g. "https://authors.library.caltech.edu").
 
 # EXAMPLE
 
-Example of a dataset collection called "authors.ds", "data.ds" and
-"thesis.ds" of EPrint records aggregated into a "citation.ds" dataset
+Example of a dataset collection called "authors.ds" and "data.ds"
+RDM records aggregated into a "citation.ds" dataset
 collection using prefixes and the source repository ids.
 
 ~~~shell
 {app_name} -prefix caltechauthors \
            -host authors.library.caltech.edu \
-           authors.ds citation.ds k3tpc-ga970
+		   authors.ds citation.ds k3tpc-ga970
 {app_name} -prefix caltechdata \
            -host data.caltech.edu \
-           data.ds citation.ds zzj7r-61978
-{app_name} -prefix caltechthesis \
-           -host thesis.library.caltech.edu \
-           thesis.ds citation.ds 1233
+		   data.ds citation.ds zzj7r-61978
 ~~~
 
 `
@@ -227,5 +232,5 @@ func main() {
    			os.Exit(1)
 		}
 	}
-	os.Exit(irdmtools.RunEPrintDSToCitationDS(in, out, eout, args, repoHost, prefix, dsIds))
+	os.Exit(irdmtools.RunRdmDSToCitationDS(in, out, eout, args, repoHost, prefix, dsIds))
 }

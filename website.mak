@@ -3,7 +3,6 @@
 #
 PROJECT = irdmtools
 
-
 BASE_URL =
 ifneq ($(base_url),)
   BASE_URL = $(base_url)
@@ -13,7 +12,7 @@ PANDOC = $(shell which pandoc)
 
 MD_PAGES = $(shell ls -1 *.md | grep -v 'nav.md')
 
-HTML_PAGES = $(shell ls -1 *.md | grep -v 'nav.md' | sed -E 's/.md/.html/g')
+HTML_PAGES = $(shell ls -1 *.md | sed -E 's/\.md/.html/g')
 
 build: search.md $(HTML_PAGES) $(MD_PAGES) pagefind
 

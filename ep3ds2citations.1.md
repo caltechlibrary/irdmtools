@@ -1,6 +1,6 @@
-%ep3ds2citations(1) irdmtools user manual | version 0.0.81 57ce1991
+%ep3ds2citations(1) irdmtools user manual | version 0.0.82 b104e3df
 % R. S. Doiel and Tom Morrell
-% 2024-04-15
+% 2024-04-23
 
 # NAME
 
@@ -52,12 +52,18 @@ objects will be written.
 
 Example of a dataset collection called "authors.ds", "data.ds" and
 "thesis.ds" of EPrint records aggregated into a "citation.ds" dataset
-colelction using prefixes and the source repository ids.
+collection using prefixes and the source repository ids.
 
 ~~~shell
-ep3ds2citations -prefix caltechauthors authors.ds citation.ds k3tpc-ga970
-ep3ds2citations -prefix caltechdata data.ds citation.ds zzj7r-61978
-ep3ds2citations -prefix caltechthesis thesis.ds citation.ds 1233
+ep3ds2citations -prefix caltechauthors \
+           -host authors.library.caltech.edu \
+           authors.ds citation.ds k3tpc-ga970
+ep3ds2citations -prefix caltechdata \
+           -host data.caltech.edu \
+           data.ds citation.ds zzj7r-61978
+ep3ds2citations -prefix caltechthesis \
+           -host thesis.library.caltech.edu \
+           thesis.ds citation.ds 1233
 ~~~
 
 
