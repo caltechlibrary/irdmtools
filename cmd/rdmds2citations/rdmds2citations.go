@@ -94,7 +94,8 @@ objects will be written.
 : works from a key list, one per line. Maybe file or standard input (use filename as "-")
 
 -prefix
-: Applies a prefix before the provided key when saving a record. E.g. `+"`"+`-prefix caltechauthors`+`"`+`
+: Applies a prefix before the provided key when saving a record. E.g. `+"`"+`-prefix authors`+`"`+` will 
+prefix keys with "authors:"
 
 -host
 : Set the hostname of base url to for reference records (e.g. authors.library.caltech.edu). Can also be set via the environment as RDM_URL.
@@ -113,12 +114,12 @@ RDM records aggregated into a "citation.ds" dataset
 collection using prefixes and the source repository ids.
 
 ~~~shell
-{app_name} -prefix caltechauthors \
+{app_name} -prefix authors \
            -host authors.library.caltech.edu \
-		   authors.ds citation.ds k3tpc-ga970
-{app_name} -prefix caltechdata \
+		   authors.ds citations.ds k3tpc-ga970
+{app_name} -prefix data \
            -host data.caltech.edu \
-		   data.ds citation.ds zzj7r-61978
+		   data.ds citations.ds zzj7r-61978
 ~~~
 
 `

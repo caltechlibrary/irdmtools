@@ -79,20 +79,16 @@ func Harvest(cfg *Config, fName string, debug bool) error {
 	//fmt.Printf("DEBUG are we using the RDM REST API? %t\n", (cfg.InvenioDbHost == ""))
 	connStr := cfg.MakeDSN()
 	if connStr == "" {
-		fmt.Printf("WARNING: harvesting through JSON API, extremely slow")
-		cfg.rl = new(RateLimit)
-	} else {
-		cfg.rl = nil
-		// Need to open our Postgres connection and defer the closing of it.
-		if cfg.pgDB == nil {
-			db, err := sql.Open("postgres", connStr)
-			if err != nil {
-				return  err
-			}
-			defer db.Close()
-			cfg.pgDB = db
-		}
+		return fmt.Errorf("ERROR: harvesting through JSON API, not supported")
+	} 
+	cfg.rl = nil
+	// Need to open our Postgres connection and defer the closing of it.
+	db, err := sql.Open("postgres", connStr)
+	if err != nil {
+		return  err
 	}
+	defer db.Close()
+	cfg.pgDB = db
 	//fmt.Printf("DEBUG is cfg.rl nil? %t, is cfg.pgDB nil? %t\n", (cfg.rl == nil), (cfg.pgDB == nil))
 	for i, id := range recordIds {
 		rec, err := GetRecord(cfg, id, false)
@@ -127,13 +123,9 @@ func Harvest(cfg *Config, fName string, debug bool) error {
 		if iTime, reportProgress = CheckWaitInterval(iTime, time.Minute); reportProgress || i == 0 {
 			log.Printf("%s last id %q (%d/%d) %s: %s", cName, id, i, tot, time.Since(t0).Round(time.Second), ProgressETA(t0, i, tot))
 		}
-		// NOTE: We need to respect rate limits of RDM API if we're using it!
-		if cfg.rl != nil {
-			fmt.Println("WARNING: You we are throttling for the JSON API access. It should use directory Postgres access!")
-			cfg.rl.Throttle(i, tot)
-		}
 	}
 	log.Printf("%d harvested, %d errors, running time %s", hCnt, eCnt, time.Since(t0).Round(time.Second))
+	cfg.pgDB = nil
 	return nil
 }
 

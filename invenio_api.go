@@ -456,83 +456,11 @@ func CheckDOI(cfg *Config, doi string) ([]map[string]interface{}, error) {
 	return records, nil
 }
 
-
-// Query takes a query string and returns the paged object
-// results as a slice of `map[string]interface{}`
-//
-// ```
-// records, err := Query(cfg, "Geological History in Southern California", "newest")
-//
-//	if err != nil {
-//	    // ... handle error ...
-//	}
-//
-//	for _, rec := ranges {
-//	    // ... process results ...
-//	}
-//
-// ```
-func Query(cfg *Config, q string, sort string) ([]map[string]interface{}, error) {
-	if sort == "" {
-		sort = "bestmatch"
-	}
-	// Make sure we have a URL
-	u, err := url.Parse(cfg.InvenioAPI)
-	if err != nil {
-		return nil, err
-	}
-	hName := u.Host
-	// Setup our query parameters, i.e. q=*
-	uri := fmt.Sprintf("%s/api/records?sort=%s&q=%s", u.String(), sort, q)
-	tot := 0
-	t0 := time.Now()
-	reportProgress := false
-	iTime := time.Now()
-	results := new(QueryResponse)
-	records := []map[string]interface{}{}
-	for i := 0; uri != ""; i++ {
-		if iTime, reportProgress = CheckWaitInterval(iTime, time.Minute); reportProgress || (i == 0) {
-			log.Printf("%s (%d/%d) %s", hName, len(records), tot, ProgressETA(t0, len(records), tot))
-		}
-		dbgPrintf(cfg, "requesting %s", uri)
-		src, headers, err := getJSON(cfg.InvenioToken, uri)
-		if err != nil {
-			return nil, err
-		}
-		cfg.rl.FromHeader(headers)
-		// NOTE: Need to unparse the response structure and
-		// then extract the IDs from the individual Hits results
-		if err := JSONUnmarshal(src, &results); err != nil {
-			return nil, err
-		}
-		if results != nil && results.Hits != nil &&
-			results.Hits.Hits != nil && len(results.Hits.Hits) > 0 {
-			for _, hit := range results.Hits.Hits {
-				records = append(records, hit)
-			}
-			tot = results.Hits.Total
-			dbgPrintf(cfg, "(%d/%d) %s\n", len(records), tot, q)
-		}
-		if results.Links != nil && results.Links.Self != results.Links.Next {
-			uri = results.Links.Next
-		} else {
-			uri = ""
-		}
-		if uri != "" {
-			// NOTE: We need to respect the rate limits of RDM's API
-			cfg.rl.Throttle(i, tot)
-		}
-	}
-	return records, nil
-}
-
 // getRecordIdsFromPg will return all record ids found by querying Invenio RDM's Postgres
 // database.
-func getRecordIdsFromPg(cfg *Config) ([]string, error) {
-	connStr := cfg.MakeDSN()
-	db, err := sql.Open("postgres", connStr)
-	if err != nil {
-		return nil, err
+func getRecordIdsFromPg(db *sql.DB) ([]string, error) {
+	if db == nil {
+		return nil, fmt.Errorf("postgres connection not open")
 	}
 	keys := []string{}
 	stmt := `SELECT json->>'id' AS rdmid
@@ -558,11 +486,9 @@ WHERE json->'access'->>'record' = 'public'
 
 // getRecordStaleIdsFromPg will return all record ids found by querying Invenio RDM's Postgres
 // database.
-func getRecordStaleIdsFromPg(cfg *Config) ([]string, error) {
-    connStr := cfg.MakeDSN()	
-	db, err := sql.Open("postgres", connStr)
-	if err != nil {
-		return nil, err
+func getRecordStaleIdsFromPg(db *sql.DB) ([]string, error) {
+	if db == nil {
+		return nil, fmt.Errorf("postgres connection not open")
 	}
 	keys := []string{}
 	stmt := `SELECT json->>'id' AS rdmid
@@ -588,11 +514,9 @@ WHERE json->'access'->>'record' = 'public'
 
 // getModifiedRecordIdsFromPg will return of record ids found in date range by querying
 // Invenio RDM's Postgres database.
-func getModifiedRecordIdsFromPg(cfg *Config, startDate string, endDate string) ([]string, error) {
-	connStr := cfg.MakeDSN()
-	db, err := sql.Open("postgres", connStr)
-	if err != nil {
-		return nil, err
+func getModifiedRecordIdsFromPg(db *sql.DB, startDate string, endDate string) ([]string, error) {
+	if db == nil {
+		return nil, fmt.Errorf("postgres connection not open")
 	}
 	keys := []string{}
 	/*
@@ -640,71 +564,7 @@ WHERE json->'access'->>'record' = 'public' AND (updated between $1 AND $2)`
 // NOTE: This method relies on OAI-PMH, this is a rate limited process
 // so results can take quiet some time.
 func GetRecordIds(cfg *Config) ([]string, error) {
-	connStr := cfg.MakeDSN()
-	if connStr != "" {
-		return getRecordIdsFromPg(cfg)
-	}
-	return nil, fmt.Errorf("requires direct Postgres access")
-
-	/* The original approach of using the REST API is depreciated.
-	ids := []string{}
-	resumptionToken := "     "
-	t0 := time.Now()
-	iTime, reportProgress := time.Now(), false
-	uri := fmt.Sprintf("%s/oai2d?verb=ListIdentifiers&metadataPrefix=oai_dc", cfg.InvenioAPI)
-	for i := 0; resumptionToken != ""; i++ {
-		if iTime, reportProgress = CheckWaitInterval(iTime, (1 * time.Minute)); reportProgress || (len(ids) == 0) {
-			var lastId string
-			if len(ids) > 0 {
-				lastId = ids[len(ids)-1]
-			}
-			log.Printf("GetRecordIds(cfg) last id %q: %s", lastId, ProgressIPS(t0, len(ids), time.Minute))
-		}
-		if i > 0 {
-			v := url.Values{}
-			v.Set("resumptionToken", resumptionToken)
-			uri = fmt.Sprintf("%s/oai2d?verb=ListIdentifiers&%s", cfg.InvenioAPI, v.Encode())
-		}
-		src, headers, err := getXML(cfg.InvenioToken, uri)
-		if err != nil {
-			return ids, err
-		}
-		cfg.rl.FromHeader(headers)
-		// NOTE: We need to respect rate limits of the RDM API
-		cfg.rl.Throttle(i, 1)
-		if bytes.HasPrefix(src, []byte("<html")) {
-			dbgPrintf(cfg, "\n%s\n", src)
-			resumptionToken = ""
-		} else {
-			oai := new(OAIListIdentifiersResponse)
-			if err := xml.Unmarshal(src, oai); err != nil {
-				dbgPrintf(cfg, "\n%s\n", src)
-				resumptionToken = ""
-				return ids, err
-			}
-			if oai.ListIdentifiers != nil {
-				resumptionToken = oai.ListIdentifiers.ResumptionToken
-				if oai.ListIdentifiers.Headers != nil {
-					for _, obj := range oai.ListIdentifiers.Headers {
-						if obj.Identifier != "" {
-							parts := strings.Split(obj.Identifier, ":")
-							last := len(parts) - 1
-							if last < 0 {
-								last = 0
-							}
-							id := parts[len(parts)-1]
-							ids = append(ids, id)
-						}
-					}
-				}
-			} else {
-				resumptionToken = ""
-			}
-		}
-	}
-	log.Printf("%d total retrieved in %s", len(ids), time.Since(t0).Round(time.Second))
-	return ids, nil
-	*/
+	return getRecordIdsFromPg(cfg.pgDB)
 }
 
 // GetRecordStaleIds takes a configuration object, contacts am RDM
@@ -720,11 +580,7 @@ func GetRecordIds(cfg *Config) ([]string, error) {
 // NOTE: This method relies on OAI-PMH, this is a rate limited process
 // so results can take quiet some time.
 func GetRecordStaleIds(cfg *Config) ([]string, error) {
-	connStr := cfg.MakeDSN()
-	if connStr != "" {
-		return getRecordStaleIdsFromPg(cfg)
-	}
-	return nil, fmt.Errorf("requires direct Postgres access")
+	return getRecordStaleIdsFromPg(cfg.pgDB)
 }
 
 
@@ -744,128 +600,17 @@ func GetModifiedRecordIds(cfg *Config, start string, end string) ([]string, erro
 	if end == "" {
 		end = time.Now().Format("2006-01-02")
 	}
-	connStr := cfg.MakeDSN()
-	if connStr != "" {
-		return getModifiedRecordIdsFromPg(cfg, start, end)
-	}
-	return nil, fmt.Errorf("database access to Postgres not configured")
-	/* REST API is depricated. 
-	debug := cfg.Debug
-	ids := []string{}
-	resumptionToken := "     "
-	uri := fmt.Sprintf("%s/oai2d?verb=ListIdentifiers&metadataPrefix=oai_dc&from=%s&until=%s", cfg.InvenioAPI, start, end)
-	dbgPrintf(cfg, "requesting %s", uri)
-	t0, iTime, reportProgress := time.Now(), time.Now(), false
-	for i := 0; resumptionToken != ""; i++ {
-		if iTime, reportProgress = CheckWaitInterval(iTime, (1 * time.Minute)); reportProgress || (len(ids) == 0) {
-			var lastId string
-			if len(ids) > 0 {
-				lastId = ids[len(ids)-1]
-			}
-			if lastId != "" {
-				log.Printf("GetModifiedRecordIDs(cfg, %q, %q) last id %q: %s", start, end, lastId, ProgressIPS(t0, len(ids), time.Minute))
-			} else {
-				log.Printf("GetModifiedRecordIDs(cfg, %q, %q) %s", start, end, ProgressIPS(t0, len(ids), time.Minute))
-			}
-		}
-		if i > 0 {
-			v := url.Values{}
-			v.Set("resumptionToken", resumptionToken)
-			uri = fmt.Sprintf("%s/oai2d?verb=ListIdentifiers&%s", cfg.InvenioAPI, v.Encode())
-		}
-		src, headers, err := getXML(cfg.InvenioToken, uri)
-		if err != nil {
-			return nil, err
-		}
-		cfg.rl.FromHeader(headers)
-		// NOTE: We need to respect rate limits for RDM API, unfortunately we don't know the total number of keys from this API request ...
-		cfg.rl.Throttle(i, 1)
-
-		if bytes.HasPrefix(src, []byte("<html")) {
-			// FIXME: Need to display error contained in the HTML response
-			if debug {
-				dbgPrintf(cfg, "\n%s\n", src)
-			}
-			resumptionToken = ""
-		} else {
-			oai := new(OAIListIdentifiersResponse)
-			if err := xml.Unmarshal(src, oai); err != nil {
-				resumptionToken = ""
-				return nil, err
-			}
-			if oai.ListIdentifiers != nil {
-				resumptionToken = oai.ListIdentifiers.ResumptionToken
-				if oai.ListIdentifiers.Headers != nil {
-					for _, obj := range oai.ListIdentifiers.Headers {
-						if obj.Identifier != "" {
-							parts := strings.Split(obj.Identifier, ":")
-							last := len(parts) - 1
-							if last < 0 {
-								last = 0
-							}
-							id := parts[len(parts)-1]
-							ids = append(ids, id)
-						}
-					}
-				}
-			} else {
-				resumptionToken = ""
-			}
-		}
-	}
-	log.Printf("%d total retrieved in %s", len(ids), time.Since(t0).Round(time.Second))
-	return ids, nil
-	*/
-}
-
-// GetRawRecord takes a configuration object and record id,
-// contacts an RDM instance and returns a map[string]interface{} record
-//
-// ```
-// cfg, _ := LoadConfig("config.json")
-// id := "qez01-2309a"
-// mapRecord, err := GetRawRecord(cfg, id)
-// if err != nil {
-//     // ... handle error ...
-// }
-// ```
-func GetRawRecord(cfg *Config, id string) (map[string]interface{}, error) {
-	// Make sure we have a valid URL
-	u, err := url.Parse(cfg.InvenioAPI)
-	if err != nil {
-		return nil, err
-	}
-	// Setup API request for a record
-	uri := fmt.Sprintf("%s/api/records/%s", u.String(), id)
-
-	src, headers, err := getJSON(cfg.InvenioToken, uri)
-	if err != nil {
-		return nil, err
-	}
-	cfg.rl.FromHeader(headers)
-	rec := map[string]interface{}{}
-	if err := JSONUnmarshal(src, &rec); err != nil {
-		return nil, err
-	}
-	return rec, nil
+	return getModifiedRecordIdsFromPg(cfg.pgDB, start, end)
 }
 
 // getRecordFromPg will return all record ids found by querying Invenio RDM's Postgres
 // database.
-func getRecordFromPg(cfg *Config, rdmID string, draft bool) (*simplified.Record, error) {
+func getRecordFromPg(db *sql.DB, rdmID string, draft bool) (*simplified.Record, error) {
 	var (
-		db *sql.DB
 		err error
 	)
-	if cfg.pgDB != nil {
-		db = cfg.pgDB
-	} else if cfg.pgDB == nil {
-		connStr := cfg.MakeDSN()
-		db, err = sql.Open("postgres", connStr)
-		if err != nil {
-			return nil, err
-		}
-		defer db.Close()
+	if db == nil {
+		return nil, fmt.Errorf("postgres connection is not open")
 	}
 	stmt := `SELECT jsonb_strip_nulls(jsonb_build_object(
     'created', created::timestamp (0) with time zone, 
@@ -970,20 +715,12 @@ ORDER BY fo.key ASC`
 
 // getRecordVersionsFromPg will return all record versions by querying Invenio RDM's Postgres
 // database.
-func getRecordVersionsFromPg(cfg *Config, rdmID string) ([]*map[string]interface{}, error) {
+func getRecordVersionsFromPg(db *sql.DB, rdmID string) ([]*map[string]interface{}, error) {
 	var (
-		db *sql.DB
 		err error
 	)
-	if cfg.pgDB != nil {
-		db = cfg.pgDB
-	} else if cfg.pgDB == nil {
-		connStr := cfg.MakeDSN()
-		db, err = sql.Open("postgres", connStr)
-		if err != nil {
-			return nil, err
-		}
-		defer db.Close()
+	if db == nil {
+		return nil, fmt.Errorf("postgres connection is not open")
 	}
 	stmt := `SELECT jsonb_strip_nulls(jsonb_build_object(
 	'id', json->>'id',
@@ -1043,34 +780,7 @@ ORDER BY version_id`
 // }
 // ```
 func GetRecord(cfg *Config, id string, draft bool) (*simplified.Record, error) {
-	connstr := cfg.MakeDSN()
-	if connstr != "" {
-		return getRecordFromPg(cfg, id, draft)
-	}
-	return nil, fmt.Errorf("database access to Postgres not configured")
-	/* REST API access is deprecated
-	// Make sure we have a valid URL
-	u, err := url.Parse(cfg.InvenioAPI)
-	if err != nil {
-		return nil, err
-	}
-	// Setup API request for a record
-	uri := fmt.Sprintf("%s/api/records/%s", u.String(), id)
-	if draft {
-		uri = fmt.Sprintf("%s/api/records/%s/draft", u.String(), id)
-	}
-	src, headers, err := getJSON(cfg.InvenioToken, uri)
-	if err != nil {
-		return nil, err
-	}
-	cfg.rl.FromHeader(headers)
-	rec := new(simplified.Record)
-	if err := JSONUnmarshal(src, &rec); err != nil {
-		return nil, err
-	}
-	fmt.Fprintf(os.Stderr, "DEBUG got record ExternalPIDs -> %+v\n", rec.ExternalPIDs)
-	return rec, nil
-	*/
+	return getRecordFromPg(cfg.pgDB, id, draft)
 }
 
 // GetRecordVersions takes a configuration object and record id,
@@ -1086,11 +796,7 @@ func GetRecord(cfg *Config, id string, draft bool) (*simplified.Record, error) {
 // }
 // ```
 func GetRecordVersions(cfg *Config, id string) ([]*map[string]interface{}, error) {
-	connstr := cfg.MakeDSN()
-	if connstr != "" {
-		return getRecordVersionsFromPg(cfg, id)
-	}
-	return nil, fmt.Errorf("requires Postgres access support")
+	return getRecordVersionsFromPg(cfg.pgDB, id)
 }
 
 // GetFile takes a configuration object, record id and filename,
@@ -1326,6 +1032,42 @@ func NewRecordVersion(cfg *Config, recordId string) (map[string]interface{}, err
 		return obj, nil
 	}
 	return nil, nil
+}
+
+//
+// NOTE: The following functions still use the Invenio RDM REST API. These are slow and rate limited. Avoid them
+//
+
+// GetRawRecord takes a configuration object and record id,
+// contacts an RDM instance and returns a map[string]interface{} record
+//
+// ```
+// cfg, _ := LoadConfig("config.json")
+// id := "qez01-2309a"
+// mapRecord, err := GetRawRecord(cfg, id)
+// if err != nil {
+//     // ... handle error ...
+// }
+// ```
+func GetRawRecord(cfg *Config, id string) (map[string]interface{}, error) {
+	// Make sure we have a valid URL
+	u, err := url.Parse(cfg.InvenioAPI)
+	if err != nil {
+		return nil, err
+	}
+	// Setup API request for a record
+	uri := fmt.Sprintf("%s/api/records/%s", u.String(), id)
+
+	src, headers, err := getJSON(cfg.InvenioToken, uri)
+	if err != nil {
+		return nil, err
+	}
+	cfg.rl.FromHeader(headers)
+	rec := map[string]interface{}{}
+	if err := JSONUnmarshal(src, &rec); err != nil {
+		return nil, err
+	}
+	return rec, nil
 }
 
 // PublishRecordVersion takes a configuration object and record id of

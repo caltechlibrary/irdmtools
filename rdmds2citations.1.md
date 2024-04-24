@@ -1,6 +1,6 @@
-%rdmds2citations(1) irdmtools user manual | version 0.0.82 b104e3df
+%rdmds2citations(1) irdmtools user manual | version 0.0.82 7125ceba
 % R. S. Doiel and Tom Morrell
-% 2024-04-23
+% 2024-04-24
 
 # NAME
 
@@ -44,7 +44,8 @@ objects will be written.
 : works from a key list, one per line. Maybe file or standard input (use filename as "-")
 
 -prefix
-: Applies a prefix before the provided key when saving a record. E.g. `-prefix caltechauthors"
+: Applies a prefix before the provided key when saving a record. E.g. `-prefix authors" will 
+prefix keys with "authors:"
 
 -host
 : Set the hostname of base url to for reference records (e.g. authors.library.caltech.edu). Can also be set via the environment as RDM_URL.
@@ -63,12 +64,12 @@ RDM records aggregated into a "citation.ds" dataset
 collection using prefixes and the source repository ids.
 
 ~~~shell
-rdmds2citations -prefix caltechauthors \
+rdmds2citations -prefix authors \
            -host authors.library.caltech.edu \
-		   authors.ds citation.ds k3tpc-ga970
-rdmds2citations -prefix caltechdata \
+		   authors.ds citations.ds k3tpc-ga970
+rdmds2citations -prefix data \
            -host data.caltech.edu \
-		   data.ds citation.ds zzj7r-61978
+		   data.ds citations.ds zzj7r-61978
 ~~~
 
 

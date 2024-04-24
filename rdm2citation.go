@@ -19,19 +19,19 @@ import (
 // and output a Citation record in JSON format.
 
 // Convert an RDM record to a citation in a Citation struct
-func RdmToCitation(repoName string, key string, record *simplified.Record, repoHost string) (*Citation, error) {
+func RdmToCitation(prefix string, record *simplified.Record, repoHost string) (*Citation, error) {
    	// This is the way an EPrint URL is actually formed.
 	protocol := "https"
 	if repoHost == "" {
 		repoHost = "localhost:8000"
 		protocol = "http"
 	}
-   	citeUsingURL := fmt.Sprintf("%s://%s/%s", protocol, repoHost, record.ID)
+   	citeUsingURL := fmt.Sprintf("%s://%s/records/%s", protocol, repoHost, record.ID)
 	repoHostURL := fmt.Sprintf("%s://%s", protocol, repoHost)
     // NOTE: We're dealing with a squirly situation of URLs to use during our migration and
     // before the feeds v2.0 implementation.
     citation := new(Citation)
-    err := citation.CrosswalkRecord(repoName, key, citeUsingURL, repoHostURL, record)
+    err := citation.CrosswalkRecord(prefix, citeUsingURL, repoHostURL, record)
     return citation, err
 }
 
@@ -67,9 +67,9 @@ func MigrateRdmDatasetToCitationDataset(rdmCName string, ids []string, repoHost 
 		repoName := path.Base(strings.TrimSuffix(rdmCName, ".ds"))
 		key := id
 		if prefix != "" {
-			key = fmt.Sprintf("%s:%s", repoName, id) // the key we will use as the suffix in citation.ds
+			key = fmt.Sprintf("%s:%s", prefix, id) // the id we will use as the suffix in citation.ds record id
 		}
-		citation, err := RdmToCitation(repoName, id, rdmRecord, repoHost)
+		citation, err := RdmToCitation(prefix, rdmRecord, repoHost)
 		if err != nil {
 			log.Printf("failed to convert (%d) id %s from %s to citation, %s", i, id, repoName, err)
 			continue

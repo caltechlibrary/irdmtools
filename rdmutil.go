@@ -88,33 +88,6 @@ func (app *RdmUtil) Configure(configFName string, envPrefix string, debug bool) 
 	return nil
 }
 
-// Query returns a byte slice for a JSON encode list
-// of record summaries or an error.
-//
-// ```
-//
-//	app := new(irdmtools.RdmUtil)
-//	if err := app.LoadConfig("irdmtools.json"); err != nil {
-//	   // ... handle error ...
-//	}
-//	src, err := app.Query("My favorite book", -1, "newest")
-//	if err != nil {
-//	    // ... handle error ...
-//	}
-//	fmt.Printf("%s\n", src)
-//
-// ```
-func (app *RdmUtil) Query(q string, sort string) ([]byte, error) {
-	records, err := Query(app.Cfg, q, sort)
-	if err != nil {
-		return nil, err
-	}
-	src, err := JSONMarshalIndent(records, "", "    ")
-	if err != nil {
-		return nil, err
-	}
-	return src, nil
-}
 
 // CheckDOI checks the .pids.doi.identifier and returns a record from
 // the match DOI.
@@ -1163,15 +1136,6 @@ func (app *RdmUtil) Run(in io.Reader, out io.Writer, eout io.Writer, action stri
 		}
 		doi := params[0]
 		src, err = app.CheckDOI(doi)
-	case "query":
-		if len(params) == 0 {
-			return fmt.Errorf("missing query string")
-		}
-		q, sort := params[0], ""
-		if len(params) > 1 {
-			sort = params[1]
-		}
-		src, err = app.Query(q, sort)
 	case "get_modified_ids":
 		if len(params) == 0 {
 			return fmt.Errorf("missing start and end dates")
