@@ -1,12 +1,6 @@
-<<<<<<< HEAD
-%eprint2rdm(1) irdmtools user manual | version 0.0.82 bd066767
-% R. S. Doiel and Tom Morrell
-% 2024-04-24
-=======
-%eprint2rdm(1) irdmtools user manual | version 0.0.82 caf1e4ff
+%eprint2rdm(1) irdmtools user manual | version 0.0.83-dev f3eac347
 % R. S. Doiel and Tom Morrell
 % 2024-04-29
->>>>>>> 8a14c550634a0aef035094ad7524c0eb8d796765
 
 # NAME
 
