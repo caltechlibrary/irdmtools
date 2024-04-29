@@ -612,7 +612,7 @@ func getRecordFromPg(db *sql.DB, rdmID string, draft bool) (*simplified.Record, 
 	if db == nil {
 		return nil, fmt.Errorf("postgres connection is not open")
 	}
-	stmt := `SELECT jsonb_strip_nulls(jsonb_build_object(
+	stmt := `SELECT id as uuid, jsonb_strip_nulls(jsonb_build_object(
     'created', created::timestamp (0) with time zone, 
     'updated', updated::timestamp (0) with time zone,
     'is_published', json->'is_publshed',
@@ -625,11 +625,11 @@ func getRecordFromPg(db *sql.DB, rdmID string, draft bool) (*simplified.Record, 
     'status', json->'status',
     'revision_id', json->'revision_id',
     'pids', json->'pids'
-))
+)) as record
 FROM rdm_records_metadata
 WHERE json->>'id' = $1 LIMIT 1;`
 	if draft {
-		stmt = `SELECT json AS record 
+		stmt = `SELECT id as uuid, json AS record 
 FROM rdm_drafts_metadata
 WHERE json->>'id' = $1 LIMIT 1;`
 	}
@@ -638,9 +638,12 @@ WHERE json->>'id' = $1 LIMIT 1;`
 		return nil, err
 	}
 	defer rows.Close()
-	var src []byte
+	var (
+		src []byte
+		uuid string
+	)
 	for rows.Next() {
-		if err := rows.Scan(&src); err != nil {
+		if err := rows.Scan(&uuid, &src); err != nil {
 			return nil, err
 		}
 	}
@@ -653,34 +656,20 @@ WHERE json->>'id' = $1 LIMIT 1;`
 	if err != nil {
 		return nil, err
 	}
+	//fmt.Fprintf(os.Stderr, "DEBUG (rdmID) %q -> (uuid) %q\n", rdmID, uuid)
 
 	// Now we try to add Files.Entries to Record.
-	// FIXME: this is way too slow
-/*
-	stmt = `WITH t AS (
-    SELECT record_id AS record_id,
-           files_object.key AS key 
-    FROM rdm_records_files
-    JOIN files_object ON (rdm_records_files.key = files_object.key)
-	ORDER BY files_object.key ASC
-) SELECT 
-    (CASE WHEN json->'files'->>'default_preview' = t.key THEN TRUE else FALSE END) AS is_default_preview, 
-    t.key AS key 
-FROM t
-JOIN rdm_records_metadata ON (t.record_id = rdm_records_metadata.id)
-WHERE json->>'id' = $1
-ORDER BY key ASC`
-*/
-
+	//
+	// NOTE: We use the UUID to avoid a join with our rdm_recorrds_metadata table, this speeds up
+	// the query by a factor of three.
 	stmt = `SELECT
     (CASE WHEN fd.json->'files'->>'default_preview' = fo.key THEN TRUE else FALSE END) AS is_default_preview,
     fo.key AS key
-FROM rdm_records_metadata rd
-JOIN rdm_records_files fd ON (rd.id = fd.record_id)
+FROM rdm_records_files fd 
 JOIN files_object fo ON (fd.key = fo.key)
-WHERE rd.json->>'id' = $1
+WHERE fd.record_id = $1
 ORDER BY fo.key ASC`
-	entries, err := db.Query(stmt, rdmID)
+	entries, err := db.Query(stmt, uuid)
 	if err != nil {
 		return nil, err
 	}

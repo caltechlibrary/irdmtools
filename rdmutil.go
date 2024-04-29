@@ -36,6 +36,7 @@ package irdmtools
 
 import (
 	"bytes"
+	"database/sql"
 	"fmt"
 	"io"
 	"os"
@@ -88,6 +89,34 @@ func (app *RdmUtil) Configure(configFName string, envPrefix string, debug bool) 
 	return nil
 }
 
+// OpenDB takes a configured RdmUtil struct and opens the described database connection.
+func (app *RdmUtil) OpenDB() error {
+	if app.Cfg == nil {
+		return fmt.Errorf("application not configured")
+	}
+	connstr := app.Cfg.MakeDSN()
+	if connstr == "" {
+		return fmt.Errorf("unable to form db connection string")
+	}
+	db, err := sql.Open("postgres", connstr)
+	if err != nil {
+		return err
+	}
+	if db != nil {
+		app.Cfg.pgDB = db
+	}
+	return nil
+}
+
+// CloseDB() closes the Postgres connection
+func (app *RdmUtil) CloseDB() error {
+	if app.Cfg != nil {
+		if app.Cfg.pgDB != nil {
+			return app.Cfg.pgDB.Close()
+		}
+	}
+	return fmt.Errorf("postgres db connection not found")
+}
 
 // CheckDOI checks the .pids.doi.identifier and returns a record from
 // the match DOI.
@@ -1144,10 +1173,22 @@ func (app *RdmUtil) Run(in io.Reader, out io.Writer, eout io.Writer, action stri
 		if len(params) > 1 {
 			end = params[1]
 		}
+		if err := app.OpenDB(); err != nil {
+			return err
+		}
+		defer app.CloseDB()
 		src, err = app.GetModifiedIds(start, end)
 	case "get_all_ids":
+		if err := app.OpenDB(); err != nil {
+			return err
+		}
+		defer app.CloseDB()
 		src, err = app.GetRecordIds()
 	case "get_all_stale_ids":
+		if err := app.OpenDB(); err != nil {
+			return err
+		}
+		defer app.CloseDB()
 		src, err = app.GetRecordStaleIds()
 	case "get_raw_record":
 		recordId, _, _, err = getRecordParams(params, true, false, false)
@@ -1160,6 +1201,10 @@ func (app *RdmUtil) Run(in io.Reader, out io.Writer, eout io.Writer, action stri
 		if err != nil {
 			return err
 		}
+		if err := app.OpenDB(); err != nil {
+			return err
+		}
+		defer app.CloseDB()
 		src, err = app.GetRecord(recordId)
 	case "get_record_versions":
 	    recordId, _, _, err = getRecordParams(params, true, false, false)
@@ -1404,7 +1449,14 @@ func (app *RdmUtil) Run(in io.Reader, out io.Writer, eout io.Writer, action stri
 		if len(params) != 1 {
 			return fmt.Errorf("JSON Identifier file required")
 		}
-		return app.Harvest(params[0])
+		if err := app.OpenDB(); err != nil {
+			return err
+		}
+		defer app.CloseDB()
+		if err := app.Harvest(params[0]); err != nil {
+			return err
+		}
+
 	default:
 		err = fmt.Errorf("%q action is not supported", action)
 	}
