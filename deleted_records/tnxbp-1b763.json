@@ -1,0 +1,301 @@
+{
+    "is_published": true,
+    "revision_id": 14,
+    "is_draft": false,
+    "pids": {
+        "doi": {
+            "identifier": "10.1002/celc.202100425",
+            "provider": "external"
+        },
+        "oai": {
+            "identifier": "oai:authors.library.caltech.edu:tnxbp-1b763",
+            "provider": "oai"
+        }
+    },
+    "custom_fields": {
+        "caltech:groups": [
+            {
+                "id": "Caltech-Center-for-Environmental-Microbial-Interactions-(CEMI)",
+                "title": {
+                    "en": "Caltech Center for Environmental Microbial Interactions (CEMI)"
+                }
+            },
+            {
+                "id": "Division-of-Geological-and-Planetary-Sciences",
+                "title": {
+                    "en": "Division of Geological and Planetary Sciences"
+                }
+            },
+            {
+                "id": "Division-of-Biology-and-Biological-Engineering",
+                "title": {
+                    "en": "Division of Biology and Biological Engineering"
+                }
+            }
+        ],
+        "journal:journal": {
+            "issn": "2196-0216",
+            "issue": "10",
+            "title": "ChemElectroChem",
+            "volume": "8",
+            "pages": "1697"
+        }
+    },
+    "files": {
+        "enabled": false
+    },
+    "status": "published",
+    "metadata": {
+        "dates": [
+            {
+                "type": {
+                    "id": "created",
+                    "title": {
+                        "de": "Erstellt",
+                        "en": "Created"
+                    }
+                },
+                "date": "2021-04-30",
+                "description": "Created from EPrint's datestamp field"
+            },
+            {
+                "type": {
+                    "id": "updated",
+                    "title": {
+                        "de": "Aktualisiert",
+                        "en": "Updated"
+                    }
+                },
+                "date": "2021-05-12",
+                "description": "Created from EPrint's last_modified field"
+            }
+        ],
+        "description": "Invited for this month's cover picture is the group of Prof. Christof Meile at the University of Georgia, USA and Prof. Victoria Orphan at the California Institute of Technology, USA. The Front Cover shows characteristic images of G. sulfurreducens biofilms on the anode surface (gray), the distribution of anabolic activity (yellow=high, blue=low), and the equation central to the description of electron transfer and simulated activity profiles. Read the full text of the Article at 10.1002/celc.202100111.",
+        "funding": [
+            {
+                "funder": {
+                    "name": "Department of Energy (DOE)"
+                },
+                "award": {
+                    "number": "DE\u2010SC0020373",
+                    "title": {
+                        "en": " "
+                    }
+                }
+            },
+            {
+                "funder": {
+                    "name": "Simons Foundation"
+                }
+            }
+        ],
+        "title": "Spatially Resolved Electron Transport through Anode-Respiring Geobacter sulfurreducens Biofilms: Controls and Constraints",
+        "related_identifiers": [
+            {
+                "scheme": "doi",
+                "relation_type": {
+                    "id": "describes",
+                    "title": {
+                        "de": "Beschreibt",
+                        "en": "Describes"
+                    }
+                },
+                "identifier": "10.1002/celc.202100111"
+            }
+        ],
+        "identifiers": [
+            {
+                "scheme": "eprintid",
+                "identifier": "108903"
+            },
+            {
+                "scheme": "resolverid",
+                "identifier": "CaltechAUTHORS:20210430-122719691"
+            }
+        ],
+        "resource_type": {
+            "id": "publication-article",
+            "title": {
+                "de": "Zeitschriftenartikel",
+                "en": "Journal Article"
+            }
+        },
+        "additional_descriptions": [
+            {
+                "type": {
+                    "id": "additional",
+                    "title": {
+                        "de": "Sonstige",
+                        "en": "Additional Information"
+                    }
+                },
+                "description": "\u00a9 2021 Wiley\u2010VCH GmbH. \n\nIssue Online: 11 May 2021; Version of Record online: 21 April 2021. \n\nThis publication is based upon research supported by the U.S. Department of Energy, Office of Science, Office of Biological and Environmental Research (DE\u2010SC0020373) and is part of the Simons Foundation Principles of Microbial Ecosystems (PriME) consortium."
+            }
+        ],
+        "publisher": "Wiley",
+        "rights": [
+            {
+                "description": {
+                    "en": "No commercial reproduction, distribution, display or performance rights in this work are provided."
+                },
+                "title": {
+                    "en": "Other"
+                }
+            }
+        ],
+        "creators": [
+            {
+                "person_or_org": {
+                    "type": "personal",
+                    "identifiers": [
+                        {
+                            "scheme": "clpid",
+                            "identifier": "He-Xiaojia"
+                        },
+                        {
+                            "scheme": "orcid",
+                            "identifier": "0000-0001-8274-5564"
+                        }
+                    ],
+                    "given_name": "Xiaojia",
+                    "name": "He, Xiaojia",
+                    "family_name": "He"
+                }
+            },
+            {
+                "person_or_org": {
+                    "type": "personal",
+                    "identifiers": [
+                        {
+                            "scheme": "clpid",
+                            "identifier": "Chadwick-Grayson-L"
+                        },
+                        {
+                            "scheme": "orcid",
+                            "identifier": "0000-0003-0700-9350"
+                        }
+                    ],
+                    "given_name": "Grayson",
+                    "name": "Chadwick, Grayson",
+                    "family_name": "Chadwick"
+                }
+            },
+            {
+                "person_or_org": {
+                    "type": "personal",
+                    "identifiers": [
+                        {
+                            "scheme": "clpid",
+                            "identifier": "Jim\u00e9nez-Otero-Fernanda"
+                        },
+                        {
+                            "scheme": "orcid",
+                            "identifier": "0000-0003-1583-6495"
+                        }
+                    ],
+                    "given_name": "Fernanda",
+                    "name": "Jim\u00e9nez Otero, Fernanda",
+                    "family_name": "Jim\u00e9nez Otero"
+                }
+            },
+            {
+                "person_or_org": {
+                    "type": "personal",
+                    "identifiers": [
+                        {
+                            "scheme": "clpid",
+                            "identifier": "Orphan-V-J"
+                        },
+                        {
+                            "scheme": "orcid",
+                            "identifier": "0000-0002-5374-6178"
+                        }
+                    ],
+                    "given_name": "Victoria J.",
+                    "name": "Orphan, Victoria J.",
+                    "family_name": "Orphan"
+                }
+            },
+            {
+                "person_or_org": {
+                    "type": "personal",
+                    "identifiers": [
+                        {
+                            "scheme": "clpid",
+                            "identifier": "Meile-Christof-D"
+                        },
+                        {
+                            "scheme": "orcid",
+                            "identifier": "0000-0002-0825-4596"
+                        }
+                    ],
+                    "given_name": "Christof",
+                    "name": "Meile, Christof",
+                    "family_name": "Meile"
+                }
+            }
+        ],
+        "publication_date": "2021-05-11",
+        "version": "public"
+    },
+    "links": {
+        "self": "https://authors.library.caltech.edu/api/records/tnxbp-1b763",
+        "self_html": "https://authors.library.caltech.edu/records/tnxbp-1b763",
+        "self_doi": "https://authors.library.caltech.edu/doi/10.1002/celc.202100425",
+        "doi": "https://doi.org/10.1002/celc.202100425",
+        "self_iiif_manifest": "https://authors.library.caltech.edu/api/iiif/record:tnxbp-1b763/manifest",
+        "self_iiif_sequence": "https://authors.library.caltech.edu/api/iiif/record:tnxbp-1b763/sequence/default",
+        "files": "https://authors.library.caltech.edu/api/records/tnxbp-1b763/files",
+        "archive": "https://authors.library.caltech.edu/api/records/tnxbp-1b763/files-archive",
+        "latest": "https://authors.library.caltech.edu/api/records/tnxbp-1b763/versions/latest",
+        "latest_html": "https://authors.library.caltech.edu/records/tnxbp-1b763/latest",
+        "draft": "https://authors.library.caltech.edu/api/records/tnxbp-1b763/draft",
+        "versions": "https://authors.library.caltech.edu/api/records/tnxbp-1b763/versions",
+        "access_links": "https://authors.library.caltech.edu/api/records/tnxbp-1b763/access/links",
+        "reserve_doi": "https://authors.library.caltech.edu/api/records/tnxbp-1b763/draft/pids/doi",
+        "communities": "https://authors.library.caltech.edu/api/records/tnxbp-1b763/communities",
+        "communities-suggestions": "https://authors.library.caltech.edu/api/records/tnxbp-1b763/communities-suggestions",
+        "requests": "https://authors.library.caltech.edu/api/records/tnxbp-1b763/requests"
+    },
+    "created": "2023-08-20T03:13:16.920489+00:00",
+    "id": "tnxbp-1b763",
+    "updated": "2024-04-13T00:09:45.457796+00:00",
+    "stats": {
+        "this_version": {
+            "data_volume": 0.0,
+            "downloads": 0,
+            "unique_views": 16,
+            "views": 20,
+            "unique_downloads": 0
+        },
+        "all_versions": {
+            "data_volume": 1975776.0,
+            "downloads": 3,
+            "unique_views": 18,
+            "views": 23,
+            "unique_downloads": 2
+        }
+    },
+    "parent": {
+        "id": "b08df-pjz65",
+        "communities": {
+            "default": "aedd135f-227e-4fdf-9476-5b3fd011bac6",
+            "ids": [
+                "aedd135f-227e-4fdf-9476-5b3fd011bac6"
+            ]
+        }
+    },
+    "versions": {
+        "is_latest": true,
+        "index": null
+    },
+    "access": {
+        "embargo": {
+            "active": false,
+            "reason": null
+        },
+        "status": "metadata-only",
+        "files": "restricted",
+        "record": "public"
+    }
+}
