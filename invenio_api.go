@@ -612,7 +612,11 @@ func getRecordFromPg(db *sql.DB, rdmID string, draft bool) (*simplified.Record, 
 	if db == nil {
 		return nil, fmt.Errorf("postgres connection is not open")
 	}
+<<<<<<< HEAD
 	stmt := `SELECT id as record_id, jsonb_strip_nulls(jsonb_build_object(
+=======
+	stmt := `SELECT id, jsonb_strip_nulls(jsonb_build_object(
+>>>>>>> 8a14c550634a0aef035094ad7524c0eb8d796765
     'created', created::timestamp (0) with time zone, 
     'updated', updated::timestamp (0) with time zone,
     'is_published', json->'is_publshed',
@@ -638,9 +642,16 @@ WHERE json->>'id' = $1 LIMIT 1;`
 		return nil, err
 	}
 	defer rows.Close()
+<<<<<<< HEAD
 	var (
 		src []byte
 		rdmUUID string
+=======
+
+	var (
+		rdmUUID string
+		src []byte
+>>>>>>> 8a14c550634a0aef035094ad7524c0eb8d796765
 	)
 	for rows.Next() {
 		if err := rows.Scan(&rdmUUID, &src); err != nil {

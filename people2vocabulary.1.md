@@ -1,6 +1,12 @@
+<<<<<<< HEAD
 %people2vocabulary(1) irdmtools user manual | version 0.0.82 bd066767
 % R. S. Doiel
 % 2024-04-24
+=======
+%people2vocabulary(1) irdmtools user manual | version 0.0.82 caf1e4ff
+% R. S. Doiel
+% 2024-04-29
+>>>>>>> 8a14c550634a0aef035094ad7524c0eb8d796765
 
 # NAME
 
