@@ -867,7 +867,7 @@ func getRecordFromPg(cfg *Config, rdmID string, draft bool) (*simplified.Record,
 		}
 		defer db.Close()
 	}
-	stmt := `SELECT jsonb_strip_nulls(jsonb_build_object(
+	stmt := `SELECT id, jsonb_strip_nulls(jsonb_build_object(
     'created', created::timestamp (0) with time zone, 
     'updated', updated::timestamp (0) with time zone,
     'is_published', json->'is_publshed',
@@ -893,9 +893,13 @@ WHERE json->>'id' = $1 LIMIT 1;`
 		return nil, err
 	}
 	defer rows.Close()
-	var src []byte
+
+	var (
+		rdmUUID string
+		src []byte
+	)
 	for rows.Next() {
-		if err := rows.Scan(&src); err != nil {
+		if err := rows.Scan(&rdmUUID, &src); err != nil {
 			return nil, err
 		}
 	}
@@ -930,12 +934,11 @@ ORDER BY key ASC`
 	stmt = `SELECT
     (CASE WHEN fd.json->'files'->>'default_preview' = fo.key THEN TRUE else FALSE END) AS is_default_preview,
     fo.key AS key
-FROM rdm_records_metadata rd
-JOIN rdm_records_files fd ON (rd.id = fd.record_id)
+FROM rdm_records_files fd 
 JOIN files_object fo ON (fd.key = fo.key)
-WHERE rd.json->>'id' = $1
+WHERE fd.record_id = $1
 ORDER BY fo.key ASC`
-	entries, err := db.Query(stmt, rdmID)
+	entries, err := db.Query(stmt, rdmUUID)
 	if err != nil {
 		return nil, err
 	}
