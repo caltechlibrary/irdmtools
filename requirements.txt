@@ -6,3 +6,4 @@ caltechdata_api
 ames
 py_dataset
 pylint 
+PyYAML

@@ -490,6 +490,13 @@ func getObjectApproved(object map[string]interface{}) *simplified.DateType {
 // normalizeObjectPublisherName will check the publisher DOI and ISSN to see if we have
 // a preferred name in our options. If so it will return that.
 func normalizeObjectPublisherName(val string, object map[string]interface{}, options *Doi2RdmOptions) string {
+	for _, issn := range getObjectISSNs(object) {
+		if issn != "" {
+			if value, ok := options.ISSNPublishers[issn]; ok {
+				return value
+			}
+		}
+	}
 	doi := getObjectDOI(object)
 	if doi != "" {
 		doiPrefix, _ := DoiPrefix(doi)
@@ -497,9 +504,15 @@ func normalizeObjectPublisherName(val string, object map[string]interface{}, opt
 			return value
 		}
 	}
+	return val
+}
+
+// normalizeObjectJournalName will check the ISSN to see if we have
+// a preferred name in our options. If so it will return that.
+func normalizeObjectJournalName(val string, object map[string]interface{}, options *Doi2RdmOptions) string {
 	for _, issn := range getObjectISSNs(object) {
 		if issn != "" {
-			if value, ok := options.ISSNPublishers[issn]; ok {
+			if value, ok := options.ISSNJournals[issn]; ok {
 				return value
 			}
 		}
@@ -575,6 +588,13 @@ func CrosswalkDataCiteObject(cfg *Config, object map[string]interface{}, options
 	if val := getObjectPublisher(object); val != "" {
 		// NOTE: Setting the publisher name is going to be normalized via DOI prefix for records with ISSN.
 		val = normalizeObjectPublisherName(val, object, options)
+		if err := SetPublisher(rec, val); err != nil {
+			return nil, err
+		}
+	}
+	if val := getObjectPublication(object); val != "" {
+		// NOTE: Setting the publisher name is going to be normalized via DOI prefix for records with ISSN.
+		val = normalizeObjectJournalName(val, object, options)
 		if err := SetPublisher(rec, val); err != nil {
 			return nil, err
 		}

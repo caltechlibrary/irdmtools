@@ -243,13 +243,12 @@ type CitationDate struct {
 }
 
 // CrosswalkRecord takes a simplified record and return maps the values into the Citation.
-func (cite *Citation) CrosswalkRecord(cName string, cID string, citeUsingURL string, repoURL string, rec *simplified.Record) error {
+func (cite *Citation) CrosswalkRecord(prefix string, citeUsingURL string, repoURL string, rec *simplified.Record) error {
 	// map repository required fields, everything else is derived from crosswalk
-	cName = path.Base(strings.TrimSuffix(cName, ".ds"))
-	cite.ID = fmt.Sprintf("%s:%s", cName, cID)
-	cite.Collection = cName
-	cite.CiteUsingURL = citeUsingURL
+	cite.ID = fmt.Sprintf("%s:%s", prefix, rec.ID)
+	cite.Collection = prefix
 	cite.CollectionID = rec.ID
+	cite.CiteUsingURL = citeUsingURL
 	if rec.Files != nil {
 		// In RDM the "default preview" is the primary document (e.g. article, thesis, etc) of record.
 		defaultPreview := rec.Files.DefaultPreview

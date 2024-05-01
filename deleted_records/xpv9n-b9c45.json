@@ -1,0 +1,449 @@
+{
+    "is_published": true,
+    "revision_id": 3,
+    "is_draft": false,
+    "pids": {
+        "oai": {
+            "identifier": "oai:authors.caltechlibrary.dev:xpv9n-b9c45",
+            "provider": "oai"
+        }
+    },
+    "custom_fields": {
+        "caltech:groups": [
+            {
+                "id": "Division-of-Geological-and-Planetary-Sciences",
+                "title": {
+                    "en": "Division of Geological and Planetary Sciences"
+                }
+            }
+        ],
+        "journal:journal": {
+            "issn": "0960-9822",
+            "issue": "14",
+            "title": "Current Biology",
+            "volume": "32",
+            "pages": "3059-3069"
+        }
+    },
+    "files": {
+        "enabled": true,
+        "count": 6,
+        "entries": {
+            "media-2.avi": {
+                "mimetype": "video/x-msvideo",
+                "key": "media-2.avi",
+                "metadata": null,
+                "ext": "avi",
+                "size": 1497622
+            },
+            "2021.11.01.466752v1.full.pdf": {
+                "mimetype": "application/pdf",
+                "key": "2021.11.01.466752v1.full.pdf",
+                "metadata": null,
+                "ext": "pdf",
+                "size": 2103121
+            },
+            "1-s2.0-S096098222200923X-mmc2.xlsx": {
+                "mimetype": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "key": "1-s2.0-S096098222200923X-mmc2.xlsx",
+                "metadata": null,
+                "ext": "xlsx",
+                "size": 4020245
+            },
+            "1-s2.0-S096098222200923X-mmc3.xlsx": {
+                "mimetype": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "key": "1-s2.0-S096098222200923X-mmc3.xlsx",
+                "metadata": null,
+                "ext": "xlsx",
+                "size": 93964
+            },
+            "1-s2.0-S096098222200923X-mmc4.xlsx": {
+                "mimetype": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "key": "1-s2.0-S096098222200923X-mmc4.xlsx",
+                "metadata": null,
+                "ext": "xlsx",
+                "size": 53482
+            },
+            "1-s2.0-S096098222200923X-mmc1.pdf": {
+                "mimetype": "application/pdf",
+                "key": "1-s2.0-S096098222200923X-mmc1.pdf",
+                "metadata": null,
+                "ext": "pdf",
+                "size": 4362865
+            }
+        },
+        "order": [],
+        "total_bytes": 12131299
+    },
+    "status": "published",
+    "metadata": {
+        "dates": [
+            {
+                "type": {
+                    "id": "created",
+                    "title": {
+                        "de": "Erstellt",
+                        "en": "Created"
+                    }
+                },
+                "date": "2021-11-03",
+                "description": "Created from EPrint's datestamp field"
+            },
+            {
+                "type": {
+                    "id": "updated",
+                    "title": {
+                        "de": "Aktualisiert",
+                        "en": "Updated"
+                    }
+                },
+                "date": "2022-10-10",
+                "description": "Created from EPrint's last_modified field"
+            }
+        ],
+        "additional_titles": [
+            {
+                "type": {
+                    "id": "alternative-title",
+                    "title": {
+                        "de": "Alternativer Titel",
+                        "en": "Alternative title"
+                    }
+                },
+                "title": "Bacterial growth in multicellular aggregates leads to the emergence of complex lifecycles"
+            }
+        ],
+        "description": "Facultative multicellular behaviors expand the metabolic capacity and physiological resilience of bacteria. Despite their ubiquity in nature, we lack an understanding of how these behaviors emerge from cellular-scale phenomena. Here, we show how the coupling between growth and resource gradient formation leads to the emergence of multicellular lifecycles in a marine bacterium. Under otherwise carbon-limited growth conditions, Vibrio splendidus 12B01 forms clonal multicellular groups to collectively harvest carbon from soluble polymers of the brown-algal polysaccharide alginate. As they grow, groups phenotypically differentiate into two spatially distinct sub-populations: a static \"shell\" surrounding a motile, carbon-storing \"core.\" Differentiation of these two sub-populations coincides with the formation of a gradient in nitrogen-source availability within clusters. Additionally, we find that populations of cells containing a high proportion of carbon-storing individuals propagate and form new clusters more readily on alginate than do populations with few carbon-storing cells. Together, these results suggest that local metabolic activity and differential partitioning of resources leads to the emergence of reproductive cycles in a facultatively multicellular bacterium.",
+        "funding": [
+            {
+                "funder": {
+                    "name": "Swiss National Science Foundation (SNSF)"
+                },
+                "award": {
+                    "number": "P2EZP2_175128",
+                    "title": {
+                        "en": " "
+                    }
+                }
+            },
+            {
+                "funder": {
+                    "name": "Swiss National Science Foundation (SNSF)"
+                },
+                "award": {
+                    "number": "P400PB_186751",
+                    "title": {
+                        "en": " "
+                    }
+                }
+            },
+            {
+                "funder": {
+                    "name": "Japan Society for the Promotion of Science (JSPS)"
+                },
+                "award": {
+                    "number": "20H02291",
+                    "title": {
+                        "en": " "
+                    }
+                }
+            },
+            {
+                "funder": {
+                    "name": "Kavli Institute for Theoretical Physics"
+                }
+            },
+            {
+                "funder": {
+                    "name": "NSF"
+                },
+                "award": {
+                    "number": "PHY-1748958",
+                    "title": {
+                        "en": " "
+                    }
+                }
+            },
+            {
+                "funder": {
+                    "name": "NIH"
+                },
+                "award": {
+                    "number": "R25GM067110",
+                    "title": {
+                        "en": " "
+                    }
+                }
+            },
+            {
+                "funder": {
+                    "name": "Gordon and Betty Moore Foundation"
+                },
+                "award": {
+                    "number": "2919.02",
+                    "title": {
+                        "en": " "
+                    }
+                }
+            },
+            {
+                "funder": {
+                    "name": "Simons Foundation"
+                },
+                "award": {
+                    "number": "542395",
+                    "title": {
+                        "en": " "
+                    }
+                }
+            },
+            {
+                "funder": {
+                    "name": "Simons Foundation"
+                },
+                "award": {
+                    "number": "542393",
+                    "title": {
+                        "en": " "
+                    }
+                }
+            }
+        ],
+        "title": "Bacterial growth in multicellular aggregates leads to the emergence of complex life cycles",
+        "resource_type": {
+            "id": "publication-article",
+            "title": {
+                "de": "Zeitschriftenartikel",
+                "en": "Journal Article"
+            }
+        },
+        "additional_descriptions": [
+            {
+                "type": {
+                    "id": "additional",
+                    "title": {
+                        "de": "Sonstige",
+                        "en": "Additional Information"
+                    }
+                },
+                "description": "\u00a9 2022 Elsevier. \n\nReceived 12 January 2022, Revised 3 May 2022, Accepted 7 June 2022, Available online 30 June 2022. \n\nWe thank the Polz lab for kindly providing Vibrio splendidus 12B01; Glen D'Souza, Jan Hendrick Hehemann, and Andreas Sichert for advice about working with alginate; Steven Biller, Allison Coe, and members of the Chisholm lab for RNA-seq advice; and Yunbin Guan for assistance with nanoSIMS operations. We thank Terence Hwa, Kapil Amernath, Ghita Guessous, and members of the Hwa lab, as well as Martin Ackermann, for helpful discussions. A.E. acknowledges funding from the Swiss National Science Foundation: grants P2EZP2 175128 and P400PB_186751. Y.S. was funded through the Japan Society for the Promotion of Science KAKENHI (grant number 20H02291). O.X.C. and J.A.S. acknowledge support from the Kavli Institute of Theoretical Physics through the National Science Foundation grant no. NSF PHY-1748958, National Institutes of Health grant no. R25GM067110, and the Gordon and Betty Moore Foundation grant no. 2919.02. This work was supported by Simons Foundation: Principles of Microbial Ecosystems (PriME) award numbers 542395 and 542393. \n\nAuthor contributions. J.A.S., A.E., and O.X.C. conceptualized the study, with help from V.J.O. and G.C. regarding the conceptualization of stable isotope experiments. J.A.S., A.E., Y.S., and G.C. developed methodology and contributed to investigation and formal analysis of the data. Y.S. contributed specifically to the methodology and formal analysis of transcriptomics experiments. G.C. contributed specifically to methodology, investigation, and formal analysis of stable isotope experiments, and B.R.K.R. contributed to the formal analysis and discussion relating to cellular carbon storage. O.X.C. and J.S. wrote the original draft. All authors contributed to review and editing of the manuscript. \n\nData and code availability: \n\u2022 Transcriptomic data (raw trimmed reads, count tables) have been deposited in the NCBI GEO repository GSE190325 and are publicly available as of the date of publication. Accession numbers are listed in the key resources table. Raw data reported in this paper will be shared by the lead contact upon request. \n\n\u2022 All original code has been deposited and is publicly available as of the date of publication. DOIs are listed in the key resources table. \n\n\u2022 Any additional information required to reanalyze the data reported in this paper is available from the lead contact upon request. \n\nThe authors declare no competing interests. \n\nInclusion and diversity. One or more of the authors of this paper self-identifies as a member of the LGBTQ+ community."
+            },
+            {
+                "type": {
+                    "id": "attached-files",
+                    "title": {
+                        "de": "Sonstige",
+                        "en": "Attached Files"
+                    }
+                },
+                "description": "<p>Supplemental Material - <a href=\"/records/xpv9n-b9c45/files/1-s2.0-S096098222200923X-mmc1.pdf?download=1\">1-s2.0-S096098222200923X-mmc1.pdf</a></p><p>Supplemental Material - <a href=\"/records/xpv9n-b9c45/files/1-s2.0-S096098222200923X-mmc2.xlsx?download=1\">1-s2.0-S096098222200923X-mmc2.xlsx</a></p><p>Supplemental Material - <a href=\"/records/xpv9n-b9c45/files/1-s2.0-S096098222200923X-mmc3.xlsx?download=1\">1-s2.0-S096098222200923X-mmc3.xlsx</a></p><p>Supplemental Material - <a href=\"/records/xpv9n-b9c45/files/1-s2.0-S096098222200923X-mmc4.xlsx?download=1\">1-s2.0-S096098222200923X-mmc4.xlsx</a></p><p>Submitted - <a href=\"/records/xpv9n-b9c45/files/2021.11.01.466752v1.full.pdf?download=1\">2021.11.01.466752v1.full.pdf</a></p><p>Supplemental Material - <a href=\"/records/xpv9n-b9c45/files/media-2.avi?download=1\">media-2.avi</a></p>"
+            }
+        ],
+        "publisher": "Cell Press",
+        "subjects": [
+            {
+                "subject": "morphogenesis"
+            },
+            {
+                "subject": "cooperation"
+            },
+            {
+                "subject": "division of labor"
+            },
+            {
+                "subject": "self-organization"
+            },
+            {
+                "subject": "marine microbes"
+            },
+            {
+                "subject": "alginate"
+            },
+            {
+                "subject": "Vibrio"
+            },
+            {
+                "subject": "nanoSIMS"
+            },
+            {
+                "subject": "PHA"
+            },
+            {
+                "subject": "motility"
+            },
+            {
+                "subject": "type-IV adhesin"
+            }
+        ],
+        "rights": [
+            {
+                "description": {
+                    "en": "\u00a9 2022 Elsevier. \n\nReceived 12 January 2022, Revised 3 May 2022, Accepted 7 June 2022, Available online 30 June 2022. \n\nWe thank the Polz lab for kindly providing Vibrio splendidus 12B01; Glen D\u2019Souza, Jan Hendrick Hehemann, and Andreas Sichert for advice about working with alginate; Steven Biller, Allison Coe, and members of the Chisholm lab for RNA-seq advice; and Yunbin Guan for assistance with nanoSIMS operations. We thank Terence Hwa, Kapil Amernath, Ghita Guessous, and members of the Hwa lab, as well as Martin Ackermann, for helpful discussions. A.E. acknowledges funding from the Swiss National Science Foundation: grants P2EZP2 175128 and P400PB_186751. Y.S. was funded through the Japan Society for the Promotion of Science KAKENHI (grant number 20H02291). O.X.C. and J.A.S. acknowledge support from the Kavli Institute of Theoretical Physics through the National Science Foundation grant no. NSF PHY-1748958, National Institutes of Health grant no. R25GM067110, and the Gordon and Betty Moore Foundation grant no. 2919.02. This work was supported by Simons Foundation: Principles of Microbial Ecosystems (PriME) award numbers 542395 and 542393. \n\nAuthor contributions. J.A.S., A.E., and O.X.C. conceptualized the study, with help from V.J.O. and G.C. regarding the conceptualization of stable isotope experiments. J.A.S., A.E., Y.S., and G.C. developed methodology and contributed to investigation and formal analysis of the data. Y.S. contributed specifically to the methodology and formal analysis of transcriptomics experiments. G.C. contributed specifically to methodology, investigation, and formal analysis of stable isotope experiments, and B.R.K.R. contributed to the formal analysis and discussion relating to cellular carbon storage. O.X.C. and J.S. wrote the original draft. All authors contributed to review and editing of the manuscript. \n\nData and code availability: \n\u2022 Transcriptomic data (raw trimmed reads, count tables) have been deposited in the NCBI GEO repository GSE190325 and are publicly available as of the date of publication. Accession numbers are listed in the key resources table. Raw data reported in this paper will be shared by the lead contact upon request. \n\n\u2022 All original code has been deposited and is publicly available as of the date of publication. DOIs are listed in the key resources table. \n\n\u2022 Any additional information required to reanalyze the data reported in this paper is available from the lead contact upon request. \n\nThe authors declare no competing interests. \n\nInclusion and diversity. One or more of the authors of this paper self-identifies as a member of the LGBTQ+ community."
+                },
+                "title": {
+                    "en": "Other"
+                }
+            }
+        ],
+        "creators": [
+            {
+                "person_or_org": {
+                    "type": "personal",
+                    "identifiers": [
+                        {
+                            "scheme": "clpid",
+                            "identifier": "Schwartzman-Julia-A"
+                        }
+                    ],
+                    "given_name": "Julia A.",
+                    "name": "Schwartzman, Julia A.",
+                    "family_name": "Schwartzman"
+                }
+            },
+            {
+                "person_or_org": {
+                    "type": "personal",
+                    "identifiers": [
+                        {
+                            "scheme": "clpid",
+                            "identifier": "Ebrahimi-Aliakbar"
+                        }
+                    ],
+                    "given_name": "Ali",
+                    "name": "Ebrahimi, Ali",
+                    "family_name": "Ebrahimi"
+                }
+            },
+            {
+                "person_or_org": {
+                    "type": "personal",
+                    "identifiers": [
+                        {
+                            "scheme": "clpid",
+                            "identifier": "Chadwick-Grayson-L"
+                        }
+                    ],
+                    "given_name": "Grayson",
+                    "name": "Chadwick, Grayson",
+                    "family_name": "Chadwick"
+                }
+            },
+            {
+                "person_or_org": {
+                    "type": "personal",
+                    "identifiers": [
+                        {
+                            "scheme": "clpid",
+                            "identifier": "Sato-Yuya"
+                        }
+                    ],
+                    "given_name": "Yuya",
+                    "name": "Sato, Yuya",
+                    "family_name": "Sato"
+                }
+            },
+            {
+                "person_or_org": {
+                    "type": "personal",
+                    "identifiers": [
+                        {
+                            "scheme": "clpid",
+                            "identifier": "Roller-Benjamin-R-K"
+                        }
+                    ],
+                    "given_name": "Benjamin R. K.",
+                    "name": "Roller, Benjamin R. K.",
+                    "family_name": "Roller"
+                }
+            },
+            {
+                "person_or_org": {
+                    "type": "personal",
+                    "identifiers": [
+                        {
+                            "scheme": "clpid",
+                            "identifier": "Orphan-V-J"
+                        }
+                    ],
+                    "given_name": "Victoria J.",
+                    "name": "Orphan, Victoria J.",
+                    "family_name": "Orphan"
+                }
+            },
+            {
+                "person_or_org": {
+                    "type": "personal",
+                    "identifiers": [
+                        {
+                            "scheme": "clpid",
+                            "identifier": "Cordero-Otto-X"
+                        }
+                    ],
+                    "given_name": "Otto X.",
+                    "name": "Cordero, Otto X.",
+                    "family_name": "Cordero"
+                }
+            }
+        ],
+        "publication_date": "2022-07-25",
+        "version": "public"
+    },
+    "links": {
+        "self": "https://authors.library.caltech.edu/api/records/xpv9n-b9c45",
+        "self_html": "https://authors.library.caltech.edu/records/xpv9n-b9c45",
+        "self_iiif_manifest": "https://authors.library.caltech.edu/api/iiif/record:xpv9n-b9c45/manifest",
+        "self_iiif_sequence": "https://authors.library.caltech.edu/api/iiif/record:xpv9n-b9c45/sequence/default",
+        "files": "https://authors.library.caltech.edu/api/records/xpv9n-b9c45/files",
+        "archive": "https://authors.library.caltech.edu/api/records/xpv9n-b9c45/files-archive",
+        "latest": "https://authors.library.caltech.edu/api/records/xpv9n-b9c45/versions/latest",
+        "latest_html": "https://authors.library.caltech.edu/records/xpv9n-b9c45/latest",
+        "draft": "https://authors.library.caltech.edu/api/records/xpv9n-b9c45/draft",
+        "versions": "https://authors.library.caltech.edu/api/records/xpv9n-b9c45/versions",
+        "access_links": "https://authors.library.caltech.edu/api/records/xpv9n-b9c45/access/links",
+        "reserve_doi": "https://authors.library.caltech.edu/api/records/xpv9n-b9c45/draft/pids/doi",
+        "communities": "https://authors.library.caltech.edu/api/records/xpv9n-b9c45/communities",
+        "communities-suggestions": "https://authors.library.caltech.edu/api/records/xpv9n-b9c45/communities-suggestions",
+        "requests": "https://authors.library.caltech.edu/api/records/xpv9n-b9c45/requests"
+    },
+    "created": "2023-08-22T16:58:09.991902+00:00",
+    "id": "xpv9n-b9c45",
+    "updated": "2023-08-22T16:58:10.079626+00:00",
+    "stats": {
+        "this_version": {
+            "data_volume": 0.0,
+            "downloads": 0,
+            "unique_views": 0,
+            "views": 0,
+            "unique_downloads": 0
+        },
+        "all_versions": {
+            "data_volume": 0.0,
+            "downloads": 0,
+            "unique_views": 0,
+            "views": 0,
+            "unique_downloads": 0
+        }
+    },
+    "parent": {
+        "id": "kt0tw-1vb94",
+        "communities": {
+            "default": "aedd135f-227e-4fdf-9476-5b3fd011bac6",
+            "ids": [
+                "aedd135f-227e-4fdf-9476-5b3fd011bac6"
+            ]
+        }
+    },
+    "versions": {
+        "is_latest": false,
+        "index": 2
+    },
+    "access": {
+        "embargo": {
+            "active": false,
+            "reason": null
+        },
+        "status": "open",
+        "files": "public",
+        "record": "public"
+    }
+}

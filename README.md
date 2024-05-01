@@ -33,8 +33,11 @@ This tool will query the CrossRef or DataCite API and convert a works record int
 
 ### `ep3ds2citations`
 
-This tools take an EPrint record in a dataset collection and returns an abbreviated record inspired by [citeproc](https://en.wikipedia.org/wiki/CiteProc). It also supports harvesting select EPrint records into a dataset collection using the `-harvest` and `-ids` options. We use this feature to facilate creating <https://feeds.library.caltech.edu>. See the [man page](ep3ds2citations.1.md) for details.
+This tools take an EPrint record in a dataset collection and returns an abbreviated record inspired by [citeproc](https://en.wikipedia.org/wiki/CiteProc). It also supports harvesting selected EPrint records into a dataset collection using the `-harvest` and `-ids` options. We use this feature to facilate creating <https://feeds.library.caltech.edu>. See the [man page](ep3ds2citations.1.md) for details.
 
+### `rdmds2citations`
+
+This tools take an RDM record in a dataset collection and returns an abbreviated record inspired by [citeproc](https://en.wikipedia.org/wiki/CiteProc). It also supports harvesting selected RDM records into a dataset collection using the `-harvest` and `-ids` options. We use this feature to facilate creating <https://feeds.library.caltech.edu>. See the [man page](rdmds2citations.1.md) for details.
 
 ## Requirements
 

@@ -36,6 +36,7 @@ package irdmtools
 
 import (
 	"bytes"
+	"database/sql"
 	"fmt"
 	"io"
 	"os"
@@ -88,32 +89,33 @@ func (app *RdmUtil) Configure(configFName string, envPrefix string, debug bool) 
 	return nil
 }
 
-// Query returns a byte slice for a JSON encode list
-// of record summaries or an error.
-//
-// ```
-//
-//	app := new(irdmtools.RdmUtil)
-//	if err := app.LoadConfig("irdmtools.json"); err != nil {
-//	   // ... handle error ...
-//	}
-//	src, err := app.Query("My favorite book", -1, "newest")
-//	if err != nil {
-//	    // ... handle error ...
-//	}
-//	fmt.Printf("%s\n", src)
-//
-// ```
-func (app *RdmUtil) Query(q string, sort string) ([]byte, error) {
-	records, err := Query(app.Cfg, q, sort)
-	if err != nil {
-		return nil, err
+// OpenDB takes a configured RdmUtil struct and opens the described database connection.
+func (app *RdmUtil) OpenDB() error {
+	if app.Cfg == nil {
+		return fmt.Errorf("application not configured")
 	}
-	src, err := JSONMarshalIndent(records, "", "    ")
-	if err != nil {
-		return nil, err
+	connstr := app.Cfg.MakeDSN()
+	if connstr == "" {
+		return fmt.Errorf("unable to form db connection string")
 	}
-	return src, nil
+	db, err := sql.Open("postgres", connstr)
+	if err != nil {
+		return err
+	}
+	if db != nil {
+		app.Cfg.pgDB = db
+	}
+	return nil
+}
+
+// CloseDB() closes the Postgres connection
+func (app *RdmUtil) CloseDB() error {
+	if app.Cfg != nil {
+		if app.Cfg.pgDB != nil {
+			return app.Cfg.pgDB.Close()
+		}
+	}
+	return fmt.Errorf("postgres db connection not found")
 }
 
 // CheckDOI checks the .pids.doi.identifier and returns a record from
@@ -1163,15 +1165,6 @@ func (app *RdmUtil) Run(in io.Reader, out io.Writer, eout io.Writer, action stri
 		}
 		doi := params[0]
 		src, err = app.CheckDOI(doi)
-	case "query":
-		if len(params) == 0 {
-			return fmt.Errorf("missing query string")
-		}
-		q, sort := params[0], ""
-		if len(params) > 1 {
-			sort = params[1]
-		}
-		src, err = app.Query(q, sort)
 	case "get_modified_ids":
 		if len(params) == 0 {
 			return fmt.Errorf("missing start and end dates")
@@ -1180,10 +1173,22 @@ func (app *RdmUtil) Run(in io.Reader, out io.Writer, eout io.Writer, action stri
 		if len(params) > 1 {
 			end = params[1]
 		}
+		if err := app.OpenDB(); err != nil {
+			return err
+		}
+		defer app.CloseDB()
 		src, err = app.GetModifiedIds(start, end)
 	case "get_all_ids":
+		if err := app.OpenDB(); err != nil {
+			return err
+		}
+		defer app.CloseDB()
 		src, err = app.GetRecordIds()
 	case "get_all_stale_ids":
+		if err := app.OpenDB(); err != nil {
+			return err
+		}
+		defer app.CloseDB()
 		src, err = app.GetRecordStaleIds()
 	case "get_raw_record":
 		recordId, _, _, err = getRecordParams(params, true, false, false)
@@ -1196,6 +1201,10 @@ func (app *RdmUtil) Run(in io.Reader, out io.Writer, eout io.Writer, action stri
 		if err != nil {
 			return err
 		}
+		if err := app.OpenDB(); err != nil {
+			return err
+		}
+		defer app.CloseDB()
 		src, err = app.GetRecord(recordId)
 	case "get_record_versions":
 	    recordId, _, _, err = getRecordParams(params, true, false, false)
@@ -1440,7 +1449,14 @@ func (app *RdmUtil) Run(in io.Reader, out io.Writer, eout io.Writer, action stri
 		if len(params) != 1 {
 			return fmt.Errorf("JSON Identifier file required")
 		}
-		return app.Harvest(params[0])
+		if err := app.OpenDB(); err != nil {
+			return err
+		}
+		defer app.CloseDB()
+		if err := app.Harvest(params[0]); err != nil {
+			return err
+		}
+
 	default:
 		err = fmt.Errorf("%q action is not supported", action)
 	}

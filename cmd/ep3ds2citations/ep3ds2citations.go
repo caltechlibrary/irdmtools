@@ -102,12 +102,18 @@ objects will be written.
 
 Example of a dataset collection called "authors.ds", "data.ds" and
 "thesis.ds" of EPrint records aggregated into a "citation.ds" dataset
-colelction using prefixes and the source repository ids.
+collection using prefixes and the source repository ids.
 
 ~~~shell
-{app_name} -prefix caltechauthors authors.ds citation.ds k3tpc-ga970
-{app_name} -prefix caltechdata data.ds citation.ds zzj7r-61978
-{app_name} -prefix caltechthesis thesis.ds citation.ds 1233
+{app_name} -prefix caltechauthors \
+           -host authors.library.caltech.edu \
+           authors.ds citation.ds k3tpc-ga970
+{app_name} -prefix caltechdata \
+           -host data.caltech.edu \
+           data.ds citation.ds zzj7r-61978
+{app_name} -prefix caltechthesis \
+           -host thesis.library.caltech.edu \
+           thesis.ds citation.ds 1233
 ~~~
 
 `

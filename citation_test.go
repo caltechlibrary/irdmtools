@@ -27,7 +27,8 @@ func TestCitationCrosswalkRecord(t *testing.T) {
 	}
 
 	item := &Citation{}
-	if err := item.CrosswalkRecord("rdm_website", "10.5281-inveniordm.1234", "", "", rec); err != nil {
+	rec.ID = "10.5281-inveniordm.1234"
+	if err := item.CrosswalkRecord("rdm_website", "", "", rec); err != nil {
 		t.Error(err)
 	}
 	expectedS := "rdm_website"

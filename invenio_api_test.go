@@ -36,7 +36,8 @@ package irdmtools
 
 import (
 	"fmt"
-	//"math/rand"
+	"math/rand"
+	"database/sql"
 	"os"
 	"path"
 	"testing"
@@ -184,6 +185,29 @@ func Test02GetRecord(t *testing.T) {
 	if err := cfg.LoadEnv("TEST_"); err != nil {
 		t.Error(err)
 	}
+	if cfg.RepoID == "" {
+		t.Errorf("Missing repo id, aborting")
+		t.FailNow()
+	}
+	if cfg.InvenioDbHost == "" {
+		t.Errorf("Missing Invenio Db Hostname")
+	}
+	connstr := cfg.MakeDSN()
+	if connstr == "" {
+		t.Errorf("cfg.MakeDSN() returned empty dsn")
+		t.FailNow()
+	}
+	db, err := sql.Open("postgres", connstr)
+	if err != nil {
+		t.Errorf("failed to open postgres, %s", err)
+		t.FailNow()
+	}
+	defer db.Close()
+	cfg.pgDB = db
+	if connstr == "" {
+		t.Errorf("cfg.MakeDSN() returned empty connection string, aborting test")
+		t.FailNow()
+	}
 	src, err := os.ReadFile(idsFName)
 	if err != nil {
 		t.Errorf("failed to read ids from file %q, %s", idsFName, err)
@@ -194,20 +218,20 @@ func Test02GetRecord(t *testing.T) {
 		t.Error(err)
 		t.FailNow()
 	}
-	/*
 	// Randomize the order of the ids before running GetRecord test.
 	rand.Shuffle(len(ids), func(i int, j int) {
 		ids[i], ids[j] = ids[j], ids[i]
 	})
-	*/
+	// Take the first hundred to test
+	test_ids := ids[0:100]
 	t0 := time.Now()
 	iTime := time.Now()
-	tot := len(ids)
+	tot := len(test_ids)
 	reportProgress := false
-	for i, id := range ids {
+	for i, id := range test_ids {
 		_, err := GetRecord(cfg, id, false)
 		if err != nil {
-			t.Errorf("(%d) GetRecord(cfg, %q, false) %s\n%s", i, id, err, cfg.rl)
+			t.Errorf("(%d) GetRecord(cfg, %q, false) %s for %s", i, id, err, connstr)
 			t.FailNow()
 		}
 		if iTime, reportProgress = CheckWaitInterval(iTime, (15 * time.Second)); reportProgress || i == 0 {

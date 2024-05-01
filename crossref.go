@@ -457,21 +457,34 @@ func getWorksApproved(work *crossrefapi.Works) *simplified.DateType {
 	return nil
 }
 
+// normalizeWorksJournalName will check the ISSN to see if we have
+// a preferred name in our options. If so it will return that.
+func normalizeWorksJournalName(val string, work *crossrefapi.Works, options *Doi2RdmOptions) string {
+	for _, issn := range getWorksISSNs(work) {
+		if issn != "" {
+			if value, ok := options.ISSNJournals[issn]; ok {
+				return value
+			}
+		}
+	}
+	return val
+}
+
 // normalizeWorksPublisherName will check the publisher DOI and ISSN to see if we have
 // a preferred name in our options. If so it will return that.
 func normalizeWorksPublisherName(val string, work *crossrefapi.Works, options *Doi2RdmOptions) string {
-	doi := getWorksDOI(work)
-	if doi != "" {
-		doiPrefix, _ := DoiPrefix(doi)
-		if value, ok := options.DoiPrefixPublishers[doiPrefix]; ok {
-			return value
-		}
-	}
 	for _, issn := range getWorksISSNs(work) {
 		if issn != "" {
 			if value, ok := options.ISSNPublishers[issn]; ok {
 				return value
 			}
+		}
+	}
+	doi := getWorksDOI(work)
+	if doi != "" {
+		doiPrefix, _ := DoiPrefix(doi)
+		if value, ok := options.DoiPrefixPublishers[doiPrefix]; ok {
+			return value
 		}
 	}
 	return val
@@ -533,6 +546,7 @@ func CrosswalkCrossRefWork(cfg *Config, work *crossrefapi.Works, options *Doi2Rd
 		}
 	}
 	if value := getWorksPublication(work); value != "" {
+		value := normalizeWorksJournalName(value, work, options)
 		if err := SetPublication(rec, value); err != nil {
 			return nil, err
 		}
