@@ -137,6 +137,9 @@ with one of the options, e.g. `+"`"+`-all`+"`"+`, you can skip providing the KEY
 -modified START [END]
 : Harvest records modified between start and end dates.
 
+-as-citations
+: This harvests the record into a minimal citation form similar to citeproc
+
 # ACTION_PARAMETERS
 
 Action parameters are the specific optional or required parameters need to complete an aciton.
