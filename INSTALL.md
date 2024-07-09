@@ -6,8 +6,8 @@ irdmtools is an **experimental** Go package and command line tools for working w
 
 To test the latest version you need the required development environment and follow the steps listed below in "Compiling from Source".
 
-Quick install using curl
-------------------------
+Quick install using curl or irm
+-------------------------------
 
 The following experimental installer should get the latest stable release for macOS and Linux (e.g. Debian, Ubuntu, Raspberry Pi OS). 
 
@@ -17,7 +17,11 @@ Copy and run the following command in your shell (e.g. Terminal)
 curl https://caltechlibrary.github.io/irdmtools/installer.sh | sh
 ~~~
 
-NOTE: Windows 11 support is via Window's Sub-System for Linux (aka WSL). If you have that available then you can use the installer example above.
+For Windows you can use a Powershell script with the following command.
+
+~~~
+irm https://caltechlibrary.github.io/irdmtools/installer.ps1 | iex
+~~~
 
 
 Requirements

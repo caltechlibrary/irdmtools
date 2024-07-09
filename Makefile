@@ -35,7 +35,7 @@ ifeq ($(OS), Windows)
 	EXT = .exe
 endif
 
-build: version.go $(PROGRAMS) man CITATION.cff about.md installer.sh
+build: version.go $(PROGRAMS) man CITATION.cff about.md installer.sh installer.ps1
 
 version.go: .FORCE
 	@echo '' | pandoc --from t2t --to plain \
@@ -71,9 +71,14 @@ about.md: codemeta.json $(PROGRAMS)
 	@if [ -f _codemeta.json ]; then rm _codemeta.json; fi
 
 installer.sh: .FORCE
-	@echo '' | pandoc --metadata title="Installer" --metadata git_org_or_person="$(GIT_GROUP)" --metadata-file codemeta.json --template codemeta-installer.tmpl >installer.sh
+	@echo '' | pandoc --metadata title="Installer" --metadata git_org_or_person="$(GIT_GROUP)" --metadata-file codemeta.json --template codemeta-bash-installer.tmpl >installer.sh
 	@chmod 775 installer.sh
 	@git add -f installer.sh
+
+installer.ps1: .FORCE
+	@echo '' | pandoc --metadata title="Installer" --metadata git_org_or_person="$(GIT_GROUP)" --metadata-file codemeta.json --template codemeta-ps1-installer.tmpl >installer.ps1
+	@chmod 775 installer.ps1
+	@git add -f installer.ps1
 
 
 test: $(PACKAGE)
