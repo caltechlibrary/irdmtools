@@ -1,0 +1,251 @@
+{
+    "is_published": true,
+    "links": {
+        "self": "https://authors.library.caltech.edu/api/records/580bm-z1182",
+        "self_html": "https://authors.library.caltech.edu/records/580bm-z1182",
+        "self_doi": "https://authors.library.caltech.edu/doi/10.1016/0370-2693(89)90468-1",
+        "doi": "https://doi.org/10.1016/0370-2693(89)90468-1",
+        "self_iiif_manifest": "https://authors.library.caltech.edu/api/iiif/record:580bm-z1182/manifest",
+        "self_iiif_sequence": "https://authors.library.caltech.edu/api/iiif/record:580bm-z1182/sequence/default",
+        "files": "https://authors.library.caltech.edu/api/records/580bm-z1182/files",
+        "archive": "https://authors.library.caltech.edu/api/records/580bm-z1182/files-archive",
+        "latest": "https://authors.library.caltech.edu/api/records/580bm-z1182/versions/latest",
+        "latest_html": "https://authors.library.caltech.edu/records/580bm-z1182/latest",
+        "draft": "https://authors.library.caltech.edu/api/records/580bm-z1182/draft",
+        "versions": "https://authors.library.caltech.edu/api/records/580bm-z1182/versions",
+        "access_links": "https://authors.library.caltech.edu/api/records/580bm-z1182/access/links",
+        "reserve_doi": "https://authors.library.caltech.edu/api/records/580bm-z1182/draft/pids/doi",
+        "communities": "https://authors.library.caltech.edu/api/records/580bm-z1182/communities",
+        "communities-suggestions": "https://authors.library.caltech.edu/api/records/580bm-z1182/communities-suggestions",
+        "requests": "https://authors.library.caltech.edu/api/records/580bm-z1182/requests"
+    },
+    "revision_id": 9,
+    "parent": {
+        "communities": {
+            "ids": [
+                "aedd135f-227e-4fdf-9476-5b3fd011bac6"
+            ],
+            "default": "aedd135f-227e-4fdf-9476-5b3fd011bac6"
+        },
+        "id": "j2p00-1v782"
+    },
+    "access": {
+        "status": "restricted",
+        "embargo": {
+            "active": false,
+            "reason": null
+        },
+        "files": "restricted",
+        "record": "public"
+    },
+    "custom_fields": {
+        "journal:journal": {
+            "pages": "21-25",
+            "volume": "218",
+            "issn": "0370-2693",
+            "issue": "1",
+            "title": "Physics Letters B"
+        },
+        "caltech:publication_status": [
+            {
+                "title": {
+                    "en": "Published"
+                },
+                "id": "published"
+            }
+        ]
+    },
+    "stats": {
+        "this_version": {
+            "unique_downloads": 0,
+            "views": 0,
+            "downloads": 0,
+            "data_volume": 0.0,
+            "unique_views": 0
+        },
+        "all_versions": {
+            "unique_downloads": 0,
+            "views": 13,
+            "downloads": 0,
+            "data_volume": 0.0,
+            "unique_views": 13
+        }
+    },
+    "updated": "2024-05-13T23:53:07.777034+00:00",
+    "id": "580bm-z1182",
+    "status": "published",
+    "metadata": {
+        "creators": [
+            {
+                "person_or_org": {
+                    "type": "personal",
+                    "identifiers": [
+                        {
+                            "identifier": "Gupta-Arun-Kumar",
+                            "scheme": "clpid"
+                        }
+                    ],
+                    "name": "Gupta, Arun Kumar",
+                    "given_name": "Arun Kumar",
+                    "family_name": "Gupta"
+                },
+                "affiliations": [
+                    {
+                        "name": "California Institute of Technology",
+                        "id": "05dxps055"
+                    }
+                ]
+            },
+            {
+                "person_or_org": {
+                    "type": "personal",
+                    "identifiers": [
+                        {
+                            "identifier": "Wise-M-B",
+                            "scheme": "clpid"
+                        },
+                        {
+                            "identifier": "0000 0001 1006 3759",
+                            "scheme": "isni"
+                        },
+                        {
+                            "identifier": "0000-0002-9125-801X",
+                            "scheme": "orcid"
+                        }
+                    ],
+                    "name": "Wise, Mark B.",
+                    "given_name": "Mark B.",
+                    "family_name": "Wise"
+                },
+                "affiliations": [
+                    {
+                        "name": "California Institute of Technology",
+                        "id": "05dxps055"
+                    }
+                ]
+            }
+        ],
+        "funding": [
+            {
+                "funder": {
+                    "name": "Department of Energy (DOE)"
+                },
+                "award": {
+                    "title": {
+                        "en": " "
+                    },
+                    "number": "DE-AC0381-ER40050"
+                }
+            },
+            {
+                "funder": {
+                    "name": "Department of Energy (DOE)"
+                },
+                "award": {
+                    "title": {
+                        "en": " "
+                    },
+                    "number": "DE-FG03-84ER40172"
+                }
+            }
+        ],
+        "dates": [
+            {
+                "description": "Created from EPrint's datestamp field",
+                "type": {
+                    "title": {
+                        "de": "Erstellt",
+                        "en": "Created"
+                    },
+                    "id": "created"
+                },
+                "date": "2017-08-11"
+            },
+            {
+                "description": "Created from EPrint's last_modified field",
+                "type": {
+                    "title": {
+                        "de": "Aktualisiert",
+                        "en": "Updated"
+                    },
+                    "id": "updated"
+                },
+                "date": "2021-11-15"
+            }
+        ],
+        "resource_type": {
+            "title": {
+                "de": "Zeitschriftenartikel",
+                "en": "Journal Article"
+            },
+            "id": "publication-article"
+        },
+        "title": "Comment on wormhole correlations",
+        "additional_descriptions": [
+            {
+                "description": "<p>&copy; 1989 Elsevier. Received 11 October 1988, Revised 28 November 1988.&nbsp;</p>",
+                "type": {
+                    "title": {
+                        "de": "Sonstige",
+                        "en": "Copyright and License"
+                    },
+                    "id": "copyright"
+                }
+            },
+            {
+                "description": "<p>This work supported in part by the US Department of Energy under Contract Nos. DE-AC0381-ER40050 and DE-FG03-84ER40172.</p>",
+                "type": {
+                    "title": {
+                        "de": "Sonstige",
+                        "en": "Acknowledgement"
+                    },
+                    "id": "acknowledgement"
+                }
+            }
+        ],
+        "publication_date": "1989-02-09",
+        "description": "Wormhole solutions to the euclidean field equations have been found for a U(1) Goldstone boson, interacting gravitationally. Using these solutions we discuss the interactions or correlations between wormholes. Some remarks, concerning the effects of wormhole correlaions on the locality of the effective theory below the wormhole scale and on the importance of large wormholes, are presented.",
+        "publisher": "Elsevier",
+        "identifiers": [
+            {
+                "identifier": "80283",
+                "scheme": "eprintid"
+            },
+            {
+                "identifier": "CaltechAUTHORS:20170811-082351145",
+                "scheme": "resolverid"
+            }
+        ],
+        "version": "Published",
+        "rights": [
+            {
+                "description": {
+                    "en": "No commercial reproduction, distribution, display or performance rights in this work are provided."
+                },
+                "id": "default",
+                "title": {
+                    "en": "Default"
+                }
+            }
+        ]
+    },
+    "versions": {
+        "is_latest": false,
+        "index": 1
+    },
+    "is_draft": false,
+    "files": {
+        "enabled": true
+    },
+    "pids": {
+        "doi": {
+            "identifier": "10.1016/0370-2693(89)90468-1",
+            "provider": "external"
+        },
+        "oai": {
+            "identifier": "oai:authors.library.caltech.edu:580bm-z1182",
+            "provider": "oai"
+        }
+    },
+    "created": "2023-08-19T21:25:41.000387+00:00"
+}

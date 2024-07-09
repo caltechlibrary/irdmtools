@@ -194,7 +194,7 @@ func (app *Ep3Util) GetRecord(id string) ([]byte, error) {
 // harvests them into a dataset v2 collection. The dataset collection
 // must exist and be configured in either the environment or
 // configuration file.
-func (app *Ep3Util) RunHarvest(in io.Reader, out io.Writer, eout io.Writer, all bool, modified bool, params []string) error {
+func (app *Ep3Util) RunHarvest(in io.Reader, out io.Writer, eout io.Writer, all bool, modified bool, asCitations bool, params []string) error {
 	switch {
 	case all:
 		timeout := time.Duration(timeoutSeconds)
@@ -202,9 +202,9 @@ func (app *Ep3Util) RunHarvest(in io.Reader, out io.Writer, eout io.Writer, all 
 		if err != nil {
 			return err
 		}
-		return HarvestEPrintRecords(app.Cfg, ids, app.Cfg.Debug)	
+		return HarvestEPrintRecords(app.Cfg, ids, asCitations, app.Cfg.Debug)	
 	case modified:
-		// FIXME: need to harvest modified eprints ...
+		// NOTE: need to harvest modified eprints ...
 		today := time.Now().Format("2006-01-02")
 		start, end := today, today
 		if len(params) < 1 {
@@ -218,9 +218,9 @@ func (app *Ep3Util) RunHarvest(in io.Reader, out io.Writer, eout io.Writer, all 
 		if err != nil {
 			return err
 		}
-		return HarvestEPrintRecords(app.Cfg, ids, app.Cfg.Debug)	
+		return HarvestEPrintRecords(app.Cfg, ids, asCitations, app.Cfg.Debug)	
 	default:
-		return HarvestEPrints(app.Cfg, params[0], app.Cfg.Debug)
+		return HarvestEPrints(app.Cfg, params[0], asCitations, app.Cfg.Debug)
 	}
 }
 
@@ -276,10 +276,11 @@ func (app *Ep3Util) Run(in io.Reader, out io.Writer, eout io.Writer, action stri
 		}
 		src, err = app.GetRecord(recordId)
 	case "harvest":
-		all, modified := false, false
+		all, modified, asCitation := false, false, false
 		flagSet := flag.NewFlagSet("harvest", flag.ContinueOnError)
 		flagSet.BoolVar(&all, "all", all, "harvest all records")
 		flagSet.BoolVar(&modified, "modified", modified, "harvest records between start and optional end date")
+		flagSet.BoolVar(&asCitation, "as-citation", asCitation, "harvest the records storing in citation format")
 		flagSet.Parse(params)
 		params = flagSet.Args()
 		if (! all) && len(params) < 1 {
@@ -288,7 +289,7 @@ func (app *Ep3Util) Run(in io.Reader, out io.Writer, eout io.Writer, action stri
 			}
 			return fmt.Errorf("JSON Identifier file required")
 		}
-		return app.RunHarvest(in, out, eout, all, modified, params)
+		return app.RunHarvest(in, out, eout, all, modified, asCitation, params)
 	default:
 		err = fmt.Errorf("%q action is not supported", action)
 	}

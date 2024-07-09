@@ -129,7 +129,7 @@ func Harvest(cfg *Config, fName string, debug bool) error {
 	return nil
 }
 
-func harvestEPrintRecordsFromMySQL(cfg *Config, recordIds []int, debug bool) error {
+func harvestEPrintRecordsFromMySQL(cfg *Config, recordIds []int, asCitation bool, debug bool) error {
 	cName := cfg.CName
 	c, err := dataset.Open(cName)
 	if err != nil {
@@ -166,6 +166,29 @@ func harvestEPrintRecordsFromMySQL(cfg *Config, recordIds []int, debug bool) err
 		if err != nil {
 			l.Printf("failed to get (%d) %d, %s", i, eprintid, err)
 			eCnt++
+		} else if asCitation {
+			// NOTE: I need to convert eprint to citation record
+			citation := new(Citation)
+			if err := citation.CrosswalkEPrint(cName, id, cfg.EPrintBaseURL, eprint); err != nil {
+				l.Printf("failed to convert eprint %s to citation, %s", id, err)
+				eCnt++
+			} else {
+				if c.HasKey(id) {
+					if err := c.UpdateObject(id, citation); err != nil {
+						l.Printf("failed to write %d to %s, %s", eprintid, cName, err)
+						eCnt++
+					} else {
+						hCnt++
+					}
+				} else {
+					if err := c.CreateObject(id, citation); err != nil {
+						l.Printf("failed to write %d to %s, %s", eprintid, cName, err)
+						eCnt++
+					} else {
+						hCnt++
+					}
+				}
+			}
 		} else {
 			if c.HasKey(id) {
 				if err := c.UpdateObject(id, eprint); err != nil {
@@ -195,10 +218,10 @@ func harvestEPrintRecordsFromMySQL(cfg *Config, recordIds []int, debug bool) err
 	return nil
 }
 
-func HarvestEPrintRecords(cfg *Config, recordIds []int, debug bool) error {
+func HarvestEPrintRecords(cfg *Config, recordIds []int, asCitation bool, debug bool) error {
 	// Check if we can harvest directly from EPrnits MySQL database.
 	if cfg.EPrintDbHost != "" && cfg.EPrintDbUser != "" && cfg.EPrintDbPassword != "" {
-		return harvestEPrintRecordsFromMySQL(cfg, recordIds, debug)
+		return harvestEPrintRecordsFromMySQL(cfg, recordIds, asCitation, debug)
 	}
 	cName := cfg.CName
 	if cName == "" {
@@ -232,6 +255,29 @@ func HarvestEPrintRecords(cfg *Config, recordIds []int, debug bool) error {
 			}
 			l.Printf("failed to get (%d) %q, %s", i, id, err)
 			eCnt++
+		} else if asCitation {
+			// NOTE: I need to convert rec to citation format
+			citation := new(Citation)
+			if err := citation.CrosswalkEPrint(cName, id, cfg.EPrintBaseURL, rec.EPrint[0]); err != nil {
+					l.Printf("failed to convert EPrint %s to citation, %s", id, err)
+					eCnt++
+			} else {
+				if c.HasKey(id) {
+					if err := c.UpdateObject(id, citation); err != nil {
+						l.Printf("failed to write %q to %s, %s", id, cName, err)
+						eCnt++
+					} else {
+						hCnt++
+					}
+				} else {
+					if err := c.CreateObject(id, citation); err != nil {
+						l.Printf("failed to write %q to %s, %s", id, cName, err)
+						eCnt++
+					} else {
+						hCnt++
+					}
+				}
+			}
 		} else {
 			if c.HasKey(id) {
 				if err := c.UpdateObject(id, rec); err != nil {
@@ -261,7 +307,7 @@ func HarvestEPrintRecords(cfg *Config, recordIds []int, debug bool) error {
 	return nil
 }
 
-func HarvestEPrints(cfg *Config, fName string, debug bool) error {
+func HarvestEPrints(cfg *Config, fName string, asCitation bool, debug bool) error {
 	cName := cfg.CName
 	if cName == "" {
 		return fmt.Errorf("dataset collection not configured")
@@ -302,7 +348,25 @@ func HarvestEPrints(cfg *Config, fName string, debug bool) error {
 			}
 			log.Printf("failed to get (%d) %q, %s", i, id, err)
 			eCnt++
-		} else {
+		} else if asCitation {
+			// FIXME: convert rec to citation record.
+			citation := rec
+			if c.HasKey(id) {
+				if err := c.UpdateObject(id, citation); err != nil {
+					log.Printf("failed to write %q to %s, %s", id, cName, err)
+					eCnt++
+				} else {
+					hCnt++
+				}
+			} else {
+				if err := c.CreateObject(id, citation); err != nil {
+					log.Printf("failed to write %q to %s, %s", id, cName, err)
+					eCnt++
+				} else {
+					hCnt++
+				}
+			}
+	    } else {
 			if c.HasKey(id) {
 				if err := c.UpdateObject(id, rec); err != nil {
 					log.Printf("failed to write %q to %s, %s", id, cName, err)
