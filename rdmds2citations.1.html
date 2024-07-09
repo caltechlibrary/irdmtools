@@ -67,7 +67,7 @@ filename as “-”)
 <dt>-prefix</dt>
 <dd>
 Applies a prefix before the provided key when saving a record. E.g.
-`-prefix caltechauthors”
+`-prefix authors” will prefix keys with “authors:”
 </dd>
 <dt>-host</dt>
 <dd>
@@ -89,12 +89,12 @@ Sets the URL to the RDM is installed
 <p>Example of a dataset collection called “authors.ds” and “data.ds” RDM
 records aggregated into a “citation.ds” dataset collection using
 prefixes and the source repository ids.</p>
-<pre class="shell"><code>rdmds2citations -prefix caltechauthors \
+<pre class="shell"><code>rdmds2citations -prefix authors \
            -host authors.library.caltech.edu \
-           authors.ds citation.ds k3tpc-ga970
-rdmds2citations -prefix caltechdata \
+           authors.ds citations.ds k3tpc-ga970
+rdmds2citations -prefix data \
            -host data.caltech.edu \
-           data.ds citation.ds zzj7r-61978</code></pre>
+           data.ds citations.ds zzj7r-61978</code></pre>
 </section>
 
 <footer>
