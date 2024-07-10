@@ -43,50 +43,54 @@ import (
 
 	// Caltech Library packages
 	"github.com/caltechlibrary/dataset/v2"
+
+	// 3rd Party Libraries
+	"gopkg.in/yaml.v3"
 )
 
 // Config holds the common configuration used by all irdmtools
 type Config struct {
 	// Debug is set true then methods with access to the Config obect
 	// can use this flag to implement addition logging to standard err
-	Debug bool `json:"-"`
+	Debug bool `json:"-", yaml:"-"`
 	// Repository Name, e.g. CaltechAUTHORS, CaltechTHESIS, CaltechDATA
-	RepoName string `json:"repo_name,omitempty"`
+	RepoName string `json:"repo_name,omitempty" yaml:"repo_name,omitempty"`
 	// Repository ID, e.g. caltechauthors, caltechthesis, caltechdata (usually the db name for repository)
 	// NOTE: It should also match the Postgres DB name used by RDM
-	RepoID string `json:"repo_id,omitempty"`
+	RepoID string `json:"repo_id,omitempty" yaml:"repo_id,omitempty"`
 	// InvenioAPI holds the URL to the InvenioAPI
-	InvenioAPI string `json:"rdm_url,omitempty"`
+	InvenioAPI string `json:"rdm_url,omitempty" yaml:"rdm_url,omitempty"`
 	// InvenioToken is holds the token string to access the API
-	InvenioToken string `json:"rdmtok,omitempty"`
+	InvenioToken string `json:"rdmtok,omitempty" yaml:"rdmtok,omitempty"`
 	// Invenio DSN holds the data source name for the Postgres database storing the invenio records
-	InvenioDSN string `json:"rdm_dsn,omitempty"`
+	InvenioDSN string `json:"rdm_dsn,omitempty" yaml:"rdm_dsn,omitempty"`
 	// InvenioStorage holds the URI to the default storage of Invenio RDM objects, e.g. local file system or S3 bucket
-	InvenioStorage string `json:"rdm_storage,omitempty"`
+	InvenioStorage string `json:"rdm_storage,omitempty" yaml:"rdm_storage,omitempty"`
 	// InvenioCommunityID holds the community id for use with the API.
-	InvenioCommunityID string `json:"rdm_community_id,omitempty"`
+	InvenioCommunityID string `json:"rdm_community_id,omitempty" yaml:"rdm_community_id,omitempty"`
 	// InvenioDbHost holds the name of the machine for the Postgres server
-	InvenioDbHost string `json:"rdm_db_host,omitempty"`
+	InvenioDbHost string `json:"rdm_db_host,omitempty" yaml:"rdm_db_host,omitempty"`
 	// InvenioDbUser holds the database username of the machine for the Postgres server
-	InvenioDbUser string `json:"rdm_db_user,omitempty"`
+	InvenioDbUser string `json:"rdm_db_user,omitempty" yaml:"rdm_db_user,omitempty"`
 	// InvenioDbPassword holds the database password of the machine for the Postgres server
-	InvenioDbPassword string `json:"rdm_db_password,omitempty"`
+	InvenioDbPassword string `json:"rdm_db_password,omitempty" yaml:"rdm_db_password,omitempty"`
 
 	// CName holds the dataset collection name used when harvesting content
-	CName string `json:"c_name,omitempty"`
+	CName string `json:"c_name,omitempty" yaml:"c_name,omitempty"`
 	// MailTo holds an email address to use when an email (e.g. CrossRef API access) is needed
-	MailTo string `json:"mailto,omitempty"`
+	MailTo string `json:"mailto,omitempty" yaml:"mailto,omitempty"`
 	// ds his a non-public point to an dataset collection structure
 	ds *dataset.Collection
 
 	// EPrint configuration needed for migration related tools
-	EPrintHost string `json:"eprint_host,omitempty"`
-	EPrintUser string `json:"eprint_user,omitempty"`
-	EPrintPassword string `json:"eprint_password,omitempty"`
-	EPrintArchivesPath string `json:"eprint_archives_path,omitempty"` 
-	EPrintDbHost string `json:"eprint_db_host,omitempty"`
-	EPrintDbUser string `json:"eprint_db_user,omitempty"`
-	EPrintDbPassword string `json:"eprint_db_password,omitempty"`
+	EPrintHost string `json:"eprint_host,omitempty" yaml:"eprint_host,omitempty"`
+	EPrintUser string `json:"eprint_user,omitempty" yaml:"eprint_user,omitempty"`
+	EPrintPassword string `json:"eprint_password,omitempty" yaml:"eprint_password,omitempty"`
+	EPrintArchivesPath string `json:"eprint_archives_path,omitempty" yaml:"eprint_archives_path,omitempty"` 
+	EPrintDbHost string `json:"eprint_db_host,omitempty" yaml:"eprint_db_host,omitempty"`
+	EPrintDbUser string `json:"eprint_db_user,omitempty" yaml:"eprint_db_user,omitempty"`
+	EPrintDbPassword string `json:"eprint_db_password,omitempty" yaml:"eprint_db_password,omitempty"`
+	EPrintBaseURL string`json:"eprint_base_url,omitempty" yaml:"eprint_base_url,omitempty"`
 
 
 	// rl holds rate limiter data for throttling API requests
@@ -252,8 +256,14 @@ func (cfg *Config) LoadConfig(configFName string) error {
 	if err != nil {
 		return err
 	}
-	if err := JSONUnmarshal(src, &cfg); err != nil {
-		return err
+	if strings.HasSuffix(configFName, ".yaml") {
+		if err := yaml.Unmarshal(src, &cfg); err != nil {
+			return err
+		}
+	} else {
+		if err := JSONUnmarshal(src, &cfg); err != nil {
+			return err
+		}
 	}
 	// Build our DSN if not set.
 	if cfg.InvenioDSN == "" {

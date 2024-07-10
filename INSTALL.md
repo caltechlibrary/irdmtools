@@ -17,7 +17,7 @@ Copy and run the following command in your shell (e.g. Terminal)
 curl https://caltechlibrary.github.io/irdmtools/installer.sh | sh
 ~~~
 
-With Windows you can use the follow Powershell command.
+For Windows you can use a Powershell script with the following command.
 
 ~~~
 irm https://caltechlibrary.github.io/irdmtools/installer.ps1 | iex

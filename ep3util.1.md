@@ -1,6 +1,6 @@
-%ep3util(1) irdmtools user manual | version 0.0.83-dev 8d9fd542
+%ep3util(1) irdmtools user manual | version 0.0.84 2dcb237c
 % R. S. Doiel and Tom Morrell
-% 2024-07-09
+% 2024-07-10
 
 # NAME
 
@@ -89,6 +89,9 @@ with one of the options, e.g. `-all`, you can skip providing the KEY_LIST_JSON f
 
 -modified START [END]
 : Harvest records modified between start and end dates.
+
+-as-citations
+: This harvests the record into a minimal citation form similar to citeproc
 
 # ACTION_PARAMETERS
 
