@@ -23,6 +23,12 @@ For Windows you can use a Powershell script with the following command.
 irm https://caltechlibrary.github.io/irdmtools/installer.ps1 | iex
 ~~~
 
+If you want to install a specific version you can download the installer scripts. then pass the version on the command line. As an example to install version v0.0.83 specifically you'd type the following two command into your shell session.
+
+~~~shell
+curl https://caltechlibrary.github.io/irdmtools/installer.sh
+sh installer.sh 0.0.83
+~~~
 
 Requirements
 ------------
