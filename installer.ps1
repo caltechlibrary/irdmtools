@@ -4,8 +4,11 @@
 #
 # Set the package name and version to install
 #
+param(
+  [Parameter()]
+  [String]$VERSION = "0.0.84"
+)
 $PACKAGE = "irdmtools"
-$VERSION = "0.0.83"
 $GIT_GROUP = "caltechlibrary"
 $RELEASE = "https://github.com/${GIT_GROUP}/${PACKAGE}/releases/tag/v${VERSION}"
 $SYSTEM_TYPE = Get-ComputerInfo -Property CsSystemType
@@ -14,6 +17,7 @@ if ($SYSTEM_TYPE.CsSystemType.Contains("ARM64")) {
 } else {
     $MACHINE = "x86_64"
 }
+
 
 # FIGURE OUT Install directory
 $BIN_DIR = "${Home}\bin"

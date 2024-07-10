@@ -78,7 +78,7 @@ installer.sh: .FORCE
 <<<<<<< HEAD
 =======
 installer.ps1: .FORCE
-	@echo '' | pandoc --metadata title="Installer" --metadata git_org_or_person="$(GIT_GROUP)" --metadata-file codemeta.json --template codemeta-ps1-installer.tmpl >installer.ps1
+	@echo '' | pandoc --metadata title="Powershell Installer" --metadata git_org_or_person="$(GIT_GROUP)" --metadata-file codemeta.json --template codemeta-ps1-installer.tmpl >installer.ps1
 	@chmod 775 installer.ps1
 	@git add -f installer.ps1
 
