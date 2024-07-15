@@ -1,6 +1,6 @@
-%rdmutil(1) irdmtools user manual | version 0.0.84 cfc248e3
+%rdmutil(1) irdmtools user manual | version 0.0.84 8f04f750
 % R. S. Doiel and Tom Morrell
-% 2024-07-10
+% 2024-07-15
 
 # NAME
 
@@ -210,7 +210,7 @@ ACCESS_VALUE is required and can be "restricted" or "public".
 
 harvest KEY_JSON
 : harvest takes a JSON file containing a list of keys and harvests each record
-into the dataset collection.
+into the dataset collection indicated by the environment variable C_NAME.
 
 
 get_endpoint PATH

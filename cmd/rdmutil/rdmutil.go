@@ -257,7 +257,7 @@ ACCESS_VALUE is required and can be "restricted" or "public".
 
 harvest KEY_JSON
 : harvest takes a JSON file containing a list of keys and harvests each record
-into the dataset collection.
+into the dataset collection indicated by the environment variable C_NAME.
 
 
 get_endpoint PATH
