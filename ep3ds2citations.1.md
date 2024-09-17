@@ -1,4 +1,4 @@
-%ep3ds2citations(1) irdmtools user manual | version 0.0.85 d78d9b80
+%ep3ds2citations(1) irdmtools user manual | version 0.0.85 4c63d857
 % R. S. Doiel and Tom Morrell
 % 2024-09-17
 
