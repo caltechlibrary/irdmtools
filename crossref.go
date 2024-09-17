@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+
 	// Caltech Library Packages
 	"github.com/caltechlibrary/crossrefapi"
 	"github.com/caltechlibrary/simplified"
@@ -274,6 +275,7 @@ func crosswalkWorksPersonToCreator(author *crossrefapi.Person, role string) *sim
 		po.Name = fmt.Sprintf("%s, %s", po.FamilyName, po.GivenName)
 	} else {
 		po.Type = "organization"
+		po.Name = author.Name
 	}
 	if author.ORCID != "" {
 		po.Identifiers = append(po.Identifiers, &simplified.Identifier{
