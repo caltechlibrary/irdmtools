@@ -274,7 +274,7 @@ func crosswalkWorksPersonToCreator(author *crossrefapi.Person, role string) *sim
 		po.Type = "personal"
 		po.Name = fmt.Sprintf("%s, %s", po.FamilyName, po.GivenName)
 	} else {
-		po.Type = "organization"
+		po.Type = "organizational"
 		po.Name = author.Name
 	}
 	if author.ORCID != "" {
