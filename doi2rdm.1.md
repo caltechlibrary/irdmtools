@@ -1,6 +1,6 @@
-%doi2rdm(1) irdmtools user manual | version 0.0.86 fdfc8ef9
+%doi2rdm(1) irdmtools user manual | version 0.0.87 e5d39496
 % R. S. Doiel and Tom Morrell
-% 2024-09-17
+% 2024-09-23
 
 # NAME
 
@@ -17,6 +17,10 @@ that takes a DOI, queries the CrossRef or DataCite API then returns a
 JSON document suitable for import into Invenio RDM. The DOI can be
 in either their canonical form or URL form (e.g. "10.1021/acsami.7b15651" or
 "https://doi.org/10.1021/acsami.7b15651").
+
+If a DOI is retrieve the exit code will be zero. If a DOI is not found
+the exit code with be ENOENT (2) else another non-zero exit code will be
+returned depending on the problem.
 
 # OPTIONS_YAML
 

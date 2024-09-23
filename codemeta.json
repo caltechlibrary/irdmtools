@@ -8,10 +8,10 @@
 	"dateModified": "2024-09-17",
     "issueTracker": "https://github.com/caltechlibrary/irdmtools/issues",
     "name": "irdmtools",
-    "version": "0.0.86",
+    "version": "0.0.87",
     "description": "Tools for working with institutional repositories and data management systems. Current implementation targets Invenio-RDM.",
     "applicationCategory": "library science",
-    "releaseNotes": "Proof of concept and refinements, piloting in production, bug fixes, performance improvements",
+    "releaseNotes": "doi2rdm gained different exit code status",
     "developmentStatus": "WIP",
     "keywords": [
         "institutional repository",

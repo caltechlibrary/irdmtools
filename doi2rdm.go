@@ -48,6 +48,13 @@ import (
 	"github.com/caltechlibrary/simplified"
 )
 
+const (
+	EXIT_OK = 0
+	ENOENT = 2
+	ENOEXEC = 8
+	EAGAIN = 11
+)
+
 // Doi2Rdm holds the configuration for doi2rdm cli.
 type Doi2Rdm struct {
 	Cfg *Config
@@ -684,14 +691,15 @@ func (app *Doi2Rdm) Configure(configFName string, envPrefix string, debug bool) 
 //	// If options are provided then we need to set the filename
 //	optionsFName := "doi2rdm.yaml"
 //	doi := "10.3847/1538-3881/ad2765"
-//	src, err := app.Run(os.Stdin, os.Stdout, os.Stderr, optionFName, doi, "", false)
+//	src, exitCode, err := app.Run(os.Stdin, os.Stdout, os.Stderr, optionFName, doi, "", false)
 //	if err != nil {
 //	    // ... handle error ...
+//      os.Exit(exitCode)
 //	}
 //	fmt.Printf("%s\n", src)
 //
 // ```
-func (app *Doi2Rdm) RunCrossRefToRdm(in io.Reader, out io.Writer, eout io.Writer, optionFName, doi string, diffFName string) error {
+func (app *Doi2Rdm) RunCrossRefToRdm(in io.Reader, out io.Writer, eout io.Writer, optionFName, doi string, diffFName string) (int, error) {
 	var (
 		err error
 		src []byte
@@ -700,12 +708,12 @@ func (app *Doi2Rdm) RunCrossRefToRdm(in io.Reader, out io.Writer, eout io.Writer
 	if optionFName != "" {
 		src, err = os.ReadFile(optionFName)
 		if err != nil {
-			return err
+			return ENOENT, err
 		}
 	}
 	options := new(Doi2RdmOptions)
 	if err := yaml.Unmarshal(src, &options); err != nil {
-		return err
+		return ENOEXEC, err
 	}
 	if app.Cfg.Debug {
 		options.Debug = app.Cfg.Debug
@@ -722,23 +730,23 @@ func (app *Doi2Rdm) RunCrossRefToRdm(in io.Reader, out io.Writer, eout io.Writer
 		oWork := new(crossrefapi.Works)
 		src, err := os.ReadFile(diffFName)
 		if err != nil {
-			return err
+			return ENOENT, err
 		}
 		if err := JSONUnmarshal(src, &oWork); err != nil {
-			return err
+			return ENOEXEC, err
 		}
 		oRecord, err = CrosswalkCrossRefWork(app.Cfg, oWork, options)
 		if err != nil {
-			return err
+			return ENOEXEC, err
 		}
 	}
 	nWork, err := QueryCrossRefWork(app.Cfg, doi, options)
 	if err != nil {
-		return err
+		return ENOENT, err
 	}
 	nRecord, err = CrosswalkCrossRefWork(app.Cfg, nWork, options)
 	if err != nil {
-		return err
+		return ENOEXEC, err
 	}
 	if diffFName != "" {
 		src, err = oRecord.DiffAsJSON(nRecord)
@@ -746,10 +754,10 @@ func (app *Doi2Rdm) RunCrossRefToRdm(in io.Reader, out io.Writer, eout io.Writer
 		src, err = JSONMarshalIndent(nRecord, "", "    ")
 	}
 	if err != nil {
-		return err
+		return ENOEXEC, err
 	}
 	fmt.Fprintf(out, "%s\n", src)
-	return nil
+	return EXIT_OK, nil
 }
 
 // RunDataCiteToRdm implements the doi2rdm cli behaviors using the DataCite service.
@@ -773,7 +781,7 @@ func (app *Doi2Rdm) RunCrossRefToRdm(in io.Reader, out io.Writer, eout io.Writer
 //		fmt.Printf("%s\n", src)
 //
 // ```
-func (app *Doi2Rdm) RunDataCiteToRdm(in io.Reader, out io.Writer, eout io.Writer, optionFName, doi string, diffFName string) error {
+func (app *Doi2Rdm) RunDataCiteToRdm(in io.Reader, out io.Writer, eout io.Writer, optionFName, doi string, diffFName string) (int, error) {
 	var (
 		err error
 		src []byte
@@ -782,12 +790,12 @@ func (app *Doi2Rdm) RunDataCiteToRdm(in io.Reader, out io.Writer, eout io.Writer
 	if optionFName != "" {
 		src, err = os.ReadFile(optionFName)
 		if err != nil {
-			return err
+			return ENOENT, err
 		}
 	}
 	options := new(Doi2RdmOptions)
 	if err := yaml.Unmarshal(src, &options); err != nil {
-		return err
+		return ENOEXEC, err
 	}
 	if app.Cfg.Debug {
 		options.Debug = app.Cfg.Debug
@@ -804,26 +812,26 @@ func (app *Doi2Rdm) RunDataCiteToRdm(in io.Reader, out io.Writer, eout io.Writer
 		object := map[string]interface{}{}
 		src, err := os.ReadFile(diffFName)
 		if err != nil {
-			return err
+			return ENOENT, err
 		}
 		if err := JSONUnmarshal(src, &object); err != nil {
-			return err
+			return ENOEXEC, err
 		}
 		oRecord, err = CrosswalkDataCiteObject(app.Cfg, object, options)
 		if err != nil {
-			return err
+			return ENOEXEC, err
 		}
 	}
 	nWork, err := QueryDataCiteObject(app.Cfg, doi, options)
 	if err != nil {
-		return err
+		return ENOENT, err
 	}
 	if len(nWork) == 0 {
-		return fmt.Errorf("not data received for %q", doi)
+		return ENOENT, fmt.Errorf("not data received for %q", doi)
 	}
 	nRecord, err = CrosswalkDataCiteObject(app.Cfg, nWork, options)
 	if err != nil {
-		return err
+		return ENOEXEC, err
 	}
 	if diffFName != "" {
 		src, err = oRecord.DiffAsJSON(nRecord)
@@ -831,10 +839,10 @@ func (app *Doi2Rdm) RunDataCiteToRdm(in io.Reader, out io.Writer, eout io.Writer
 		src, err = JSONMarshalIndent(nRecord, "", "    ")
 	}
 	if err != nil {
-		return err
+		return ENOEXEC, err
 	}
 	fmt.Fprintf(out, "%s\n", src)
-	return nil
+	return EXIT_OK, nil
 }
 
 // RunDoiToRDMCombined implements the doi2rdm cli behaviors using the CrossRead and DataCite service.
@@ -858,17 +866,16 @@ func (app *Doi2Rdm) RunDataCiteToRdm(in io.Reader, out io.Writer, eout io.Writer
 //		fmt.Printf("%s\n", src)
 //
 // ```
-func (app *Doi2Rdm) RunDoiToRdmCombined(in io.Reader, out io.Writer, eout io.Writer, optionFName, doi string, diffFName string) error {
+func (app *Doi2Rdm) RunDoiToRdmCombined(in io.Reader, out io.Writer, eout io.Writer, optionFName, doi string, diffFName string) (int, error) {
 	// Do we have an arXiv id?
 	if strings.HasPrefix(strings.ToLower(doi), "arxiv:") {
 		return app.RunDataCiteToRdm(in, out, eout, optionFName, doi, diffFName)
 	}
-	if crErr := app.RunCrossRefToRdm(in, out, eout, optionFName, doi, diffFName); crErr != nil {
+	if _, crErr := app.RunCrossRefToRdm(in, out, eout, optionFName, doi, diffFName); crErr != nil  {
 		// Then try DataCiteToRdm
-		if dcErr := app.RunDataCiteToRdm(in, out, eout, optionFName, doi, diffFName); dcErr != nil {
-			return fmt.Errorf("crossref: %s, datacite: %s", crErr, dcErr)
+		if exitCode, dcErr := app.RunDataCiteToRdm(in, out, eout, optionFName, doi, diffFName); dcErr != nil {
+			return exitCode, fmt.Errorf("crossref: %s, datacite: %s", crErr, dcErr)
 		}
-		return nil
 	}
-	return nil
+	return EXIT_OK, nil
 }
