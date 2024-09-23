@@ -64,6 +64,10 @@ JSON document suitable for import into Invenio RDM. The DOI can be
 in either their canonical form or URL form (e.g. "10.1021/acsami.7b15651" or
 "https://doi.org/10.1021/acsami.7b15651").
 
+If a DOI is retrieve the exit code will be zero. If a DOI is not found
+the exit code with be ENOENT (2) else another non-zero exit code will be
+returned depending on the problem.
+
 # OPTIONS_YAML
 
 {app_name} can use an YAML options file to set the behavior of the
@@ -190,19 +194,19 @@ func main() {
 	}
 	switch dataSource {
 		case "crossref":
-			if err := app.RunCrossRefToRdm(in, out, eout, optionsFName, doi, diffFName); err != nil {
+			if exitCode, err := app.RunCrossRefToRdm(in, out, eout, optionsFName, doi, diffFName); err != nil {
 				fmt.Fprintf(eout, "%s\n", err)
-				os.Exit(1)
+				os.Exit(exitCode)
 			}
 		case "datacite":
-			if err := app.RunDataCiteToRdm(in, out, eout, optionsFName, doi, diffFName); err != nil {
+			if exitCode, err := app.RunDataCiteToRdm(in, out, eout, optionsFName, doi, diffFName); err != nil {
 				fmt.Fprintf(eout, "%s\n", err)
-				os.Exit(1)
+				os.Exit(exitCode)
 			}
 		default:
-			if err := app.RunDoiToRdmCombined(in, out, eout, optionsFName, doi, diffFName); err != nil {
+			if exitCode, err := app.RunDoiToRdmCombined(in, out, eout, optionsFName, doi, diffFName); err != nil {
 				fmt.Fprintf(eout, "%s\n", err)
-				os.Exit(1)
+				os.Exit(exitCode)
 			}
 	}
 }
