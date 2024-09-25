@@ -4,14 +4,14 @@
     "license": "https://caltechlibrary.github.io/irdmtools/LICENSE",
     "codeRepository": "https://github.com/caltechlibrary/irdmtools",
     "dateCreated": "2022-10-27",
-	"dateRelease": "2024-09-17",
-	"dateModified": "2024-09-17",
+	"dateRelease": "2024-09-25",
+	"dateModified": "2024-09-25",
     "issueTracker": "https://github.com/caltechlibrary/irdmtools/issues",
     "name": "irdmtools",
-    "version": "0.0.87",
+    "version": "0.0.88",
     "description": "Tools for working with institutional repositories and data management systems. Current implementation targets Invenio-RDM.",
     "applicationCategory": "library science",
-    "releaseNotes": "doi2rdm gained different exit code status",
+    "releaseNotes": "refined publication date to include CrossRef's populated publication date",
     "developmentStatus": "WIP",
     "keywords": [
         "institutional repository",
@@ -29,7 +29,7 @@
         "Windows"
     ],
     "softwareRequirements": [
-        "Go >= 1.22.1",
+        "Go >= 1.23.1",
 		"PostgreSQL >= 16",
 		"PostgREST >= 12",
 		"Pandoc >= 3",
