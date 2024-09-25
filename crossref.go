@@ -403,6 +403,7 @@ func getWorksSubjects(work *crossrefapi.Works) []*simplified.Subject {
 	return nil
 }
 
+
 func getWorksPublishedPrint(work *crossrefapi.Works) *simplified.DateType {
 	if work.Message != nil && work.Message.PublishedPrint != nil {
 		return crosswalkWorksDateObjectToDateType(work.Message.PublishedPrint, "published print")
@@ -418,6 +419,14 @@ func getWorksPublishedOnline(work *crossrefapi.Works) *simplified.DateType {
 }
 
 func getWorksPublicationDate(work *crossrefapi.Works) string {
+	var pubDate *simplified.DateType
+	if work.Message != nil  && work.Message.Published != nil {
+		pubDate = crosswalkWorksDateObjectToDateType(work.Message.Published, "published date")
+	}
+	if pubDate != nil && pubDate.Date != "" {
+		return pubDate.Date
+	}
+	// If pubDate isn't available then guess what it should be.
 	printDate := getWorksPublishedPrint(work)
 	onlineDate := getWorksPublishedOnline(work)
 	acceptedDate := getWorksAccepted(work)
