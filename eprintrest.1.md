@@ -1,4 +1,4 @@
-%eprintrest(1) irdmtools user manual | version 0.0.88 19ea39a0
+%eprintrest(1) irdmtools user manual | version 0.0.88 94057474
 % R. S. Doiel and Tom Morrell
 % 2024-09-25
 
