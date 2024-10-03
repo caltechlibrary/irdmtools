@@ -270,7 +270,7 @@ func crosswalkWorksPersonToCreator(author *crossrefapi.Person, role string) *sim
 	po := new(simplified.PersonOrOrg)
 	po.FamilyName = author.Family
 	po.GivenName = author.Given
-	if author.Family != "" && author.Given != "" {
+	if author.Family != "" { //&& author.Given != "" { // removed per issue #80
 		po.Type = "personal"
 		po.Name = fmt.Sprintf("%s, %s", po.FamilyName, po.GivenName)
 	} else {

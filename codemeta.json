@@ -8,10 +8,10 @@
 	"dateModified": "2024-09-25",
     "issueTracker": "https://github.com/caltechlibrary/irdmtools/issues",
     "name": "irdmtools",
-    "version": "0.0.88",
+    "version": "0.0.89",
     "description": "Tools for working with institutional repositories and data management systems. Current implementation targets Invenio-RDM.",
     "applicationCategory": "library science",
-    "releaseNotes": "refined publication date to include CrossRef's populated publication date",
+    "releaseNotes": "Address case where CrossRef record only has family name populated",
     "developmentStatus": "WIP",
     "keywords": [
         "institutional repository",
