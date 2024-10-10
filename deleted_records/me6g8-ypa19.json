@@ -1,0 +1,543 @@
+{
+    "updated": "2024-09-25T23:18:22.534551+00:00",
+    "access": {
+        "record": "public",
+        "files": "public",
+        "embargo": {
+            "active": false,
+            "reason": null
+        },
+        "status": "open"
+    },
+    "id": "me6g8-ypa19",
+    "pids": {
+        "doi": {
+            "identifier": "10.1101/2022.06.16.496161",
+            "provider": "external"
+        },
+        "oai": {
+            "identifier": "oai:authors.library.caltech.edu:me6g8-ypa19",
+            "provider": "oai"
+        }
+    },
+    "is_draft": false,
+    "status": "published",
+    "custom_fields": {
+        "caltech:publication_status": [
+            {
+                "id": "submitted",
+                "title": {
+                    "en": "Submitted"
+                }
+            }
+        ]
+    },
+    "parent": {
+        "communities": {
+            "ids": [
+                "aedd135f-227e-4fdf-9476-5b3fd011bac6"
+            ],
+            "default": "aedd135f-227e-4fdf-9476-5b3fd011bac6"
+        },
+        "id": "vtrpm-fnt54"
+    },
+    "files": {
+        "entries": {
+            "2022.06.16.496161v3.full.pdf": {
+                "mimetype": "application/pdf",
+                "size": 7250694,
+                "ext": "pdf",
+                "key": "2022.06.16.496161v3.full.pdf",
+                "metadata": null
+            },
+            "media-1.pdf": {
+                "mimetype": "application/pdf",
+                "size": 13243131,
+                "ext": "pdf",
+                "key": "media-1.pdf",
+                "metadata": null
+            },
+            "media-2.pdf": {
+                "mimetype": "application/pdf",
+                "size": 393346,
+                "ext": "pdf",
+                "key": "media-2.pdf",
+                "metadata": null
+            },
+            "media-4.pdf": {
+                "mimetype": "application/pdf",
+                "size": 31955,
+                "ext": "pdf",
+                "key": "media-4.pdf",
+                "metadata": null
+            },
+            "media-3.pdf": {
+                "mimetype": "application/pdf",
+                "size": 2562806,
+                "ext": "pdf",
+                "key": "media-3.pdf",
+                "metadata": null
+            },
+            "media-5.mp4": {
+                "mimetype": "video/mp4",
+                "size": 4848588,
+                "ext": "mp4",
+                "key": "media-5.mp4",
+                "metadata": null
+            },
+            "media-6.mp4": {
+                "mimetype": "video/mp4",
+                "size": 3284921,
+                "ext": "mp4",
+                "key": "media-6.mp4",
+                "metadata": null
+            }
+        },
+        "total_bytes": 31615441,
+        "enabled": true,
+        "order": [],
+        "count": 7,
+        "default_preview": "2022.06.16.496161v3.full.pdf"
+    },
+    "links": {
+        "self": "https://authors.library.caltech.edu/api/records/me6g8-ypa19",
+        "self_html": "https://authors.library.caltech.edu/records/me6g8-ypa19",
+        "self_doi": "https://authors.library.caltech.edu/doi/10.1101/2022.06.16.496161",
+        "doi": "https://doi.org/10.1101/2022.06.16.496161",
+        "self_iiif_manifest": "https://authors.library.caltech.edu/api/iiif/record:me6g8-ypa19/manifest",
+        "self_iiif_sequence": "https://authors.library.caltech.edu/api/iiif/record:me6g8-ypa19/sequence/default",
+        "files": "https://authors.library.caltech.edu/api/records/me6g8-ypa19/files",
+        "archive": "https://authors.library.caltech.edu/api/records/me6g8-ypa19/files-archive",
+        "latest": "https://authors.library.caltech.edu/api/records/me6g8-ypa19/versions/latest",
+        "latest_html": "https://authors.library.caltech.edu/records/me6g8-ypa19/latest",
+        "draft": "https://authors.library.caltech.edu/api/records/me6g8-ypa19/draft",
+        "versions": "https://authors.library.caltech.edu/api/records/me6g8-ypa19/versions",
+        "access_links": "https://authors.library.caltech.edu/api/records/me6g8-ypa19/access/links",
+        "reserve_doi": "https://authors.library.caltech.edu/api/records/me6g8-ypa19/draft/pids/doi",
+        "communities": "https://authors.library.caltech.edu/api/records/me6g8-ypa19/communities",
+        "communities-suggestions": "https://authors.library.caltech.edu/api/records/me6g8-ypa19/communities-suggestions",
+        "requests": "https://authors.library.caltech.edu/api/records/me6g8-ypa19/requests"
+    },
+    "revision_id": 3,
+    "is_published": true,
+    "created": "2024-09-25T23:18:22.355751+00:00",
+    "metadata": {
+        "title": "Disrupting cellular memory to overcome drug resistance",
+        "creators": [
+            {
+                "person_or_org": {
+                    "type": "personal",
+                    "given_name": "Guillaume",
+                    "name": "Harmange, Guillaume",
+                    "family_name": "Harmange",
+                    "identifiers": [
+                        {
+                            "identifier": "Harmange-Guillaume",
+                            "scheme": "clpid"
+                        },
+                        {
+                            "identifier": "0000-0002-3157-5355",
+                            "scheme": "orcid"
+                        }
+                    ]
+                }
+            },
+            {
+                "person_or_org": {
+                    "type": "personal",
+                    "given_name": "Ra\u00fal A.",
+                    "name": "Reyes Hueros, Ra\u00fal A.",
+                    "family_name": "Reyes Hueros",
+                    "identifiers": [
+                        {
+                            "identifier": "Reyes-Hueros-Ra\u00fal-A",
+                            "scheme": "clpid"
+                        },
+                        {
+                            "identifier": "0000-0001-7554-051X",
+                            "scheme": "orcid"
+                        }
+                    ]
+                }
+            },
+            {
+                "person_or_org": {
+                    "type": "personal",
+                    "given_name": "Dylan",
+                    "name": "Schaff, Dylan",
+                    "family_name": "Schaff",
+                    "identifiers": [
+                        {
+                            "identifier": "Schaff-Dylan",
+                            "scheme": "clpid"
+                        },
+                        {
+                            "identifier": "0000-0002-3367-9270",
+                            "scheme": "orcid"
+                        }
+                    ]
+                }
+            },
+            {
+                "person_or_org": {
+                    "type": "personal",
+                    "given_name": "Benjamin",
+                    "name": "Emert, Benjamin",
+                    "family_name": "Emert",
+                    "identifiers": [
+                        {
+                            "identifier": "Emert-Benjamin",
+                            "scheme": "clpid"
+                        },
+                        {
+                            "identifier": "0000-0002-4857-2425",
+                            "scheme": "orcid"
+                        }
+                    ]
+                }
+            },
+            {
+                "person_or_org": {
+                    "type": "personal",
+                    "given_name": "Michael",
+                    "name": "Saint-Antoine, Michael",
+                    "family_name": "Saint-Antoine",
+                    "identifiers": [
+                        {
+                            "identifier": "Saint-Antoine-Michael",
+                            "scheme": "clpid"
+                        }
+                    ]
+                }
+            },
+            {
+                "person_or_org": {
+                    "type": "personal",
+                    "given_name": "Shivani",
+                    "name": "Nellore, Shivani",
+                    "family_name": "Nellore",
+                    "identifiers": [
+                        {
+                            "identifier": "Nellore-Shivani",
+                            "scheme": "clpid"
+                        }
+                    ]
+                }
+            },
+            {
+                "person_or_org": {
+                    "type": "personal",
+                    "given_name": "Mitchell E.",
+                    "name": "Fane, Mitchell E.",
+                    "family_name": "Fane",
+                    "identifiers": [
+                        {
+                            "identifier": "Fane-Mitchell-E",
+                            "scheme": "clpid"
+                        },
+                        {
+                            "identifier": "0000-0001-6163-5753",
+                            "scheme": "orcid"
+                        }
+                    ]
+                }
+            },
+            {
+                "person_or_org": {
+                    "type": "personal",
+                    "given_name": "Gretchen M.",
+                    "name": "Alicea, Gretchen M.",
+                    "family_name": "Alicea",
+                    "identifiers": [
+                        {
+                            "identifier": "Alicea-Gretchen-M",
+                            "scheme": "clpid"
+                        },
+                        {
+                            "identifier": "0000-0001-8436-2890",
+                            "scheme": "orcid"
+                        }
+                    ]
+                }
+            },
+            {
+                "person_or_org": {
+                    "type": "personal",
+                    "given_name": "Ashani T.",
+                    "name": "Weeraratna, Ashani T.",
+                    "family_name": "Weeraratna",
+                    "identifiers": [
+                        {
+                            "identifier": "Weeraratna-Ashani-T",
+                            "scheme": "clpid"
+                        },
+                        {
+                            "identifier": "0000-0003-0448-6952",
+                            "scheme": "orcid"
+                        }
+                    ]
+                }
+            },
+            {
+                "person_or_org": {
+                    "type": "personal",
+                    "given_name": "Abhyudai",
+                    "name": "Singh, Abhyudai",
+                    "family_name": "Singh",
+                    "identifiers": [
+                        {
+                            "identifier": "Singh-Abhyudai",
+                            "scheme": "clpid"
+                        },
+                        {
+                            "identifier": "0000-0002-1451-2838",
+                            "scheme": "orcid"
+                        }
+                    ]
+                }
+            },
+            {
+                "person_or_org": {
+                    "type": "personal",
+                    "given_name": "Sydney M.",
+                    "name": "Shaffer, Sydney M.",
+                    "family_name": "Shaffer",
+                    "identifiers": [
+                        {
+                            "identifier": "Shaffer-Sydney-M",
+                            "scheme": "clpid"
+                        },
+                        {
+                            "identifier": "0000-0003-3539-9886",
+                            "scheme": "orcid"
+                        }
+                    ]
+                }
+            }
+        ],
+        "additional_descriptions": [
+            {
+                "description": "<p>The copyright holder for this preprint is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made available under a CC-BY-NC 4.0 International license. Version 1 - June 17, 2022. Version 2 - August 4, 2022. Version 3 - August 5, 2022.&nbsp;</p>",
+                "type": {
+                    "id": "copyright",
+                    "title": {
+                        "de": "Sonstige",
+                        "en": "Copyright and License"
+                    }
+                }
+            },
+            {
+                "description": "<p>S.M.S. receive royalties related to Stellaris RNA FISH probes.</p>",
+                "type": {
+                    "id": "coi",
+                    "title": {
+                        "de": "Sonstige",
+                        "en": "Conflict of Interest"
+                    }
+                }
+            },
+            {
+                "description": "<p>G.H. and S.M.S. conceptualized the project and designed the study. G.H. performed all experiments and analysis<br>with the following exceptions. R.A.R.H. helped with the barcode processing pipeline and provided helpful<br>discussion. D.S. performed the ATAC sequencing experiment and its analysis, and helped with the barcode<br>processing pipeline. M.S. and A.S performed the modeling analysis. B.E. provided technical guidance and<br>troubleshooting for the barcoding library. A.T.W, M.E.F, and G.M.A generated the mouse PDX tissue. S.N.<br>helped maintain cell lines and performed computational analyses. G.H. and S.M.S. wrote the paper.</p>",
+                "type": {
+                    "id": "contributions",
+                    "title": {
+                        "de": "Sonstige",
+                        "en": "Contributions"
+                    }
+                }
+            },
+            {
+                "description": "<p>We thank all members of the Shaffer lab for feedback on experiments and the manuscript, P. Gonzalez-Camara<br>and T. Ridky for thoughtful discussions and ideas, W. Niu for help on developing image processing pipelines, L.<br>available under aCC-BY-NC 4.0 International license.<br>(which was not certified by peer review) is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made bioRxiv preprint doi: https://doi.org/10.1101/2022.06.16.496161; this version posted August 5, 2022. The copyright holder for this preprint Bugaj for feedback on the manuscript, and M. Herlyn for providing cell lines. S.M.S. acknowledges support from the NIH Director's Early Independence Award DP5OD028144 and the Wistar/Penn Skin Cancer SPORE (P50 CA174523). A.S. acknowledges support from R01GM124446. A.T.W. acknowledges support from R01CA207935 and P01CA114046.</p>",
+                "type": {
+                    "id": "acknowledgement",
+                    "title": {
+                        "de": "Sonstige",
+                        "en": "Acknowledgement"
+                    }
+                }
+            },
+            {
+                "description": "<p>All data and code used for this paper can be found here:<br>https://drive.google.com/drive/folders/1-C78090Z43w5kGb1ZW8pXgysjha35jlU?usp=sharing</p>",
+                "type": {
+                    "id": "data-availability",
+                    "title": {
+                        "de": "Sonstige",
+                        "en": "Data Availability"
+                    }
+                }
+            },
+            {
+                "description": "<ul class=\"supp-frag-data-list clearfix\">\n<li class=\"first\">\n<div class=\"element-supp-frag-data clearfix supplementary-material-caption\">\n<div class=\"highwire-markup\">\n<div class=\"content-block-markup\">\n<div class=\"supplementary-material-expansion\"><span class=\"supplementary-material-label\">Supplemental Figures</span><span class=\"inline-linked-media-wrapper\"><span class=\"inline-linked-media\"><a class=\"\" href=\"https://www.biorxiv.org/content/biorxiv/early/2022/08/05/2022.06.16.496161/DC1/embed/media-1.pdf?download=true\">[supplements/496161_file03.pdf]</a></span></span></div>\n<span></span></div>\n</div>\n</div>\n</li>\n<li>\n<div class=\"element-supp-frag-data clearfix supplementary-material-caption\">\n<div class=\"highwire-markup\">\n<div class=\"content-block-markup\">\n<div class=\"supplementary-material-expansion\"><span class=\"supplementary-material-label\">Supplemental Method 1</span><span class=\"inline-linked-media-wrapper\"><span class=\"inline-linked-media\"><a class=\"\" href=\"https://www.biorxiv.org/content/biorxiv/early/2022/08/05/2022.06.16.496161/DC2/embed/media-2.pdf?download=true\">[supplements/496161_file04.pdf]</a></span></span></div>\n<span></span></div>\n</div>\n</div>\n</li>\n<li>\n<div class=\"element-supp-frag-data clearfix supplementary-material-caption\">\n<div class=\"highwire-markup\">\n<div class=\"content-block-markup\">\n<div class=\"supplementary-material-expansion\"><span class=\"supplementary-material-label\">Supplemental Table 1</span><span class=\"inline-linked-media-wrapper\"><span class=\"inline-linked-media\"><a class=\"\" href=\"https://www.biorxiv.org/content/biorxiv/early/2022/08/05/2022.06.16.496161/DC3/embed/media-3.pdf?download=true\">[supplements/496161_file05.pdf]</a></span></span></div>\n<span></span></div>\n</div>\n</div>\n</li>\n<li>\n<div class=\"element-supp-frag-data clearfix supplementary-material-caption\">\n<div class=\"highwire-markup\">\n<div class=\"content-block-markup\">\n<div class=\"supplementary-material-expansion\"><span class=\"supplementary-material-label\">Supplemental Table 2</span><span class=\"inline-linked-media-wrapper\"><span class=\"inline-linked-media\"><a class=\"\" href=\"https://www.biorxiv.org/content/biorxiv/early/2022/08/05/2022.06.16.496161/DC4/embed/media-4.pdf?download=true\">[supplements/496161_file06.pdf]</a></span></span></div>\n<span></span></div>\n</div>\n</div>\n</li>\n<li>\n<div class=\"element-supp-frag-data clearfix supplementary-material-caption\">\n<div class=\"highwire-markup\">\n<div class=\"content-block-markup\">\n<div class=\"supplementary-material-expansion\"><span class=\"supplementary-material-label\">Supplemental Video 1 (untreated)</span><span class=\"inline-linked-media-wrapper\"><span class=\"inline-linked-media\"><a class=\"\" href=\"https://www.biorxiv.org/content/biorxiv/early/2022/08/05/2022.06.16.496161/DC5/embed/media-5.mp4?download=true\">[supplements/496161_file07.mp4]</a></span></span></div>\n<span></span></div>\n</div>\n</div>\n</li>\n<li class=\"last\">\n<div class=\"element-supp-frag-data clearfix supplementary-material-caption\">\n<div class=\"highwire-markup\">\n<div class=\"content-block-markup\">\n<div class=\"supplementary-material-expansion\"><span class=\"supplementary-material-label\">Supplemental Video 2 (PI3Ki pretreated)</span><span class=\"inline-linked-media-wrapper\"><span class=\"inline-linked-media\"><a class=\"\" href=\"https://www.biorxiv.org/content/biorxiv/early/2022/08/05/2022.06.16.496161/DC6/embed/media-6.mp4?download=true\">[supplements/496161_file08.mp4]</a></span></span></div>\n</div>\n</div>\n</div>\n</li>\n</ul>",
+                "type": {
+                    "id": "supplemental-material",
+                    "title": {
+                        "de": "Sonstige",
+                        "en": "Supplemental Material"
+                    }
+                }
+            }
+        ],
+        "related_identifiers": [
+            {
+                "identifier": "10.1038/s41467-023-41811-8",
+                "relation_type": {
+                    "id": "ispreviousversionof",
+                    "title": {
+                        "de": "Ist eine vorherige Version von",
+                        "en": "Is previous version of"
+                    }
+                },
+                "resource_type": {
+                    "id": "publication-article",
+                    "title": {
+                        "de": "Zeitschriftenartikel",
+                        "en": "Journal Article"
+                    }
+                },
+                "scheme": "doi"
+            },
+            {
+                "identifier": "https://www.biorxiv.org/content/10.1101/2022.06.16.496161v3.supplementary-material",
+                "relation_type": {
+                    "id": "issupplementedby",
+                    "title": {
+                        "de": "Wird erg\u00e4nzt durch",
+                        "en": "Is supplemented by"
+                    }
+                },
+                "resource_type": {
+                    "id": "publication-supplemental",
+                    "title": {
+                        "de": "Zeitschriftenartikel",
+                        "en": "Supplemental Material"
+                    }
+                },
+                "scheme": "url"
+            }
+        ],
+        "description": "<p>Plasticity enables cells to change their gene expression state in the absence of a genetic change. At the single-cell level, these gene expression states can persist for different lengths of time which is a quantitative measurement referred to as gene expression memory. Because plasticity is not encoded by genetic changes, these cell states can be reversible, and therefore, are amenable to modulation by disrupting gene expression memory. However, we currently do not have robust methods to find the regulators of memory or to track state switching in plastic cell populations. Here, we developed a lineage tracing-based technique to quantify gene expression memory and to identify single cells as they undergo cell state transitions. Applied to human melanoma cells, we quantified long-lived fluctuations in gene expression that underlie resistance to targeted therapy. Further, we identified the PI3K and TGF-&beta; pathways as modulators of these state dynamics. Applying the gene expression signatures derived from this technique, we find that these expression states are generalizable to in vivo models and present in scRNA-seq from patient tumors. Leveraging the PI3K and TGF-&beta; pathways as dials on memory between plastic states, we propose a &ldquo; pretreatment&rdquo; model in which we first use a PI3K inhibitor to modulate the expression states of the cell population and then apply targeted therapy. This plasticity informed dosing scheme ultimately yields fewer resistant colonies than targeted therapy alone. Taken together, we describe a technique to find modulators of gene expression memory and then apply this knowledge to alter plastic cell states and their connected cell fates.</p>",
+        "languages": [
+            {
+                "id": "eng",
+                "title": {
+                    "en": "English"
+                }
+            }
+        ],
+        "dates": [
+            {
+                "description": "Posted paper",
+                "date": "2022-08-05",
+                "type": {
+                    "id": "available",
+                    "title": {
+                        "de": "Verf\u00fcgbar",
+                        "en": "Available"
+                    }
+                }
+            }
+        ],
+        "funding": [
+            {
+                "award": {
+                    "number": "DP5OD028144",
+                    "title": {
+                        "en": " "
+                    }
+                },
+                "funder": {
+                    "name": "NIH"
+                }
+            },
+            {
+                "award": {
+                    "number": "P50 CA174523",
+                    "title": {
+                        "en": " "
+                    }
+                },
+                "funder": {
+                    "name": "NIH"
+                }
+            },
+            {
+                "award": {
+                    "number": "R01GM124446",
+                    "title": {
+                        "en": " "
+                    }
+                },
+                "funder": {
+                    "name": "NIH"
+                }
+            },
+            {
+                "award": {
+                    "number": "R01CA207935",
+                    "title": {
+                        "en": " "
+                    }
+                },
+                "funder": {
+                    "name": "NIH"
+                }
+            },
+            {
+                "award": {
+                    "number": "P01CA114046",
+                    "title": {
+                        "en": " "
+                    }
+                },
+                "funder": {
+                    "name": "NIH"
+                }
+            }
+        ],
+        "publisher": "BioRxiv",
+        "version": "Submitted",
+        "rights": [
+            {
+                "id": "cc-by-nc-4.0",
+                "title": {
+                    "en": "Creative Commons Attribution Non Commercial 4.0 International"
+                },
+                "props": {
+                    "url": "https://creativecommons.org/licenses/by-nc/4.0/legalcode",
+                    "scheme": "spdx"
+                },
+                "description": {
+                    "en": ""
+                }
+            }
+        ],
+        "publication_date": "2022-08-05",
+        "resource_type": {
+            "id": "publication-preprint",
+            "title": {
+                "de": "Preprint",
+                "en": "Discussion Paper"
+            }
+        }
+    },
+    "stats": {
+        "all_versions": {
+            "unique_views": 57,
+            "data_volume": 350769672.0,
+            "downloads": 63,
+            "views": 57,
+            "unique_downloads": 62
+        },
+        "this_version": {
+            "unique_views": 0,
+            "data_volume": 0.0,
+            "downloads": 0,
+            "views": 0,
+            "unique_downloads": 0
+        }
+    },
+    "versions": {
+        "is_latest": true,
+        "index": 3
+    }
+}
