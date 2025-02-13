@@ -46,6 +46,7 @@ import (
 
 	// 3rd Party Libraries
 	"gopkg.in/yaml.v3"
+	"github.com/joho/godotenv"
 )
 
 // Config holds the common configuration used by all irdmtools
@@ -170,6 +171,10 @@ func (cfg *Config) LoadEnv(prefix string) error {
 	if cfg == nil {
 		cfg = NewConfig()
 	}
+	if err := godotenv.Load(); err != nil {
+		fmt.Fprint(os.Stderr, "WARNING: failed to find or read .env file, %s\n", err)
+	}
+
 	if repoID := os.Getenv(prefixVar("REPO_ID", prefix)); repoID != "" {
 		cfg.RepoID = repoID
 	}
@@ -245,6 +250,9 @@ func (cfg *Config) LoadEnv(prefix string) error {
 func (cfg *Config) LoadConfig(configFName string) error {
 	if cfg == nil {
 		cfg = NewConfig()
+	}
+	if err := godotenv.Load(); err != nil {
+		fmt.Fprint(os.Stderr, "WARNING: failed to find or read .env file, %s\n", err)
 	}
 	if configFName == "" {
 		return fmt.Errorf("configuration filename is an empty string")

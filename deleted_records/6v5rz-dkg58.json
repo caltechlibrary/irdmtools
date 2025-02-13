@@ -1,0 +1,811 @@
+{
+    "revision_id": 27,
+    "custom_fields": {
+        "caltech:publication_status": [
+            {
+                "title": {
+                    "en": "Published"
+                },
+                "id": "published"
+            }
+        ],
+        "imprint:imprint": {
+            "pages": "320 pp.",
+            "place": "Pasadena, CA"
+        },
+        "caltech:groups": [
+            {
+                "title": {
+                    "en": "Caltech Library"
+                },
+                "id": "Caltech-Library"
+            }
+        ]
+    },
+    "status": "published",
+    "pids": {
+        "doi": {
+            "identifier": "10.7907/6v5rz-dkg58",
+            "provider": "datacite",
+            "client": "datacite"
+        },
+        "oai": {
+            "identifier": "oai:authors.library.caltech.edu:6v5rz-dkg58",
+            "provider": "oai"
+        }
+    },
+    "parent": {
+        "communities": {
+            "ids": [
+                "aedd135f-227e-4fdf-9476-5b3fd011bac6"
+            ],
+            "default": "aedd135f-227e-4fdf-9476-5b3fd011bac6"
+        },
+        "id": "08y7q-02604"
+    },
+    "metadata": {
+        "contributors": [
+            {
+                "role": {
+                    "title": {
+                        "de": "Andere",
+                        "en": "Related Author"
+                    },
+                    "id": "relatedauthor"
+                },
+                "person_or_org": {
+                    "given_name": "Kara",
+                    "name": "Whatley, Kara",
+                    "family_name": "Whatley",
+                    "type": "personal",
+                    "identifiers": [
+                        {
+                            "identifier": "Whatley-Kara-M",
+                            "scheme": "clpid"
+                        },
+                        {
+                            "identifier": "0000-0002-5684-1875",
+                            "scheme": "orcid"
+                        }
+                    ]
+                },
+                "affiliations": [
+                    {
+                        "name": "California Institute of Technology",
+                        "id": "05dxps055"
+                    }
+                ]
+            },
+            {
+                "role": {
+                    "title": {
+                        "de": "Andere",
+                        "en": "Related Author"
+                    },
+                    "id": "relatedauthor"
+                },
+                "person_or_org": {
+                    "given_name": "Judith",
+                    "name": "Goodstein, Judith",
+                    "family_name": "Goodstein",
+                    "type": "personal",
+                    "identifiers": [
+                        {
+                            "identifier": "Goodstein-J-R",
+                            "scheme": "clpid"
+                        },
+                        {
+                            "identifier": "0000-0003-0699-3886",
+                            "scheme": "orcid"
+                        }
+                    ]
+                },
+                "affiliations": [
+                    {
+                        "name": "California Institute of Technology",
+                        "id": "05dxps055"
+                    }
+                ]
+            },
+            {
+                "role": {
+                    "title": {
+                        "de": "Andere",
+                        "en": "Related Author"
+                    },
+                    "id": "relatedauthor"
+                },
+                "person_or_org": {
+                    "given_name": "Lois",
+                    "name": "Rosson, Lois",
+                    "family_name": "Rosson",
+                    "type": "personal"
+                },
+                "affiliations": [
+                    {
+                        "name": "National Aeronautics and Space Administration",
+                        "id": "027ka1x80"
+                    }
+                ]
+            },
+            {
+                "role": {
+                    "title": {
+                        "de": "Andere",
+                        "en": "Related Author"
+                    },
+                    "id": "relatedauthor"
+                },
+                "person_or_org": {
+                    "given_name": "David",
+                    "name": "Zierler, David",
+                    "family_name": "Zierler",
+                    "type": "personal",
+                    "identifiers": [
+                        {
+                            "identifier": "Zierler-David-B",
+                            "scheme": "clpid"
+                        }
+                    ]
+                },
+                "affiliations": [
+                    {
+                        "name": "California Institute of Technology",
+                        "id": "05dxps055"
+                    }
+                ]
+            },
+            {
+                "role": {
+                    "title": {
+                        "de": "Andere",
+                        "en": "Related Author"
+                    },
+                    "id": "relatedauthor"
+                },
+                "person_or_org": {
+                    "given_name": "Charles A.",
+                    "name": "Kollmer, Charles A.",
+                    "family_name": "Kollmer",
+                    "type": "personal",
+                    "identifiers": [
+                        {
+                            "identifier": "Kollmer-Charles-A",
+                            "scheme": "clpid"
+                        },
+                        {
+                            "identifier": "0000-0001-9014-331X",
+                            "scheme": "orcid"
+                        }
+                    ]
+                },
+                "affiliations": [
+                    {
+                        "name": "California Institute of Technology",
+                        "id": "05dxps055"
+                    }
+                ]
+            },
+            {
+                "role": {
+                    "title": {
+                        "de": "Andere",
+                        "en": "Related Author"
+                    },
+                    "id": "relatedauthor"
+                },
+                "person_or_org": {
+                    "given_name": "Soraya",
+                    "name": "de Chadarevian, Soraya",
+                    "family_name": "de Chadarevian",
+                    "type": "personal",
+                    "identifiers": [
+                        {
+                            "identifier": "de-Chadarevian-Soraya",
+                            "scheme": "clpid"
+                        },
+                        {
+                            "identifier": "0000-0002-4360-7203",
+                            "scheme": "orcid"
+                        }
+                    ]
+                },
+                "affiliations": [
+                    {
+                        "name": "University of California, Los Angeles",
+                        "id": "046rm7j60"
+                    }
+                ]
+            },
+            {
+                "role": {
+                    "title": {
+                        "de": "Andere",
+                        "en": "Related Author"
+                    },
+                    "id": "relatedauthor"
+                },
+                "person_or_org": {
+                    "given_name": "Brian R.",
+                    "name": "Jacobson, Brian R.",
+                    "family_name": "Jacobson",
+                    "type": "personal",
+                    "identifiers": [
+                        {
+                            "identifier": "Jacobson-B-R",
+                            "scheme": "clpid"
+                        },
+                        {
+                            "identifier": "0000-0001-6325-2991",
+                            "scheme": "orcid"
+                        }
+                    ]
+                },
+                "affiliations": [
+                    {
+                        "name": "California Institute of Technology",
+                        "id": "05dxps055"
+                    }
+                ]
+            },
+            {
+                "role": {
+                    "title": {
+                        "de": "Andere",
+                        "en": "Related Author"
+                    },
+                    "id": "relatedauthor"
+                },
+                "person_or_org": {
+                    "given_name": "Talia",
+                    "name": "Shabtay Filip, Talia",
+                    "family_name": "Shabtay Filip",
+                    "type": "personal",
+                    "identifiers": [
+                        {
+                            "identifier": "0000-0002-5464-2063",
+                            "scheme": "orcid"
+                        },
+                        {
+                            "identifier": "Shabtay-Filip-Talia",
+                            "scheme": "clpid"
+                        }
+                    ]
+                },
+                "affiliations": [
+                    {
+                        "name": "University of Chicago",
+                        "id": "024mw5h28"
+                    }
+                ]
+            },
+            {
+                "role": {
+                    "title": {
+                        "de": "Andere",
+                        "en": "Related Author"
+                    },
+                    "id": "relatedauthor"
+                },
+                "person_or_org": {
+                    "given_name": "Anne",
+                    "name": "Sullivan, Anne",
+                    "family_name": "Sullivan",
+                    "type": "personal",
+                    "identifiers": [
+                        {
+                            "identifier": "Sullivan-Anne",
+                            "scheme": "clpid"
+                        }
+                    ]
+                }
+            },
+            {
+                "role": {
+                    "title": {
+                        "de": "Andere",
+                        "en": "Related Author"
+                    },
+                    "id": "relatedauthor"
+                },
+                "person_or_org": {
+                    "given_name": "Christopher",
+                    "name": "Hawthorne, Christopher",
+                    "family_name": "Hawthorne",
+                    "type": "personal",
+                    "identifiers": [
+                        {
+                            "identifier": "Hawthorne-Christopher",
+                            "scheme": "clpid"
+                        }
+                    ]
+                }
+            },
+            {
+                "role": {
+                    "title": {
+                        "de": "Andere",
+                        "en": "Related Author"
+                    },
+                    "id": "relatedauthor"
+                },
+                "person_or_org": {
+                    "given_name": "J. V.",
+                    "name": "Decemvirale, J. V.",
+                    "family_name": "Decemvirale",
+                    "type": "personal",
+                    "identifiers": [
+                        {
+                            "identifier": "Decemvirale-John-V",
+                            "scheme": "clpid"
+                        }
+                    ]
+                },
+                "affiliations": [
+                    {
+                        "name": "California State University, San Bernardino",
+                        "id": "02n651896"
+                    }
+                ]
+            },
+            {
+                "role": {
+                    "title": {
+                        "de": "Andere",
+                        "en": "Related Author"
+                    },
+                    "id": "relatedauthor"
+                },
+                "person_or_org": {
+                    "given_name": "Peter Sachs",
+                    "name": "Collopy, Peter Sachs",
+                    "family_name": "Collopy",
+                    "type": "personal",
+                    "identifiers": [
+                        {
+                            "identifier": "0000-0002-0979-6549",
+                            "scheme": "orcid"
+                        },
+                        {
+                            "identifier": "Collopy-P-S",
+                            "scheme": "clpid"
+                        }
+                    ]
+                },
+                "affiliations": [
+                    {
+                        "name": "California Institute of Technology",
+                        "id": "05dxps055"
+                    }
+                ]
+            },
+            {
+                "role": {
+                    "title": {
+                        "de": "Andere",
+                        "en": "Related Author"
+                    },
+                    "id": "relatedauthor"
+                },
+                "person_or_org": {
+                    "given_name": "Jennifer A.",
+                    "name": "Watts, Jennifer A.",
+                    "family_name": "Watts",
+                    "type": "personal",
+                    "identifiers": [
+                        {
+                            "identifier": "Watts-Jennifer-A",
+                            "scheme": "clpid"
+                        }
+                    ]
+                },
+                "affiliations": [
+                    {
+                        "name": "Huntington Library Art Collections and Botanical Gardens",
+                        "id": "05dv1j335"
+                    }
+                ]
+            },
+            {
+                "role": {
+                    "title": {
+                        "de": "Andere",
+                        "en": "Related Author"
+                    },
+                    "id": "relatedauthor"
+                },
+                "person_or_org": {
+                    "given_name": "Claudia",
+                    "name": "Bohn-Spector, Claudia",
+                    "family_name": "Bohn-Spector",
+                    "type": "personal",
+                    "identifiers": [
+                        {
+                            "identifier": "Bohn-Spector-Claudia",
+                            "scheme": "clpid"
+                        }
+                    ]
+                }
+            },
+            {
+                "role": {
+                    "title": {
+                        "de": "Andere",
+                        "en": "Related Author"
+                    },
+                    "id": "relatedauthor"
+                },
+                "person_or_org": {
+                    "given_name": "Tim",
+                    "name": "Durfee, Tim",
+                    "family_name": "Durfee",
+                    "type": "personal",
+                    "identifiers": [
+                        {
+                            "identifier": "Durfee-Tim",
+                            "scheme": "clpid"
+                        }
+                    ]
+                }
+            }
+        ],
+        "funding": [
+            {
+                "funder": {
+                    "name": "Getty Foundation",
+                    "id": "02g8xhs57"
+                }
+            }
+        ],
+        "publisher": "Caltech Library",
+        "additional_descriptions": [
+            {
+                "description": "<p class=\"MsoNormal\">7: Foreword / Kara Whatley</p>\n<p class=\"MsoNormal\">8: Preface: True Confessions of an Aging Archivist / Judith Goodstein</p>\n<p class=\"MsoNormal\">14: Introduction / Peter Sachs Collopy and Claudia Bohn-Spector</p>\n<p class=\"MsoNormal\">21: <strong>The Infinite Lawn</strong></p>\n<p class=\"MsoNormal\">46: Between Science and Fiction: NASA&rsquo;s Voyager Missions and the Visualization of the Space Environment / Lois Rosson</p>\n<p class=\"MsoNormal\">54: The Universe in Pixels: The Creation of Charge-Coupled Devices and the Dawn of Big Data Astronomy / David Zierler</p>\n<p class=\"MsoNormal\">71: <strong>Time Stream</strong></p>\n<p class=\"MsoNormal\">95: <strong>Powers of Ten</strong></p>\n<p class=\"MsoNormal\">110: &ldquo;Of Men and Molds&rdquo;: <em>Neurospora</em> and the Illustration of Nature&rsquo;s Molecular Order / Charles A. Kollmer</p>\n<p class=\"MsoNormal\">126: Rendering the Molecular World / Soraya de Chadarevian</p>\n<p class=\"MsoNormal\">154: Golden Event Science in the Golden Age of Television / Brian R. Jacobson</p>\n<p class=\"MsoNormal\">194: Thinking with Art and Engineering at the Jet Propulsion Laboratory: Learning from JPL&rsquo;s Visual Strategists / Talia Shabtay Filip</p>\n<p class=\"MsoNormal\">230: JPL&rsquo;s <em>Visions of the Future</em> Posters and the Imagined Frontier / Anne Sullivan</p>\n<p class=\"MsoNormal\">247: <strong>Aesthetic Virtue</strong></p>\n<p class=\"MsoNormal\">260: Figures and Grounds: A Critical History of the Caltech Campus and Its Architecture / Christopher Hawthorne</p>\n<p class=\"MsoNormal\">268: Architectures of Epistemic Mastery on the Caltech Campus, 1915&ndash;1930 / J. V. Decemvirale</p>\n<p class=\"MsoNormal\">288: Passing in the Hallway: Art and Technology at Caltech, 1968&ndash;1972 / Peter Sachs Collopy</p>\n<p class=\"MsoNormal\">294: An Experiment in Art: Baxter Gallery at Caltech / Jennifer A. Watts</p>\n<p class=\"MsoNormal\">302: A Conspiracy of Bachelors: Caltech and the Visual Arts at Mid-Century / Claudia Bohn-Spector</p>\n<p class=\"MsoNormal\">312: Exhibits A &amp; B: Notes for an Exhibition of Science and Art / Tim Durfee</p>\n<p class=\"MsoNormal\">314: Caltech Art Exhibitions, 1968&ndash;1985</p>\n<p class=\"MsoNormal\">316: Contributors</p>",
+                "type": {
+                    "title": {
+                        "de": "Inhaltsverzeichnis",
+                        "en": "Table of contents"
+                    },
+                    "id": "table-of-contents"
+                }
+            },
+            {
+                "description": "<p>Caltech Library, Pasadena. Published with the assistance of the Getty Foundation.</p>",
+                "type": {
+                    "title": {
+                        "de": "Sonstige",
+                        "en": "Acknowledgement"
+                    },
+                    "id": "acknowledgement"
+                }
+            }
+        ],
+        "rights": [
+            {
+                "description": {
+                    "en": ""
+                },
+                "title": {
+                    "en": "No commercial reproduction, distribution, display or performance rights in this work are provided."
+                },
+                "id": "default"
+            }
+        ],
+        "version": "Whole Book",
+        "title": "Crossing Over: Art and Science at Caltech, 1920\u20132020",
+        "publication_date": "2024-10-17",
+        "creators": [
+            {
+                "role": {
+                    "title": {
+                        "de": "EditorIn",
+                        "en": "Editor"
+                    },
+                    "id": "editor"
+                },
+                "person_or_org": {
+                    "given_name": "Peter Sachs",
+                    "name": "Collopy, Peter Sachs",
+                    "family_name": "Collopy",
+                    "type": "personal",
+                    "identifiers": [
+                        {
+                            "identifier": "Collopy-P-S",
+                            "scheme": "clpid"
+                        },
+                        {
+                            "identifier": "0000-0002-0979-6549",
+                            "scheme": "orcid"
+                        }
+                    ]
+                },
+                "affiliations": [
+                    {
+                        "name": "California Institute of Technology",
+                        "id": "05dxps055"
+                    }
+                ]
+            },
+            {
+                "role": {
+                    "title": {
+                        "de": "EditorIn",
+                        "en": "Editor"
+                    },
+                    "id": "editor"
+                },
+                "person_or_org": {
+                    "given_name": "Claudia",
+                    "name": "Bohn-Spector, Claudia",
+                    "family_name": "Bohn-Spector",
+                    "type": "personal",
+                    "identifiers": [
+                        {
+                            "identifier": "Bohn-Spector-Claudia",
+                            "scheme": "clpid"
+                        }
+                    ]
+                }
+            }
+        ],
+        "languages": [
+            {
+                "title": {
+                    "en": "English"
+                },
+                "id": "eng"
+            }
+        ],
+        "description": "<p class=\"p1\">Science is as much a visual practice as a textual or quantitative one. For centuries, scientists have used microscopes, telescopes, painting, illustration, printing, and photography to perceive nature and communicate what they see in it, often in collaboration with artists. In the twentieth century, scientists also came to view creativity as an essential resource and looked to art to foster it.</p>\n<p class=\"p1\"><span class=\"s1\"><em>Crossing Over</em>&nbsp;is an interdisciplinary publication that looks at one prominent university&mdash;the California Institute of Technology (Caltech) in Pasadena&mdash;as a site for scientific and artistic image production. Uncovering the rich pictorial record embedded in its Archives and Special Collections, a team of visual culture scholars examines Caltech through a series of tightly focused case studies. How, the authors ask, have science and engineering institutions like Caltech used scientific representation, art, and architecture to construct themselves and produce discovery and invention? This book reveals new facets of life and work at Caltech that will be illuminating even to those familiar with the school, showcasing views that informed&mdash;and were informed by&mdash;the vibrant visual culture of Southern California.</span></p>\n<p class=\"p1\"><span class=\"s1\">This volume is published to accompany an exhibition on view at the California Institute of Technology from September 27 to December 15, 2024.</span></p>",
+        "related_identifiers": [
+            {
+                "identifier": "https://library.caltech.edu/crossing-over/introduction",
+                "scheme": "url",
+                "resource_type": {
+                    "title": {
+                        "de": "Veranstaltung",
+                        "en": "Event"
+                    },
+                    "id": "event"
+                },
+                "relation_type": {
+                    "title": {
+                        "de": "Referenziert",
+                        "en": "References"
+                    },
+                    "id": "references"
+                }
+            }
+        ],
+        "resource_type": {
+            "title": {
+                "de": "Buch",
+                "en": "Book"
+            },
+            "id": "publication-book"
+        }
+    },
+    "created": "2024-10-18T22:58:41.792309+00:00",
+    "files": {
+        "total_bytes": 112312854,
+        "enabled": true,
+        "count": 23,
+        "order": [],
+        "default_preview": "CrossingOver_2024.pdf",
+        "entries": {
+            "p46-53-BetweenScienceAndFiction-CrossingOver.pdf": {
+                "mimetype": "application/pdf",
+                "metadata": null,
+                "ext": "pdf",
+                "key": "p46-53-BetweenScienceAndFiction-CrossingOver.pdf",
+                "size": 877183
+            },
+            "p71-94-TimeStream-CrossingOver.pdf": {
+                "mimetype": "application/pdf",
+                "metadata": null,
+                "ext": "pdf",
+                "key": "p71-94-TimeStream-CrossingOver.pdf",
+                "size": 4540992
+            },
+            "p268-287-ArchitecturesOfEpistemicMastery-CrossingOver.pdf": {
+                "mimetype": "application/pdf",
+                "metadata": null,
+                "ext": "pdf",
+                "key": "p268-287-ArchitecturesOfEpistemicMastery-CrossingOver.pdf",
+                "size": 3171035
+            },
+            "CrossingOver_2024.pdf": {
+                "mimetype": "application/pdf",
+                "metadata": null,
+                "ext": "pdf",
+                "key": "CrossingOver_2024.pdf",
+                "size": 56375081
+            },
+            "p95-109-PowersOfTen-CrossingOver.pdf": {
+                "mimetype": "application/pdf",
+                "metadata": null,
+                "ext": "pdf",
+                "key": "p95-109-PowersOfTen-CrossingOver.pdf",
+                "size": 3123026
+            },
+            "p7-Foreword-CrossingOver.pdf": {
+                "mimetype": "application/pdf",
+                "metadata": null,
+                "ext": "pdf",
+                "key": "p7-Foreword-CrossingOver.pdf",
+                "size": 51829
+            },
+            "p230-246-JPLsVisionsOfTheFuture-CrossingOver.pdf": {
+                "mimetype": "application/pdf",
+                "metadata": null,
+                "ext": "pdf",
+                "key": "p230-246-JPLsVisionsOfTheFuture-CrossingOver.pdf",
+                "size": 2929890
+            },
+            "p8-13-Preface-CrossingOver.pdf": {
+                "mimetype": "application/pdf",
+                "metadata": null,
+                "ext": "pdf",
+                "key": "p8-13-Preface-CrossingOver.pdf",
+                "size": 531634
+            },
+            "p110-125-OfMenAndMolds-CrossingOver.pdf": {
+                "mimetype": "application/pdf",
+                "metadata": null,
+                "ext": "pdf",
+                "key": "p110-125-OfMenAndMolds-CrossingOver.pdf",
+                "size": 2701742
+            },
+            "p14-20-Introduction-CrossingOver.pdf": {
+                "mimetype": "application/pdf",
+                "metadata": null,
+                "ext": "pdf",
+                "key": "p14-20-Introduction-CrossingOver.pdf",
+                "size": 631580
+            },
+            "p302-311-ConspiracyOfBachelors-CrossingOver.pdf": {
+                "mimetype": "application/pdf",
+                "metadata": null,
+                "ext": "pdf",
+                "key": "p302-311-ConspiracyOfBachelors-CrossingOver.pdf",
+                "size": 879001
+            },
+            "p126-153-RenderingTheMolecularWorld-CrossingOver.pdf": {
+                "mimetype": "application/pdf",
+                "metadata": null,
+                "ext": "pdf",
+                "key": "p126-153-RenderingTheMolecularWorld-CrossingOver.pdf",
+                "size": 5997873
+            },
+            "p247-259-AestheticVirtue-CrossingOver.pdf": {
+                "mimetype": "application/pdf",
+                "metadata": null,
+                "ext": "pdf",
+                "key": "p247-259-AestheticVirtue-CrossingOver.pdf",
+                "size": 2598519
+            },
+            "p288-293-PassingInTheHallway-CrossingOver.pdf": {
+                "mimetype": "application/pdf",
+                "metadata": null,
+                "ext": "pdf",
+                "key": "p288-293-PassingInTheHallway-CrossingOver.pdf",
+                "size": 486072
+            },
+            "p312-313-ExhibitsAB-CrossingOver.pdf": {
+                "mimetype": "application/pdf",
+                "metadata": null,
+                "ext": "pdf",
+                "key": "p312-313-ExhibitsAB-CrossingOver.pdf",
+                "size": 238357
+            },
+            "p294-301-ExperimentInArt-CrossingOver.pdf": {
+                "mimetype": "application/pdf",
+                "metadata": null,
+                "ext": "pdf",
+                "key": "p294-301-ExperimentInArt-CrossingOver.pdf",
+                "size": 529967
+            },
+            "p316-320-Contributors-CrossingOver.pdf": {
+                "mimetype": "application/pdf",
+                "metadata": null,
+                "ext": "pdf",
+                "key": "p316-320-Contributors-CrossingOver.pdf",
+                "size": 261760
+            },
+            "p260-267-FiguresAndGrounds-CrossingOver.pdf": {
+                "mimetype": "application/pdf",
+                "metadata": null,
+                "ext": "pdf",
+                "key": "p260-267-FiguresAndGrounds-CrossingOver.pdf",
+                "size": 832733
+            },
+            "p314-315-CaltechArtExhibitions1968_1985-CrossingOver.pdf": {
+                "mimetype": "application/pdf",
+                "metadata": null,
+                "ext": "pdf",
+                "key": "p314-315-CaltechArtExhibitions1968_1985-CrossingOver.pdf",
+                "size": 90123
+            },
+            "p21-45-InfiniteLawn-CrossingOver.pdf": {
+                "mimetype": "application/pdf",
+                "metadata": null,
+                "ext": "pdf",
+                "key": "p21-45-InfiniteLawn-CrossingOver.pdf",
+                "size": 6496733
+            },
+            "p154-193-GoldenEventScienceInTheGoldenAgeOfTelevision-CrossingOver.pdf": {
+                "mimetype": "application/pdf",
+                "metadata": null,
+                "ext": "pdf",
+                "key": "p154-193-GoldenEventScienceInTheGoldenAgeOfTelevision-CrossingOver.pdf",
+                "size": 8529278
+            },
+            "p54-70-UniverseInPixels-CrossingOver.pdf": {
+                "mimetype": "application/pdf",
+                "metadata": null,
+                "ext": "pdf",
+                "key": "p54-70-UniverseInPixels-CrossingOver.pdf",
+                "size": 2218850
+            },
+            "p194-229-ThinkingWithArtAndEngineeringAtTheJetPropulsionLaboratory-CrossingOver.pdf": {
+                "mimetype": "application/pdf",
+                "metadata": null,
+                "ext": "pdf",
+                "key": "p194-229-ThinkingWithArtAndEngineeringAtTheJetPropulsionLaboratory-CrossingOver.pdf",
+                "size": 8219596
+            }
+        }
+    },
+    "links": {
+        "self": "https://authors.library.caltech.edu/api/records/6v5rz-dkg58",
+        "self_html": "https://authors.library.caltech.edu/records/6v5rz-dkg58",
+        "self_doi": "https://authors.library.caltech.edu/doi/10.7907/6v5rz-dkg58",
+        "doi": "https://doi.org/10.7907/6v5rz-dkg58",
+        "self_iiif_manifest": "https://authors.library.caltech.edu/api/iiif/record:6v5rz-dkg58/manifest",
+        "self_iiif_sequence": "https://authors.library.caltech.edu/api/iiif/record:6v5rz-dkg58/sequence/default",
+        "files": "https://authors.library.caltech.edu/api/records/6v5rz-dkg58/files",
+        "archive": "https://authors.library.caltech.edu/api/records/6v5rz-dkg58/files-archive",
+        "latest": "https://authors.library.caltech.edu/api/records/6v5rz-dkg58/versions/latest",
+        "latest_html": "https://authors.library.caltech.edu/records/6v5rz-dkg58/latest",
+        "draft": "https://authors.library.caltech.edu/api/records/6v5rz-dkg58/draft",
+        "versions": "https://authors.library.caltech.edu/api/records/6v5rz-dkg58/versions",
+        "access_links": "https://authors.library.caltech.edu/api/records/6v5rz-dkg58/access/links",
+        "reserve_doi": "https://authors.library.caltech.edu/api/records/6v5rz-dkg58/draft/pids/doi",
+        "communities": "https://authors.library.caltech.edu/api/records/6v5rz-dkg58/communities",
+        "communities-suggestions": "https://authors.library.caltech.edu/api/records/6v5rz-dkg58/communities-suggestions",
+        "requests": "https://authors.library.caltech.edu/api/records/6v5rz-dkg58/requests"
+    },
+    "access": {
+        "embargo": {
+            "active": false,
+            "reason": null
+        },
+        "record": "public",
+        "status": "open",
+        "files": "public"
+    },
+    "is_published": true,
+    "updated": "2024-10-29T21:28:42.324915+00:00",
+    "stats": {
+        "this_version": {
+            "unique_views": 0,
+            "downloads": 0,
+            "unique_downloads": 0,
+            "data_volume": 0.0,
+            "views": 0
+        },
+        "all_versions": {
+            "unique_views": 0,
+            "downloads": 0,
+            "unique_downloads": 0,
+            "data_volume": 0.0,
+            "views": 0
+        }
+    },
+    "is_draft": false,
+    "versions": {
+        "index": 1,
+        "is_latest": true
+    },
+    "id": "6v5rz-dkg58"
+}

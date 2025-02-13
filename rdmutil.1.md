@@ -1,6 +1,6 @@
-%rdmutil(1) irdmtools user manual | version 0.0.89 2119b53d
+%rdmutil(1) irdmtools user manual | version 0.0.90 6e081d17
 % R. S. Doiel and Tom Morrell
-% 2024-10-03
+% 2025-02-13
 
 # NAME
 
@@ -17,9 +17,14 @@ database. It does NOT use the OAI-PMH API since that is far too slow.
 rdmutil uses environment variables for configuration. For accessing the
 JSON API it uses the following.
 
+
 dataset related environment variables (i.e. for harvest action) 
 
 __rdmutil__ environment variable for storing harvested content.
+
+# ENVIRONMENT
+
+Environment can be read from the shell or loaded via a ".env" file.
 
 C_NAME
 : A dataset collection name. Collection must exist.

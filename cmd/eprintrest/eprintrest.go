@@ -74,8 +74,11 @@ NOTE: the rest API does not enforce user permissions, restrictions
 or roles. It is a minimal READ ONLY re-implementation of the EPrints 3.3
 REST API!
 
+# ENVIRONMENT
+
 The application is configured from the environment. The following
-environment variables need to be set.
+environment variables need to be set. The environment variables can
+be set at the shell level or in a ".env" file.
 
 REPO_ID
 : The repository id string (e.g. caltechauthors). Also the name of the database for the repository.

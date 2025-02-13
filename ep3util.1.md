@@ -1,6 +1,6 @@
-%ep3util(1) irdmtools user manual | version 0.0.89 2119b53d
+%ep3util(1) irdmtools user manual | version 0.0.90 6e081d17
 % R. S. Doiel and Tom Morrell
-% 2024-10-03
+% 2025-02-13
 
 # NAME
 
@@ -13,7 +13,11 @@ ep3util [OPTIONS] ACTION [ACTION_PARAMETERS ...]
 # DESCRIPTION
 
 __ep3util__ provides a quick wrapper around EPrints 3.3 REST API.
-By default ep3util looks for five environment variables.
+By default ep3util looks for five environment variables. 
+
+# ENVIRONMENT
+
+These can be specified in the shell or in a ".env" file.
 
 REPO_ID
 : the EPrints repository id (name of database and archive subdirectory).

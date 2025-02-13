@@ -1,101 +1,100 @@
 {
-    "@context": "https://doi.org/10.5063/schema/codemeta-2.0",
-    "@type": "SoftwareSourceCode",
-    "license": "https://caltechlibrary.github.io/irdmtools/LICENSE",
-    "codeRepository": "https://github.com/caltechlibrary/irdmtools",
-    "dateCreated": "2022-10-27",
-	"dateRelease": "2024-09-25",
-	"dateModified": "2024-09-25",
-    "issueTracker": "https://github.com/caltechlibrary/irdmtools/issues",
-    "name": "irdmtools",
-    "version": "0.0.89",
-    "description": "Tools for working with institutional repositories and data management systems. Current implementation targets Invenio-RDM.",
-    "applicationCategory": "library science",
-    "releaseNotes": "Address case where CrossRef record only has family name populated",
-    "developmentStatus": "WIP",
-    "keywords": [
-        "institutional repository",
-        "data management",
-        "Invenio",
-        "Invenio-RDM"
-    ],
-    "programmingLanguage": [
-        "Go",
-		"Python"
-    ],
-    "operatingSystem": [
-        "Linux",
-        "macOS",
-        "Windows"
-    ],
-    "softwareRequirements": [
-        "Go >= 1.23.1",
-		"PostgreSQL >= 16",
-		"PostgREST >= 12",
-		"Pandoc >= 3",
-		"MySQL >= 8",
-		"SQLite >= 3"
-    ],
-    "relatedLink": [
-        "https://inveniosoftware.org/products/rdm/",
-        "https://eprints.org"
-    ],
-    "author": [
-        {
-            "@type": "Person",
-            "@id": "https://orcid.org/0000-0003-0900-6903",
-            "givenName": "R. S.",
-            "familyName": "Doiel",
-            "email": "rsdoiel@caltech.edu",
-            "affiliation": {
-                "@type": "Organization",
-                "name": "Caltech Library, Caltech"
-            }
-        },
-        {
-            "@type": "Person",
-            "@id": "https://orcid.org/0000-0001-9266-5146",
-            "givenName": "Tom",
-            "familyName": "Morrell",
-            "email": "tmorrell@caltech.edu",
-            "affiliation": {
-                "@type": "Organization",
-                "name": "Caltech Library, Caltech"
-            }
-        }
-    ],
-    "contributor": [
-        {
-            "@type": "Person",
-            "@id": "https://orcid.org/0000-0002-0026-2516",
-            "givenName": "Kathy",
-            "familyName": "Johnson",
-            "email": "kjohnson@caltech.edu",
-            "affiliation": {
-                "@type": "Organization",
-                "name": "Caltech Library, Caltech"
-            }
-        },
-        {
-            "@type": "Person",
-            "@id": "https://orcid.org/0000-0002-6539-638X",
-            "givenName": "George",
-            "familyName": "Porter",
-            "email": "george@library.caltech.edu",
-            "affiliation": {
-                "@type": "Organization",
-                "name": "Caltech Library, Caltech"
-            }
-        },
-		{
-			"@type": "Person",
-			"@id": "https://orcid.org/0000-0002-0102-996X",
-			"givenName": "Cynthia",
-			"familyName": "Kiser",
-			"affiliation": {
-                "@type": "Organization",
-                "name": "Caltech IMSS, Caltech"
-			}
-		}
-    ]
+  "@context": "https://doi.org/10.5063/schema/codemeta-2.0",
+  "type": "SoftwareSourceCode",
+  "codeRepository": "https://github.com/caltechlibrary/irdmtools",
+  "author": [
+    {
+      "id": "https://orcid.org/0000-0003-0900-6903",
+      "type": "Person",
+      "givenName": "R. S.",
+      "familyName": "Doiel",
+      "affiliation": {
+        "@type": "Organization",
+        "name": "Caltech Library, Caltech"
+      },
+      "email": "rsdoiel@caltech.edu"
+    },
+    {
+      "id": "https://orcid.org/0000-0001-9266-5146",
+      "type": "Person",
+      "givenName": "Tom",
+      "familyName": "Morrell",
+      "affiliation": {
+        "@type": "Organization",
+        "name": "Caltech Library, Caltech"
+      },
+      "email": "tmorrell@caltech.edu"
+    }
+  ],
+  "contributor": [
+    {
+      "id": "https://orcid.org/0000-0002-0026-2516",
+      "type": "Person",
+      "givenName": "Kathy",
+      "familyName": "Johnson",
+      "affiliation": {
+        "@type": "Organization",
+        "name": "Caltech Library, Caltech"
+      },
+      "email": "kjohnson@caltech.edu"
+    },
+    {
+      "id": "https://orcid.org/0000-0002-6539-638X",
+      "type": "Person",
+      "givenName": "George",
+      "familyName": "Porter",
+      "affiliation": {
+        "@type": "Organization",
+        "name": "Caltech Library, Caltech"
+      },
+      "email": "george@library.caltech.edu"
+    },
+    {
+      "id": "https://orcid.org/0000-0002-0102-996X",
+      "type": "Person",
+      "givenName": "Cynthia",
+      "familyName": "Kiser",
+      "affiliation": {
+        "@type": "Organization",
+        "name": "Caltech IMSS, Caltech"
+      }
+    }
+  ],
+  "dateCreated": "2022-10-27",
+  "dateModified": "2025-02-13",
+  "datePublished": "2025-02-13",
+  "description": "Tools for working with institutional repositories and data management systems. Current implementation targets Invenio-RDM.",
+  "keywords": [
+    "institutional repository",
+    "data management",
+    "Invenio",
+    "Invenio-RDM"
+  ],
+  "name": "irdmtools",
+  "license": "https://caltechlibrary.github.io/irdmtools/LICENSE",
+  "operatingSystem": [
+    "Linux",
+    "macOS",
+    "Windows"
+  ],
+  "programmingLanguage": [
+    "Go",
+    "Python"
+  ],
+  "relatedLink": [
+    "https://inveniosoftware.org/products/rdm/",
+    "https://eprints.org"
+  ],
+  "softwareRequirements": [
+    "Go >= 1.23.1",
+    "PostgreSQL >= 16",
+    "PostgREST >= 12",
+    "Pandoc >= 3",
+    "MySQL >= 8",
+    "SQLite >= 3"
+  ],
+  "version": "0.0.90",
+  "developmentStatus": "WIP",
+  "issueTracker": "https://github.com/caltechlibrary/irdmtools/issues",
+  "releaseNotes": "This releasee adds support for \".env\" files to the Config struct and funcs."
 }

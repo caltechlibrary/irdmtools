@@ -8,23 +8,23 @@ management systems. Current implementation targets Invenio-RDM."
 authors:
   - family-names: Doiel
     given-names: R. S.
-    orcid: "https://orcid.org/0000-0003-0900-6903"
+    orcid: ""
   - family-names: Morrell
     given-names: Tom
-    orcid: "https://orcid.org/0000-0001-9266-5146"
+    orcid: ""
 
 repository-code: "https://github.com/caltechlibrary/irdmtools"
-version: 0.0.89
+version: 0.0.90
 license-url: "https://caltechlibrary.github.io/irdmtools/LICENSE"
 keywords: [ "institutional repository", "data
 management", "Invenio", "Invenio-RDM" ]
-
+date-released: 2025-02-13
 ---
 
 About this software
 ===================
 
-## irdmtools 0.0.89
+## irdmtools 0.0.90
 
 ### Authors
 

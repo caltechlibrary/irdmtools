@@ -60,7 +60,11 @@ var (
 # DESCRIPTION
 
 __{app_name}__ provides a quick wrapper around EPrints 3.3 REST API.
-By default {app_name} looks for five environment variables.
+By default {app_name} looks for five environment variables. 
+
+# ENVIRONMENT
+
+These can be specified in the shell or in a ".env" file.
 
 REPO_ID
 : the EPrints repository id (name of database and archive subdirectory).

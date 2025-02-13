@@ -1,0 +1,323 @@
+{
+    "versions": {
+        "is_latest": true,
+        "index": 1
+    },
+    "metadata": {
+        "languages": [
+            {
+                "title": {
+                    "en": "English"
+                },
+                "id": "eng"
+            }
+        ],
+        "rights": [
+            {
+                "title": {
+                    "en": "Creative Commons Attribution 4.0 International"
+                },
+                "props": {
+                    "url": "https://creativecommons.org/licenses/by/4.0/legalcode",
+                    "scheme": "spdx"
+                },
+                "id": "cc-by-4.0",
+                "description": {
+                    "en": ""
+                }
+            }
+        ],
+        "title": "Resonance Fluorescence of a Chiral Artificial Atom",
+        "related_identifiers": [
+            {
+                "relation_type": {
+                    "title": {
+                        "de": "Wird zitiert von",
+                        "en": "Featured in"
+                    },
+                    "id": "featuredin"
+                },
+                "identifier": "https://physics.aps.org/articles/v16/103",
+                "scheme": "url",
+                "resource_type": {
+                    "title": {
+                        "de": "Zeitschriftenartikel",
+                        "en": "Physics (APS)"
+                    },
+                    "id": "featuredin-physics"
+                }
+            }
+        ],
+        "additional_descriptions": [
+            {
+                "type": {
+                    "title": {
+                        "de": "Sonstige",
+                        "en": "Copyright and License"
+                    },
+                    "id": "copyright"
+                },
+                "description": "<p class=\"usage-statement\">Published by the American Physical Society under the terms of the&nbsp;<a href=\"https://creativecommons.org/licenses/by/4.0/\">Creative Commons Attribution 4.0 International</a> license. Further distribution of this work must maintain attribution to the author(s) and the published article&rsquo;s title, journal citation, and DOI.</p>"
+            },
+            {
+                "type": {
+                    "title": {
+                        "de": "Sonstige",
+                        "en": "Acknowledgement"
+                    },
+                    "id": "acknowledgement"
+                },
+                "description": "<div>\n<div class=\"article-section-text\">\n<div>\n<p>This work was supported by startup funds from the Caltech EAS division, a Braun trust grant, and the National Science Foundation (Grant No. 1733907). C.&thinsp;J. gratefully acknowledges support from the IQIM/AWS Postdoctoral Fellowship. F.&thinsp;Y. gratefully acknowledges support from the NSF Graduate Research Fellowship.</p>\n</div>\n</div>\n</div>"
+            }
+        ],
+        "version": "Published",
+        "publisher": "American Physical Society",
+        "funding": [
+            {
+                "funder": {
+                    "name": "National Science Foundation",
+                    "id": "021nxhr62"
+                },
+                "award": {
+                    "number": "PHY-1733907",
+                    "title": {
+                        "en": " "
+                    }
+                }
+            },
+            {
+                "funder": {
+                    "name": "California Institute of Technology",
+                    "id": "05dxps055"
+                },
+                "award": {
+                    "number": "Division of Engineering and Applied Science",
+                    "title": {
+                        "en": " "
+                    }
+                }
+            },
+            {
+                "funder": {
+                    "name": "California Institute of Technology",
+                    "id": "05dxps055"
+                },
+                "award": {
+                    "number": "Institute for Quantum Information and Matter",
+                    "title": {
+                        "en": " "
+                    }
+                }
+            },
+            {
+                "funder": {
+                    "name": "Amazon (United States)",
+                    "id": "04mv4n011"
+                }
+            },
+            {
+                "funder": {
+                    "name": "California Institute of Technology",
+                    "id": "05dxps055"
+                },
+                "award": {
+                    "number": "AWS Center for Quantum Computing",
+                    "title": {
+                        "en": " "
+                    }
+                }
+            },
+            {
+                "funder": {
+                    "name": "National Science Foundation",
+                    "id": "021nxhr62"
+                },
+                "award": {
+                    "number": "NSF Graduate Research Fellowship",
+                    "title": {
+                        "en": " "
+                    }
+                }
+            }
+        ],
+        "description": "<p>We demonstrate a superconducting artificial atom with strong unidirectional coupling to a microwave photonic waveguide. Our artificial atom is realized by coupling a transmon qubit to the waveguide at two spatially separated points with time-modulated interactions. Direction-sensitive interference arising from the parametric couplings in our scheme results in a nonreciprocal response, where we measure a forward/backward ratio of spontaneous emission exceeding 100. We verify the quantum nonlinear behavior of this artificial chiral atom by measuring the resonance fluorescence spectrum under a strong resonant drive and observing well-resolved Mollow triplets. Further, we demonstrate chirality for the second transition energy of the artificial atom and control it with a pulse sequence to realize a qubit-state-dependent nonreciprocal phase on itinerant photons. Our demonstration puts forth a superconducting hardware platform for the scalable realization of several key functionalities pursued within the paradigm of chiral quantum optics, including quantum networks with all-to-all connectivity, driven-dissipative stabilization of many-body entanglement, and the generation of complex nonclassical states of light.</p>",
+        "resource_type": {
+            "title": {
+                "de": "Zeitschriftenartikel",
+                "en": "Journal Article"
+            },
+            "id": "publication-article"
+        },
+        "publication_date": "2023-04",
+        "creators": [
+            {
+                "person_or_org": {
+                    "given_name": "Chaitali",
+                    "family_name": "Joshi",
+                    "name": "Joshi, Chaitali",
+                    "type": "personal",
+                    "identifiers": [
+                        {
+                            "identifier": "Joshi-Chaitali",
+                            "scheme": "clpid"
+                        },
+                        {
+                            "identifier": "0000-0003-0720-4316",
+                            "scheme": "orcid"
+                        }
+                    ]
+                }
+            },
+            {
+                "person_or_org": {
+                    "given_name": "Frank",
+                    "family_name": "Yang",
+                    "name": "Yang, Frank",
+                    "type": "personal",
+                    "identifiers": [
+                        {
+                            "identifier": "0000-0001-5591-4035",
+                            "scheme": "orcid"
+                        },
+                        {
+                            "identifier": "Yang-Frank",
+                            "scheme": "clpid"
+                        }
+                    ]
+                }
+            },
+            {
+                "affiliations": [
+                    {
+                        "name": "California Institute of Technology",
+                        "id": "05dxps055"
+                    }
+                ],
+                "person_or_org": {
+                    "given_name": "Mohammad",
+                    "family_name": "Mirhosseini",
+                    "name": "Mirhosseini, Mohammad",
+                    "type": "personal",
+                    "identifiers": [
+                        {
+                            "identifier": "Mirhosseini-M",
+                            "scheme": "clpid"
+                        },
+                        {
+                            "identifier": "0000-0002-9084-6880",
+                            "scheme": "orcid"
+                        }
+                    ]
+                }
+            }
+        ]
+    },
+    "access": {
+        "status": "open",
+        "files": "public",
+        "record": "public",
+        "embargo": {
+            "reason": null,
+            "active": false
+        }
+    },
+    "created": "2024-07-05T17:05:39.512607+00:00",
+    "custom_fields": {
+        "journal:journal": {
+            "volume": "13",
+            "issn": "2160-3308",
+            "title": "Physical Review X",
+            "issue": "2",
+            "pages": "021039"
+        },
+        "caltech:groups": [
+            {
+                "title": {
+                    "en": "Institute for Quantum Information and Matter"
+                },
+                "id": "IQIM"
+            },
+            {
+                "title": {
+                    "en": "AWS Center for Quantum Computing"
+                },
+                "id": "AWS-Center-for-Quantum-Computing"
+            }
+        ]
+    },
+    "is_draft": false,
+    "links": {
+        "self": "https://authors.library.caltech.edu/api/records/q2nev-24q50",
+        "self_html": "https://authors.library.caltech.edu/records/q2nev-24q50",
+        "self_doi": "https://authors.library.caltech.edu/doi/10.1103/physrevx.13.021039",
+        "doi": "https://doi.org/10.1103/physrevx.13.021039",
+        "self_iiif_manifest": "https://authors.library.caltech.edu/api/iiif/record:q2nev-24q50/manifest",
+        "self_iiif_sequence": "https://authors.library.caltech.edu/api/iiif/record:q2nev-24q50/sequence/default",
+        "files": "https://authors.library.caltech.edu/api/records/q2nev-24q50/files",
+        "archive": "https://authors.library.caltech.edu/api/records/q2nev-24q50/files-archive",
+        "latest": "https://authors.library.caltech.edu/api/records/q2nev-24q50/versions/latest",
+        "latest_html": "https://authors.library.caltech.edu/records/q2nev-24q50/latest",
+        "draft": "https://authors.library.caltech.edu/api/records/q2nev-24q50/draft",
+        "versions": "https://authors.library.caltech.edu/api/records/q2nev-24q50/versions",
+        "access_links": "https://authors.library.caltech.edu/api/records/q2nev-24q50/access/links",
+        "reserve_doi": "https://authors.library.caltech.edu/api/records/q2nev-24q50/draft/pids/doi",
+        "communities": "https://authors.library.caltech.edu/api/records/q2nev-24q50/communities",
+        "communities-suggestions": "https://authors.library.caltech.edu/api/records/q2nev-24q50/communities-suggestions",
+        "requests": "https://authors.library.caltech.edu/api/records/q2nev-24q50/requests"
+    },
+    "files": {
+        "enabled": true,
+        "entries": {
+            "PhysRevX.13.021039.pdf": {
+                "metadata": null,
+                "key": "PhysRevX.13.021039.pdf",
+                "mimetype": "application/pdf",
+                "size": 4063534,
+                "ext": "pdf"
+            }
+        },
+        "count": 1,
+        "total_bytes": 4063534,
+        "order": []
+    },
+    "is_published": true,
+    "revision_id": 3,
+    "pids": {
+        "doi": {
+            "identifier": "10.1103/physrevx.13.021039",
+            "provider": "external"
+        },
+        "oai": {
+            "identifier": "oai:authors.library.caltech.edu:q2nev-24q50",
+            "provider": "oai"
+        }
+    },
+    "status": "published",
+    "parent": {
+        "communities": {
+            "ids": [
+                "aedd135f-227e-4fdf-9476-5b3fd011bac6"
+            ],
+            "default": "aedd135f-227e-4fdf-9476-5b3fd011bac6"
+        },
+        "id": "hggg5-rje91"
+    },
+    "stats": {
+        "this_version": {
+            "unique_downloads": 0,
+            "data_volume": 0.0,
+            "downloads": 0,
+            "unique_views": 0,
+            "views": 0
+        },
+        "all_versions": {
+            "unique_downloads": 0,
+            "data_volume": 0.0,
+            "downloads": 0,
+            "unique_views": 0,
+            "views": 0
+        }
+    },
+    "updated": "2024-07-05T17:05:39.622010+00:00",
+    "id": "q2nev-24q50"
+}

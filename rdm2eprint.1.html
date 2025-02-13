@@ -36,6 +36,23 @@ uses RDM_URL, RDMTOK, RDM_COMMUNITY_ID environment variables for
 configuration. It can read data from a previously harvest RDM record or
 directly from RDM via the API url. The tool is intended to run in a pipe
 line so have minimal options.</p>
+<h1 id="environment">ENVIRONMENT</h1>
+<p>The following environment variables can be set at the shell level or
+in a “.env” file.</p>
+<dl>
+<dt>RDM_URL</dt>
+<dd>
+The URL to the RDM instance
+</dd>
+<dt>RDMTOK</dt>
+<dd>
+The application token needed to access the RDM API
+</dd>
+<dt>RDM_COMMUNITY_ID</dt>
+<dd>
+The community id used for the RDM collection
+</dd>
+</dl>
 <h1 id="options">OPTIONS</h1>
 <dl>
 <dt>-help</dt>
