@@ -1,0 +1,484 @@
+{
+    "updated": "2023-11-09T16:55:27.118105+00:00",
+    "access": {
+        "record": "public",
+        "files": "public",
+        "embargo": {
+            "active": false,
+            "reason": null
+        },
+        "status": "open"
+    },
+    "id": "6swqe-4t813",
+    "pids": {
+        "oai": {
+            "identifier": "oai:authors.library.caltech.edu:6swqe-4t813",
+            "provider": "oai"
+        }
+    },
+    "is_draft": false,
+    "status": "published",
+    "custom_fields": {},
+    "parent": {
+        "communities": {
+            "ids": [
+                "aedd135f-227e-4fdf-9476-5b3fd011bac6"
+            ],
+            "default": "aedd135f-227e-4fdf-9476-5b3fd011bac6"
+        },
+        "id": "vtrpm-fnt54"
+    },
+    "files": {
+        "entries": {
+            "media-4.pdf": {
+                "mimetype": "application/pdf",
+                "size": 31955,
+                "ext": "pdf",
+                "key": "media-4.pdf",
+                "metadata": null
+            },
+            "media-5.mp4": {
+                "mimetype": "video/mp4",
+                "size": 4848588,
+                "ext": "mp4",
+                "key": "media-5.mp4",
+                "metadata": null
+            },
+            "media-6.mp4": {
+                "mimetype": "video/mp4",
+                "size": 3284921,
+                "ext": "mp4",
+                "key": "media-6.mp4",
+                "metadata": null
+            },
+            "2022.06.16.496161v3.full.pdf": {
+                "mimetype": "application/pdf",
+                "size": 7250694,
+                "ext": "pdf",
+                "key": "2022.06.16.496161v3.full.pdf",
+                "metadata": null
+            },
+            "media-1.pdf": {
+                "mimetype": "application/pdf",
+                "size": 13243131,
+                "ext": "pdf",
+                "key": "media-1.pdf",
+                "metadata": null
+            },
+            "media-2.pdf": {
+                "mimetype": "application/pdf",
+                "size": 393346,
+                "ext": "pdf",
+                "key": "media-2.pdf",
+                "metadata": null
+            },
+            "media-3.pdf": {
+                "mimetype": "application/pdf",
+                "size": 2562806,
+                "ext": "pdf",
+                "key": "media-3.pdf",
+                "metadata": null
+            }
+        },
+        "total_bytes": 31615441,
+        "enabled": true,
+        "order": [],
+        "count": 7
+    },
+    "links": {
+        "self": "https://authors.library.caltech.edu/api/records/6swqe-4t813",
+        "self_html": "https://authors.library.caltech.edu/records/6swqe-4t813",
+        "self_iiif_manifest": "https://authors.library.caltech.edu/api/iiif/record:6swqe-4t813/manifest",
+        "self_iiif_sequence": "https://authors.library.caltech.edu/api/iiif/record:6swqe-4t813/sequence/default",
+        "files": "https://authors.library.caltech.edu/api/records/6swqe-4t813/files",
+        "archive": "https://authors.library.caltech.edu/api/records/6swqe-4t813/files-archive",
+        "latest": "https://authors.library.caltech.edu/api/records/6swqe-4t813/versions/latest",
+        "latest_html": "https://authors.library.caltech.edu/records/6swqe-4t813/latest",
+        "draft": "https://authors.library.caltech.edu/api/records/6swqe-4t813/draft",
+        "versions": "https://authors.library.caltech.edu/api/records/6swqe-4t813/versions",
+        "access_links": "https://authors.library.caltech.edu/api/records/6swqe-4t813/access/links",
+        "reserve_doi": "https://authors.library.caltech.edu/api/records/6swqe-4t813/draft/pids/doi",
+        "communities": "https://authors.library.caltech.edu/api/records/6swqe-4t813/communities",
+        "communities-suggestions": "https://authors.library.caltech.edu/api/records/6swqe-4t813/communities-suggestions",
+        "requests": "https://authors.library.caltech.edu/api/records/6swqe-4t813/requests"
+    },
+    "revision_id": 7,
+    "is_published": true,
+    "created": "2023-08-20T08:00:26.843643+00:00",
+    "metadata": {
+        "title": "Disrupting cellular memory to overcome drug resistance",
+        "creators": [
+            {
+                "person_or_org": {
+                    "type": "personal",
+                    "given_name": "Guillaume",
+                    "name": "Harmange, Guillaume",
+                    "family_name": "Harmange",
+                    "identifiers": [
+                        {
+                            "identifier": "Harmange-Guillaume",
+                            "scheme": "clpid"
+                        },
+                        {
+                            "identifier": "0000-0002-3157-5355",
+                            "scheme": "orcid"
+                        }
+                    ]
+                }
+            },
+            {
+                "person_or_org": {
+                    "type": "personal",
+                    "given_name": "Ra\u00fal A.",
+                    "name": "Reyes Hueros, Ra\u00fal A.",
+                    "family_name": "Reyes Hueros",
+                    "identifiers": [
+                        {
+                            "identifier": "Reyes-Hueros-Ra\u00fal-A",
+                            "scheme": "clpid"
+                        },
+                        {
+                            "identifier": "0000-0001-7554-051X",
+                            "scheme": "orcid"
+                        }
+                    ]
+                }
+            },
+            {
+                "person_or_org": {
+                    "type": "personal",
+                    "given_name": "Dylan",
+                    "name": "Schaff, Dylan",
+                    "family_name": "Schaff",
+                    "identifiers": [
+                        {
+                            "identifier": "Schaff-Dylan",
+                            "scheme": "clpid"
+                        },
+                        {
+                            "identifier": "0000-0002-3367-9270",
+                            "scheme": "orcid"
+                        }
+                    ]
+                }
+            },
+            {
+                "person_or_org": {
+                    "type": "personal",
+                    "given_name": "Benjamin",
+                    "name": "Emert, Benjamin",
+                    "family_name": "Emert",
+                    "identifiers": [
+                        {
+                            "identifier": "Emert-Benjamin",
+                            "scheme": "clpid"
+                        },
+                        {
+                            "identifier": "0000-0002-4857-2425",
+                            "scheme": "orcid"
+                        }
+                    ]
+                }
+            },
+            {
+                "person_or_org": {
+                    "type": "personal",
+                    "given_name": "Michael",
+                    "name": "Saint-Antoine, Michael",
+                    "family_name": "Saint-Antoine",
+                    "identifiers": [
+                        {
+                            "identifier": "Saint-Antoine-Michael",
+                            "scheme": "clpid"
+                        }
+                    ]
+                }
+            },
+            {
+                "person_or_org": {
+                    "type": "personal",
+                    "given_name": "Shivani",
+                    "name": "Nellore, Shivani",
+                    "family_name": "Nellore",
+                    "identifiers": [
+                        {
+                            "identifier": "Nellore-Shivani",
+                            "scheme": "clpid"
+                        }
+                    ]
+                }
+            },
+            {
+                "person_or_org": {
+                    "type": "personal",
+                    "given_name": "Mitchell E.",
+                    "name": "Fane, Mitchell E.",
+                    "family_name": "Fane",
+                    "identifiers": [
+                        {
+                            "identifier": "Fane-Mitchell-E",
+                            "scheme": "clpid"
+                        },
+                        {
+                            "identifier": "0000-0001-6163-5753",
+                            "scheme": "orcid"
+                        }
+                    ]
+                }
+            },
+            {
+                "person_or_org": {
+                    "type": "personal",
+                    "given_name": "Gretchen M.",
+                    "name": "Alicea, Gretchen M.",
+                    "family_name": "Alicea",
+                    "identifiers": [
+                        {
+                            "identifier": "Alicea-Gretchen-M",
+                            "scheme": "clpid"
+                        },
+                        {
+                            "identifier": "0000-0001-8436-2890",
+                            "scheme": "orcid"
+                        }
+                    ]
+                }
+            },
+            {
+                "person_or_org": {
+                    "type": "personal",
+                    "given_name": "Ashani T.",
+                    "name": "Weeraratna, Ashani T.",
+                    "family_name": "Weeraratna",
+                    "identifiers": [
+                        {
+                            "identifier": "Weeraratna-Ashani-T",
+                            "scheme": "clpid"
+                        },
+                        {
+                            "identifier": "0000-0003-0448-6952",
+                            "scheme": "orcid"
+                        }
+                    ]
+                }
+            },
+            {
+                "person_or_org": {
+                    "type": "personal",
+                    "given_name": "Abhyudai",
+                    "name": "Singh, Abhyudai",
+                    "family_name": "Singh",
+                    "identifiers": [
+                        {
+                            "identifier": "Singh-Abhyudai",
+                            "scheme": "clpid"
+                        },
+                        {
+                            "identifier": "0000-0002-1451-2838",
+                            "scheme": "orcid"
+                        }
+                    ]
+                }
+            },
+            {
+                "person_or_org": {
+                    "type": "personal",
+                    "given_name": "Sydney M.",
+                    "name": "Shaffer, Sydney M.",
+                    "family_name": "Shaffer",
+                    "identifiers": [
+                        {
+                            "identifier": "Shaffer-Sydney-M",
+                            "scheme": "clpid"
+                        },
+                        {
+                            "identifier": "0000-0003-3539-9886",
+                            "scheme": "orcid"
+                        }
+                    ]
+                }
+            }
+        ],
+        "additional_descriptions": [
+            {
+                "description": "The copyright holder for this preprint is the author/funder, who has granted bioRxiv a license to display the preprint in perpetuity. It is made available under a CC-BY-NC 4.0 International license. \n\nVersion 1 - June 17, 2022. Version 2 - August 4, 2022. Version 3 - August 5, 2022. \n\nWe thank all members of the Shaffer lab for feedback on experiments and the manuscript, P. Gonzalez-Camara and T. Ridky for thoughtful discussions and ideas, W. Niu for help on developing image processing pipelines, L. Bugaj for feedback on the manuscript, and M. Herlyn for providing cell lines. S.M.S. acknowledges support from the NIH Director's Early Independence Award DP5OD028144 and the Wistar/Penn Skin Cancer SPORE (P50 CA174523). A.S. acknowledges support from R01GM124446. A.T.W. acknowledges support from R01CA207935 and P01CA114046. \n\nSoftware and data availability: All data and code used for this paper can be found here: https://drive.google.com/drive/folders/1-C78090Z43w5kGb1ZW8pXgysjha35jlU?usp=sharing. \n\nAuthor Contributions: G.H. and S.M.S. conceptualized the project and designed the study. G.H. performed all experiments and analysis with the following exceptions. R.A.R.H. helped with the barcode processing pipeline and provided helpful discussion. D.S. performed the ATAC sequencing experiment and its analysis, and helped with the barcode processing pipeline. M.S. and A.S performed the modeling analysis. B.E. provided technical guidance and troubleshooting for the barcoding library. A.T.W, M.E.F, and G.M.A generated the mouse PDX tissue. S.N. helped maintain cell lines and performed computational analyses. G.H. and S.M.S. wrote the paper. \n\nCompeting interests: S.M.S. receive royalties related to Stellaris RNA FISH probes. All other authors have no competing interests to declare.",
+                "type": {
+                    "id": "additional",
+                    "title": {
+                        "de": "Sonstige",
+                        "en": "Additional Information"
+                    }
+                }
+            },
+            {
+                "description": "<p>Submitted - <a href=\"/records/6swqe-4t813/files/2022.06.16.496161v3.full.pdf?download=1\">2022.06.16.496161v3.full.pdf</a></p><p>Supplemental Material - <a href=\"/records/6swqe-4t813/files/media-1.pdf?download=1\">media-1.pdf</a></p><p>Supplemental Material - <a href=\"/records/6swqe-4t813/files/media-2.pdf?download=1\">media-2.pdf</a></p><p>Supplemental Material - <a href=\"/records/6swqe-4t813/files/media-3.pdf?download=1\">media-3.pdf</a></p><p>Supplemental Material - <a href=\"/records/6swqe-4t813/files/media-4.pdf?download=1\">media-4.pdf</a></p><p>Supplemental Material - <a href=\"/records/6swqe-4t813/files/media-5.mp4?download=1\">media-5.mp4</a></p><p>Supplemental Material - <a href=\"/records/6swqe-4t813/files/media-6.mp4?download=1\">media-6.mp4</a></p>",
+                "type": {
+                    "id": "attached-files",
+                    "title": {
+                        "de": "Sonstige",
+                        "en": "Attached Files"
+                    }
+                }
+            }
+        ],
+        "related_identifiers": [
+            {
+                "identifier": "https://drive.google.com/drive/folders/1-C78090Z43w5kGb1ZW8pXgysjha35jlU?usp=sharing",
+                "relation_type": {
+                    "id": "describes",
+                    "title": {
+                        "de": "Beschreibt",
+                        "en": "Describes"
+                    }
+                },
+                "scheme": "url"
+            },
+            {
+                "identifier": "https://authors.library.caltech.edu/records/1xbbf-adg66",
+                "relation_type": {
+                    "id": "ispublishedin",
+                    "title": {
+                        "de": "Wird ver\u00f6ffentlicht in",
+                        "en": "Is published in"
+                    }
+                },
+                "scheme": "url"
+            }
+        ],
+        "description": "Plasticity enables cells to change their gene expression state in the absence of a genetic change. At the single-cell level, these gene expression states can persist for different lengths of time which is a quantitative measurement referred to as gene expression memory. Because plasticity is not encoded by genetic changes, these cell states can be reversible, and therefore, are amenable to modulation by disrupting gene expression memory. However, we currently do not have robust methods to find the regulators of memory or to track state switching in plastic cell populations. Here, we developed a lineage tracing-based technique to quantify gene expression memory and to identify single cells as they undergo cell state transitions. Applied to human melanoma cells, we quantified long-lived fluctuations in gene expression that underlie resistance to targeted therapy. Further, we identified the PI3K and TGF-\u03b2 pathways as modulators of these state dynamics. Applying the gene expression signatures derived from this technique, we find that these expression states are generalizable to in vivo models and present in scRNA-seq from patient tumors. Leveraging the PI3K and TGF-\u03b2 pathways as dials on memory between plastic states, we propose a \" pretreatment\" model in which we first use a PI3K inhibitor to modulate the expression states of the cell population and then apply targeted therapy. This plasticity informed dosing scheme ultimately yields fewer resistant colonies than targeted therapy alone. Taken together, we describe a technique to find modulators of gene expression memory and then apply this knowledge to alter plastic cell states and their connected cell fates.",
+        "identifiers": [
+            {
+                "identifier": "115347",
+                "scheme": "eprintid"
+            },
+            {
+                "identifier": "10.1101/2022.06.16.496161",
+                "scheme": "doi"
+            },
+            {
+                "identifier": "CaltechAUTHORS:20220706-964795000",
+                "scheme": "resolverid"
+            }
+        ],
+        "dates": [
+            {
+                "description": "Created from EPrint's datestamp field",
+                "date": "2022-07-08",
+                "type": {
+                    "id": "created",
+                    "title": {
+                        "de": "Erstellt",
+                        "en": "Created"
+                    }
+                }
+            },
+            {
+                "description": "Created from EPrint's last_modified field",
+                "date": "2022-08-16",
+                "type": {
+                    "id": "updated",
+                    "title": {
+                        "de": "Aktualisiert",
+                        "en": "Updated"
+                    }
+                }
+            }
+        ],
+        "funding": [
+            {
+                "award": {
+                    "number": "DP5OD028144",
+                    "title": {
+                        "en": " "
+                    }
+                },
+                "funder": {
+                    "name": "NIH"
+                }
+            },
+            {
+                "award": {
+                    "number": "P50 CA174523",
+                    "title": {
+                        "en": " "
+                    }
+                },
+                "funder": {
+                    "name": "NIH"
+                }
+            },
+            {
+                "award": {
+                    "number": "R01GM124446",
+                    "title": {
+                        "en": " "
+                    }
+                },
+                "funder": {
+                    "name": "NIH"
+                }
+            },
+            {
+                "award": {
+                    "number": "R01CA207935",
+                    "title": {
+                        "en": " "
+                    }
+                },
+                "funder": {
+                    "name": "NIH"
+                }
+            },
+            {
+                "award": {
+                    "number": "P01CA114046",
+                    "title": {
+                        "en": " "
+                    }
+                },
+                "funder": {
+                    "name": "NIH"
+                }
+            }
+        ],
+        "version": "Supplemental Material + Submitted",
+        "rights": [
+            {
+                "title": {
+                    "en": "Other"
+                },
+                "description": {
+                    "en": "No commercial reproduction, distribution, display or performance rights in this work are provided."
+                }
+            }
+        ],
+        "publication_date": "2022-07-08",
+        "resource_type": {
+            "id": "publication-report",
+            "title": {
+                "de": "Bericht",
+                "en": "Report"
+            }
+        }
+    },
+    "stats": {
+        "all_versions": {
+            "unique_views": 57,
+            "data_volume": 350769672.0,
+            "downloads": 63,
+            "views": 57,
+            "unique_downloads": 62
+        },
+        "this_version": {
+            "unique_views": 57,
+            "data_volume": 350769672.0,
+            "downloads": 63,
+            "views": 57,
+            "unique_downloads": 62
+        }
+    },
+    "versions": {
+        "is_latest": true,
+        "index": 2
+    }
+}

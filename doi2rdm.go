@@ -96,7 +96,7 @@ contributor_types:
   stats-reviewer: other
   reader: other
   translator: translator
-# Map the CrossRef resource type to the RDM type
+# Map the CrossRef and DataCite resource type to the RDM type
 resource_types:
   article: publication-article
   Preprint: publication-preprint
@@ -124,6 +124,8 @@ resource_types:
   report: publication-workingpaper
   report-component: publication-workingpaper
   posted-content: publication-preprint
+  DataPaper: publication-datapaper
+  Text: publication-other
 # Mapping DOI prefixes to Publisher names (used to normalize publisher names)
 doi_prefix_publishers:
   10.1103: American Physical Society

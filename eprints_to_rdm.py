@@ -182,13 +182,12 @@ def get_file_list(config, eprintid, rec, security):
         content = metadata.get('content', None)
         if content:
             content = content_mapping[content]
-        format_des = metadata.get('format_des', None)
-        if format_des:
-            content = content + format_des
+        format_des = metadata.get('format_desc', None)
         if _security is not None and security == _security:
             file_url = file['file_id']
             cmd = file_to_scp(config, eprintid, pos, source_name, target_name)
             file_list.append({
+                'description': format_des,
                 'filename': target_name,
                 'file_url': file_url, 
                 'cmd': cmd,

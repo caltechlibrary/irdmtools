@@ -1,0 +1,354 @@
+{
+    "parent": {
+        "id": "44946-kf375",
+        "communities": {
+            "ids": [
+                "aedd135f-227e-4fdf-9476-5b3fd011bac6"
+            ],
+            "default": "aedd135f-227e-4fdf-9476-5b3fd011bac6"
+        }
+    },
+    "custom_fields": {
+        "journal:journal": {
+            "issn": "0004-3702",
+            "title": "Artificial Intelligence",
+            "volume": "336",
+            "pages": "104195"
+        },
+        "caltech:publication_status": [
+            {
+                "id": "published",
+                "title": {
+                    "en": "Published"
+                }
+            }
+        ]
+    },
+    "files": {
+        "count": 0,
+        "order": [],
+        "total_bytes": 0,
+        "enabled": false,
+        "entries": {}
+    },
+    "status": "published",
+    "revision_id": 5,
+    "created": "2024-09-18T23:05:04.753984+00:00",
+    "links": {
+        "self": "https://authors.library.caltech.edu/api/records/35qce-kxq75",
+        "self_html": "https://authors.library.caltech.edu/records/35qce-kxq75",
+        "self_doi": "https://authors.library.caltech.edu/doi/10.1016/j.artint.2024.104195",
+        "doi": "https://doi.org/10.1016/j.artint.2024.104195",
+        "self_iiif_manifest": "https://authors.library.caltech.edu/api/iiif/record:35qce-kxq75/manifest",
+        "self_iiif_sequence": "https://authors.library.caltech.edu/api/iiif/record:35qce-kxq75/sequence/default",
+        "files": "https://authors.library.caltech.edu/api/records/35qce-kxq75/files",
+        "archive": "https://authors.library.caltech.edu/api/records/35qce-kxq75/files-archive",
+        "latest": "https://authors.library.caltech.edu/api/records/35qce-kxq75/versions/latest",
+        "latest_html": "https://authors.library.caltech.edu/records/35qce-kxq75/latest",
+        "draft": "https://authors.library.caltech.edu/api/records/35qce-kxq75/draft",
+        "versions": "https://authors.library.caltech.edu/api/records/35qce-kxq75/versions",
+        "access_links": "https://authors.library.caltech.edu/api/records/35qce-kxq75/access/links",
+        "reserve_doi": "https://authors.library.caltech.edu/api/records/35qce-kxq75/draft/pids/doi",
+        "communities": "https://authors.library.caltech.edu/api/records/35qce-kxq75/communities",
+        "communities-suggestions": "https://authors.library.caltech.edu/api/records/35qce-kxq75/communities-suggestions",
+        "requests": "https://authors.library.caltech.edu/api/records/35qce-kxq75/requests"
+    },
+    "updated": "2024-09-25T16:52:24.085991+00:00",
+    "stats": {
+        "this_version": {
+            "views": 0,
+            "downloads": 0,
+            "data_volume": 0.0,
+            "unique_views": 0,
+            "unique_downloads": 0
+        },
+        "all_versions": {
+            "views": 0,
+            "downloads": 0,
+            "data_volume": 0.0,
+            "unique_views": 0,
+            "unique_downloads": 0
+        }
+    },
+    "pids": {
+        "doi": {
+            "identifier": "10.1016/j.artint.2024.104195",
+            "provider": "external"
+        },
+        "oai": {
+            "identifier": "oai:authors.library.caltech.edu:35qce-kxq75",
+            "provider": "oai"
+        }
+    },
+    "is_draft": false,
+    "versions": {
+        "index": 1,
+        "is_latest": true
+    },
+    "metadata": {
+        "resource_type": {
+            "id": "publication-article",
+            "title": {
+                "de": "Zeitschriftenartikel",
+                "en": "Journal Article"
+            }
+        },
+        "title": "Sample-based bounds for coherent risk measures: Applications to policy synthesis and verification",
+        "subjects": [
+            {
+                "subject": "Sampling methods"
+            },
+            {
+                "subject": "Risk"
+            },
+            {
+                "subject": "Uncertain systems"
+            },
+            {
+                "subject": "Safety-critical control"
+            },
+            {
+                "subject": "Control barrier functions"
+            },
+            {
+                "subject": "Policy generation"
+            }
+        ],
+        "creators": [
+            {
+                "person_or_org": {
+                    "name": "Akella, Prithvi",
+                    "family_name": "Akella",
+                    "given_name": "Prithvi",
+                    "identifiers": [
+                        {
+                            "identifier": "0000-0003-4375-0015",
+                            "scheme": "orcid"
+                        },
+                        {
+                            "identifier": "Akella-Prithvi",
+                            "scheme": "clpid"
+                        }
+                    ],
+                    "type": "personal"
+                },
+                "affiliations": [
+                    {
+                        "id": "05dxps055",
+                        "name": "California Institute of Technology"
+                    }
+                ]
+            },
+            {
+                "person_or_org": {
+                    "name": "Dixit, Anushri",
+                    "family_name": "Dixit",
+                    "given_name": "Anushri",
+                    "identifiers": [
+                        {
+                            "identifier": "Dixit-Anushri",
+                            "scheme": "clpid"
+                        },
+                        {
+                            "identifier": "0000-0002-9698-2189",
+                            "scheme": "orcid"
+                        }
+                    ],
+                    "type": "personal"
+                },
+                "affiliations": [
+                    {
+                        "id": "05dxps055",
+                        "name": "California Institute of Technology"
+                    }
+                ]
+            },
+            {
+                "person_or_org": {
+                    "name": "Ahmadi, Mohamadreza",
+                    "family_name": "Ahmadi",
+                    "given_name": "Mohamadreza",
+                    "identifiers": [
+                        {
+                            "identifier": "Ahmadi-Mohamadreza",
+                            "scheme": "clpid"
+                        },
+                        {
+                            "identifier": "0000-0003-1447-3012",
+                            "scheme": "orcid"
+                        }
+                    ],
+                    "type": "personal"
+                },
+                "affiliations": [
+                    {
+                        "id": "05dxps055",
+                        "name": "California Institute of Technology"
+                    }
+                ]
+            },
+            {
+                "person_or_org": {
+                    "name": "Burdick, Joel W.",
+                    "family_name": "Burdick",
+                    "given_name": "Joel W.",
+                    "identifiers": [
+                        {
+                            "identifier": "Burdick-J-W",
+                            "scheme": "clpid"
+                        },
+                        {
+                            "identifier": "0000-0002-3091-540X",
+                            "scheme": "orcid"
+                        }
+                    ],
+                    "type": "personal"
+                },
+                "affiliations": [
+                    {
+                        "id": "05dxps055",
+                        "name": "California Institute of Technology"
+                    }
+                ]
+            },
+            {
+                "person_or_org": {
+                    "name": "Ames, Aaron D.",
+                    "family_name": "Ames",
+                    "given_name": "Aaron D.",
+                    "identifiers": [
+                        {
+                            "identifier": "Ames-A-D",
+                            "scheme": "clpid"
+                        },
+                        {
+                            "identifier": "0000-0003-0848-3177",
+                            "scheme": "orcid"
+                        }
+                    ],
+                    "type": "personal"
+                },
+                "affiliations": [
+                    {
+                        "id": "05dxps055",
+                        "name": "California Institute of Technology"
+                    }
+                ]
+            }
+        ],
+        "funding": [
+            {
+                "award": {
+                    "title": {
+                        "en": " "
+                    },
+                    "number": "FA9550-19-1-0302"
+                },
+                "funder": {
+                    "id": "011e9bt93",
+                    "name": "United States Air Force Office of Scientific Research"
+                }
+            }
+        ],
+        "languages": [
+            {
+                "id": "eng",
+                "title": {
+                    "en": "English"
+                }
+            }
+        ],
+        "additional_descriptions": [
+            {
+                "description": "<p>&copy; 2024 Elsevier B.V. All rights are reserved, including those for text and data mining, AI training, and similar technologies.</p>",
+                "type": {
+                    "id": "copyright",
+                    "title": {
+                        "de": "Sonstige",
+                        "en": "Copyright and License"
+                    }
+                }
+            },
+            {
+                "description": "<p>This work was supported by the&nbsp;<span>AFOSR</span>, grant&nbsp;<span class=\"anchor-text-container\"><span class=\"anchor-text\">FA9550-19-1-0302</span></span>.</p>",
+                "type": {
+                    "id": "funding",
+                    "title": {
+                        "de": "Sonstige",
+                        "en": "Funding"
+                    }
+                }
+            },
+            {
+                "description": "<p><strong>Prithvi Akella:</strong>&nbsp;Conceptualization, Formal analysis, Investigation, Methodology, Software, Validation, Visualization, Writing &ndash; original draft, Writing &ndash; review &amp; editing.&nbsp;<strong>Anushri Dixit:</strong>&nbsp;Conceptualization, Formal analysis, Writing &ndash; review &amp; editing.&nbsp;<strong>Mohamadreza Ahmadi:</strong>&nbsp;Conceptualization, Formal analysis, Supervision, Writing &ndash; review &amp; editing.&nbsp;<strong>Joel W. Burdick:</strong>&nbsp;Formal analysis, Supervision, Validation, Writing &ndash; review &amp; editing.&nbsp;<strong>Aaron D. Ames:</strong> Funding acquisition, Writing &ndash; review &amp; editing.</p>",
+                "type": {
+                    "id": "contributions",
+                    "title": {
+                        "de": "Sonstige",
+                        "en": "Contributions"
+                    }
+                }
+            },
+            {
+                "description": "<p>No data was used for the research described in the article.</p>",
+                "type": {
+                    "id": "data-availability",
+                    "title": {
+                        "de": "Sonstige",
+                        "en": "Data Availability"
+                    }
+                }
+            }
+        ],
+        "rights": [
+            {
+                "title": {
+                    "en": "No commercial reproduction, distribution, display or performance rights in this work are provided."
+                },
+                "id": "default",
+                "description": {
+                    "en": ""
+                }
+            }
+        ],
+        "publisher": "Elsevier",
+        "dates": [
+            {
+                "description": "Available Online",
+                "date": "2024-08-02",
+                "type": {
+                    "id": "available",
+                    "title": {
+                        "de": "Verf\u00fcgbar",
+                        "en": "Available"
+                    }
+                }
+            },
+            {
+                "description": "Accepted",
+                "date": "2024-07-27",
+                "type": {
+                    "id": "accepted",
+                    "title": {
+                        "de": "Angenommen",
+                        "en": "Accepted"
+                    }
+                }
+            }
+        ],
+        "version": "Published",
+        "publication_date": "2024-11",
+        "description": "<div class=\"Abstracts u-font-serif\">\n<div class=\"abstract author\">\n<div>\n<p>Autonomous systems are increasingly used in highly variable and uncertain environments giving rise to the pressing need to consider risk in both the synthesis and verification of policies for these systems. This paper first develops a sample-based method to upper bound the risk measure evaluation of a random variable whose distribution is unknown. These bounds permit us to generate high-confidence verification statements for a large class of robotic systems in a sample-efficient manner. Second, we develop a sample-based method to determine solutions to non-convex optimization problems that outperform a large fraction of the decision space of possible solutions. Both sample-based approaches then permit us to rapidly synthesize risk-aware policies that are guaranteed to achieve a minimum level of system performance. To showcase our approach in simulation, we verify a cooperative multi-agent system and develop a risk-aware controller that outperforms the system's baseline controller. Our approach can be extended to account for any&nbsp;<em>g</em>-entropic risk measure.</p>\n</div>\n</div>\n</div>\n<div></div>"
+    },
+    "id": "35qce-kxq75",
+    "is_published": true,
+    "access": {
+        "embargo": {
+            "reason": null,
+            "active": false
+        },
+        "files": "public",
+        "record": "public",
+        "status": "metadata-only"
+    }
+}
