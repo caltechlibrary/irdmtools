@@ -72,6 +72,20 @@ customized resource type and person role mapping for the content
 you harvest. This will allow you to be substantially closer to the
 final record form needed to crosswalk EPrints data into Invenio RDM.
 
+# ENVIRONMENT
+
+Environment variables can be set at the shell level or in a ".env" file.
+
+EPRINT_USER
+: The eprint user id to access the REST API
+
+EPRINT_PASSWORD
+: The eprint user password to access the REST API
+
+EPRINT_HOST
+: The hostname of the EPrints service
+
+
 # OPTIONS
 
 -help

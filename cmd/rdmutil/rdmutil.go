@@ -64,9 +64,14 @@ database. It does NOT use the OAI-PMH API since that is far too slow.
 {app_name} uses environment variables for configuration. For accessing the
 JSON API it uses the following.
 
+
 dataset related environment variables (i.e. for harvest action) 
 
 __{app_name}__ environment variable for storing harvested content.
+
+# ENVIRONMENT
+
+Environment can be read from the shell or loaded via a ".env" file.
 
 C_NAME
 : A dataset collection name. Collection must exist.

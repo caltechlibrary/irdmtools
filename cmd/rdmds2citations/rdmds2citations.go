@@ -67,6 +67,10 @@ that takes an dataset collection of RDM records and converts then
 to a citations dataset collection. It can do so for a single record id
 or read a JSON list of record ids to migrate.
 
+# ENVIRONMENT
+
+The environment variables can be set with in the shell environment
+or read from a ".env" file.
 
 RDM_DS is the dataset collection holding the eprint records.
 

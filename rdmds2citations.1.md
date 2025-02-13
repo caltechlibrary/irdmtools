@@ -1,6 +1,6 @@
-%rdmds2citations(1) irdmtools user manual | version 0.0.89 5850ad61
+%rdmds2citations(1) irdmtools user manual | version 0.0.90 282bfa93
 % R. S. Doiel and Tom Morrell
-% 2024-10-03
+% 2025-02-13
 
 # NAME
 
@@ -17,6 +17,10 @@ that takes an dataset collection of RDM records and converts then
 to a citations dataset collection. It can do so for a single record id
 or read a JSON list of record ids to migrate.
 
+# ENVIRONMENT
+
+The environment variables can be set with in the shell environment
+or read from a ".env" file.
 
 RDM_DS is the dataset collection holding the eprint records.
 

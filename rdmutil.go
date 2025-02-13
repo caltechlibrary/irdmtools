@@ -84,7 +84,7 @@ func (app *RdmUtil) Configure(configFName string, envPrefix string, debug bool) 
 	}
 	// Make sure we have a minimal useful configuration
 	if (app.Cfg.InvenioAPI == "" || app.Cfg.InvenioToken == "") && app.Cfg.InvenioDbHost == "" {
-		return fmt.Errorf("RDM_URL or RDMTOK not set, RDM_DB_HOST not set")
+		return fmt.Errorf("(RDM_URL and RDMTOK) or RDM_DB_HOST is not set")
 	}
 	return nil
 }
