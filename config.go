@@ -171,10 +171,11 @@ func (cfg *Config) LoadEnv(prefix string) error {
 	if cfg == nil {
 		cfg = NewConfig()
 	}
-	if err := godotenv.Load(); err != nil {
-		fmt.Fprint(os.Stderr, "WARNING: failed to find or read .env file, %s\n", err)
+	if _, err := os.Stat(".env"); err == nil {
+		if err := godotenv.Load(); err != nil {
+			fmt.Fprintf(os.Stderr, "WARNING: failed to read .env file, %s.\n", err)
+		}
 	}
-
 	if repoID := os.Getenv(prefixVar("REPO_ID", prefix)); repoID != "" {
 		cfg.RepoID = repoID
 	}
@@ -252,7 +253,7 @@ func (cfg *Config) LoadConfig(configFName string) error {
 		cfg = NewConfig()
 	}
 	if err := godotenv.Load(); err != nil {
-		fmt.Fprint(os.Stderr, "WARNING: failed to find or read .env file, %s\n", err)
+		fmt.Fprintf(os.Stderr, "WARNING: failed to find or read .env file, %s\n", err)
 	}
 	if configFName == "" {
 		return fmt.Errorf("configuration filename is an empty string")
