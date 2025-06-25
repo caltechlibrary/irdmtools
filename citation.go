@@ -435,16 +435,20 @@ func (cite *Citation) CrosswalkRecord(prefix string, citeUsingURL string, repoUR
 	return nil
 }
 
-// CrosswalkCreatorToCitationAgent takes a simplified.Cretor and returns a CitationAgent, role (e.g. "author", "editor", "thesis_advisor", "thesis_committee", "reviewer", "contributor"), and an error value
+// CrosswalkCreatorToCitationAgent takes a simplified.Creator and returns a CitationAgent, role (e.g. "author", "editor", "thesis_advisor", "thesis_committee", "reviewer", "contributor"), and an error value
 func CrosswalkCreatorToCitationAgent(creator *simplified.Creator) (*CitationAgent, string, error) {
+	var role string
+	if creator.Role != nil && creator.Role.ID != "" {
+		role = creator.Role.ID
+	}
 	if creator.PersonOrOrg == nil {
-		return nil, "", fmt.Errorf("create.PersonOrOrg is nil")
+		return nil, role, fmt.Errorf("create.PersonOrOrg is nil")
 	}
 	citationAgent, err := CrosswalkPersonOrOrgToCitationAgent(creator.PersonOrOrg)
 	if err != nil {
-		return nil, "", err
+		return nil, role, err
 	}
-	return citationAgent, "", nil
+	return citationAgent, role, nil
 }
 
 // CrosswalkPersonOrOrgToCitationAgent takes a simplified.PersonOrOrg and returns a CitationAgent

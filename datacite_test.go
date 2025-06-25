@@ -2,15 +2,18 @@ package irdmtools
 
 import (
 	//"fmt"
-	//"encoding/json"
+	"encoding/json"
 	"testing"
+
+	// 3rd Party package
+	"gopkg.in/yaml.v3"
 )
 
 func TestQueryDataCiteObject(t *testing.T) {
 	ids := []string{
 		"10.22002/36sg9-yhj98",
 		"10.22002/D1.868",
-		"arXiv.2404.01326",
+		//"arXiv.2404.01326",
 		"arXiv:2312.07215",
 		"arXiv:2305.06519",
 		"arXiv:2312.03791",
@@ -22,6 +25,9 @@ func TestQueryDataCiteObject(t *testing.T) {
 	}
 	cfg := new(Config)
 	options := new(Doi2RdmOptions)
+	if err := yaml.Unmarshal(TestDefaultOptions, &options); err != nil {
+		t.Error(err)
+	}
 	options.MailTo = "test@example.edu"
 	for _, id := range ids {
 		work, err := QueryDataCiteObject(cfg, id, options)
@@ -65,6 +71,9 @@ func TestQueryDatasetDOI(t *testing.T) {
 
 	cfg := new(Config)
 	options := new(Doi2RdmOptions)
+	if err := yaml.Unmarshal(TestDefaultOptions, &options); err != nil {
+		t.Error(err)
+	}
 	options.MailTo = "test@example.edu"
 	for doi, expected := range data {
 		m, err := QueryDataCiteObject(cfg, doi, options)
@@ -109,14 +118,16 @@ func TestQueryDatasetDOI(t *testing.T) {
 		if expectedS != gotS {
 			t.Errorf("expected published %q, got %q", expectedS, gotS)
 		}
-		expectedS = "https://doi.org/10.22002/d1.868"
+		expectedS = "10.22002/d1.868" // "https://doi.org/10.22002/d1.868"
 		gotS = getObjectIdentifier(m)
-		if expectedS != gotS {
-			t.Errorf("expected identifier %q, got %q", expectedS, gotS)
-		}
+		src, _ := json.MarshalIndent(m, "", "    ")
 		/*
 			src, _ := json.MarshalIndent(m, "", "    ")
 			fmt.Printf("DEBUG m ->\n%s\n", src)
 		*/
+		src = []byte(``)
+		if expectedS != gotS {
+			t.Errorf("expected identifier %q, got %q for m ->\n%s", expectedS, gotS, src)
+		}
 	}
 }

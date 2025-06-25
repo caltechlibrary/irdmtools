@@ -526,6 +526,11 @@ func getObjectIdentifier(object map[string]interface{}) string {
 			return identifier
 		}
 	}
+	if data, ok := getObjectData(object); ok {
+		if id, ok := data["id"].(string); ok {
+			return id
+		}
+	}
 	return ""
 }
 

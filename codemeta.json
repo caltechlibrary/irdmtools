@@ -61,8 +61,8 @@
     }
   ],
   "dateCreated": "2022-10-27",
-  "dateModified": "2025-04-02",
-  "datePublished": "2025-04-02",
+  "dateModified": "2025-06-25",
+  "datePublished": "2025-06-25",
   "description": "Tools for working with institutional repositories and data management systems. Current implementation targets Invenio-RDM.",
   "funder": "Caltech Library",
   "keywords": [
@@ -94,8 +94,8 @@
     "MySQL >= 8",
     "SQLite >= 3"
   ],
-  "version": "0.0.91",
+  "version": "0.0.92",
   "developmentStatus": "WIP",
   "issueTracker": "https://github.com/caltechlibrary/irdmtools/issues",
-  "releaseNotes": "Inproved detection of messaging around \".env\" file."
+  "releaseNotes": "Fix issue #81."
 }
