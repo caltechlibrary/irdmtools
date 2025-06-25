@@ -1,5 +1,5 @@
 #!/usr/bin/env pwsh
-# Generated with codemeta-ps1-installer.tmpl, see https://github.com/caltechlibrary/codemeta-pandoc-examples
+# generated with CMTools 0.0.92 03dbfd86
 
 #
 # Set the package name and version to install
@@ -24,6 +24,7 @@ if ($SYSTEM_TYPE.CsSystemType.Contains("ARM64")) {
     $MACHINE = "x86_64"
 }
 
+Write-Output "Using release ${RELEASE}"
 
 # FIGURE OUT Install directory
 $BIN_DIR = "${Home}\bin"
@@ -49,7 +50,29 @@ curl.exe -Lo "${ZIPFILE}" "${DOWNLOAD_URL}"
 if (!(Test-Path $ZIPFILE)) {
     Write-Output "Failed to download ${ZIPFILE} from ${DOWNLOAD_URL}"
 } else {
-    tar.exe xf "${ZIPFILE}" -C "${Home}"
+    # Do we have a zip file or tar.gz file?
+    $fileInfo = Get-Item "${ZIPFILE}"
+
+    # Handle zip or tar.gz files
+    switch ($fileInfo.Extension) {
+        ".zip" {
+            Expand-Archive -Force -Path "${ZIPFILE}" "${Home}"
+            break
+        }
+        ".gz" {
+            tar.exe xf "${ZIPFILE}" -C "${Home}"
+            break
+        }
+        ".tgz" {
+            tar.exe xf "${ZIPFILE}" -C "${Home}"
+            break
+        }
+        default {
+            Write-Output "The ${ZIPFILE} from ${DOWNLOAD_URL} is neither a ZIP file nor a gzipped tar file."
+            exit 1
+        }
+    }
+
     #Remove-Item $ZIPFILE
 
     $User = [System.EnvironmentVariableTarget]::User

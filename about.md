@@ -14,17 +14,17 @@ authors:
     orcid: ""
 
 repository-code: "https://github.com/caltechlibrary/irdmtools"
-version: 0.0.91
+version: 0.0.92
 license-url: "https://caltechlibrary.github.io/irdmtools/LICENSE"
 keywords: [ "institutional repository", "data
 management", "Invenio", "Invenio-RDM" ]
-date-released: 2025-04-02
+date-released: 2025-06-25
 ---
 
 About this software
 ===================
 
-## irdmtools 0.0.91
+## irdmtools 0.0.92
 
 ### Authors
 
@@ -59,9 +59,10 @@ systems. Current implementation targets Invenio-RDM.
 
 ### Software Requiremets
 
-- Go &gt;= 1.23.1
+- Go &gt;= 1.24.4
+- CMTools &gt;= 0.0.33
 - PostgreSQL &gt;= 16
 - PostgREST &gt;= 12
-- Pandoc &gt;= 3
+- Pandoc &gt;= 3.1
 - MySQL &gt;= 8
-- SQLite &gt;= 3
+- SQLite &gt;= 3.49

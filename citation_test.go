@@ -317,14 +317,14 @@ func TestCrosswalkPersonOrOrgToCitationAgent(t *testing.T) {
     },
 	{
 	      "given_name": "Marianne E.",
-	      "family_name": "Bronner"
+	      "family_name": "Bronner",
           "clpid": "Bronner-M-E",
-          "orcid": "0000-0003-4274-1862",
+          "orcid": "0000-0003-4274-1862"
     }
 ]`)
 	expectedPeople := []*CitationAgent{}
 	if err := json.Unmarshal(src, &expectedPeople); err != nil {
-		t.Errorf("failed to unmarshal expected data, skipping %s", err)
+		t.Errorf("failed to unmarshal expected data, skipping %s\n\n%s", err, src)
 		t.FailNow()
 	}
 	for i, creator := range personList {
