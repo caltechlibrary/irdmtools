@@ -59,9 +59,10 @@ systems. Current implementation targets Invenio-RDM.
 
 ### Software Requiremets
 
-- Go &gt;= 1.23.1
+- Go &gt;= 1.24.4
+- CMTools &gt;= 0.0.33
 - PostgreSQL &gt;= 16
 - PostgREST &gt;= 12
-- Pandoc &gt;= 3
+- Pandoc &gt;= 3.1
 - MySQL &gt;= 8
-- SQLite &gt;= 3
+- SQLite &gt;= 3.49

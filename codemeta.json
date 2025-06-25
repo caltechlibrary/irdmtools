@@ -87,15 +87,26 @@
     "https://eprints.org"
   ],
   "softwareRequirements": [
-    "Go >= 1.23.1",
+    "Go >= 1.24.4",
+    "CMTools >= 0.0.33",
     "PostgreSQL >= 16",
     "PostgREST >= 12",
-    "Pandoc >= 3",
+    "Pandoc >= 3.1",
     "MySQL >= 8",
-    "SQLite >= 3"
+    "SQLite >= 3.49"
+  ],
+  "softwareSuggestions": [
+    "GNU Make > 3.8",
+    "PostgreSQL >= 16",
+    "PostgREST >= 12",
+    "Pandoc >= 3.1",
+    "MySQL >= 8",
+    "SQLite >= 3.49"
   ],
   "version": "0.0.92",
-  "developmentStatus": "WIP",
+  "developmentStatus": "active",
   "issueTracker": "https://github.com/caltechlibrary/irdmtools/issues",
-  "releaseNotes": "Fix issue #81."
+  "releaseNotes": "Fix issue #81.",
+  "copyrightYear": 2025,
+  "copyrightHolder": "California Institute of Technology"
 }
