@@ -1,0 +1,656 @@
+{
+    "files": {
+        "enabled": false
+    },
+    "is_draft": false,
+    "pids": {
+        "oai": {
+            "provider": "oai",
+            "identifier": "oai:authors.library.caltech.edu:0qj6g-79g34"
+        }
+    },
+    "is_published": true,
+    "parent": {
+        "communities": {
+            "ids": [
+                "aedd135f-227e-4fdf-9476-5b3fd011bac6"
+            ],
+            "default": "aedd135f-227e-4fdf-9476-5b3fd011bac6"
+        },
+        "id": "czaad-adf41"
+    },
+    "custom_fields": {
+        "journal:journal": {
+            "pages": "368-374",
+            "issue": "1",
+            "volume": "7",
+            "title": "ACS Energy Letters",
+            "issn": "2380-8195"
+        }
+    },
+    "access": {
+        "files": "restricted",
+        "record": "public",
+        "embargo": {
+            "active": false,
+            "reason": null
+        },
+        "status": "metadata-only"
+    },
+    "metadata": {
+        "description": "In 2016, an Editorial in ACS Nano, entitled \"The Rising and Receding Fortunes of Electrochemists\", (1) reflected the growing scientific consensus that existing initiatives in fundamental research were undermatched to the fact that electrochemistry was becoming ubiquitous in applications in energy, thus handicapping progress toward social impact. That same year, Next Generation Electrochemistry (NGenE) hosted its first edition at the University of Illinois at Chicago (UIC). NGenE is an annual summer workshop focused on describing emerging challenges at the frontiers of research in electrochemistry and the application of innovative strategies to address them. The original premise behind NGenE was also that, despite its reach and importance, fundamental electrochemistry had gone through a rather slow period of activity in the early 21st century compared to many companion fields. Back in 2016, one of the causes was ascribed to a deficit in electrochemistry training at the graduate level, (2) (3) leading to calls for increased emphasis in research in this area. (4) Since 2016, NGenE has tackled these deficiencies by broadening the knowledge and perspective of senior graduate students and postdoctoral researchers. A series of world-renowned experts in various walks of electrochemistry examine fundamental phenomena at an advanced level, identifying critical gaps in our understanding and innovative strategies to address them. The program assumes baseline knowledge and prior experience in electrochemistry. NGenE does not ask, \"What is electrochemistry?\" but instead, \"What will electrochemistry become?\". As such, it addresses the very same issues raised in the aforementioned Editorial.",
+        "version": "public",
+        "creators": [
+            {
+                "person_or_org": {
+                    "identifiers": [
+                        {
+                            "identifier": "Cabana-Jordi",
+                            "scheme": "clpid"
+                        },
+                        {
+                            "identifier": "0000-0002-2353-5986",
+                            "scheme": "orcid"
+                        }
+                    ],
+                    "family_name": "Cabana",
+                    "name": "Cabana, Jordi",
+                    "given_name": "Jordi",
+                    "type": "personal"
+                }
+            },
+            {
+                "person_or_org": {
+                    "identifiers": [
+                        {
+                            "identifier": "Alaan-Thomas",
+                            "scheme": "clpid"
+                        }
+                    ],
+                    "family_name": "Alaan",
+                    "name": "Alaan, Thomas",
+                    "given_name": "Thomas",
+                    "type": "personal"
+                }
+            },
+            {
+                "person_or_org": {
+                    "identifiers": [
+                        {
+                            "identifier": "Crabtree-George-W",
+                            "scheme": "clpid"
+                        },
+                        {
+                            "identifier": "0000-0002-8494-4468",
+                            "scheme": "orcid"
+                        }
+                    ],
+                    "family_name": "Crabtree",
+                    "name": "Crabtree, George W.",
+                    "given_name": "George W.",
+                    "type": "personal"
+                }
+            },
+            {
+                "person_or_org": {
+                    "identifiers": [
+                        {
+                            "identifier": "Hatzell-Marta-C",
+                            "scheme": "clpid"
+                        },
+                        {
+                            "identifier": "0000-0001-6226-5811",
+                            "scheme": "orcid"
+                        }
+                    ],
+                    "family_name": "Hatzell",
+                    "name": "Hatzell, Marta C.",
+                    "given_name": "Marta C.",
+                    "type": "personal"
+                }
+            },
+            {
+                "person_or_org": {
+                    "identifiers": [
+                        {
+                            "identifier": "Manthiram-Karthish",
+                            "scheme": "clpid"
+                        },
+                        {
+                            "identifier": "0000-0001-9260-3391",
+                            "scheme": "orcid"
+                        }
+                    ],
+                    "family_name": "Manthiram",
+                    "name": "Manthiram, Karthish",
+                    "given_name": "Karthish",
+                    "type": "personal"
+                },
+                "affiliations": [
+                    {
+                        "id": "05dxps055",
+                        "name": "California Institute of Technology"
+                    }
+                ]
+            },
+            {
+                "person_or_org": {
+                    "identifiers": [
+                        {
+                            "identifier": "Steingart-Daniel-A",
+                            "scheme": "clpid"
+                        },
+                        {
+                            "identifier": "0000-0002-8184-9641",
+                            "scheme": "orcid"
+                        }
+                    ],
+                    "family_name": "Steingart",
+                    "name": "Steingart, Daniel A.",
+                    "given_name": "Daniel A.",
+                    "type": "personal"
+                }
+            },
+            {
+                "person_or_org": {
+                    "identifiers": [
+                        {
+                            "identifier": "Zenyuk-Iryna",
+                            "scheme": "clpid"
+                        },
+                        {
+                            "identifier": "0000-0002-1612-0475",
+                            "scheme": "orcid"
+                        }
+                    ],
+                    "family_name": "Zenyuk",
+                    "name": "Zenyuk, Iryna",
+                    "given_name": "Iryna",
+                    "type": "personal"
+                }
+            },
+            {
+                "person_or_org": {
+                    "identifiers": [
+                        {
+                            "identifier": "Jiao-Feng",
+                            "scheme": "clpid"
+                        },
+                        {
+                            "identifier": "0000-0002-3335-3203",
+                            "scheme": "orcid"
+                        }
+                    ],
+                    "family_name": "Jiao",
+                    "name": "Jiao, Feng",
+                    "given_name": "Feng",
+                    "type": "personal"
+                }
+            },
+            {
+                "person_or_org": {
+                    "identifiers": [
+                        {
+                            "identifier": "Vojvodic-Aleksandra",
+                            "scheme": "clpid"
+                        },
+                        {
+                            "identifier": "0000-0002-5584-6711",
+                            "scheme": "orcid"
+                        }
+                    ],
+                    "family_name": "Vojvodic",
+                    "name": "Vojvodic, Aleksandra",
+                    "given_name": "Aleksandra",
+                    "type": "personal"
+                }
+            },
+            {
+                "person_or_org": {
+                    "identifiers": [
+                        {
+                            "identifier": "Yang-Jenny-Y",
+                            "scheme": "clpid"
+                        },
+                        {
+                            "identifier": "0000-0002-9680-8260",
+                            "scheme": "orcid"
+                        }
+                    ],
+                    "family_name": "Yang",
+                    "name": "Yang, Jenny Y.",
+                    "given_name": "Jenny Y.",
+                    "type": "personal"
+                }
+            },
+            {
+                "person_or_org": {
+                    "identifiers": [
+                        {
+                            "identifier": "Balsara-Nitash-P",
+                            "scheme": "clpid"
+                        },
+                        {
+                            "identifier": "0000-0002-0106-5565",
+                            "scheme": "orcid"
+                        }
+                    ],
+                    "family_name": "Balsara",
+                    "name": "Balsara, Nitash P.",
+                    "given_name": "Nitash P.",
+                    "type": "personal"
+                }
+            },
+            {
+                "person_or_org": {
+                    "identifiers": [
+                        {
+                            "identifier": "Persson-Kristin-A",
+                            "scheme": "clpid"
+                        },
+                        {
+                            "identifier": "0000-0003-2495-5509",
+                            "scheme": "orcid"
+                        }
+                    ],
+                    "family_name": "Persson",
+                    "name": "Persson, Kristin A.",
+                    "given_name": "Kristin A.",
+                    "type": "personal"
+                }
+            },
+            {
+                "person_or_org": {
+                    "identifiers": [
+                        {
+                            "identifier": "Siegel-Donald-J",
+                            "scheme": "clpid"
+                        },
+                        {
+                            "identifier": "0000-0001-7913-2513",
+                            "scheme": "orcid"
+                        }
+                    ],
+                    "family_name": "Siegel",
+                    "name": "Siegel, Donald J.",
+                    "given_name": "Donald J.",
+                    "type": "personal"
+                }
+            },
+            {
+                "person_or_org": {
+                    "identifiers": [
+                        {
+                            "identifier": "Haynes-Christy-L",
+                            "scheme": "clpid"
+                        },
+                        {
+                            "identifier": "0000-0002-5420-5867",
+                            "scheme": "orcid"
+                        }
+                    ],
+                    "family_name": "Haynes",
+                    "name": "Haynes, Christy L.",
+                    "given_name": "Christy L.",
+                    "type": "personal"
+                }
+            },
+            {
+                "person_or_org": {
+                    "identifiers": [
+                        {
+                            "identifier": "Mauzeroll-Janine",
+                            "scheme": "clpid"
+                        },
+                        {
+                            "identifier": "0000-0003-4752-7507",
+                            "scheme": "orcid"
+                        }
+                    ],
+                    "family_name": "Mauzeroll",
+                    "name": "Mauzeroll, Janine",
+                    "given_name": "Janine",
+                    "type": "personal"
+                }
+            },
+            {
+                "person_or_org": {
+                    "identifiers": [
+                        {
+                            "identifier": "Shen-Mei",
+                            "scheme": "clpid"
+                        },
+                        {
+                            "identifier": "0000-0002-6033-8308",
+                            "scheme": "orcid"
+                        }
+                    ],
+                    "family_name": "Shen",
+                    "name": "Shen, Mei",
+                    "given_name": "Mei",
+                    "type": "personal"
+                }
+            },
+            {
+                "person_or_org": {
+                    "identifiers": [
+                        {
+                            "identifier": "Venton-B-Jill",
+                            "scheme": "clpid"
+                        },
+                        {
+                            "identifier": "0000-0002-5096-9309",
+                            "scheme": "orcid"
+                        }
+                    ],
+                    "family_name": "Venton",
+                    "name": "Venton, B. Jill",
+                    "given_name": "B. Jill",
+                    "type": "personal"
+                }
+            },
+            {
+                "person_or_org": {
+                    "identifiers": [
+                        {
+                            "identifier": "Balke-Nina",
+                            "scheme": "clpid"
+                        },
+                        {
+                            "identifier": "0000-0001-5865-5892",
+                            "scheme": "orcid"
+                        }
+                    ],
+                    "family_name": "Balke",
+                    "name": "Balke, Nina",
+                    "given_name": "Nina",
+                    "type": "personal"
+                }
+            },
+            {
+                "person_or_org": {
+                    "identifiers": [
+                        {
+                            "identifier": "Rodr\u00edguez-L\u00f3pez-Joaqu\u00edn",
+                            "scheme": "clpid"
+                        },
+                        {
+                            "identifier": "0000-0003-4346-4668",
+                            "scheme": "orcid"
+                        }
+                    ],
+                    "family_name": "Rodr\u00edguez-L\u00f3pez",
+                    "name": "Rodr\u00edguez-L\u00f3pez, Joaqu\u00edn",
+                    "given_name": "Joaqu\u00edn",
+                    "type": "personal"
+                }
+            },
+            {
+                "person_or_org": {
+                    "identifiers": [
+                        {
+                            "identifier": "Rolison-Debra-R",
+                            "scheme": "clpid"
+                        },
+                        {
+                            "identifier": "0000-0003-0493-9931",
+                            "scheme": "orcid"
+                        }
+                    ],
+                    "family_name": "Rolison",
+                    "name": "Rolison, Debra R.",
+                    "given_name": "Debra R.",
+                    "type": "personal"
+                }
+            },
+            {
+                "person_or_org": {
+                    "identifiers": [
+                        {
+                            "identifier": "Shahbazian-Yassar-Reza",
+                            "scheme": "clpid"
+                        },
+                        {
+                            "identifier": "0000-0002-7744-4780",
+                            "scheme": "orcid"
+                        }
+                    ],
+                    "family_name": "Shahbazian-Yassar",
+                    "name": "Shahbazian-Yassar, Reza",
+                    "given_name": "Reza",
+                    "type": "personal"
+                }
+            },
+            {
+                "person_or_org": {
+                    "identifiers": [
+                        {
+                            "identifier": "Srinivasan-Venkat",
+                            "scheme": "clpid"
+                        },
+                        {
+                            "identifier": "0000-0002-1248-5952",
+                            "scheme": "orcid"
+                        }
+                    ],
+                    "family_name": "Srinivasan",
+                    "name": "Srinivasan, Venkat",
+                    "given_name": "Venkat",
+                    "type": "personal"
+                }
+            },
+            {
+                "person_or_org": {
+                    "identifiers": [
+                        {
+                            "identifier": "Chaudhuri-Satanu",
+                            "scheme": "clpid"
+                        },
+                        {
+                            "identifier": "0000-0002-4328-2947",
+                            "scheme": "orcid"
+                        }
+                    ],
+                    "family_name": "Chaudhuri",
+                    "name": "Chaudhuri, Santanu",
+                    "given_name": "Santanu",
+                    "type": "personal"
+                }
+            },
+            {
+                "person_or_org": {
+                    "identifiers": [
+                        {
+                            "identifier": "Couet-Adrien",
+                            "scheme": "clpid"
+                        },
+                        {
+                            "identifier": "0000-0002-7330-5150",
+                            "scheme": "orcid"
+                        }
+                    ],
+                    "family_name": "Couet",
+                    "name": "Couet, Adrien",
+                    "given_name": "Adrien",
+                    "type": "personal"
+                }
+            },
+            {
+                "person_or_org": {
+                    "identifiers": [
+                        {
+                            "identifier": "Hattrick-Simpers-Jason-R",
+                            "scheme": "clpid"
+                        },
+                        {
+                            "identifier": "0000-0003-2937-3188",
+                            "scheme": "orcid"
+                        }
+                    ],
+                    "family_name": "Hattrick-Simpers",
+                    "name": "Hattrick-Simpers, Jason",
+                    "given_name": "Jason",
+                    "type": "personal"
+                }
+            }
+        ],
+        "dates": [
+            {
+                "description": "Created from EPrint's datestamp field",
+                "date": "2022-01-13",
+                "type": {
+                    "id": "created",
+                    "title": {
+                        "de": "Erstellt",
+                        "en": "Created"
+                    }
+                }
+            },
+            {
+                "description": "Created from EPrint's last_modified field",
+                "date": "2022-08-16",
+                "type": {
+                    "id": "updated",
+                    "title": {
+                        "de": "Aktualisiert",
+                        "en": "Updated"
+                    }
+                }
+            }
+        ],
+        "funding": [
+            {
+                "funder": {
+                    "name": "NSF"
+                },
+                "award": {
+                    "number": "DMR-1661629",
+                    "title": {
+                        "en": " "
+                    }
+                }
+            }
+        ],
+        "publisher": "American Chemical Society",
+        "additional_descriptions": [
+            {
+                "description": "\u00a9 2021 American Chemical Society. \n\nReceived: November 30, 2021; Accepted: December 10, 2021; Published: December 22, 2021. \n\nNext Generation Electrochemistry is funded by the National Science Foundation through grant XC-1661629. \n\nViews expressed in this Energy Focus are those of the authors and not necessarily the views of the ACS. \n\nThe authors declare no competing financial interest.",
+                "type": {
+                    "id": "additional",
+                    "title": {
+                        "de": "Sonstige",
+                        "en": "Additional Information"
+                    }
+                }
+            }
+        ],
+        "resource_type": {
+            "id": "publication-article",
+            "title": {
+                "de": "Zeitschriftenartikel",
+                "en": "Journal Article"
+            }
+        },
+        "publication_date": "2022-01-14",
+        "subjects": [
+            {
+                "subject": "Electrochemistry, Solvation, Electrodes, Ions, Materials"
+            },
+            {
+                "subject": "Materials Chemistry"
+            },
+            {
+                "subject": "Energy Engineering and Power Technology"
+            },
+            {
+                "subject": "Fuel Technology"
+            },
+            {
+                "subject": "Renewable Energy, Sustainability and the Environment"
+            },
+            {
+                "subject": "Chemistry (miscellaneous)"
+            }
+        ],
+        "title": "NGenE 2021: Electrochemistry Is Everywhere",
+        "rights": [
+            {
+                "description": {
+                    "en": "No commercial reproduction, distribution, display or performance rights in this work are provided."
+                },
+                "title": {
+                    "en": "Other"
+                }
+            }
+        ],
+        "identifiers": [
+            {
+                "identifier": "112884",
+                "scheme": "eprintid"
+            },
+            {
+                "identifier": "10.1021/acsenergylett.1c02608",
+                "scheme": "doi"
+            },
+            {
+                "identifier": "CaltechAUTHORS:20220113-351992438",
+                "scheme": "resolverid"
+            }
+        ],
+        "related_identifiers": [
+            {
+                "relation_type": {
+                    "id": "describes",
+                    "title": {
+                        "de": "Beschreibt",
+                        "en": "Describes"
+                    }
+                },
+                "identifier": "10.1021/acsenergylett.1c02608",
+                "scheme": "doi"
+            }
+        ]
+    },
+    "updated": "2024-02-09T19:04:15.211779+00:00",
+    "created": "2023-09-15T07:23:07.154491+00:00",
+    "status": "published",
+    "stats": {
+        "this_version": {
+            "views": 22,
+            "downloads": 0,
+            "data_volume": 0.0,
+            "unique_downloads": 0,
+            "unique_views": 22
+        },
+        "all_versions": {
+            "views": 22,
+            "downloads": 0,
+            "data_volume": 0.0,
+            "unique_downloads": 0,
+            "unique_views": 22
+        }
+    },
+    "links": {
+        "self": "https://authors.library.caltech.edu/api/records/0qj6g-79g34",
+        "self_html": "https://authors.library.caltech.edu/records/0qj6g-79g34",
+        "self_iiif_manifest": "https://authors.library.caltech.edu/api/iiif/record:0qj6g-79g34/manifest",
+        "self_iiif_sequence": "https://authors.library.caltech.edu/api/iiif/record:0qj6g-79g34/sequence/default",
+        "files": "https://authors.library.caltech.edu/api/records/0qj6g-79g34/files",
+        "archive": "https://authors.library.caltech.edu/api/records/0qj6g-79g34/files-archive",
+        "latest": "https://authors.library.caltech.edu/api/records/0qj6g-79g34/versions/latest",
+        "latest_html": "https://authors.library.caltech.edu/records/0qj6g-79g34/latest",
+        "draft": "https://authors.library.caltech.edu/api/records/0qj6g-79g34/draft",
+        "versions": "https://authors.library.caltech.edu/api/records/0qj6g-79g34/versions",
+        "access_links": "https://authors.library.caltech.edu/api/records/0qj6g-79g34/access/links",
+        "reserve_doi": "https://authors.library.caltech.edu/api/records/0qj6g-79g34/draft/pids/doi",
+        "communities": "https://authors.library.caltech.edu/api/records/0qj6g-79g34/communities",
+        "communities-suggestions": "https://authors.library.caltech.edu/api/records/0qj6g-79g34/communities-suggestions",
+        "requests": "https://authors.library.caltech.edu/api/records/0qj6g-79g34/requests"
+    },
+    "revision_id": 7,
+    "id": "0qj6g-79g34",
+    "versions": {
+        "is_latest": true,
+        "index": 2
+    }
+}

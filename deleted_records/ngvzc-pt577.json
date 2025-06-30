@@ -1,0 +1,383 @@
+{
+    "versions": {
+        "is_latest": true,
+        "index": 2
+    },
+    "revision_id": 9,
+    "parent": {
+        "communities": {
+            "ids": [
+                "aedd135f-227e-4fdf-9476-5b3fd011bac6"
+            ],
+            "default": "aedd135f-227e-4fdf-9476-5b3fd011bac6"
+        },
+        "id": "9gqnj-grk22"
+    },
+    "custom_fields": {
+        "journal:journal": {
+            "issn": "1754-2189",
+            "title": "Nature Protocols",
+            "pages": "2345-2380",
+            "issue": "5",
+            "volume": "16"
+        },
+        "caltech:groups": [
+            {
+                "title": {
+                    "en": "Division of Biology and Biological Engineering"
+                },
+                "id": "Division-of-Biology-and-Biological-Engineering"
+            }
+        ]
+    },
+    "pids": {
+        "doi": {
+            "identifier": "10.1038/s41596-020-00464-3",
+            "provider": "external"
+        },
+        "oai": {
+            "identifier": "oai:authors.library.caltech.edu:ngvzc-pt577",
+            "provider": "oai"
+        }
+    },
+    "access": {
+        "record": "public",
+        "status": "open",
+        "files": "public",
+        "embargo": {
+            "reason": null,
+            "active": false
+        }
+    },
+    "created": "2023-08-22T09:40:30.532765+00:00",
+    "is_draft": false,
+    "metadata": {
+        "creators": [
+            {
+                "person_or_org": {
+                    "type": "personal",
+                    "identifiers": [
+                        {
+                            "scheme": "clpid",
+                            "identifier": "Robertson-Wesley-E"
+                        },
+                        {
+                            "scheme": "orcid",
+                            "identifier": "0000-0001-9812-8288"
+                        }
+                    ],
+                    "given_name": "Wesley E.",
+                    "family_name": "Robertson",
+                    "name": "Robertson, Wesley E."
+                }
+            },
+            {
+                "person_or_org": {
+                    "type": "personal",
+                    "identifiers": [
+                        {
+                            "scheme": "clpid",
+                            "identifier": "Funke-Louise-F-H"
+                        }
+                    ],
+                    "given_name": "Louise F. H.",
+                    "family_name": "Funke",
+                    "name": "Funke, Louise F. H."
+                }
+            },
+            {
+                "person_or_org": {
+                    "type": "personal",
+                    "identifiers": [
+                        {
+                            "scheme": "clpid",
+                            "identifier": "de-la-Torre-Daniel"
+                        },
+                        {
+                            "scheme": "orcid",
+                            "identifier": "0000-0002-9545-9388"
+                        }
+                    ],
+                    "given_name": "Daniel",
+                    "family_name": "de la Torre",
+                    "name": "de la Torre, Daniel"
+                }
+            },
+            {
+                "person_or_org": {
+                    "type": "personal",
+                    "identifiers": [
+                        {
+                            "scheme": "clpid",
+                            "identifier": "Fredens-Julius"
+                        },
+                        {
+                            "scheme": "orcid",
+                            "identifier": "0000-0002-4262-9304"
+                        }
+                    ],
+                    "given_name": "Julius",
+                    "family_name": "Fredens",
+                    "name": "Fredens, Julius"
+                }
+            },
+            {
+                "person_or_org": {
+                    "type": "personal",
+                    "identifiers": [
+                        {
+                            "scheme": "clpid",
+                            "identifier": "Wang-Kaihang"
+                        },
+                        {
+                            "scheme": "orcid",
+                            "identifier": "0000-0001-7657-8755"
+                        }
+                    ],
+                    "given_name": "Kaihang",
+                    "family_name": "Wang",
+                    "name": "Wang, Kaihang"
+                }
+            },
+            {
+                "person_or_org": {
+                    "type": "personal",
+                    "identifiers": [
+                        {
+                            "scheme": "clpid",
+                            "identifier": "Chin-Jason-W"
+                        },
+                        {
+                            "scheme": "orcid",
+                            "identifier": "0000-0003-1219-4757"
+                        }
+                    ],
+                    "given_name": "Jason W.",
+                    "family_name": "Chin",
+                    "name": "Chin, Jason W."
+                }
+            }
+        ],
+        "rights": [
+            {
+                "title": {
+                    "en": "Other"
+                },
+                "description": {
+                    "en": "No commercial reproduction, distribution, display or performance rights in this work are provided."
+                }
+            }
+        ],
+        "title": "Creating custom synthetic genomes in Escherichia coli with REXER and GENESIS",
+        "version": "Supplemental Material",
+        "dates": [
+            {
+                "date": "2021-04-26",
+                "type": {
+                    "title": {
+                        "de": "Erstellt",
+                        "en": "Created"
+                    },
+                    "id": "created"
+                },
+                "description": "Created from EPrint's datestamp field"
+            },
+            {
+                "date": "2021-11-16",
+                "type": {
+                    "title": {
+                        "de": "Aktualisiert",
+                        "en": "Updated"
+                    },
+                    "id": "updated"
+                },
+                "description": "Created from EPrint's last_modified field"
+            }
+        ],
+        "related_identifiers": [
+            {
+                "scheme": "url",
+                "identifier": "https://github.com/TiongSun/iSeq",
+                "relation_type": {
+                    "title": {
+                        "de": "Beschreibt",
+                        "en": "Describes"
+                    },
+                    "id": "describes"
+                }
+            }
+        ],
+        "funding": [
+            {
+                "award": {
+                    "number": "MC_U105181009",
+                    "title": {
+                        "en": " "
+                    }
+                },
+                "funder": {
+                    "name": "Medical Research Council (UK)"
+                }
+            },
+            {
+                "award": {
+                    "number": "MC_UP_A024_1008",
+                    "title": {
+                        "en": " "
+                    }
+                },
+                "funder": {
+                    "name": "Medical Research Council (UK)"
+                }
+            },
+            {
+                "award": {
+                    "number": "MRF-109-0003-RG-CHIN/C0741",
+                    "title": {
+                        "en": " "
+                    }
+                },
+                "funder": {
+                    "name": "Medical Research Foundation"
+                }
+            },
+            {
+                "funder": {
+                    "name": "European Research Council (ERC)"
+                }
+            },
+            {
+                "award": {
+                    "number": "R232-2016-3474",
+                    "title": {
+                        "en": " "
+                    }
+                },
+                "funder": {
+                    "name": "Lundbeck Foundation"
+                }
+            }
+        ],
+        "publisher": "Nature Publishing Group",
+        "identifiers": [
+            {
+                "scheme": "eprintid",
+                "identifier": "106358"
+            },
+            {
+                "scheme": "resolverid",
+                "identifier": "CaltechAUTHORS:20201030-111758974"
+            }
+        ],
+        "additional_descriptions": [
+            {
+                "type": {
+                    "title": {
+                        "de": "Sonstige",
+                        "en": "Additional Information"
+                    },
+                    "id": "additional"
+                },
+                "description": "\u00a9 2021 Nature Publishing Group. \n\nReceived 02 May 2019. Accepted 16 November 2020. Published 26 April 2021. \n\nThis work was supported by the Medical Research Council (MRC), UK (MC_U105181009 and MC_UP_A024_1008), the Medical Research Foundation (MRF-109-0003-RG-CHIN/C0741) and an ERC Advanced Grant SGCR, all to J.W.C., and by the Lundbeck Foundation (R232-2016-3474) to J.F. J.W.C. thanks H. Pelham for supporting this project. We are grateful to the LMB Media Kitchen for help with preparing materials. \n\nThese authors contributed equally: Wesley E. Robertson, Louise F. H. Funke, Daniel de la Torre, Julius Fredens. \n\nAuthor Contributions. All authors contributed to developing this protocol and writing this paper. J.W.C. supervised the project. \n\nData availability. No new data were generated or analyzed while preparing this protocol. Representative data are available in refs. 3,14. \n\nCode availability. Code used for next-generation sequencing analysis is freely available at https://github.com/TiongSun/iSeq. \n\nThe authors declare no competing interests. \n\nPeer review information Nature Protocols thanks Byung-Kwan Cho, Bogumil Karas and the other, anonymous, reviewer(s) for their contribution to the peer review of this work."
+            },
+            {
+                "type": {
+                    "title": {
+                        "de": "Sonstige",
+                        "en": "Attached Files"
+                    },
+                    "id": "attached-files"
+                },
+                "description": "<p>Supplemental Material - <a href=\"/records/ngvzc-pt577/files/41596_2020_464_MOESM1_ESM.pdf?download=1\">41596_2020_464_MOESM1_ESM.pdf</a></p><p>Supplemental Material - <a href=\"/records/ngvzc-pt577/files/41596_2020_464_MOESM2_ESM.pdf?download=1\">41596_2020_464_MOESM2_ESM.pdf</a></p><p>Supplemental Material - <a href=\"/records/ngvzc-pt577/files/41596_2020_464_MOESM3_ESM.xlsx?download=1\">41596_2020_464_MOESM3_ESM.xlsx</a></p>"
+            }
+        ],
+        "subjects": [
+            {
+                "subject": "Genetic engineering"
+            },
+            {
+                "subject": "Genomic engineering"
+            },
+            {
+                "subject": "Synthetic biology"
+            }
+        ],
+        "publication_date": "2021-05",
+        "description": "We previously developed REXER (Replicon EXcision Enhanced Recombination); this method enables the replacement of &gt;100 kb of the Escherichia coli genome with synthetic DNA in a single step and allows the rapid identification of non-viable or otherwise problematic sequences with nucleotide resolution. Iterative repetition of REXER (GENESIS, GENomE Stepwise Interchange Synthesis) enables stepwise replacement of longer contiguous sections of genomic DNA with synthetic DNA, and even the replacement of the entire E. coli genome with synthetic DNA. Here we detail protocols for REXER and GENESIS. A standard REXER protocol typically takes 7\u201310 days to complete. Our description encompasses (i) synthetic DNA design, (ii) assembly of synthetic DNA constructs, (iii) utilization of CRISPR\u2013Cas9 coupled to lambda-red recombination and positive/negative selection to enable the high-fidelity replacement of genomic DNA with synthetic DNA (or insertion of synthetic DNA), (iv) evaluation of the success of the integration and replacement and (v) identification of non-tolerated synthetic DNA sequences with nucleotide resolution. This protocol provides a set of precise genome engineering methods to create custom synthetic E. coli genomes.",
+        "resource_type": {
+            "title": {
+                "de": "Zeitschriftenartikel",
+                "en": "Journal Article"
+            },
+            "id": "publication-article"
+        }
+    },
+    "stats": {
+        "all_versions": {
+            "views": 118,
+            "data_volume": 27522014.0,
+            "downloads": 79,
+            "unique_downloads": 74,
+            "unique_views": 116
+        },
+        "this_version": {
+            "views": 118,
+            "data_volume": 27522014.0,
+            "downloads": 79,
+            "unique_downloads": 74,
+            "unique_views": 116
+        }
+    },
+    "links": {
+        "self": "https://authors.library.caltech.edu/api/records/ngvzc-pt577",
+        "self_html": "https://authors.library.caltech.edu/records/ngvzc-pt577",
+        "self_doi": "https://authors.library.caltech.edu/doi/10.1038/s41596-020-00464-3",
+        "doi": "https://doi.org/10.1038/s41596-020-00464-3",
+        "self_iiif_manifest": "https://authors.library.caltech.edu/api/iiif/record:ngvzc-pt577/manifest",
+        "self_iiif_sequence": "https://authors.library.caltech.edu/api/iiif/record:ngvzc-pt577/sequence/default",
+        "files": "https://authors.library.caltech.edu/api/records/ngvzc-pt577/files",
+        "archive": "https://authors.library.caltech.edu/api/records/ngvzc-pt577/files-archive",
+        "latest": "https://authors.library.caltech.edu/api/records/ngvzc-pt577/versions/latest",
+        "latest_html": "https://authors.library.caltech.edu/records/ngvzc-pt577/latest",
+        "draft": "https://authors.library.caltech.edu/api/records/ngvzc-pt577/draft",
+        "versions": "https://authors.library.caltech.edu/api/records/ngvzc-pt577/versions",
+        "access_links": "https://authors.library.caltech.edu/api/records/ngvzc-pt577/access/links",
+        "reserve_doi": "https://authors.library.caltech.edu/api/records/ngvzc-pt577/draft/pids/doi",
+        "communities": "https://authors.library.caltech.edu/api/records/ngvzc-pt577/communities",
+        "communities-suggestions": "https://authors.library.caltech.edu/api/records/ngvzc-pt577/communities-suggestions",
+        "requests": "https://authors.library.caltech.edu/api/records/ngvzc-pt577/requests"
+    },
+    "is_published": true,
+    "updated": "2023-12-22T23:28:18.735920+00:00",
+    "files": {
+        "total_bytes": 894616,
+        "entries": {
+            "41596_2020_464_MOESM2_ESM.pdf": {
+                "ext": "pdf",
+                "mimetype": "application/pdf",
+                "size": 364374,
+                "metadata": null,
+                "key": "41596_2020_464_MOESM2_ESM.pdf"
+            },
+            "41596_2020_464_MOESM1_ESM.pdf": {
+                "ext": "pdf",
+                "mimetype": "application/pdf",
+                "size": 517713,
+                "metadata": null,
+                "key": "41596_2020_464_MOESM1_ESM.pdf"
+            },
+            "41596_2020_464_MOESM3_ESM.xlsx": {
+                "ext": "xlsx",
+                "mimetype": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "size": 12529,
+                "metadata": null,
+                "key": "41596_2020_464_MOESM3_ESM.xlsx"
+            }
+        },
+        "count": 3,
+        "order": [],
+        "enabled": true
+    },
+    "id": "ngvzc-pt577",
+    "status": "published"
+}
