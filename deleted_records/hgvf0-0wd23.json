@@ -1,0 +1,165 @@
+{
+    "revision_id": 5,
+    "custom_fields": {
+        "caltech:publication_status": [
+            {
+                "title": {
+                    "en": "Published"
+                },
+                "id": "published"
+            }
+        ],
+        "journal:journal": {
+            "pages": "641-651",
+            "issn": "0950-1991",
+            "issue": "2",
+            "volume": "113",
+            "title": "Development"
+        }
+    },
+    "status": "published",
+    "pids": {
+        "doi": {
+            "identifier": "10.1242/dev.113.2.641",
+            "provider": "external"
+        },
+        "oai": {
+            "identifier": "oai:authors.library.caltech.edu:hgvf0-0wd23",
+            "provider": "oai"
+        }
+    },
+    "parent": {
+        "communities": {
+            "ids": [
+                "aedd135f-227e-4fdf-9476-5b3fd011bac6"
+            ],
+            "default": "aedd135f-227e-4fdf-9476-5b3fd011bac6"
+        },
+        "id": "8h019-xj384"
+    },
+    "metadata": {
+        "publisher": "Company of Biologists",
+        "identifiers": [
+            {
+                "identifier": "1477-9129",
+                "scheme": "issn"
+            }
+        ],
+        "rights": [
+            {
+                "description": {
+                    "en": ""
+                },
+                "title": {
+                    "en": "No commercial reproduction, distribution, display or performance rights in this work are provided."
+                },
+                "id": "default"
+            }
+        ],
+        "version": "Published",
+        "title": "FGFR-4, a new member of the fibroblast growth factor receptor family, expressed in the definitive endoderm and skeletal muscle lineages of the mouse",
+        "publication_date": "1991-10-01",
+        "creators": [
+            {
+                "person_or_org": {
+                    "given_name": "Kevin L.",
+                    "name": "Stark, Kevin L.",
+                    "family_name": "Stark",
+                    "type": "personal"
+                }
+            },
+            {
+                "person_or_org": {
+                    "given_name": "Jill A.",
+                    "name": "McMahon, Jill A.",
+                    "family_name": "McMahon",
+                    "type": "personal"
+                }
+            },
+            {
+                "person_or_org": {
+                    "given_name": "Rew P.",
+                    "name": "McMahon, Rew P.",
+                    "family_name": "McMahon",
+                    "type": "personal"
+                }
+            }
+        ],
+        "languages": [
+            {
+                "title": {
+                    "en": "English"
+                },
+                "id": "eng"
+            }
+        ],
+        "description": "ABSTRACT\n               We have used the polymerase chain reaction to clone from fetal cerebellar RNA a novel member of the fibroblast growth factor receptor family, FGFR-4. cDNAs encoding a full-length receptor were isolated and RNA expression examined in adult and fetal tissues by RNA blot analysis. Transcripts were detected in adult lung, liver and kidney and in fetal RNAs from 11.5 to 16.5 days post coitum (p.c.). In situ hybridization was performed to examine developmental expression. FGFR-4 RNA was expressed in definitive endoderm of the developing gut and extraembryonic endoderm of the yolk-sac from 8.5 to 14.5 days p.c. At early somite stages, FGFR-4 was also expressed in the myotomal component of the somite, and by 14.5 days p.c. in the myotomally derived skeletal muscle. No expression was seen at any stage in cardiac muscle. Several endodermal derivatives, the liver, lung and pancreas, expressed FGFR-4 at 14.5 days p.c. In addition, FGFR-4 RNA was detected in the adrenal cortex, collecting tubules of the kidney and condensing cartilage at this time. These results suggest that FGFR-4 is likely to have diverse roles in development, which may include regulation of definitive endoderm and skeletal muscle lineages.",
+        "resource_type": {
+            "title": {
+                "de": "Zeitschriftenartikel",
+                "en": "Journal Article"
+            },
+            "id": "publication-article"
+        }
+    },
+    "created": "2024-11-23T00:42:11.471196+00:00",
+    "files": {
+        "total_bytes": 0,
+        "enabled": false,
+        "count": 0,
+        "order": [],
+        "entries": {}
+    },
+    "links": {
+        "self": "https://authors.library.caltech.edu/api/records/hgvf0-0wd23",
+        "self_html": "https://authors.library.caltech.edu/records/hgvf0-0wd23",
+        "self_doi": "https://authors.library.caltech.edu/doi/10.1242/dev.113.2.641",
+        "doi": "https://doi.org/10.1242/dev.113.2.641",
+        "self_iiif_manifest": "https://authors.library.caltech.edu/api/iiif/record:hgvf0-0wd23/manifest",
+        "self_iiif_sequence": "https://authors.library.caltech.edu/api/iiif/record:hgvf0-0wd23/sequence/default",
+        "files": "https://authors.library.caltech.edu/api/records/hgvf0-0wd23/files",
+        "archive": "https://authors.library.caltech.edu/api/records/hgvf0-0wd23/files-archive",
+        "latest": "https://authors.library.caltech.edu/api/records/hgvf0-0wd23/versions/latest",
+        "latest_html": "https://authors.library.caltech.edu/records/hgvf0-0wd23/latest",
+        "draft": "https://authors.library.caltech.edu/api/records/hgvf0-0wd23/draft",
+        "versions": "https://authors.library.caltech.edu/api/records/hgvf0-0wd23/versions",
+        "access_links": "https://authors.library.caltech.edu/api/records/hgvf0-0wd23/access/links",
+        "reserve_doi": "https://authors.library.caltech.edu/api/records/hgvf0-0wd23/draft/pids/doi",
+        "communities": "https://authors.library.caltech.edu/api/records/hgvf0-0wd23/communities",
+        "communities-suggestions": "https://authors.library.caltech.edu/api/records/hgvf0-0wd23/communities-suggestions",
+        "requests": "https://authors.library.caltech.edu/api/records/hgvf0-0wd23/requests"
+    },
+    "access": {
+        "embargo": {
+            "active": false,
+            "reason": null
+        },
+        "record": "public",
+        "status": "metadata-only",
+        "files": "public"
+    },
+    "is_published": true,
+    "updated": "2024-12-03T17:36:01.386089+00:00",
+    "stats": {
+        "this_version": {
+            "unique_views": 0,
+            "downloads": 0,
+            "unique_downloads": 0,
+            "data_volume": 0.0,
+            "views": 0
+        },
+        "all_versions": {
+            "unique_views": 0,
+            "downloads": 0,
+            "unique_downloads": 0,
+            "data_volume": 0.0,
+            "views": 0
+        }
+    },
+    "is_draft": false,
+    "versions": {
+        "index": 1,
+        "is_latest": true
+    },
+    "id": "hgvf0-0wd23"
+}
