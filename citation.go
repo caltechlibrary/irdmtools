@@ -484,10 +484,10 @@ func (ca *CitationAgent) ToString() string {
 
 func agentIncluded(agentList []*CitationAgent, agent *CitationAgent) bool {
 	for _, cAgent := range agentList {
-		if agent.CLpid == cAgent.CLpid {
+		if cAgent.CLpid != "" && agent.CLpid == cAgent.CLpid {
 			return true
 		}
-		if agent.ORCID == cAgent.ORCID {
+		if cAgent.ORCID != "" && agent.ORCID == cAgent.ORCID {
 			return true
 		}
 	}
