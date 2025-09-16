@@ -490,9 +490,6 @@ func agentIncluded(agentList []*CitationAgent, agent *CitationAgent) bool {
 		if agent.ORCID == cAgent.ORCID {
 			return true
 		}
-		if (agent.FamilyName == cAgent.FamilyName) && (agent.LivedName == cAgent.LivedName) {
-			return true
-		}
 	}
 	return false
 }
