@@ -482,6 +482,21 @@ func (ca *CitationAgent) ToString() string {
 	return fmt.Sprintf("%s, %s", ca.FamilyName, ca.LivedName)
 }
 
+func agentIncluded(agentList []*CitationAgent, agent *CitationAgent) bool {
+	for _, cAgent := range agentList {
+		if agent.CLpid == cAgent.CLpid {
+			return true
+		}
+		if agent.ORCID == cAgent.ORCID {
+			return true
+		}
+		if (agent.FamilyName == cAgent.FamilyName) && (agent.LivedName == cAgent.LivedName) {
+			return true
+		}
+	}
+	return false
+}
+
 // CrosswalkEPrint takes an eprinttools.EPrint record and return maps the values into the Citation.
 func (cite *Citation) CrosswalkEPrint(cName string, cID string, citeUsingURL string, eprint *eprinttools.EPrint) error {
 	// map repository required fields, everything else is derived from crosswalk
@@ -549,7 +564,9 @@ func (cite *Citation) CrosswalkEPrint(cName string, cID string, citeUsingURL str
 				agent.ORCID = creator.ORCID
 				agent.Prefix = creator.Name.Honourific
 				agent.Suffix = creator.Name.Lineage
-				cite.Author = append(cite.Author, agent)
+				if ! agentIncluded(cite.Author, agent) {
+					cite.Author = append(cite.Author, agent)
+				}
 			}
 		}
 	}
