@@ -18,6 +18,12 @@ github.com/caltechlibrary/semver v0.0.0-20220817184719-a504da2d5c6a h1:3q6ct6FfF
 github.com/caltechlibrary/semver v0.0.0-20220817184719-a504da2d5c6a/go.mod h1:LxzDpCilL3QqjL8qdirgmlo8riDkSFNsTALfIYYyQtE=
 github.com/caltechlibrary/simplified v0.0.23 h1:uWJ/WEX7f82+o952QkxfLVO0XBXUIiCUdxwvDzUdJto=
 github.com/caltechlibrary/simplified v0.0.23/go.mod h1:GuYwUEySYBN6+PCNEttSPdM6QNw0lIzBM68aTLnNGDU=
+github.com/caltechlibrary/simplified v0.0.24-0.20250916162100-ecf217dd014b h1:c9XZeMrFxtklLH/ZXrbkfRDwCDvt4/jQG97REhtnl8Y=
+github.com/caltechlibrary/simplified v0.0.24-0.20250916162100-ecf217dd014b/go.mod h1:GuYwUEySYBN6+PCNEttSPdM6QNw0lIzBM68aTLnNGDU=
+github.com/caltechlibrary/simplified v0.0.24-0.20250916162508-e9425429a659 h1:nojI1zPWQPnFyQSMhoJ59sh5LvPPVxzBu+9bzZbXMYY=
+github.com/caltechlibrary/simplified v0.0.24-0.20250916162508-e9425429a659/go.mod h1:GuYwUEySYBN6+PCNEttSPdM6QNw0lIzBM68aTLnNGDU=
+github.com/caltechlibrary/simplified v0.0.24 h1:nwNN6YGC6DQ5lYqUWR+967Xb6rJh+BZ78r8u/ad4KuY=
+github.com/caltechlibrary/simplified v0.0.24/go.mod h1:GuYwUEySYBN6+PCNEttSPdM6QNw0lIzBM68aTLnNGDU=
 github.com/dustin/go-humanize v1.0.1 h1:GzkhY7T5VNhEkwH0PVJgjz+fX1rhBrR7pRT3mDkpeCY=
 github.com/dustin/go-humanize v1.0.1/go.mod h1:Mu1zIs6XwVuF/gI1OepvI0qD18qycQx+mFykh5fBlto=
 github.com/glebarez/go-sqlite v1.22.0 h1:uAcMJhaA6r3LHMTFgP0SifzgXg46yJkgxqyuyec+ruQ=
