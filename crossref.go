@@ -193,9 +193,6 @@ func getWorksFunding(work *crossrefapi.Works) []*simplified.Funder {
 						Funder: agency,
 						Award: &simplified.AwardIdentifier{
 							Number: award,
-							Title: &simplified.TitleDetail{
-								Encoding: " ",
-							},
 						},
 					})
 				}
