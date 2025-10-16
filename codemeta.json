@@ -61,8 +61,8 @@
     }
   ],
   "dateCreated": "2022-10-27",
-  "dateModified": "2025-09-16",
-  "datePublished": "2025-09-16",
+  "dateModified": "2025-10-16",
+  "datePublished": "2025-10-16",
   "description": "Tools for working with institutional repositories and data management systems. Current implementation targets Invenio-RDM.",
   "funder": "Caltech Library",
   "keywords": [
@@ -103,10 +103,10 @@
     "MySQL >= 8",
     "SQLite >= 3.49"
   ],
-  "version": "0.0.93",
+  "version": "0.0.94",
   "developmentStatus": "active",
   "issueTracker": "https://github.com/caltechlibrary/irdmtools/issues",
-  "releaseNotes": "- Fix issue #83 with duplicated authors in the citations.\n- Fix issue #82, upgrade to v0.0.24 of simplified package",
+  "releaseNotes": "- Fix issue #84, removed empty Title element for awards",
   "copyrightYear": 2025,
   "copyrightHolder": "California Institute of Technology"
 }
