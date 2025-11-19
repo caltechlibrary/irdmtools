@@ -198,7 +198,6 @@ func getWorksFunding(work *crossrefapi.Works) []*simplified.Funder {
 			}
 			if len(funder.Award) > 0 {
 				for _, award := range funder.Award {
-
 					grant := &simplified.Funder{
 						Award: &simplified.AwardIdentifier{
 							Number: award,
