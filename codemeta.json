@@ -61,8 +61,8 @@
     }
   ],
   "dateCreated": "2022-10-27",
-  "dateModified": "2025-10-16",
-  "datePublished": "2025-10-16",
+  "dateModified": "2025-11-19",
+  "datePublished": "2025-11-19",
   "description": "Tools for working with institutional repositories and data management systems. Current implementation targets Invenio-RDM.",
   "funder": "Caltech Library",
   "keywords": [
@@ -103,10 +103,10 @@
     "MySQL >= 8",
     "SQLite >= 3.49"
   ],
-  "version": "0.0.94",
+  "version": "0.0.95",
   "developmentStatus": "active",
   "issueTracker": "https://github.com/caltechlibrary/irdmtools/issues",
-  "releaseNotes": "- Fix issue #84, removed empty Title element for awards",
+  "releaseNotes": "- Fix issue #85, upgrade to latest crossrefapi package, then added support for ROR as funder identifier.",
   "copyrightYear": 2025,
   "copyrightHolder": "California Institute of Technology"
 }

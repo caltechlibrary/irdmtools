@@ -1,7 +1,6 @@
 package irdmtools
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"path"
