@@ -167,11 +167,19 @@ func getWorksFunding(work *crossrefapi.Works) []*simplified.Funder {
 			ok bool
 		)
 		for _, funder := range work.Message.Funder {
-			agency := &simplified.FunderIdentifier {
-				Name: funder.Name,
+			agency := &simplified.FunderIdentifier {}
+			if funder.Name != "" {
+				agency.Name = funder.Name
 			}
 			ror = ""
-			if funder.DOI != "" && funder.DoiAssertedBy == "publisher" {
+			if funder.Identifiers != nil && len(funder.Identifiers) > 0 {
+				for _, identifier := range funder.Identifiers {
+					if identifier.IdType == "ROR" && identifier.AssertedBy == "publisher" {
+						ror = strings.TrimPrefix(identifier.Id, "https://ror.org/")
+					}
+				}
+			}
+			if ror == "" && funder.DOI != "" && funder.DoiAssertedBy == "publisher" {
 				parts := strings.SplitN(funder.DOI, "/", 2)
 				if len(parts) == 2 {
 					suffix = strings.TrimSpace(parts[1])
@@ -189,12 +197,15 @@ func getWorksFunding(work *crossrefapi.Works) []*simplified.Funder {
 			}
 			if len(funder.Award) > 0 {
 				for _, award := range funder.Award {
-					funding = append(funding, &simplified.Funder{
-						Funder: agency,
+					grant := &simplified.Funder{
 						Award: &simplified.AwardIdentifier{
 							Number: award,
 						},
-					})
+					}
+					if agency.Name != "" || agency.Identifier != "" {
+						grant.Funder = agency
+					} 
+					funding = append(funding, grant)
 				}
 			} else {
 				funding = append(funding, &simplified.Funder{
