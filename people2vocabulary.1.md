@@ -1,6 +1,6 @@
-%people2vocabulary(1) irdmtools user manual | version 0.0.95 05aae01b
+%people2vocabulary(1) irdmtools user manual | version 0.0.96 f9ad0102
 % R. S. Doiel
-% 2025-11-19
+% 2026-01-20
 
 # NAME
 
