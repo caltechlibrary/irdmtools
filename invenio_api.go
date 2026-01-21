@@ -594,11 +594,12 @@ func GetRecordStaleIds(cfg *Config) ([]string, error) {
 // NOTE: This method relies on OAI-PMH, this is a rate limited process
 // so results can take quiet some time.
 func GetModifiedRecordIds(cfg *Config, start string, end string) ([]string, error) {
+	today := time.Now()
 	if start == "" {
-		start = time.Now().Format("2006-01-02")
+		start = today.Format("2006-01-02")
 	}
 	if end == "" {
-		end = time.Now().Format("2006-01-02")
+		end = today.AddDate(0,0,1).Format("2006-01-02")
 	}
 	return getModifiedRecordIdsFromPg(cfg.pgDB, start, end)
 }

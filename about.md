@@ -14,17 +14,17 @@ authors:
     orcid: ""
 
 repository-code: "https://github.com/caltechlibrary/irdmtools"
-version: 0.0.95
+version: 0.0.96
 license-url: "https://caltechlibrary.github.io/irdmtools/LICENSE"
 keywords: [ "institutional repository", "data
 management", "Invenio", "Invenio-RDM" ]
-date-released: 2025-11-19
+date-released: 2026-01-20
 ---
 
 About this software
 ===================
 
-## irdmtools 0.0.95
+## irdmtools 0.0.96
 
 ### Authors
 

@@ -61,8 +61,8 @@
     }
   ],
   "dateCreated": "2022-10-27",
-  "dateModified": "2025-11-19",
-  "datePublished": "2025-11-19",
+  "dateModified": "2026-01-20",
+  "datePublished": "2026-01-20",
   "description": "Tools for working with institutional repositories and data management systems. Current implementation targets Invenio-RDM.",
   "funder": "Caltech Library",
   "keywords": [
@@ -103,10 +103,10 @@
     "MySQL >= 8",
     "SQLite >= 3.49"
   ],
-  "version": "0.0.95",
+  "version": "0.0.96",
   "developmentStatus": "active",
   "issueTracker": "https://github.com/caltechlibrary/irdmtools/issues",
-  "releaseNotes": "- Fix issue #85, upgrade to latest crossrefapi package, then added support for ROR as funder identifier.",
+  "releaseNotes": "- Updated for Go v1.25.6\n- Changed get_modified_id to pick a default end date that is 24 hours in advanced before today to capture today's records\n- Fix issue #85, upgrade to latest crossrefapi package, then added support for ROR as funder identifier.",
   "copyrightYear": 2025,
   "copyrightHolder": "California Institute of Technology"
 }
