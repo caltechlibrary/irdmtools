@@ -1,6 +1,5 @@
 
-[![Project Status: WIP – Initial development is in progress, but there has not yet been a stable, usable release suitable for the public.](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
-
+[![Project Status: Active – The project has reached a stable, usable state and is being actively developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
 
 Institutional Repository Data Management Tools
 ==============================================
@@ -44,7 +43,7 @@ This tools take an RDM record in a dataset collection and returns an abbreviated
 - An Invenio RDM deployment
 - To building the Go based software and documentation
     - git
-    - Go >= 1.22.1
+    - Go >= 1.26.1
     - Make (e.g. GNU Make)
     - Pandoc >= 3
 - For harvesting content
@@ -82,5 +81,3 @@ The Go based tools rely on a properly configured environment (i.e.
 environment variables set in your POSIX shell). Specific requirements
 are listed in the man pages for each of the Go based command line
 programs.
-
-

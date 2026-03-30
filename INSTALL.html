@@ -24,48 +24,55 @@
 </ul>
 </nav>
 <section>
-<h1 id="install">INSTALL</h1>
-<p>irdmtools is an <strong>experimental</strong> Go package and command
-line tools for working with institutional repositories (e.g. Invenio
-RDM). It is distributed in source code and in binary form for macOS
-(Intel and M1), Linux (Intel and ARM 64), Raspberry Pi OS.</p>
-<p>To test the latest version you need the required development
-environment and follow the steps listed below in “Compiling from
-Source”.</p>
-<h2 id="quick-install-using-curl-or-irm">Quick install using curl or
+<h1 id="installation-for-development-of-irdmtools">Installation for
+development of <strong>irdmtools</strong></h1>
+<p><strong>irdmtools</strong> Tools for working with institutional
+repositories and data management systems. Current implementation targets
+Invenio-RDM.</p>
+<h2 id="quick-install-with-curl-or-irm">Quick install with curl or
 irm</h2>
-<p>The following experimental installer should get the latest stable
-release for macOS and Linux (e.g. Debian, Ubuntu, Raspberry Pi OS).</p>
-<p>Copy and run the following command in your shell (e.g. Terminal)</p>
-<pre><code>curl https://caltechlibrary.github.io/irdmtools/installer.sh | sh</code></pre>
-<p>For Windows you can use a Powershell script with the following
-command.</p>
-<pre><code>irm https://caltechlibrary.github.io/irdmtools/installer.ps1 | iex</code></pre>
-<p>If you want to install a specific version you can download the
-installer scripts. then pass the version on the command line. As an
-example to install version v0.0.83 specifically you’d type the following
-two command into your shell session.</p>
-<pre class="shell"><code>curl https://caltechlibrary.github.io/irdmtools/installer.sh
-sh installer.sh 0.0.83</code></pre>
-<h2 id="requirements">Requirements</h2>
-<p>This may change in the future.</p>
+<p>There is an experimental installer.sh script that can be run with the
+following command to install latest table release. This may work for
+macOS, Linux and if you’re using Windows with the Unix subsystem. This
+would be run from your shell (e.g. Terminal on macOS).</p>
+<pre class="shell"><code>curl https://caltechlibrary.github.io/irdmtools/installer.sh | sh</code></pre>
+<p>This will install the programs included in irdmtools in your
+<code>$HOME/bin</code> directory.</p>
+<p>If you are running Windows 10 or 11 use the Powershell command
+below.</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode ps1"><code class="sourceCode powershell"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">irm</span> https<span class="op">://</span>caltechlibrary<span class="op">.</span><span class="fu">github</span><span class="op">.</span><span class="fu">io</span><span class="op">/</span>irdmtools<span class="op">/</span>installer<span class="op">.</span><span class="fu">ps1</span> <span class="op">|</span> <span class="fu">iex</span></span></code></pre></div>
+<h3 id="if-your-are-running-macos-or-windows">If your are running macOS
+or Windows</h3>
+<p>You may get security warnings if you are using macOS or Windows. See
+the notes for the specific operating system you’re using to fix
+issues.</p>
 <ul>
-<li>Git to clone the repository from GitHub</li>
-<li><a href="https://golang.org">Golang</a> 1.20.4 or better</li>
-<li>GNU Make</li>
-<li>Pandoc 3 or better (to build documentation)</li>
-<li>Bash</li>
-<li>grep</li>
+<li><a href="INSTALL_NOTES_macOS.html">INSTALL_NOTES_macOS.md</a></li>
+<li><a
+href="INSTALL_NOTES_Windows.html">INSTALL_NOTES_Windows.md</a></li>
 </ul>
-<h2 id="compiling-from-source">Compiling from Source</h2>
+<h2 id="installing-from-source">Installing from source</h2>
+<h3 id="required-software">Required software</h3>
+<ul>
+<li>Go &gt;= 1.26.1</li>
+<li>CMTools &gt;= 0.0.40</li>
+</ul>
+<h3 id="suggested-software">Suggested software</h3>
+<ul>
+<li>PostgreSQL &gt;= 16</li>
+<li>PostgREST &gt;= 12</li>
+<li>Pandoc &gt;= 3.1</li>
+<li>MySQL &gt;= 8</li>
+<li>SQLite &gt;= 3.49</li>
+</ul>
+<h3 id="steps">Steps</h3>
 <ol type="1">
-<li>clone the repository</li>
-<li>change into the cloned directory</li>
-<li>run “make”, “make test” and “make install”</li>
+<li>git clone https://github.com/caltechlibrary/irdmtools</li>
+<li>Change directory into the <code>irdmtools</code> directory</li>
+<li>Make to build, test and install</li>
 </ol>
-<p>Here’s the steps I take to build and test on my macOS box or Linux
-box.</p>
-<pre><code>git clone git@github.com:caltechlibrary/irdmtools.git
+<pre class="shell"><code>git clone https://github.com/caltechlibrary/irdmtools
 cd irdmtools
 make
 make test
