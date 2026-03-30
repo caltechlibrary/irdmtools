@@ -87,8 +87,8 @@
     "https://eprints.org"
   ],
   "softwareRequirements": [
-    "Go >= 1.24.4",
-    "CMTools >= 0.0.33",
+    "Go >= 1.26.1",
+    "CMTools >= 0.0.40",
     "PostgreSQL >= 16",
     "PostgREST >= 12",
     "Pandoc >= 3.1",
@@ -107,6 +107,6 @@
   "developmentStatus": "active",
   "issueTracker": "https://github.com/caltechlibrary/irdmtools/issues",
   "releaseNotes": "- Updated for Go v1.26.1\n- Changed get_modified_id to pick a default end date that is 24 hours in advanced before today to capture today's records\n- Proof of concept relatedItem mappings for DataCite records per issue #77\n- Fix issue #85, upgrade to latest crossrefapi package, then added support for ROR as funder identifier.\n- Fix issue #86 for mapping journals to journal:journal and correctly map editors to contributors",
-  "copyrightYear": 2025,
+  "copyrightYear": 2026,
   "copyrightHolder": "California Institute of Technology"
 }

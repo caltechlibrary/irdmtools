@@ -1,61 +1,58 @@
+Installation for development of **irdmtools**
+===========================================
 
-INSTALL
-=======
+**irdmtools** Tools for working with institutional repositories and data management systems. Current implementation targets Invenio-RDM.
 
-irdmtools is an **experimental** Go package and command line tools for working with institutional repositories (e.g. Invenio RDM). It is distributed in source code and in binary form for macOS (Intel and M1), Linux (Intel and ARM 64), Raspberry Pi OS.
+Quick install with curl or irm
+------------------------------
 
-To test the latest version you need the required development environment and follow the steps listed below in "Compiling from Source".
+There is an experimental installer.sh script that can be run with the following command to install latest table release. This may work for macOS, Linux and if you’re using Windows with the Unix subsystem. This would be run from your shell (e.g. Terminal on macOS).
 
-Quick install using curl or irm
--------------------------------
-
-The following experimental installer should get the latest stable release for macOS and Linux (e.g. Debian, Ubuntu, Raspberry Pi OS). 
-
-Copy and run the following command in your shell (e.g. Terminal)
-
-~~~
+~~~shell
 curl https://caltechlibrary.github.io/irdmtools/installer.sh | sh
 ~~~
 
-For Windows you can use a Powershell script with the following command.
+This will install the programs included in irdmtools in your `$HOME/bin` directory.
 
-~~~
+If you are running Windows 10 or 11 use the Powershell command below.
+
+~~~ps1
 irm https://caltechlibrary.github.io/irdmtools/installer.ps1 | iex
 ~~~
 
-If you want to install a specific version you can download the installer scripts. then pass the version on the command line. As an example to install version v0.0.83 specifically you'd type the following two command into your shell session.
+### If your are running macOS or Windows
+
+You may get security warnings if you are using macOS or Windows. See the notes for the specific operating system you're using to fix issues.
+
+- [INSTALL_NOTES_macOS.md](INSTALL_NOTES_macOS.md)
+- [INSTALL_NOTES_Windows.md](INSTALL_NOTES_Windows.md)
+
+Installing from source
+----------------------
+
+### Required software
+
+- Go &gt;&#x3D; 1.26.1
+- CMTools &gt;&#x3D; 0.0.40
+
+### Suggested software
+
+- PostgreSQL &gt;&#x3D; 16
+- PostgREST &gt;&#x3D; 12
+- Pandoc &gt;&#x3D; 3.1
+- MySQL &gt;&#x3D; 8
+- SQLite &gt;&#x3D; 3.49
+
+### Steps
+
+1. git clone https://github.com/caltechlibrary/irdmtools
+2. Change directory into the `irdmtools` directory
+3. Make to build, test and install
 
 ~~~shell
-curl https://caltechlibrary.github.io/irdmtools/installer.sh
-sh installer.sh 0.0.83
-~~~
-
-Requirements
-------------
-
-This may change in the future.
-
-- Git to clone the repository from GitHub
-- [Golang](https://golang.org) 1.20.4 or better
-- GNU Make
-- Pandoc 3 or better (to build documentation)
-- Bash 
-- grep
-
-Compiling from Source
----------------------
-
-1. clone the repository
-2. change into the cloned directory
-3. run "make", "make test" and "make install"
-
-Here's the steps I take to build and test on my macOS box or Linux box.
-
-~~~
-git clone git@github.com:caltechlibrary/irdmtools.git
+git clone https://github.com/caltechlibrary/irdmtools
 cd irdmtools
 make
 make test
 make install
 ~~~
-
