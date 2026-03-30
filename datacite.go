@@ -360,8 +360,8 @@ func getObjectAgents(object map[string]interface{}, agentType string) []*simplif
 					agents = append(agents, agent)
 				}
 			}
-			return agents			
-		}		
+			return agents
+		}
 	}
 	return nil
 }
@@ -419,7 +419,7 @@ func getObjectSubjects(object map[string]interface{}) []*simplified.Subject {
 					subject := new(simplified.Subject)
 					subject.Subject = s.(string)
 					if ! isDuplicateSubject(subject, subjects) {
-						subjects = append(subjects, subject)		
+						subjects = append(subjects, subject)
 					}
 				}
 			}
@@ -534,6 +534,13 @@ func getObjectIdentifier(object map[string]interface{}) string {
 	return ""
 }
 
+func getRelatedItem(object map[string]interface{}) map[string]interface{} {
+	if data, ok := object["relatedItem"].(map[string]interface{}); ok {
+		return data
+	}
+	return nil
+}
+
 // CrosswalkDataCiteObject takes a Object object from the DataCite API
 // and maps the fields into an simplified Record struct return a
 // new struct or error.
@@ -543,7 +550,6 @@ func CrosswalkDataCiteObject(cfg *Config, object map[string]interface{}, options
 	}
 	rec := new(simplified.Record)
 	rec.Metadata = new(simplified.Metadata)
-
 	// .message.type -> .record.metadata.resource_type (via controlled vocabulary)
 	if value := getObjectResourceType(object); value != "" {
 		if err := SetResourceType(rec, value, options.ResourceTypes); err != nil {
@@ -680,6 +686,36 @@ func CrosswalkDataCiteObject(cfg *Config, object map[string]interface{}, options
 	// Default language to US English
 	if err := SetLanguages(rec, "id", "eng"); err != nil {
 		return nil, err
+	}
+
+	// Handle relatedItem mapping
+	if value := getRelatedItem(object); value != nil {
+		if titles, ok := value["titles"].([]string); ok && len(titles) > 0 {
+			SetCustomField(rec, "journal:journal", "title", titles[0])
+		}
+		if volume, ok := value["volume"]; ok {
+			SetCustomField(rec, "journal:journal", "volume", volume)
+		}
+		if issue, ok := value["issue"]; ok {
+			SetCustomField(rec, "journal:journal", "issue", issue)
+		}
+		if firstPage, ok := value["firstPage"]; ok {
+			if lastPage, ok := value["lastPage"]; ok {
+				SetCustomField(rec, "journal:journal", "pages", fmt.Sprintf("%s - %s", firstPage, lastPage))
+			}
+		}
+		if publisher, ok := value["publisher"].(string); ok {
+			rec.Metadata.Publisher = publisher
+		}
+		if relatedItemIdentifier, ok := value["relatedItemIdentifier"].(map[string]interface{}); ok {
+			if relatedItemType, ok := relatedItemIdentifier["relatedItemType"].(string); ok && relatedItemType == "Journal" {
+				if relatedItemIdentifierType, ok := relatedItemIdentifier["relatedItemIdentifierType"].(string); ok && relatedItemIdentifierType == "ISSN" {
+					if issn, ok := relatedItemIdentifier["relatedItemIdentifier"].(string); ok {
+						SetCustomField(rec, "journal:journal", "issn", issn)
+					}
+				}
+			}
+		}
 	}
 
 	// NOTE: We need to set the creation and updated time.

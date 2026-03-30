@@ -260,9 +260,18 @@ func customFieldsMetadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.
 		},
 	*/
 	// NOTE: handle thesis type including capitalization of types.
-	if eprint.Type == "article" && eprint.Publication != "" {
+	if (eprint.Type == "article" || eprint.Type == "journal_issue") && eprint.Publication != "" {
 		if err := SetJournalField(rec, "title", eprint.Publication); err != nil {
 			return err
+		}
+		// Per issue #86, eprint.Number need to get assigned to issue for journal issues
+		if eprint.Type == "journal_issue" {
+			if err := SetJournalField(rec, "volume", eprint.Volume); err != nil {
+				return err
+			}
+			if err := SetJournalField(rec, "issue", eprint.Number); err != nil {
+				return err
+			}
 		}
 		// Per issue #55, eprint.Number is mapped to caltech:series_number for series, otherwise it's a issue number
 		if eprint.Series == "" {
@@ -519,7 +528,7 @@ func simplifyCreators(eprint *eprinttools.EPrint, rec *simplified.Record) error 
 	// NOTE: If there are no creators AND their are editors then I need
 	// to create the editor as a creator and add them here instead of
 	// in contributors. This is related to issue #9.
-	if len(creators) == 0 && eprint.Editors.Length() > 0 {
+	if eprint.Creators == nil && eprint.CorpCreators == nil && eprint.Editors.Length() > 0 {
 		for i := 0; i < eprint.Editors.Length(); i++ {
 			if item := eprint.Editors.IndexOf(i); item != nil && item.Name != nil {
 				if person := itemToPersonOrOrg(item); person != nil {
@@ -579,9 +588,10 @@ func simplifyContributors(eprint *eprinttools.EPrint, rec *simplified.Record, co
 	// Add Editors, Adivisors, Committee Members, Thesis Chair, Reviewers, Translators, etc.
 	if eprint.Editors != nil && eprint.Editors.Length() > 0 {
 		// NORE: Editors may have already been mapped to creators when there are no creators in the record.
-		if eprint.Creators != nil && eprint.Creators.Length() > 0 {
+		if (eprint.Creators != nil && eprint.Creators.Length() > 0) || (eprint.CorpCreators != nil && eprint.CorpCreators.Length() > 0) {
 			for i := 0; i < eprint.Editors.Length(); i++ {
 				if item := eprint.Editors.IndexOf(i); item != nil && item.Name != nil {
+					fmt.Fprintf(os.Stderr, "DEBUG simplifyCreators eprint.Editors has values -> %+v\n", item)
 					if person := itemToPersonOrOrg(item); person != nil {
 						contributors = append(contributors, &simplified.Creator{
 							PersonOrOrg: person,
