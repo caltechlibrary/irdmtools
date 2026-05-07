@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <title>irdmtools</title>
+    <link rel="stylesheet" href="https://caltechlibrary.github.io/css/site.css">
+    <link rel="stylesheet" href="https://media.library.caltech.edu/cl-webcomponents/css/code-blocks.css">
+    <script type="module" src="https://media.library.caltech.edu/cl-webcomponents/copyToClipboard.js"></script>
+    <script type="module" src="https://media.library.caltech.edu/cl-webcomponents/footer-global.js"></script>
+</head>
+<body>
+<header>
+<a href="https://library.caltech.edu"><img src="https://media.library.caltech.edu/assets/caltechlibrary-logo.png" alt="Caltech Library logo"></a>
+</header>
+<a href="#main-content" class="visually-hidden">skip to main content</a>
+<nav>
+<ul>
+    <li><a href="/">Home</a></li>
+    <li><a href="index.html">README</a></li>
+    <li><a href="LICENSE">LICENSE</a></li>
+    <li><a href="INSTALL.html">INSTALL</a></li>
+    <li><a href="user_manual.html">User Manual</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="search.html">Search</a></li>
+    <li><a href="https://github.com/caltechlibrary/irdmtools">Code Repository</a></li>
+</ul>
+</nav>
+<section id="main-content">
+<p>Need to de-dup subjects when pulled from datacite dois data.</p>
+<p>Duplicate listing for records are showing up for,</p>
+<p>http://feeds-test.library.caltech.edu.s3-website-us-west-2.amazonaws.com/people/Orphan-V-J/combined.html</p>
+<p>Reharvest, confirm that duplicated are solved and then switch
+production after notifying Donna that fix is happening.</p>
+<p>Funding:</p>
+<p>.fundingReferences -&gt; .fundingReferences</p>
+<p>Example: https://api.datacite.org/dois/10.22002/36sg9-yhj98 (might
+not be great example),</p>
+<p>License</p>
+<p>.metadata.rights -&gt; .metadata.rights</p>
+<p>Subject:</p>
+<p>.subject.subject[*] -&gt; .subject.subject[*]</p>
+<p>Example: https://api.datacite.org/dois/10.48550/arXiv.2404.01326</p>
+<p>Ignore:</p>
+<p>.PublisherLocation, et el.</p>
+<p>Date problem:</p>
+<p>.publication_date, .publication_year</p>
+<p>Cold Spring Harbor DOI “.accepted_date as last fallback”</p>
+<p>Datacite added a relatedItems object. The following are the mappings
+suggested by Tom in issue #77</p>
+<pre><code>If relatedItems is present
+
+If relatedItemType == Journal
+
+Then
+
+relatedItem.titles.title -&gt; custom_fields.journal:journal.title
+relatedItem.volume -&gt; custom_fields.journal:journal.volume
+relatedItem.issue -&gt; custom_fields.journal:journal.issue
+relatedItem.firstPage and relatedItem.lastPage or relatedItem.number -&gt; custom_fields.journal:journal.pages
+relatedItem.publisher -&gt; metadata.publisher
+if relatedIten.relatedItemIdentifier.relatedItemIdentifierType == ISSN, then relatedItem.relatedItemIdentifier.relatedItemIdentifier -&gt; custom_fields.journal:journal.issn</code></pre>
+</section>
+<footer-global></footer-global>
+</body>
+</html>

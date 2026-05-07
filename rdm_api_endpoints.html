@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+    <title>irdmtools</title>
+    <link rel="stylesheet" href="https://caltechlibrary.github.io/css/site.css">
+    <link rel="stylesheet" href="https://media.library.caltech.edu/cl-webcomponents/css/code-blocks.css">
+    <script type="module" src="https://media.library.caltech.edu/cl-webcomponents/copyToClipboard.js"></script>
+    <script type="module" src="https://media.library.caltech.edu/cl-webcomponents/footer-global.js"></script>
+</head>
+<body>
+<header>
+<a href="https://library.caltech.edu"><img src="https://media.library.caltech.edu/assets/caltechlibrary-logo.png" alt="Caltech Library logo"></a>
+</header>
+<a href="#main-content" class="visually-hidden">skip to main content</a>
+<nav>
+<ul>
+    <li><a href="/">Home</a></li>
+    <li><a href="index.html">README</a></li>
+    <li><a href="LICENSE">LICENSE</a></li>
+    <li><a href="INSTALL.html">INSTALL</a></li>
+    <li><a href="user_manual.html">User Manual</a></li>
+    <li><a href="about.html">About</a></li>
+    <li><a href="search.html">Search</a></li>
+    <li><a href="https://github.com/caltechlibrary/irdmtools">Code Repository</a></li>
+</ul>
+</nav>
+<section id="main-content">
+<blockquote>
+<ul>
+<li>Invenio RDM JSON API uses Bearer tokens for authentication, passed
+via HTTP headers or query parameters.</li>
+<li>The API supports CRUD operations on drafts, records, files, and
+requests with versioning and access control.</li>
+<li>Key endpoints include <code>/api/records</code>,
+<code>/api/drafts</code>, <code>/api/files</code>, and
+<code>/api/requests</code>, each supporting multiple HTTP methods.</li>
+<li>Requests and responses follow RESTful conventions with JSON
+payloads, including metadata aligned with DataCite Schema v4.x.</li>
+<li>API features pagination, sorting, filtering, and pretty-printing of
+JSON responses for exploration.</li>
+</ul>
+</blockquote>
+<hr />
+<h2 id="introduction">Introduction</h2>
+<p>The Invenio RDM (Research Data Management) platform provides a robust
+JSON API for managing research data records, drafts, files, and user
+requests. This report synthesizes the official documentation into a
+structured, comprehensive Markdown table summarizing all API endpoints,
+their methods, descriptions, example requests, responses, and notes. The
+table is designed to be a ready-reference guide for developers and
+researchers interacting with Invenio RDM programmatically.</p>
+<hr />
+<h2 id="authentication-and-authorization">Authentication and
+Authorization</h2>
+<p>The Invenio RDM API exclusively uses Bearer tokens for
+authentication. These tokens are generated in the user account settings
+and must be included in requests either via the
+<code>Authorization</code> HTTP header or as an
+<code>access_token</code> query parameter. The default scope is
+<code>user:email</code>, but custom scopes can be configured for
+granular access control. Authentication is mandatory for most endpoints,
+especially those involving drafts, records, and requests.</p>
+<p>Example authentication via header:</p>
+<div class="sourceCode" id="cb1"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> <span class="at">-H</span> <span class="st">&quot;Authorization: Bearer API-TOKEN&quot;</span> https://inveniordm.example.com/api/records</span></code></pre></div>
+<p>Or via query parameter:</p>
+<div class="sourceCode" id="cb2"><pre
+class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">curl</span> https://inveniordm.example.com/api/records<span class="pp">?</span>access_token=API-TOKEN</span></code></pre></div>
+<hr />
+<h2 id="api-endpoints-summary-table">API Endpoints Summary Table</h2>
+<table>
+<colgroup>
+<col style="width: 6%" />
+<col style="width: 4%" />
+<col style="width: 21%" />
+<col style="width: 21%" />
+<col style="width: 24%" />
+<col style="width: 21%" />
+</colgroup>
+<thead>
+<tr>
+<th>Endpoint Path</th>
+<th>HTTP Method(s)</th>
+<th>Description</th>
+<th>Example Request</th>
+<th>Example Response (truncated)</th>
+<th>Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/api/records</code></td>
+<td>GET</td>
+<td>Retrieve published records with optional pagination, sorting, and
+filtering</td>
+<td><code>GET /api/records?page=1&amp;size=10&amp;prettyprint=1</code></td>
+<td><code>{ "hits": { "total": 100, "hits": [ { "id": "123", "metadata": { ... } } ] }</code></td>
+<td>Supports <code>page</code>, <code>size</code>, <code>q</code>
+(query), <code>sort</code> parameters. Use <code>prettyprint=1</code>
+for formatted JSON.</td>
+</tr>
+<tr>
+<td><code>/api/records</code></td>
+<td>POST</td>
+<td>Create a new record with metadata and files</td>
+<td><code>POST /api/records</code> with JSON body containing metadata
+and file info</td>
+<td><code>{ "id": "123", "metadata": { ... }, "files": { ... } }</code></td>
+<td>Requires authentication. Files must be uploaded separately.</td>
+</tr>
+<tr>
+<td><code>/api/records/{id}</code></td>
+<td>GET</td>
+<td>Retrieve a specific record by ID</td>
+<td><code>GET /api/records/123</code></td>
+<td><code>{ "id": "123", "metadata": { ... }, "files": { ... } }</code></td>
+<td>Returns detailed record metadata and associated files.</td>
+</tr>
+<tr>
+<td><code>/api/records/{id}</code></td>
+<td>PUT</td>
+<td>Update an existing record</td>
+<td><code>PUT /api/records/123</code> with JSON body containing updated
+metadata</td>
+<td><code>{ "id": "123", "metadata": { ... } }</code></td>
+<td>Requires authentication. Only metadata can be updated; files require
+separate endpoints.</td>
+</tr>
+<tr>
+<td><code>/api/records/{id}</code></td>
+<td>DELETE</td>
+<td>Delete a record</td>
+<td><code>DELETE /api/records/123</code></td>
+<td><code>{ "status": "deleted" }</code></td>
+<td>Requires authentication. Irreversible operation.</td>
+</tr>
+<tr>
+<td><code>/api/records/{id}/versions</code></td>
+<td>GET</td>
+<td>List all versions of a record</td>
+<td><code>GET /api/records/123/versions</code></td>
+<td><code>{ "versions": [ { "id": "v1", "created": "2023-01-01T00:00:00Z" } ] }</code></td>
+<td>Returns version history with timestamps.</td>
+</tr>
+<tr>
+<td><code>/api/records/{id}/versions</code></td>
+<td>POST</td>
+<td>Create a new version of a record</td>
+<td><code>POST /api/records/123/versions</code> with JSON body
+containing version metadata</td>
+<td><code>{ "id": "v2", "created": "2023-01-02T00:00:00Z" }</code></td>
+<td>Requires authentication. Allows updating files in new versions.</td>
+</tr>
+<tr>
+<td><code>/api/drafts</code></td>
+<td>GET</td>
+<td>List all drafts</td>
+<td><code>GET /api/drafts</code></td>
+<td><code>{ "hits": { "total": 10, "hits": [ { "id": "d123", "metadata": { ... } } ] }</code></td>
+<td>Requires authentication. Supports pagination and filtering.</td>
+</tr>
+<tr>
+<td><code>/api/drafts</code></td>
+<td>POST</td>
+<td>Create a new draft record</td>
+<td><code>POST /api/drafts</code> with JSON body containing metadata and
+file info</td>
+<td><code>{ "id": "d123", "metadata": { ... } }</code></td>
+<td>Requires authentication. Files must be uploaded separately.</td>
+</tr>
+<tr>
+<td><code>/api/drafts/{id}</code></td>
+<td>GET</td>
+<td>Retrieve a specific draft by ID</td>
+<td><code>GET /api/drafts/d123</code></td>
+<td><code>{ "id": "d123", "metadata": { ... } }</code></td>
+<td>Returns detailed draft metadata.</td>
+</tr>
+<tr>
+<td><code>/api/drafts/{id}</code></td>
+<td>PUT</td>
+<td>Update a draft record</td>
+<td><code>PUT /api/drafts/d123</code> with JSON body containing updated
+metadata</td>
+<td><code>{ "id": "d123", "metadata": { ... } }</code></td>
+<td>Requires authentication. Only metadata can be updated; files require
+separate endpoints.</td>
+</tr>
+<tr>
+<td><code>/api/drafts/{id}</code></td>
+<td>DELETE</td>
+<td>Delete a draft record</td>
+<td><code>DELETE /api/drafts/d123</code></td>
+<td><code>{ "status": "deleted" }</code></td>
+<td>Requires authentication. Irreversible operation.</td>
+</tr>
+<tr>
+<td><code>/api/drafts/{id}/publish</code></td>
+<td>POST</td>
+<td>Publish a draft record</td>
+<td><code>POST /api/drafts/d123/publish</code></td>
+<td><code>{ "id": "123", "status": "published" }</code></td>
+<td>Requires authentication. Creates a published record from the
+draft.</td>
+</tr>
+<tr>
+<td><code>/api/drafts/{id}/files</code></td>
+<td>GET</td>
+<td>List files associated with a draft</td>
+<td><code>GET /api/drafts/d123/files</code></td>
+<td><code>{ "files": [ { "id": "f1", "filename": "file.txt" } ] }</code></td>
+<td>Requires authentication. Returns file metadata.</td>
+</tr>
+<tr>
+<td><code>/api/drafts/{id}/files</code></td>
+<td>POST</td>
+<td>Upload a file to a draft</td>
+<td><code>POST /api/drafts/d123/files</code> with file data</td>
+<td><code>{ "id": "f1", "filename": "file.txt", "status": "uploaded" }</code></td>
+<td>Requires authentication. Supports chunked uploads.</td>
+</tr>
+<tr>
+<td><code>/api/drafts/{id}/files/{file_id}</code></td>
+<td>DELETE</td>
+<td>Delete a file from a draft</td>
+<td><code>DELETE /api/drafts/d123/files/f1</code></td>
+<td><code>{ "status": "deleted" }</code></td>
+<td>Requires authentication. Irreversible operation.</td>
+</tr>
+<tr>
+<td><code>/api/requests</code></td>
+<td>GET</td>
+<td>List all requests</td>
+<td><code>GET /api/requests</code></td>
+<td><code>{ "hits": { "total": 5, "hits": [ { "id": "r123", "status": "pending" } ] }</code></td>
+<td>Requires authentication. Supports pagination and filtering.</td>
+</tr>
+<tr>
+<td><code>/api/requests</code></td>
+<td>POST</td>
+<td>Create a new request</td>
+<td><code>POST /api/requests</code> with JSON body containing request
+details</td>
+<td><code>{ "id": "r123", "status": "created" }</code></td>
+<td>Requires authentication. Requests can be accepted, declined, or
+canceled.</td>
+</tr>
+<tr>
+<td><code>/api/requests/{id}</code></td>
+<td>GET</td>
+<td>Retrieve a specific request by ID</td>
+<td><code>GET /api/requests/r123</code></td>
+<td><code>{ "id": "r123", "status": "pending", "comments": [ ... ] }</code></td>
+<td>Returns request details including comments and timeline.</td>
+</tr>
+<tr>
+<td><code>/api/requests/{id}</code></td>
+<td>PUT</td>
+<td>Update a request (e.g., accept, decline, cancel)</td>
+<td><code>PUT /api/requests/r123</code> with JSON body containing
+updated status</td>
+<td><code>{ "id": "r123", "status": "accepted" }</code></td>
+<td>Requires authentication. Only certain users can update requests
+based on roles.</td>
+</tr>
+<tr>
+<td><code>/api/requests/{id}/comments</code></td>
+<td>GET</td>
+<td>List comments on a request</td>
+<td><code>GET /api/requests/r123/comments</code></td>
+<td><code>{ "comments": [ { "id": "c1", "content": "comment text" } ] }</code></td>
+<td>Requires authentication. Returns all comments on the request.</td>
+</tr>
+<tr>
+<td><code>/api/requests/{id}/comments</code></td>
+<td>POST</td>
+<td>Add a comment to a request</td>
+<td><code>POST /api/requests/r123/comments</code> with JSON body
+containing comment content</td>
+<td><code>{ "id": "c1", "content": "comment text" }</code></td>
+<td>Requires authentication. Comments can be updated and deleted.</td>
+</tr>
+<tr>
+<td><code>/api/requests/{id}/comments/{comment_id}</code></td>
+<td>PUT, DELETE</td>
+<td>Update or delete a comment on a request</td>
+<td><code>PUT /api/requests/r123/comments/c1</code> with updated content
+or <code>DELETE /api/requests/r123/comments/c1</code></td>
+<td><code>{ "id": "c1", "content": "updated comment" }</code> or
+<code>{ "status": "deleted" }</code></td>
+<td>Requires authentication. Only comment owners or authorized users can
+modify.</td>
+</tr>
+<tr>
+<td><code>/api/records/{id}/access/links</code></td>
+<td>POST</td>
+<td>Create a secret link for a record with specific permissions</td>
+<td><code>POST /api/records/123/access/links</code> with JSON body
+containing permission and expiration</td>
+<td><code>{ "token": "secret-token", "expires_at": "2023-12-31T23:59:00Z" }</code></td>
+<td>Requires authentication. Used for sharing records with specific
+permissions and expiration.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="key-notes-and-additional-information">Key Notes and Additional
+Information</h2>
+<ul>
+<li><strong>Authentication</strong>: All endpoints except public record
+retrieval require a Bearer token. Tokens are generated in the user
+account settings and passed via HTTP headers or query parameters.</li>
+<li><strong>Pagination and Filtering</strong>: Endpoints that return
+lists (e.g., <code>/api/records</code>, <code>/api/drafts</code>,
+<code>/api/requests</code>) support pagination with <code>page</code>
+and <code>size</code> parameters, and filtering via <code>q</code>
+(query) parameter.</li>
+<li><strong>Sorting</strong>: Records can be sorted using the
+<code>sort</code> parameter with options like “bestmatch,” “newest,”
+“mostviewed,” and “mostdownloaded.”</li>
+<li><strong>Pretty Printing</strong>: Adding <code>prettyprint=1</code>
+to the query string formats JSON responses for easier readability in
+browsers.</li>
+<li><strong>Versioning</strong>: Records support versioning, allowing
+creation of new versions with updated files and metadata.</li>
+<li><strong>File Management</strong>: Files are managed separately from
+records and drafts, with endpoints supporting upload, deletion, and
+listing.</li>
+<li><strong>Request Management</strong>: Requests can be created,
+updated, and commented on, with detailed timelines and status
+tracking.</li>
+<li><strong>Secret Links</strong>: The API supports creating secret
+links with specific permissions and expiration dates for secure sharing
+of records.</li>
+</ul>
+<hr />
+<h2 id="conclusion">Conclusion</h2>
+<p>The Invenio RDM JSON API offers a comprehensive, well-documented
+interface for managing research data records, drafts, files, and user
+requests. The API follows RESTful conventions with clear endpoints for
+CRUD operations, versioning, and access control. Authentication via
+Bearer tokens ensures secure access, and the documentation provides
+practical examples for interacting with each endpoint. The API’s support
+for pagination, sorting, filtering, and pretty-printing enhances
+usability for developers and researchers. This structured summary table
+serves as a ready-reference guide for integrating and utilizing the
+Invenio RDM API effectively.</p>
+</section>
+<footer-global></footer-global>
+</body>
+</html>
