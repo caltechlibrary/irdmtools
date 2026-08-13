@@ -73,7 +73,7 @@ var (
 		"publication-technicalnote":        "monograph",
 		"publication-thesis":               "thesis",
 		"teachingresource":                 "teaching_resource",
-		"teachingresource-lecturenotes":    "teching_resource",
+		"teachingresource-lecturenotes":    "teaching_resource",
 		"teachingresource-textbook":        "teaching_resource",
 	}
 

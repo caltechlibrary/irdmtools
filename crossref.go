@@ -255,8 +255,15 @@ func makeSimpleRole(role string) *simplified.Role {
 }
 
 func makeSimpleTitleDetail(title string) *simplified.TitleDetail {
+	// NOTE: Per issue 87, additional titles need a title type set
+	// or RDM will reject the record. CrossRef doesn't distinguish
+	// why a work has multiple titles (e.g. translated title vs.
+	// alternative title) so "other" is used as a safe default.
 	return &simplified.TitleDetail{
 		Title: title,
+		Type: &simplified.Type{
+			ID: "other",
+		},
 	}
 }
 

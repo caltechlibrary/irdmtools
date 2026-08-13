@@ -676,3 +676,52 @@ func TestIssue81(t *testing.T) {
 		t.Errorf("failed to fund `.custom_fields` in record")
 	}
 }
+
+func TestIssue87(t *testing.T) {
+	// This DOI resolves to a CrossRef work with two titles
+	// (the original Portuguese title and an English translated
+	// title). See https://github.com/caltechlibrary/irdmtools/issues/87
+	doi := "10.47456/cad.astro.v7nespecial.53384"
+	app := new(Doi2Rdm)
+	app.Cfg = new(Config)
+	app.Cfg.Debug = false
+	options := new(Doi2RdmOptions)
+	if err := yaml.Unmarshal(TestDefaultOptions, &options); err != nil {
+		t.Error(err)
+	}
+	options.MailTo = "dld-test@library.caltech.edu"
+	workObj, err := QueryCrossRefWork(app.Cfg, doi, options)
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+	if workObj == nil {
+		t.Errorf("expected a non-nil object for %q", doi)
+		t.FailNow()
+	}
+	record, err := CrosswalkCrossRefWork(app.Cfg, workObj, options)
+	if err != nil {
+		t.Errorf("%s", err)
+	}
+	if record == nil {
+		t.Errorf("expected a non-nil record for doi %q", doi)
+		t.FailNow()
+	}
+	if record.Metadata == nil {
+		t.Errorf("expected a non-nil `.metadata` for doi %q", doi)
+		t.FailNow()
+	}
+	if len(record.Metadata.AdditionalTitles) == 0 {
+		t.Errorf("expected `.metadata.additional_titles` to be populated for doi %q", doi)
+		t.FailNow()
+	}
+	for i, titleDetail := range record.Metadata.AdditionalTitles {
+		if titleDetail.Type == nil {
+			t.Errorf("expected `.metadata.additional_titles[%d].type` to be set, got nil", i)
+			continue
+		}
+		if titleDetail.Type.ID != "other" {
+			t.Errorf("expected `.metadata.additional_titles[%d].type.id` to be %q, got %q", i, "other", titleDetail.Type.ID)
+		}
+	}
+}
