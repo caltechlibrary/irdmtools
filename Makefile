@@ -1,25 +1,34 @@
+
+# generated with CMTools 0.0.98 0e1e09ba
+
 #
-# Simple Makefile for Golang based Projects.
+# Simple Makefile for Golang based Projects built under POSIX.
 #
 PROJECT = irdmtools
 
 GIT_GROUP = caltechlibrary
 
+PROGRAMS = rdmutil ep3util eprint2rdm rdm2eprint eprintrest doi2rdm people2vocabulary ep3ds2citations rdmds2citations # $(shell ls -1 cmd)
+
 RELEASE_DATE = $(shell date +%Y-%m-%d)
 
 RELEASE_HASH=$(shell git log --pretty=format:'%h' -n 1)
 
-PROGRAMS = rdmutil ep3util eprint2rdm rdm2eprint eprintrest doi2rdm people2vocabulary ep3ds2citations rdmds2citations # $(shell ls -1 cmd)
+MAN_PAGES_1 = $(shell ls -1 *.1.md | sed -E 's/.1.md/.1/g')
 
-MAN_PAGES = $(shell ls -1 *.1.md | sed -E 's/\.1.md/.1/g')
+MAN_PAGES_3 = $(shell ls -1 *.3.md | sed -E 's/.3.md/.3/g')
 
-HTML_PAGES = $(shell find . -type f | grep -E '\.html')
+MAN_PAGES_7 = $(shell ls -1 *.7.md | sed -E 's/.7.md/.7/g')
+
+HTML_PAGES = $(shell find . -type f | grep -E '.html$')
+
+DOCS = $(shell ls -1 *.?.md)
 
 PACKAGE = $(shell ls -1 *.go)
 
 VERSION = $(shell grep '"version":' codemeta.json | cut -d\"  -f 4)
 
-BRANCH = $(shell git branch | grep '* ' | cut -d\  -f 2)
+BRANCH = $(shell git branch | grep '* ' | cut -d  -f 2)
 
 OS = $(shell uname)
 
@@ -38,19 +47,24 @@ endif
 build: version.go $(PROGRAMS) man CITATION.cff about.md installer.sh installer.ps1
 
 version.go: .FORCE
-	@echo '' | pandoc --from t2t --to plain \
-                --metadata-file codemeta.json \
-                --metadata package=$(PROJECT) \
-                --metadata version=$(VERSION) \
-                --metadata release_date=$(RELEASE_DATE) \
-                --metadata release_hash=$(RELEASE_HASH) \
-                --template codemeta-version-go.tmpl \
-                LICENSE >version.go
+	cmt codemeta.json version.go
 
 hash: .FORCE
-        git log --pretty=format:'%h' -n 1
+	git log --pretty=format:'%h' -n 1
 
-man: $(MAN_PAGES)
+man: $(MAN_PAGES_1) # $(MAN_PAGES_3) $(MAN_PAGES_7)
+
+$(MAN_PAGES_1): .FORCE
+	mkdir -p man/man1
+	pandoc $@.md --from markdown --to man -s >man/man1/$@
+
+$(MAN_PAGES_3): .FORCE
+	mkdir -p man/man3
+	pandoc $@.md --from markdown --to man -s >man/man3/$@
+
+$(MAN_PAGES_7): .FORCE
+	mkdir -p man/man7
+	pandoc $@.md --from markdown --to man -s >man/man7/$@
 
 $(PROGRAMS): $(PACKAGE)
 	@mkdir -p bin
@@ -62,33 +76,20 @@ $(MAN_PAGES): .FORCE
 	pandoc $@.md --from markdown --to man -s >man/man1/$@
 
 CITATION.cff: codemeta.json
-	@cat codemeta.json | sed -E   's/"@context"/"at__context"/g;s/"@type"/"at__type"/g;s/"@id"/"at__id"/g' >_codemeta.json
-	@echo '' | pandoc --metadata title="Cite $(PROJECT)" --metadata-file=_codemeta.json --template=codemeta-cff.tmpl >CITATION.cff
+	cmt codemeta.json CITATION.cff
 
 about.md: codemeta.json $(PROGRAMS)
-	@cat codemeta.json | sed -E 's/"@context"/"at__context"/g;s/"@type"/"at__type"/g;s/"@id"/"at__id"/g' >_codemeta.json
-	@echo "" | pandoc --metadata-file=_codemeta.json --template codemeta-md.tmpl >about.md 2>/dev/null;
-	@if [ -f _codemeta.json ]; then rm _codemeta.json; fi
+	cmt codemeta.json about.md
 
 installer.sh: .FORCE
-	@echo '' | pandoc --metadata title="Installer" --metadata git_org_or_person="$(GIT_GROUP)" --metadata-file codemeta.json --template codemeta-bash-installer.tmpl >installer.sh
-	@chmod 775 installer.sh
-	@git add -f installer.sh
+	cmt codemeta.json installer.sh
 
 installer.ps1: .FORCE
-	@echo '' | pandoc --metadata title="Powershell Installer" --metadata git_org_or_person="$(GIT_GROUP)" --metadata-file codemeta.json --template codemeta-ps1-installer.tmpl >installer.ps1
-	@chmod 775 installer.ps1
-	@git add -f installer.ps1
+	cmt codemeta.json installer.ps1
 
 
 test: $(PACKAGE)
-	#go test -timeout 120h
-	go test -test.v -run Test01Config
-	#go test -test.v -run Test01Query
-	#go test -timeout 2h -ids testdata/test_record_ids.json -run Test02GetRecord
-	#go test -timeout 2h -ids testdata/test_record_ids.json -run Test03Harvest
-	go test -timeout 2h -run Test01GetRecordIds
-	go test -timeout 2h -run Test01GetModifiedIds
+	go test
 
 website: clean-website .FORCE
 	make -f website.mak
@@ -104,7 +105,7 @@ refresh:
 	git fetch origin
 	git pull origin $(BRANCH)
 
-publish: build website save .FORCE
+publish: website .FORCE
 	./publish.bash
 
 clean:
@@ -124,7 +125,11 @@ install: build
 	@echo "Make sure $(PREFIX)/bin is in your PATH"
 	@echo "Installing man page in $(PREFIX)/man"
 	@mkdir -p $(PREFIX)/man/man1
-	@for FNAME in $(MAN_PAGES); do if [ -f "./man/man1/$${FNAME}" ]; then cp -v "./man/man1/$${FNAME}" "$(PREFIX)/man/man1/$${FNAME}"; fi; done
+	@for FNAME in $(MAN_PAGES_1); do if [ -f "./man/man1/$${FNAME}" ]; then cp -v "./man/man1/$${FNAME}" "$(PREFIX)/man/man1/$${FNAME}"; fi; done
+	@mkdir -p $(PREFIX)/man/man3
+	@for FNAME in $(MAN_PAGES_3); do if [ -f "./man/man3/$${FNAME}" ]; then cp -v "./man/man3/$${FNAME}" "$(PREFIX)/man/man3/$${FNAME}"; fi; done
+	@mkdir -p $(PREFIX)/man/man7
+	@for FNAME in $(MAN_PAGES_7); do if [ -f "./man/man7/$${FNAME}" ]; then cp -v "./man/man7/$${FNAME}" "$(PREFIX)/man/man7/$${FNAME}"; fi; done
 	@echo ""
 	@echo "Make sure $(PREFIX)/man is in your MANPATH"
 
@@ -132,12 +137,13 @@ uninstall: .FORCE
 	@echo "Removing programs in $(PREFIX)/bin"
 	@for FNAME in $(PROGRAMS); do if [ -f "$(PREFIX)/bin/$${FNAME}$(EXT)" ]; then rm -v "$(PREFIX)/bin/$${FNAME}$(EXT)"; fi; done
 	@echo "Removing man pages in $(PREFIX)/man"
-	@for FNAME in $(MAN_PAGES); do if [ -f "$(PREFIX)/man/man1/$${FNAME}" ]; then rm -v "$(PREFIX)/man/man1/$${FNAME}"; fi; done
-
+	@for FNAME in $(MAN_PAGES_1); do if [ -f "$(PREFIX)/man/man1/$${FNAME}" ]; then rm -v "$(PREFIX)/man/man1/$${FNAME}"; fi; done
+	@for FNAME in $(MAN_PAGES_3); do if [ -f "$(PREFIX)/man/man3/$${FNAME}" ]; then rm -v "$(PREFIX)/man/man3/$${FNAME}"; fi; done
+	@for FNAME in $(MAN_PAGES_7); do if [ -f "$(PREFIX)/man/man7/$${FNAME}" ]; then rm -v "$(PREFIX)/man/man7/$${FNAME}"; fi; done
 
 setup_dist: .FORCE
 	@mkdir -p dist
-	@rm -fR dist/*
+	@rm -fR dist/
 
 dist/Linux-x86_64: $(PROGRAMS)
 	@mkdir -p dist/bin
@@ -195,6 +201,7 @@ distribute_docs:
 	@for DNAME in $(DOCS); do cp -vR $$DNAME dist/; done
 
 release: build installer.sh installer.ps1 save setup_dist distribute_docs dist/Linux-x86_64 dist/Linux-aarch64 dist/macOS-x86_64 dist/macOS-arm64 dist/Windows-x86_64 dist/Windows-arm64 dist/Linux-armv7l
-	printf "\n\tReady to do ./release.bash\n"
+	@printf "\nready to run\n\n\trelease.bash\n\n"
+
 
 .FORCE:
