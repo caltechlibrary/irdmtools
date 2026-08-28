@@ -72,7 +72,7 @@
     "Invenio-RDM"
   ],
   "name": "irdmtools",
-  "license": "https://caltechlibrary.github.io/irdmtools/LICENSE",
+  "license": "https://software.library.caltech.edu/irdmtools/LICENSE",
   "operatingSystem": [
     "Linux",
     "macOS",
