@@ -53,7 +53,7 @@ This tools take an RDM record in a dataset collection and returns an abbreviated
 
 ## Quick install
 
-If you're running on Linux, macOS or Raspberry Pi OS you may be able to installed precompiled irdmtools Go based tools with the following curl command --
+If you're running on Linux, macOS or Raspberry Pi OS you may be able to installed precompiled irdmtools Go based tools with the following curl command:
 
 ~~~
 curl https://software.library.caltech.edu/irdmtools/installer.sh | sh
