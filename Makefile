@@ -105,9 +105,6 @@ refresh:
 	git fetch origin
 	git pull origin $(BRANCH)
 
-publish: website .FORCE
-	./publish.bash
-
 clean:
 	@if [ -f version.go ]; then rm version.go; fi
 	@if [ -d bin ]; then rm -fR bin; fi
