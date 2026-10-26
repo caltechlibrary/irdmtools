@@ -1,121 +1,54 @@
-# -*- sh -*-
-
-# Compiled source
-# .............................................................................
-
-*.com
-*.class
-*.dll
-*.exe
-*.o
-*.so
-*.dylib
-
-# Compressed archives & package files
-# .............................................................................
-
-*.7z
-*.dmg
-*.gz
-*.iso
-*.jar
-*.rar
-*.tar
-*.zip
-
-# OS-specific things to ignore:
-# .............................................................................
-
+# Operating system and editor droppings
 .DS_Store
-.DS_Store?
 ._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
 Thumbs.db
-
-# Dropbox and similar files to ignore:
-# .............................................................................
-
-.dropbox
-
-# Emacs-specific things to ignore:
-# .............................................................................
-
 *~
-.#*
-\#*#
-.git/COMMIT_EDITMSG
-auto
-*.synctex.gz
-TAGS
+*.swp
+*.bak
 
-# LaTeX-specific things to ignore:
-# .............................................................................
-
-*.aux
-*.bbl
-*.blg
-*.fls
-*.loc
-*.lof
-*.log
-*.lot
-*.mp
-*.out
-*.toc
-*.toc
-
-# Python-specific things to ignore:
-# .............................................................................
-
-__pycache__
+# Python (the repository holds scripts)
+__pycache__/
 *.py[cod]
-*$py.class
+.ipynb_checkpoints/
 
-# InnoSetup-specific things to ignore:
-# .............................................................................
+# Go build and test artifacts
+*.exe
+*.test
+*.prof
 
-*.~is
+# Build products, rebuilt by make; never committed
+/bin/
+/dist/
+/man/
+/testout/
+*.zip
+*.tar.gz
+*.tgz
+/release_notes.tmp
+/_codemeta.json
 
-# Jupyter Notebook-specific things to ignore:
-# .............................................................................
-
-.ipynb_checkpoints
-
-# Project-specific things to ignore:
-# .............................................................................
+# Secrets and per-machine configuration: never committed.
+# .env and irdmtools.json hold the RDM token and database passwords
+# (config.go reads both).
 .env
 *.env
-*~
-*.bak
-*.swp
-*.ds
-*.rc
-testout
-bin/*
-dist/*
-_codemeta.json
-reference/*
-people.csv
-groups.csv
-*.conf
-scratch/
-*.jsonl
-test-*.txt
-*.yaml
-s3_uploads/
-migration/
-testdata
-*.bash
-problem_files/
-*.env
-htdocs
-file_info_query.sql
-*.json
 *.keys
-*.sql
-*.csv
-t.txt
-man/*
-sandbox/*
+/irdmtools.json
+
+# Working data and scratch space, kept out of git. Dataset collections (*.ds)
+# are built by the tools.
+*.ds
+/scratch/
+/sandbox/
+/s3_uploads/
+/problem_files/
+/reference/
+/people.csv
+/groups.csv
+/file_info_query.sql
+/t.txt
+
+# NOTE: testdata/, .github/ and docs/ are deliberately not ignored, and neither
+# are whole file types (*.json, *.csv, *.sql, *.yaml, *.bash): fixtures,
+# scripts and release files live under those names. The old file ignored them
+# and 80 tracked files matched its rules.
