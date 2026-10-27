@@ -109,3 +109,34 @@ func TestExitStatus(t *testing.T) {
 		}
 	}
 }
+
+// TestHelpTextListsEveryExitCode checks the EXIT STATUS section lists each code
+// the program returns as its own entry, and the WARNINGS section each warning
+// code the normalizer can give.
+func TestHelpTextListsEveryExitCode(t *testing.T) {
+	section := func(from, to string) string {
+		i := strings.Index(helpText, from)
+		j := strings.Index(helpText, to)
+		if i < 0 || j < i {
+			t.Fatalf("expected the manual to have %q before %q", from, to)
+		}
+		return helpText[i:j]
+	}
+	status := section("# EXIT STATUS", "\n# OPTIONS\n")
+	for _, code := range []string{"0", "1", "2", "8", "66", "78"} {
+		if !strings.Contains(status, "\n"+code+"\n: ") {
+			t.Errorf("expected EXIT STATUS to list exit code %s as an entry", code)
+		}
+	}
+	warnings := section("# WARNINGS", "# EXIT STATUS")
+	for _, code := range []string{"parse-fallback", "script-unmapped", "math-linear", "math-unconverted", "multiple-titles"} {
+		if !strings.Contains(warnings, `"`+code+`"`) {
+			t.Errorf("expected WARNINGS to describe the %q code", code)
+		}
+	}
+	for _, field := range []string{`"title"`, `"additional title"`, `"description"`} {
+		if !strings.Contains(warnings, field) {
+			t.Errorf("expected WARNINGS to name the field %s", field)
+		}
+	}
+}
