@@ -65,12 +65,29 @@ func getWorksTitles(work *crossrefapi.Works, options *Doi2RdmOptions) (string, [
 	return title, others, nil
 }
 
-// getWorksAbstract retrieves the abstract from the CrossRef Works
-func getWorksAbstract(work *crossrefapi.Works) string {
-	if work.Message != nil && work.Message.Abstract != "" {
-		return work.Message.Abstract
+// getWorksDescription returns the abstract of a CrossRef Works object as HTML
+// that Invenio RDM's sanitizer keeps: paragraphs, headings as bold paragraphs
+// and inline markup, with MathML as TeX between \( and \), and the leading
+// "Abstract" heading and the copyright text dropped. The conversion warnings
+// are not reported here yet. A work with no abstract gives "".
+//
+// @param work {*crossrefapi.Works} a CrossRef work, which may have no message
+// @param options {*Doi2RdmOptions} the options, which name the symbol table to convert with
+// @returns {string} the description as HTML, empty when there is no abstract
+// @returns {error} an error if the normalizer cannot be built
+// @example
+//
+//	description, err := getWorksDescription(work, options)
+func getWorksDescription(work *crossrefapi.Works, options *Doi2RdmOptions) (string, error) {
+	if work == nil || work.Message == nil {
+		return "", nil
 	}
-	return ""
+	n, err := options.crossRefNormalizer()
+	if err != nil {
+		return "", err
+	}
+	description, _ := n.AbstractHTML(work.Message)
+	return description, nil
 }
 
 // getWorksPublisher
@@ -566,8 +583,12 @@ func CrosswalkCrossRefWork(cfg *Config, work *crossrefapi.Works, options *Doi2Rd
 		}
 	}
 	// NOTE: Abstract becomes Description in simplified records
-	if value := getWorksAbstract(work); value != "" {
-		if err := SetDescription(rec, value); err != nil {
+	description, err := getWorksDescription(work, options)
+	if err != nil {
+		return nil, err
+	}
+	if description != "" {
+		if err := SetDescription(rec, description); err != nil {
 			return nil, err
 		}
 	}

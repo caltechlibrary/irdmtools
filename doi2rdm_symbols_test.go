@@ -248,3 +248,52 @@ func TestWorkspaceExitCodes(t *testing.T) {
 		t.Errorf("expected ENOENT, the harvester's \"DOI not found\", to stay 2, got %d", ENOENT)
 	}
 }
+
+// TestCrosswalkDescriptionUsesOverrideSymbols checks the override table
+// reaches the description as well as the title.
+func TestCrosswalkDescriptionUsesOverrideSymbols(t *testing.T) {
+	dir := t.TempDir()
+	work := symbolsTitleWork()
+	work.Message.Abstract = "<jats:p>caf&eacute;</jats:p>"
+	app := &Doi2Rdm{Cfg: new(Config)}
+	options, code, err := app.loadCrossRefOptions("")
+	if err != nil {
+		t.Fatalf("exit code %d: %s", code, err)
+	}
+	record, err := CrosswalkCrossRefWork(app.Cfg, work, options)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if record.Metadata.Description != "<p>café</p>" {
+		t.Errorf("expected the default table, got %q", record.Metadata.Description)
+	}
+	over := new(Doi2RdmOptions)
+	*over = *options
+	over.normalizer = nil
+	over.Symbols = writeSymbolsFile(t, dir, "over.json", eacuteOverride)
+	work = symbolsTitleWork()
+	work.Message.Abstract = "<jats:p>caf&eacute;</jats:p>"
+	record, err = CrosswalkCrossRefWork(app.Cfg, work, over)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if record.Metadata.Description != "<p>cafE</p>" {
+		t.Errorf("expected the override table, got %q", record.Metadata.Description)
+	}
+}
+
+// TestGetWorksDescriptionBadSymbols checks the description reports a symbols
+// file that cannot be read instead of falling back to the default table. The
+// crosswalk reaches the title first, so this is tested directly.
+func TestGetWorksDescriptionBadSymbols(t *testing.T) {
+	options := new(Doi2RdmOptions)
+	options.Symbols = filepath.Join(t.TempDir(), "absent.json")
+	work := symbolsTitleWork()
+	work.Message.Abstract = "<jats:p>x</jats:p>"
+	if got, err := getWorksDescription(work, options); err == nil {
+		t.Errorf("expected an error for a missing symbols file, got %q", got)
+	}
+	if title, _, err := getWorksTitles(work, options); err == nil {
+		t.Errorf("expected an error for a missing symbols file, got %q", title)
+	}
+}
