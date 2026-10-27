@@ -135,14 +135,6 @@ check_doi DOI
 : This takes a DOI and searches the .pids.doi.identifiers for matching rdm
 records or drafts. DOI is required.
 
-query QUERY_STRING [size | size sort]
-: Returns a result using RDM's search engine. The JSON API access must be
-defined. It is limited to about 10K total results. You can use the see RDM's
-documentation for query construction.  See <https://inveniordm.docs.cern.ch/customize/search/>,
-<https://inveniordm.docs.cern.ch/reference/rest_api_requests/> and
-<https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-query-string-query.html#query-string-syntax>.
-Query takes one required parameter and two optional.
-
 get_record RECORD_ID
 : Returns a specific simplified record indicated by RECORD_ID, e.g. bq3se-47g50.
 The RECORD_ID is a required parameter.  If Postgres access is defined then it
@@ -225,7 +217,7 @@ upload_files RECORD_ID FILENAME [FILENAME ...]
 : Upload files to a draft record. RECORD_ID is required as are one or more
 filenames.
 
-get_files RECORD_ID
+get_draft_files RECORD_ID
 : Retrieve the list of files attached to a draft. RECORD_ID is required.
 
 delete_files RECORD_ID FILENAME [FILENAME ...]
@@ -282,6 +274,9 @@ patch_endpoint PATH [FILENAME]
 : Perform a PATCH to the end point indicated by PATH. PATH is required.
 If FILENAME is provided then JSON source is read file the file otherwise
 it is read from standard input.
+
+delete_endpoint PATH
+: Perform a DELETE to the end point indicated by PATH. PATH is required.
 
 # ACTION_PARAMETERS
 
