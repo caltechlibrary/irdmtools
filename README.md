@@ -52,7 +52,7 @@ For examples of using irdmtools from Python see the
 - An Invenio RDM deployment
 - To building the Go based software and documentation
     - git
-    - Go >= 1.26.1
+    - Go >= 1.27.1
     - Make (e.g. GNU Make)
     - Pandoc >= 3
 - For harvesting content
