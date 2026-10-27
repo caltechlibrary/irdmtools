@@ -5,6 +5,7 @@ import (
 	"os"
 	"path"
 	"strings"
+	"sync"
 	"time"
 
 
@@ -39,14 +40,35 @@ func getWorksResourceType(work *crossrefapi.Works) string {
 	return ""
 }
 
-// getWorksTitles retrieves an ordered list of titles from a CrossRef Works object.
-// The zero index is the primary document title, the remaining are alternative titles.
-// If no titles are found then the slice of string will be empty.
-func getWorksTitles(work *crossrefapi.Works) []string {
-	if work.Message != nil && work.Message.Title != nil && len(work.Message.Title) > 0 {
-		return work.Message.Title[:]
+// crossRefNormalizer is the normalizer that turns CrossRef titles into plain
+// text, built once per run from the default symbol table.
+var crossRefNormalizer = sync.OnceValues(func() (*crossrefapi.Normalizer, error) {
+	return crossrefapi.NewNormalizer("")
+})
+
+// getWorksTitles returns the title of a CrossRef Works object as plain text
+// with its subtitle appended, and the other titles that add something to it.
+// The conversion warnings are not reported here yet. With no title the
+// title is "" and there are no other titles.
+//
+// @param work {*crossrefapi.Works} a CrossRef work, which may have no message
+// @returns {string} the full title as plain text
+// @returns {[]string} the alternate titles as plain text
+// @returns {error} an error if the normalizer cannot be built
+// @example
+//
+//	title, others, err := getWorksTitles(work)
+func getWorksTitles(work *crossrefapi.Works) (string, []string, error) {
+	if work == nil || work.Message == nil {
+		return "", nil, nil
 	}
-	return []string{}
+	n, err := crossRefNormalizer()
+	if err != nil {
+		return "", nil, err
+	}
+	title, _ := n.FullTitle(work.Message)
+	others, _ := n.AlternateTitles(work.Message)
+	return title, others, nil
 }
 
 // getWorksAbstract retrieves the abstract from the CrossRef Works
@@ -535,17 +557,18 @@ func CrosswalkCrossRefWork(cfg *Config, work *crossrefapi.Works, options *Doi2Rd
 			return nil, err
 		}
 	}
-	if values := getWorksTitles(work); len(values) > 0 {
-		for i, val := range values {
-			if i == 0 {
-				if err := SetTitle(rec, val); err != nil {
-					return nil, err
-				}
-			} else {
-				if err := AddAdditionalTitles(rec, makeSimpleTitleDetail(val)); err != nil {
-					return nil, err
-				}
-			}
+	title, otherTitles, err := getWorksTitles(work)
+	if err != nil {
+		return nil, err
+	}
+	if title != "" {
+		if err := SetTitle(rec, title); err != nil {
+			return nil, err
+		}
+	}
+	for _, val := range otherTitles {
+		if err := AddAdditionalTitles(rec, makeSimpleTitleDetail(val)); err != nil {
+			return nil, err
 		}
 	}
 	// NOTE: Abstract becomes Description in simplified records
