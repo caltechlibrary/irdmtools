@@ -1,9 +1,9 @@
 module github.com/caltechlibrary/irdmtools
 
-go 1.26.1
+go 1.27.1
 
 require (
-	github.com/caltechlibrary/crossrefapi v1.0.10
+	github.com/caltechlibrary/crossrefapi v1.1.0
 	github.com/caltechlibrary/dataciteapi v1.1.0
 	github.com/caltechlibrary/dataset/v2 v2.1.10
 	github.com/caltechlibrary/eprinttools v1.3.7
@@ -22,7 +22,7 @@ require (
 	github.com/caltechlibrary/semver v0.0.0-20220817184719-a504da2d5c6a // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/glebarez/go-sqlite v1.22.0 // indirect
-	github.com/google/go-querystring v1.1.0 // indirect
+	github.com/google/go-querystring v1.2.0 // indirect
 	github.com/google/uuid v1.5.0 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
