@@ -56,6 +56,11 @@ const (
 	ENOENT = 2
 	ENOEXEC = 8
 	EAGAIN = 11
+	// The workspace exit codes (DR-0014), used by the failures added with the
+	// symbols option so that a script can tell them from "DOI not found" (2).
+	// The codes above are the older ones and are not changed here.
+	EX_NOINPUT = 66 // a named input, such as the symbols file, is missing
+	EX_CONFIG = 78 // a configuration file is present but wrong
 )
 
 // Doi2Rdm holds the configuration for doi2rdm cli.
@@ -219,7 +224,7 @@ func (app *Doi2Rdm) Configure(configFName string, envPrefix string, debug bool) 
 //
 // @param optionFName {string} the options YAML file name, or "" for the default
 // @returns {*Doi2RdmOptions} the options, nil on error
-// @returns {int} the exit code, ENOENT for a missing file, ENOEXEC for an invalid one
+// @returns {int} the exit code: ENOENT or ENOEXEC for the options file, EX_NOINPUT for a missing symbols file, EX_CONFIG for an invalid one
 // @returns {error} an error naming the file that could not be read or parsed
 // @example
 //
@@ -252,9 +257,9 @@ func (app *Doi2Rdm) loadCrossRefOptions(optionFName string) (*Doi2RdmOptions, in
 	}
 	if _, err := options.crossRefNormalizer(); err != nil {
 		if errors.Is(err, fs.ErrNotExist) {
-			return nil, ENOENT, err
+			return nil, EX_NOINPUT, err
 		}
-		return nil, ENOEXEC, err
+		return nil, EX_CONFIG, err
 	}
 	return options, EXIT_OK, nil
 }

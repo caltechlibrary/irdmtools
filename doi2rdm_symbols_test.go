@@ -130,7 +130,8 @@ func TestCrosswalkOptionsSymbolsDirect(t *testing.T) {
 }
 
 // TestLoadOptionsSymbolsErrors checks that a missing or invalid override file
-// stops the run, naming the file, with the codes the options file itself uses.
+// stops the run, naming the file, with the workspace exit codes: 66 (no input)
+// and 78 (config), which cannot be mistaken for 2, "DOI not found".
 func TestLoadOptionsSymbolsErrors(t *testing.T) {
 	dir := t.TempDir()
 	writeSymbolsFile(t, dir, "invalid.json", `{"superscript": {}}`)
@@ -140,9 +141,9 @@ func TestLoadOptionsSymbolsErrors(t *testing.T) {
 		symbols string
 		code    int
 	}{
-		{"missing", "absent.json", ENOENT},
-		{"unknown section", "invalid.json", ENOEXEC},
-		{"not JSON", "notjson.json", ENOEXEC},
+		{"missing", "absent.json", EX_NOINPUT},
+		{"unknown section", "invalid.json", EX_CONFIG},
+		{"not JSON", "notjson.json", EX_CONFIG},
 	}
 	for _, tt := range tests {
 		app := &Doi2Rdm{Cfg: new(Config)}
@@ -218,8 +219,8 @@ func TestRunCrossRefToRdmBadSymbols(t *testing.T) {
 		symbols string
 		code    int
 	}{
-		{"absent.json", ENOENT},
-		{writeSymbolsFile(t, dir, "invalid.json", `{"superscript": {}}`), ENOEXEC},
+		{"absent.json", EX_NOINPUT},
+		{writeSymbolsFile(t, dir, "invalid.json", `{"superscript": {}}`), EX_CONFIG},
 	}
 	for _, tt := range tests {
 		app := &Doi2Rdm{Cfg: new(Config)}
@@ -230,5 +231,20 @@ func TestRunCrossRefToRdmBadSymbols(t *testing.T) {
 	}
 	if out.Len() != 0 {
 		t.Errorf("expected nothing on stdout, got %q", out.String())
+	}
+}
+
+// TestWorkspaceExitCodes pins the numbers of the workspace exit codes
+// (DR-0014) the symbols option uses: scripts, such as the irdm_harvester,
+// read the numbers, not the constants.
+func TestWorkspaceExitCodes(t *testing.T) {
+	if EX_NOINPUT != 66 {
+		t.Errorf("expected EX_NOINPUT to be 66, got %d", EX_NOINPUT)
+	}
+	if EX_CONFIG != 78 {
+		t.Errorf("expected EX_CONFIG to be 78, got %d", EX_CONFIG)
+	}
+	if ENOENT != 2 {
+		t.Errorf("expected ENOENT, the harvester's \"DOI not found\", to stay 2, got %d", ENOENT)
 	}
 }
