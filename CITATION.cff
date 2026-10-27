@@ -1,21 +1,29 @@
+
 cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
 type: software
-title: "irdmtools"
-abstract: "Tools for working with institutional repositories and data
-management systems. Current implementation targets Invenio-RDM."
+title: irdmtools
+abstract: |-
+  Tools for working with institutional repositories and data management systems. Current implementation targets Invenio-RDM.
 authors:
   - family-names: Doiel
     given-names: R. S.
-    orcid: ""
+    orcid: https://orcid.org/0000-0003-0900-6903
+    email: rsdoiel@caltech.edu
   - family-names: Morrell
     given-names: Tom
-    orcid: ""
+    orcid: https://orcid.org/0000-0001-9266-5146
+    email: tmorrell@caltech.edu
 
 
 repository-code: "https://github.com/caltechlibrary/irdmtools"
-version: 0.0.98
+version: 0.0.99
+date-released: 2026-10-27
+
 license-url: "https://software.library.caltech.edu/irdmtools/LICENSE"
-keywords: [ "institutional repository", "data
-management", "Invenio", "Invenio-RDM" ]
-date-released: 2026-08-13
+keywords:
+  - institutional repository
+  - data management
+  - Invenio
+  - Invenio-RDM
+

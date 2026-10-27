@@ -1,11 +1,11 @@
 #!/bin/sh
-# generated with CMTools 0.0.98 0e1e09ba
+# generated with CMTools 0.0.99 0517e19d
 
 #
 # Set the package name and version to install
 #
 PACKAGE="irdmtools"
-VERSION="0.0.98"
+VERSION="0.0.99"
 GIT_GROUP="caltechlibrary"
 RELEASE="https://github.com/$GIT_GROUP/$PACKAGE/releases/tag/v$VERSION"
 if [ "$PKG_VERSION" != "" ]; then

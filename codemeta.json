@@ -61,8 +61,8 @@
     }
   ],
   "dateCreated": "2022-10-27",
-  "dateModified": "2026-08-13",
-  "datePublished": "2026-08-13",
+  "dateModified": "2026-10-27",
+  "datePublished": "2026-10-27",
   "description": "Tools for working with institutional repositories and data management systems. Current implementation targets Invenio-RDM.",
   "funder": "Caltech Library",
   "keywords": [
@@ -102,10 +102,10 @@
     "MySQL >= 8",
     "SQLite >= 3.49"
   ],
-  "version": "0.0.98",
+  "version": "0.0.99",
   "developmentStatus": "active",
   "issueTracker": "https://github.com/caltechlibrary/irdmtools/issues",
-  "releaseNotes": "- Fix issue #87, set title type to \"other\" on additional_titles crosswalked from CrossRef records with multiple titles\n- Fix typo mapping teachingresource-lecturenotes resource type back to EPrints (\"teching_resource\" -> \"teaching_resource\")\n- Updated for Go v1.26.1\n- Changed get_modified_id to pick a default end date that is 24 hours in advanced before today to capture today's records\n- Proof of concept relatedItem mappings for DataCite records per issue #77\n- Fix issue #85, upgrade to latest crossrefapi package, then added support for ROR as funder identifier.\n- Fix issue #86 for mapping journals to journal:journal and correctly map editors to contributors",
+  "releaseNotes": "- This release modernizes the build, release and documentation. The tools behave as in v0.0.98 except for the one fix below.\n- Fixed four malformed struct tags that `go vet` reported (`config.go`, `eprintrest.go`). `EPrintRest` now decodes `db_host`, `db_user` and `db_password` from JSON, and a `debug:` key in a YAML configuration no longer sets `Config.Debug`; it is a command line flag only.\n- A fresh clone builds: `version.go` is committed again (a clean checkout failed with `undefined: Version`).\n- The Makefile: `build`, `test` and `install` no longer run `cmt`, so building needs only git, make, go and pandoc. `cmt` runs only from `make generate` and `make release`.\n- `make release` builds one zip per platform (Linux, macOS and Windows, on x86_64 and arm64) and `release-check` fails when a zip lacks a program or carries a stale version or manual page. The 32-bit Raspberry Pi (Linux-armv7l) build is dropped; a Pi is supported as Linux-aarch64.\n- `release.bash` and `release.ps1` were rewritten and share one test driver (`make test-release`).\n- Tests: `make test` is offline; the tests that need an RDM or Postgres configuration skip themselves, and the ones that call public APIs (DataCite, CrossRef, ROR) run only with `make test-live`.\n- Documentation sources moved to `docs/` and are published by the shared workflow; the Python scripts and the `irdm` package moved to `scripts/`; working notes moved to the workspace; the site hostname is software.library.caltech.edu.\n- `codemeta.json` is CodeMeta 4.0 and no longer lists CMTools as a requirement.",
   "copyrightYear": 2026,
   "copyrightHolder": "California Institute of Technology"
 }
