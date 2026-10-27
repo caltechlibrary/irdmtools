@@ -9,6 +9,8 @@ Project TODOS: <https://github.com/orgs/caltechlibrary/projects/3/views/5?filter
 Bugs
 ----
 
+- [ ] doi2rdm cannot crosswalk a CrossRef journal issue (e.g. 10.1111/jdv.v40.6, `type` "journal-issue"): `resource type "journal-issue" not mapped`. It has no title either. Decide whether to map it in `resource_types` or to skip such records on purpose (found in doi2rdm Part B Phase 2).
+- [ ] `CrosswalkCrossRefWork` calls api.ror.org (`lookupROR` in `ror.go`) for each funder whose DOI the publisher asserted, with no timeout and no cache across records, so crosswalking is a network operation and an offline test must drop the funders (found in doi2rdm Part B Phase 2).
 - [ ] ep3ds2citations, citations from CaltechDATA seem to be missing orcid even when present in the data.ds record.
 - [ ] eprint2rdm missing metadata attributes
 	- [x] journal related fields (e.g. journal:journal) in custom fields
