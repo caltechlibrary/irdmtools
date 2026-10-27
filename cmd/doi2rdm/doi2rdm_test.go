@@ -140,3 +140,21 @@ func TestHelpTextListsEveryExitCode(t *testing.T) {
 		}
 	}
 }
+
+// TestHelpTextDocumentsDebug checks the manual explains -debug as a way to see
+// what CrossRef or DataCite returned, not only what doi2rdm does with it.
+func TestHelpTextDocumentsDebug(t *testing.T) {
+	i := strings.Index(helpText, "\n# OPTIONS\n")
+	if i < 0 {
+		t.Fatal("expected the manual to have an OPTIONS section")
+	}
+	options := helpText[i:]
+	for _, want := range []string{"-debug\n: ", "works JSON", "objects JSON", "CrossRef", "DataCite", "standard error", "before"} {
+		if !strings.Contains(options, want) {
+			t.Errorf("expected the -debug entry and its example to contain %q", want)
+		}
+	}
+	if !strings.Contains(helpText, "-debug ") {
+		t.Error("expected an example that uses -debug")
+	}
+}

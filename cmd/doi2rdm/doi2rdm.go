@@ -176,6 +176,14 @@ that run {app_name} read them.
 -version
 : display version
 
+-debug
+: write the JSON that CrossRef ("works JSON:") or DataCite ("objects JSON:")
+  returned to standard error, before it is converted. Use it to tell a problem
+  in the service's own data from a problem in the conversion, whether you are
+  debugging {app_name} or a CrossRef or DataCite record. It is written once
+  the service has answered, so a DOI that is not found shows nothing. Standard
+  output is not changed. The output can be long, so save it with 2>FILENAME.
+
 -diff JSON_FILENAME
 : compare the JSON_FILENAME contents with record generated from CrossRef or DataCite works record
 
@@ -198,6 +206,14 @@ check CrossRef then DataCite.
 
 ~~~
 	{app_name} options.yaml "10.1021/acsami.7b15651" >article.json
+~~~
+
+See what CrossRef returned for a DOI, and what {app_name} made of it. The raw
+CrossRef JSON and any warnings are in "debug.txt", the RDM record is in
+"article.json".
+
+~~~
+	{app_name} -debug options.yaml "10.1021/acsami.7b15651" >article.json 2>debug.txt
 ~~~
 
 Check to see the difference from the saved "article.json" and
