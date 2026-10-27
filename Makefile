@@ -20,8 +20,6 @@ MAN_PAGES_3 = $(shell ls -1 *.3.md | sed -E 's/.3.md/.3/g')
 
 MAN_PAGES_7 = $(shell ls -1 *.7.md | sed -E 's/.7.md/.7/g')
 
-HTML_PAGES = $(shell find . -type f | grep -E '.html$')
-
 DOCS = $(shell ls -1 *.?.md)
 
 PACKAGE = $(shell ls -1 *.go)
@@ -88,9 +86,6 @@ installer.ps1: .FORCE
 test: $(PACKAGE)
 	go test
 
-website: clean-website .FORCE
-	make -f website.mak
-
 status:
 	git status
 
@@ -108,9 +103,6 @@ clean:
 	@if [ -d dist ]; then rm -fR dist; fi
 	@if [ -d man ]; then rm -fR man; fi
 	@if [ -d testout ]; then rm -fR testout; fi
-
-clean-website:
-	@for FNAME in $(HTML_PAGES); do if [ -f "$${FNAME}" ]; then rm "$${FNAME}"; fi; done
 
 install: build
 	@echo "Installing programs in $(PREFIX)/bin"
