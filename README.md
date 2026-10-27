@@ -28,7 +28,7 @@ This tool is migrating content from an EPrints repository via the EPrint REST AP
 
 ### `doi2rdm`
 
-This tool will query the CrossRef or DataCite API and convert a works record into a JSON structure compatible with an RDM record (e.g. to be inserted via an RDM API call).  See the [man page](doi2rdm.1.md) for details
+This tool will query the CrossRef or DataCite API and convert a works record into a JSON structure compatible with an RDM record (e.g. to be inserted via an RDM API call).  See the [man page](doi2rdm.1.md) for details, and [titles and abstracts from CrossRef](doi2rdm_text_normalization.md) for how titles, additional titles and descriptions are converted
 
 ### `ep3ds2citations`
 
