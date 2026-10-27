@@ -77,7 +77,7 @@ doi2rdm: 10.1103/physrevlett.134.141902: title: math-linear: Z_N
 doi2rdm: 10.1007/s00717-026-00622-0: title: multiple-titles: X-linked juvenile retinoschisis
 ~~~
 
-The fields are `title`, `additional title` and `description`. The codes are:
+Control characters in a fragment, such as terminal escape sequences, are replaced by spaces, so a warning is always one line of printable text. The fields are `title`, `additional title` and `description`. The codes are:
 
 | Code | Meaning |
 |---|---|

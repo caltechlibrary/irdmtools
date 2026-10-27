@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"strings"
 	"testing"
+	"unicode"
 
 	"github.com/caltechlibrary/crossrefapi"
 	"github.com/caltechlibrary/simplified"
@@ -359,5 +360,48 @@ func TestRunCrossRefToRdmWritesWarnings(t *testing.T) {
 	}
 	if out.Len() != 0 || eout.Len() != 0 {
 		t.Errorf("expected nothing written, got %q and %q", out.String(), eout.String())
+	}
+}
+
+// TestCrossRefWarningLineHasNoControlCharacters checks a warning line cannot
+// carry a terminal escape sequence or any other control character from
+// CrossRef's text: a parse-fallback warning quotes the raw source, so the
+// fragment is untrusted. Each control character, the C1 ones and the line and
+// paragraph separators too, becomes a space; ordinary text and non-Latin
+// letters are untouched.
+func TestCrossRefWarningLineHasNoControlCharacters(t *testing.T) {
+	tests := []struct {
+		name     string
+		fragment string
+		want     string
+	}{
+		{"escape sequence", "a \x1b[31mred\x1b[0m b", "a  [31mred [0m b"},
+		{"terminal title", "x \x1b]0;pwned\a y", "x  ]0;pwned  y"},
+		{"bell and nul", "a\ab\x00c", "a b c"},
+		{"C1 control, the single-byte CSI", "a\u009bb", "a b"},
+		{"delete", "a\x7fb", "a b"},
+		{"tab", "a\tb", "a b"},
+		{"line and paragraph separators", "a\u2028b\u2029c", "a b c"},
+		{"CRLF is one space", "a\r\nb", "a b"},
+		{"text is untouched", "巴马香猪 \u00e9 <i>x</i> \\( y \\)", "巴马香猪 \u00e9 <i>x</i> \\( y \\)"},
+	}
+	for _, tt := range tests {
+		w := CrossRefWarning{Field: "title", Warning: crossrefapi.Warning{Code: "parse-fallback", Fragment: tt.fragment}}
+		got := w.Line("10.1/x")
+		want := "doi2rdm: 10.1/x: title: parse-fallback: " + tt.want
+		if got != want {
+			t.Errorf("%s:\n got  %q\n want %q", tt.name, got, want)
+		}
+		for _, r := range got {
+			if unicode.IsControl(r) || r == '\u2028' || r == '\u2029' {
+				t.Errorf("%s: the line has the control character %U", tt.name, r)
+			}
+		}
+	}
+	// the DOI and the field are quoted from the command line and the program,
+	// but a DOI typed with a control character must not reach the terminal either
+	w := CrossRefWarning{Field: "title", Warning: crossrefapi.Warning{Code: "math-linear", Fragment: "Z_N"}}
+	if got := w.Line("10.1/\x1b[2Jx"); strings.ContainsRune(got, 0x1b) {
+		t.Errorf("expected no escape character from the DOI, got %q", got)
 	}
 }

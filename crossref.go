@@ -6,6 +6,7 @@ import (
 	"path"
 	"strings"
 	"time"
+	"unicode"
 
 
 	// Caltech Library Packages
@@ -66,8 +67,11 @@ type CrossRefWarning struct {
 }
 
 // Line returns the warning as one line of text for standard error:
-// "doi2rdm: DOI: field: code: fragment". Line breaks in the fragment are
-// replaced by spaces so a warning is always one line.
+// "doi2rdm: DOI: field: code: fragment". The fragment can quote CrossRef's raw
+// text, which is untrusted, so every control character in the line (a terminal
+// escape sequence, a bell, a C1 control, a tab, a line or paragraph separator)
+// is replaced by a space and a CRLF pair by one space: a warning is always
+// one line of printable text.
 //
 // @param doi {string} the DOI of the work the warning is about
 // @returns {string} the warning as one line without a trailing newline
@@ -76,8 +80,13 @@ type CrossRefWarning struct {
 //	w := CrossRefWarning{Field: "title", Warning: crossrefapi.Warning{Code: "math-linear", Fragment: "Z_N"}}
 //	fmt.Println(w.Line("10.1/x")) // doi2rdm: 10.1/x: title: math-linear: Z_N
 func (w CrossRefWarning) Line(doi string) string {
-	fragment := strings.NewReplacer("\r\n", " ", "\n", " ", "\r", " ").Replace(w.Warning.Fragment)
-	return fmt.Sprintf("doi2rdm: %s: %s: %s: %s", doi, w.Field, w.Warning.Code, fragment)
+	line := fmt.Sprintf("doi2rdm: %s: %s: %s: %s", doi, w.Field, w.Warning.Code, w.Warning.Fragment)
+	return strings.Map(func(r rune) rune {
+		if unicode.IsControl(r) || r == '\u2028' || r == '\u2029' {
+			return ' '
+		}
+		return r
+	}, strings.ReplaceAll(line, "\r\n", " "))
 }
 
 // fieldWarnings labels normalizer warnings with the field they came from.

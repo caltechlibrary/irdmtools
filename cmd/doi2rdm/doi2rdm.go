@@ -135,7 +135,9 @@ field is "title", "additional title" or "description". code is one of
 "math-unconverted" (a formula element was left as text) and
 "multiple-titles" (CrossRef gave more than one title; the first is used and the
 fragment is the others). fragment is the part of the source the warning is
-about. Warnings never change the JSON written to standard output or the exit
+about. Control characters in a fragment, such as terminal escape sequences,
+are replaced by spaces, so a warning is always one line of printable text.
+Warnings never change the JSON written to standard output or the exit
 status. With -diff only the warnings for the current record are written.
 
 # EXIT STATUS

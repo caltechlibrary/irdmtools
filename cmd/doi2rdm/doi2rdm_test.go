@@ -29,6 +29,7 @@ func TestHelpTextDocumentsNormalization(t *testing.T) {
 		"78",
 		"multiple-titles",
 		"math-linear",
+		"Control characters in a fragment",
 	} {
 		if !strings.Contains(helpText, want) {
 			t.Errorf("expected the manual to contain %q", want)
