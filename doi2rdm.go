@@ -66,6 +66,10 @@ const (
 // Doi2Rdm holds the configuration for doi2rdm cli.
 type Doi2Rdm struct {
 	Cfg *Config
+
+	// queryCrossRef fetches a CrossRef work. It is nil outside tests, which
+	// leaves QueryCrossRefWork, the live query, in place.
+	queryCrossRef func(cfg *Config, doi string, options *Doi2RdmOptions) (*crossrefapi.Works, error)
 }
 
 type Doi2RdmOptions struct {
@@ -291,11 +295,7 @@ func (app *Doi2Rdm) RunCrossRefToRdm(in io.Reader, out io.Writer, eout io.Writer
 	if err != nil {
 		return exitCode, err
 	}
-	var src []byte
-	var (
-		oRecord *simplified.Record
-		nRecord *simplified.Record
-	)
+	var oRecord *simplified.Record
 	if diffFName != "" {
 		oWork := new(crossrefapi.Works)
 		src, err := os.ReadFile(diffFName)
@@ -310,21 +310,57 @@ func (app *Doi2Rdm) RunCrossRefToRdm(in io.Reader, out io.Writer, eout io.Writer
 			return ENOEXEC, err
 		}
 	}
-	nWork, err := QueryCrossRefWork(app.Cfg, doi, options)
+	query := QueryCrossRefWork
+	if app.queryCrossRef != nil {
+		query = app.queryCrossRef
+	}
+	nWork, err := query(app.Cfg, doi, options)
 	if err != nil {
 		return ENOENT, err
 	}
-	nRecord, err = CrosswalkCrossRefWork(app.Cfg, nWork, options)
+	return app.renderCrossRefWork(out, eout, doi, nWork, options, oRecord, diffFName != "")
+}
+
+// renderCrossRefWork crosswalks a CrossRef work that has been fetched and
+// writes the record as JSON to out, or in diff mode the difference from the old
+// record, and nothing else. What the text normalizer could not convert cleanly
+// is written to eout, one line per warning: "doi2rdm: DOI: field: code:
+// fragment". Warnings never change out or the result. In diff mode only the
+// new work's warnings are written.
+//
+// @param out {io.Writer} where the record JSON is written
+// @param eout {io.Writer} where the warning lines are written, may be nil
+// @param doi {string} the DOI of the work, named in each warning line
+// @param nWork {*crossrefapi.Works} the work to crosswalk
+// @param options {*Doi2RdmOptions} the crosswalk options
+// @param oRecord {*simplified.Record} the old record to diff against, used when diff is true
+// @param diff {bool} true to write the diff of oRecord and the new record
+// @returns {int} EXIT_OK, or ENOEXEC if the work cannot be crosswalked or the JSON made
+// @returns {error} an error describing the failure
+// @example
+//
+//	exitCode, err := app.renderCrossRefWork(os.Stdout, os.Stderr, doi, work, options, nil, false)
+func (app *Doi2Rdm) renderCrossRefWork(out io.Writer, eout io.Writer, doi string, nWork *crossrefapi.Works, options *Doi2RdmOptions, oRecord *simplified.Record, diff bool) (int, error) {
+	var (
+		src []byte
+		err error
+	)
+	nRecord, warnings, err := CrosswalkCrossRefWorkWarnings(app.Cfg, nWork, options)
 	if err != nil {
 		return ENOEXEC, err
 	}
-	if diffFName != "" {
+	if diff {
 		src, err = oRecord.DiffAsJSON(nRecord)
 	} else {
 		src, err = JSONMarshalIndent(nRecord, "", "    ")
 	}
 	if err != nil {
 		return ENOEXEC, err
+	}
+	if eout != nil {
+		for _, w := range warnings {
+			fmt.Fprintln(eout, w.Line(doi))
+		}
 	}
 	fmt.Fprintf(out, "%s\n", src)
 	return EXIT_OK, nil

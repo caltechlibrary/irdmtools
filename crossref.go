@@ -39,20 +39,86 @@ func getWorksResourceType(work *crossrefapi.Works) string {
 	return ""
 }
 
+// CrossRefWarning is something the text normalizer could not convert cleanly
+// in one field of a CrossRef work. The record is still made, with the best
+// text available; the warning says where a person may want to look.
+type CrossRefWarning struct {
+	// Field is the part of the record the warning is about: "title",
+	// "additional title" or "description".
+	Field string
+	// Warning is the normalizer's warning, with its code and the fragment of
+	// the source it is about.
+	Warning crossrefapi.Warning
+}
+
+// Line returns the warning as one line of text for standard error:
+// "doi2rdm: DOI: field: code: fragment". Line breaks in the fragment are
+// replaced by spaces so a warning is always one line.
+//
+// @param doi {string} the DOI of the work the warning is about
+// @returns {string} the warning as one line without a trailing newline
+// @example
+//
+//	w := CrossRefWarning{Field: "title", Warning: crossrefapi.Warning{Code: "math-linear", Fragment: "Z_N"}}
+//	fmt.Println(w.Line("10.1/x")) // doi2rdm: 10.1/x: title: math-linear: Z_N
+func (w CrossRefWarning) Line(doi string) string {
+	fragment := strings.NewReplacer("\r\n", " ", "\n", " ", "\r", " ").Replace(w.Warning.Fragment)
+	return fmt.Sprintf("doi2rdm: %s: %s: %s: %s", doi, w.Field, w.Warning.Code, fragment)
+}
+
+// fieldWarnings labels normalizer warnings with the field they came from.
+func fieldWarnings(field string, warnings []crossrefapi.Warning) []CrossRefWarning {
+	var result []CrossRefWarning
+	for _, w := range warnings {
+		result = append(result, CrossRefWarning{Field: field, Warning: w})
+	}
+	return result
+}
+
 // getWorksTitles returns the title of a CrossRef Works object as plain text
-// with its subtitle appended, and the other titles that add something to it.
-// The conversion warnings are not reported here yet. With no title the
-// title is "" and there are no other titles.
+// with its subtitle appended, the other titles that add something to it, and
+// the warnings from converting them. With no title the title is "" and there
+// are no other titles.
 //
 // @param work {*crossrefapi.Works} a CrossRef work, which may have no message
 // @param options {*Doi2RdmOptions} the options, which name the symbol table to convert with
 // @returns {string} the full title as plain text
 // @returns {[]string} the alternate titles as plain text
+// @returns {[]CrossRefWarning} what could not be converted cleanly
 // @returns {error} an error if the normalizer cannot be built
 // @example
 //
-//	title, others, err := getWorksTitles(work, options)
-func getWorksTitles(work *crossrefapi.Works, options *Doi2RdmOptions) (string, []string, error) {
+//	title, others, warnings, err := getWorksTitles(work, options)
+func getWorksTitles(work *crossrefapi.Works, options *Doi2RdmOptions) (string, []string, []CrossRefWarning, error) {
+	if work == nil || work.Message == nil {
+		return "", nil, nil, nil
+	}
+	n, err := options.crossRefNormalizer()
+	if err != nil {
+		return "", nil, nil, err
+	}
+	title, titleWarnings := n.FullTitle(work.Message)
+	others, otherWarnings := n.AlternateTitles(work.Message)
+	warnings := fieldWarnings("title", titleWarnings)
+	warnings = append(warnings, fieldWarnings("additional title", otherWarnings)...)
+	return title, others, warnings, nil
+}
+
+// getWorksDescription returns the abstract of a CrossRef Works object as HTML
+// that Invenio RDM's sanitizer keeps: paragraphs, headings as bold paragraphs
+// and inline markup, with MathML as TeX between \( and \), and the leading
+// "Abstract" heading and the copyright text dropped, and the warnings from
+// converting it. A work with no abstract gives "".
+//
+// @param work {*crossrefapi.Works} a CrossRef work, which may have no message
+// @param options {*Doi2RdmOptions} the options, which name the symbol table to convert with
+// @returns {string} the description as HTML, empty when there is no abstract
+// @returns {[]CrossRefWarning} what could not be converted cleanly
+// @returns {error} an error if the normalizer cannot be built
+// @example
+//
+//	description, warnings, err := getWorksDescription(work, options)
+func getWorksDescription(work *crossrefapi.Works, options *Doi2RdmOptions) (string, []CrossRefWarning, error) {
 	if work == nil || work.Message == nil {
 		return "", nil, nil
 	}
@@ -60,34 +126,8 @@ func getWorksTitles(work *crossrefapi.Works, options *Doi2RdmOptions) (string, [
 	if err != nil {
 		return "", nil, err
 	}
-	title, _ := n.FullTitle(work.Message)
-	others, _ := n.AlternateTitles(work.Message)
-	return title, others, nil
-}
-
-// getWorksDescription returns the abstract of a CrossRef Works object as HTML
-// that Invenio RDM's sanitizer keeps: paragraphs, headings as bold paragraphs
-// and inline markup, with MathML as TeX between \( and \), and the leading
-// "Abstract" heading and the copyright text dropped. The conversion warnings
-// are not reported here yet. A work with no abstract gives "".
-//
-// @param work {*crossrefapi.Works} a CrossRef work, which may have no message
-// @param options {*Doi2RdmOptions} the options, which name the symbol table to convert with
-// @returns {string} the description as HTML, empty when there is no abstract
-// @returns {error} an error if the normalizer cannot be built
-// @example
-//
-//	description, err := getWorksDescription(work, options)
-func getWorksDescription(work *crossrefapi.Works, options *Doi2RdmOptions) (string, error) {
-	if work == nil || work.Message == nil {
-		return "", nil
-	}
-	n, err := options.crossRefNormalizer()
-	if err != nil {
-		return "", err
-	}
-	description, _ := n.AbstractHTML(work.Message)
-	return description, nil
+	description, warnings := n.AbstractHTML(work.Message)
+	return description, fieldWarnings("description", warnings), nil
 }
 
 // getWorksPublisher
@@ -553,66 +593,88 @@ func normalizeWorksPublisherName(val string, work *crossrefapi.Works, options *D
 // and maps the fields into an simplified Record struct return a
 // new struct or error.
 func CrosswalkCrossRefWork(cfg *Config, work *crossrefapi.Works, options *Doi2RdmOptions) (*simplified.Record, error) {
+	rec, _, err := CrosswalkCrossRefWorkWarnings(cfg, work, options)
+	return rec, err
+}
+
+// CrosswalkCrossRefWorkWarnings does what CrosswalkCrossRefWork does and also
+// returns what the text normalizer could not convert cleanly in the title,
+// the additional titles and the description. A warning never fails the
+// crosswalk: the record holds the best text available.
+//
+// @param cfg {*Config} the configuration
+// @param work {*crossrefapi.Works} the CrossRef work to map
+// @param options {*Doi2RdmOptions} the crosswalk options
+// @returns {*simplified.Record} the new record, nil on error
+// @returns {[]CrossRefWarning} the conversion warnings, in field order
+// @returns {error} an error if the work is nil or cannot be mapped
+// @example
+//
+//	rec, warnings, err := CrosswalkCrossRefWorkWarnings(cfg, work, options)
+//	for _, w := range warnings {
+//		fmt.Fprintln(os.Stderr, w.Line(doi))
+//	}
+func CrosswalkCrossRefWorkWarnings(cfg *Config, work *crossrefapi.Works, options *Doi2RdmOptions) (*simplified.Record, []CrossRefWarning, error) {
 	if work == nil {
-		return nil, fmt.Errorf("crossref api works not populated")
+		return nil, nil, fmt.Errorf("crossref api works not populated")
 	}
 	rec := new(simplified.Record)
 	// .message.type -> .record.metadata.resource_type (via controlled vocabulary)
 	if value := getWorksResourceType(work); value != "" {
 		if err := SetResourceType(rec, value, options.ResourceTypes); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
 	if value := getWorksDOI(work); value != "" {
 		if err := SetDOI(rec, value); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
-	title, otherTitles, err := getWorksTitles(work, options)
+	title, otherTitles, titleWarnings, err := getWorksTitles(work, options)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	if title != "" {
 		if err := SetTitle(rec, title); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
 	for _, val := range otherTitles {
 		if err := AddAdditionalTitles(rec, makeSimpleTitleDetail(val)); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
 	// NOTE: Abstract becomes Description in simplified records
-	description, err := getWorksDescription(work, options)
+	description, descriptionWarnings, err := getWorksDescription(work, options)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	if description != "" {
 		if err := SetDescription(rec, description); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
 	if values := getWorksCreators(work); values != nil && len(values) > 0 {
 		if err := SetCreators(rec, values); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
 	if values := getWorksContributors(work); values != nil && len(values) > 0 {
 		if err := SetContributors(rec, values); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
 	if value := getWorksPublisher(work); value != "" {
 		// FIXME: Setting the publisher name is going to be normalized via DOI prefix, maybe ISSN?
 		value := normalizeWorksPublisherName(value, work, options)
 		if err := SetPublisher(rec, value); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
 	if value := getWorksPublication(work); value != "" {
 		value := normalizeWorksJournalName(value, work, options)
 		if err := SetPublication(rec, value); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
 	/* FIXME: Need to know where this it's assignted in simplified model.
@@ -621,43 +683,43 @@ func CrosswalkCrossRefWork(cfg *Config, work *crossrefapi.Works, options *Doi2Rd
 	place to fetch this data.
 	if value := getWorksSeries(work); value != "" {
 		if err := SetSeries(rec, value); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
 	*/
 	if value := getWorksVolume(work); value != "" {
 		if err := SetVolume(rec, value); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
 	if value := getWorksIssue(work); value != "" {
 		if err := SetIssue(rec, value); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
 	if value := getWorksPublisherLocation(work); value != "" {
 		if err := SetPublisherLocation(rec, value); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
 	if value := getWorksPageRange(work); value != "" {
 		if err := SetPageRange(rec, value); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
 	if value := getWorksArticleNumber(work); value != "" {
 		if err := SetArticleNumber(rec, value); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
 	if values := getWorksISBNs(work); values != nil && len(values) > 0 {
 		if err := SetImprintField(rec, "isbn", values); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
 	if values := getWorksISSNs(work); len(values) > 0 {
 		if err := SetJournalField(rec, "issn", values[0]); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		if len(values) > 1 {
 			for i := 1; i < len(values); i++ {
@@ -667,55 +729,56 @@ func CrosswalkCrossRefWork(cfg *Config, work *crossrefapi.Works, options *Doi2Rd
 	}
 	if values := getWorksFunding(work); values != nil && len(values) > 0 {
 		if err := SetFunding(rec, values); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
 	if values := getWorksLicenses(work); values != nil {
 		if err := AddRights(rec, values); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
 	if values := getWorksSubjects(work); values != nil {
 		if err := AddSubjects(rec, values); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
 	// NOTE: Crossref has many dates, e.g. publised print, published online
 	if value := getWorksPublishedPrint(work); value != nil {
 		if err := AddDate(rec, value); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
 	if value := getWorksPublishedOnline(work); value != nil {
 		if err := AddDate(rec, value); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
 	if value := getWorksAccepted(work); value != nil {
 		if err := AddDate(rec, value); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
 	if value := getWorksApproved(work); value != nil {
 		if err := AddDate(rec, value); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
 	// NOTE: Publication Date should be the earlier of print or online
 	if value := getWorksPublicationDate(work); value != "" {
 		if err := SetPublicationDate(rec, value); err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
 
 	// Default language to US English
 	if err := SetLanguages(rec, "id", "eng"); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	// NOTE: We need to set the creation and updated time.
 	now := time.Now()
 	rec.Created = now
 	rec.Updated = now
-	return rec, nil
+	warnings := append(titleWarnings, descriptionWarnings...)
+	return rec, warnings, nil
 }

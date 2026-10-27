@@ -290,10 +290,10 @@ func TestGetWorksDescriptionBadSymbols(t *testing.T) {
 	options.Symbols = filepath.Join(t.TempDir(), "absent.json")
 	work := symbolsTitleWork()
 	work.Message.Abstract = "<jats:p>x</jats:p>"
-	if got, err := getWorksDescription(work, options); err == nil {
+	if got, _, err := getWorksDescription(work, options); err == nil {
 		t.Errorf("expected an error for a missing symbols file, got %q", got)
 	}
-	if title, _, err := getWorksTitles(work, options); err == nil {
+	if title, _, _, err := getWorksTitles(work, options); err == nil {
 		t.Errorf("expected an error for a missing symbols file, got %q", title)
 	}
 }
