@@ -129,7 +129,7 @@ func Test01Query(t *testing.T) {
 */
 
 func Test01GetModifiedRecordIds(t *testing.T) {
-	if cfg == nil {
+	if cfg == nil || cfg.pgDB == nil {
 		t.Skipf("Not configured for testing")
 	}
 	today := time.Now()
@@ -155,7 +155,7 @@ func Test01GetModifiedRecordIds(t *testing.T) {
 }
 
 func Test01GetRecordIds(t *testing.T) {
-	if cfg == nil {
+	if cfg == nil || cfg.pgDB == nil {
 		t.Skipf("Not configured for testing")
 	}
 	ids, err := GetRecordIds(cfg)
@@ -186,8 +186,7 @@ func Test02GetRecord(t *testing.T) {
 		t.Error(err)
 	}
 	if cfg.RepoID == "" {
-		t.Errorf("Missing repo id, aborting")
-		t.FailNow()
+		t.Skipf("not configured for testing, no TEST_REPO_ID")
 	}
 	if cfg.InvenioDbHost == "" {
 		t.Errorf("Missing Invenio Db Hostname")

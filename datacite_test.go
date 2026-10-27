@@ -10,6 +10,7 @@ import (
 )
 
 func TestQueryDataCiteObject(t *testing.T) {
+	requireLive(t)
 	ids := []string{
 		"10.22002/36sg9-yhj98",
 		"10.22002/D1.868",
@@ -54,6 +55,7 @@ func TestQueryDataCiteObject(t *testing.T) {
 }
 
 func TestQueryDatasetDOI(t *testing.T) {
+	requireLive(t)
 	data := map[string]map[string]interface{}{
 		"10.22002/d1.868": map[string]interface{}{
 			"title": "caltechlibrary/dataset: issues #13, #14, #15 fixes",

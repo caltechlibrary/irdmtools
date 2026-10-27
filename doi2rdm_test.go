@@ -578,6 +578,7 @@ issn_publishers:
 )
 
 func TestDataCiteToRDM(t *testing.T) {
+	requireLive(t)
 	//FIXME: Need an arxiv DOI to look up at DataCite
 	arxiv_ids := []string{
 		"10.22002/D1.868",
@@ -630,6 +631,7 @@ func TestDataCiteToRDM(t *testing.T) {
 }
 
 func TestIssue81(t *testing.T) {
+	requireLive(t)
 	doi := "10.1093/mnras/stae1289"
 	app := new(Doi2Rdm)
 	app.Cfg = new(Config)
@@ -678,6 +680,7 @@ func TestIssue81(t *testing.T) {
 }
 
 func TestIssue87(t *testing.T) {
+	requireLive(t)
 	// This DOI resolves to a CrossRef work with two titles
 	// (the original Portuguese title and an English translated
 	// title). See https://github.com/caltechlibrary/irdmtools/issues/87

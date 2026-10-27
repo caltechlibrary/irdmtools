@@ -41,8 +41,7 @@ import (
 
 func Test03Harvest(t *testing.T) {
 	if cfg == nil || cfg.InvenioAPI == "" || cfg.InvenioToken == "" {
-		t.Errorf("tests not configured")
-		t.FailNow()
+		t.Skipf("not configured for testing")
 	}
 	if cfg.CName == "" {
 		t.Errorf("dataset collection not configured")

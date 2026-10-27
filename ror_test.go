@@ -5,6 +5,7 @@ import (
 )
 
 func TestLookupROR(t *testing.T) {
+	requireLive(t)
 	doiSuffix := "100000025"
 	expectedROR := "https://ror.org/04xeg9z08"
 	ror, ok := lookupROR(doiSuffix, false)

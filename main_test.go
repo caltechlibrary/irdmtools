@@ -46,7 +46,17 @@ var (
 	cfg      *Config
 	useQuery string
 	idsFName string
+	live     bool
 )
+
+// requireLive skips a test that calls a public API (DataCite, CrossRef, ROR)
+// unless the tests were run with -live (see `make test-live`).
+func requireLive(t *testing.T) {
+	t.Helper()
+	if !live {
+		t.Skip("live test, calls a public API; run it with: make test-live")
+	}
+}
 
 func TestMain(m *testing.M) {
 	var (
@@ -59,6 +69,7 @@ func TestMain(m *testing.M) {
 	flag.StringVar(&configFName, "config", configFName, "config file for testing")
 	flag.StringVar(&useQuery, "q", useQuery, "use this test query")
 	flag.StringVar(&idsFName, "ids", idsFName, "use this JSON id list for testing")
+	flag.BoolVar(&live, "live", live, "also run the tests that call public APIs")
 	flag.Parse()
 
 	if cfg == nil {
