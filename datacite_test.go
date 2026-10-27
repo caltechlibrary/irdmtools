@@ -29,7 +29,7 @@ func TestQueryDataCiteObject(t *testing.T) {
 	if err := yaml.Unmarshal(TestDefaultOptions, &options); err != nil {
 		t.Error(err)
 	}
-	options.MailTo = "test@example.edu"
+	options.MailTo = liveMailTo(t)
 	for _, id := range ids {
 		work, err := QueryDataCiteObject(cfg, id, options)
 		if err != nil {
@@ -76,7 +76,7 @@ func TestQueryDatasetDOI(t *testing.T) {
 	if err := yaml.Unmarshal(TestDefaultOptions, &options); err != nil {
 		t.Error(err)
 	}
-	options.MailTo = "test@example.edu"
+	options.MailTo = liveMailTo(t)
 	for doi, expected := range data {
 		m, err := QueryDataCiteObject(cfg, doi, options)
 		if err != nil {

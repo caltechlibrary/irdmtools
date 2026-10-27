@@ -39,6 +39,7 @@ import (
 	"log"
 	"os"
 	"path"
+	"strings"
 	"testing"
 )
 
@@ -56,6 +57,33 @@ func requireLive(t *testing.T) {
 	if !live {
 		t.Skip("live test, calls a public API; run it with: make test-live")
 	}
+}
+
+// mailToFromEnv returns the mailto the live tests identify themselves with,
+// read from the environment variable TEST_MAILTO, and whether there is one.
+// CrossRef and DataCite ask callers for an address; none is written in a test
+// (irdmtools DR-0004).
+func mailToFromEnv() (string, bool) {
+	mailTo := strings.TrimSpace(os.Getenv("TEST_MAILTO"))
+	return mailTo, mailTo != ""
+}
+
+// skipper is the part of *testing.T that liveMailTo uses, so a test can check
+// when it skips.
+type skipper interface {
+	Helper()
+	Skip(args ...interface{})
+}
+
+// liveMailTo returns the mailto for a live test that calls CrossRef or
+// DataCite, and skips the test, saying how to set it, when TEST_MAILTO is unset.
+func liveMailTo(t skipper) string {
+	t.Helper()
+	mailTo, ok := mailToFromEnv()
+	if !ok {
+		t.Skip("live test, CrossRef and DataCite ask callers to identify themselves; set TEST_MAILTO to your email address, e.g. TEST_MAILTO=you@example.edu make test-live")
+	}
+	return mailTo
 }
 
 func TestMain(m *testing.M) {

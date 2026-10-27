@@ -602,7 +602,7 @@ func TestDataCiteToRDM(t *testing.T) {
 		t.Error(err)
 	}
 
-	options.MailTo = "dld-test@library.caltech.edu"
+	options.MailTo = liveMailTo(t)
 	for _, doi := range arxiv_ids {
 		obj, err := QueryDataCiteObject(app.Cfg, doi, options)
 		if err != nil {
@@ -640,7 +640,7 @@ func TestIssue81(t *testing.T) {
 	if err := yaml.Unmarshal(TestDefaultOptions, &options); err != nil {
         t.Error(err)
 	}
-	options.MailTo = "dld-test@library.caltech.edu"
+	options.MailTo = liveMailTo(t)
 	workObj, err := QueryCrossRefWork(app.Cfg, doi, options)
 	if err != nil {
 		t.Error(err)
@@ -692,7 +692,7 @@ func TestIssue87(t *testing.T) {
 	if err := yaml.Unmarshal(TestDefaultOptions, &options); err != nil {
 		t.Error(err)
 	}
-	options.MailTo = "dld-test@library.caltech.edu"
+	options.MailTo = liveMailTo(t)
 	workObj, err := QueryCrossRefWork(app.Cfg, doi, options)
 	if err != nil {
 		t.Error(err)

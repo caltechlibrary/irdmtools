@@ -69,10 +69,16 @@ test: .FORCE
 	go vet ./...
 	go test ./...
 
-# test-live also calls the public APIs. CrossRef asks callers to identify
-# themselves, and these tests send a fixed Library address.
-test-live: .FORCE
+# test-live also calls the public APIs. CrossRef and DataCite ask callers to
+# identify themselves; the tests send the address in the environment variable
+# TEST_MAILTO and skip the ones that need it when it is not set.
+test-live: check-mailto .FORCE
 	go test . -live
+
+# check-mailto says so when TEST_MAILTO is not set, so a skipped live test is
+# not a surprise. It does not stop the run.
+check-mailto: .FORCE
+	@if [ -z "$$TEST_MAILTO" ]; then echo "TEST_MAILTO is not set: the live tests that call CrossRef and DataCite will be skipped."; echo "Set it to your email address, e.g. TEST_MAILTO=you@example.edu make test-live"; fi
 
 # test-release runs the tests of release.bash, and of release.ps1 when pwsh is
 # installed. They use throwaway repositories and a stub gh, so nothing reaches
