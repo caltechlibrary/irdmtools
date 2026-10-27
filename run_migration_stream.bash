@@ -10,7 +10,7 @@ if [ "$2" = "" ]; then
 fi
 #
 # run migration stream takes a list of EPrint ids, makes a working
-# copy and sets up logging for eprints_to_rdm.py.
+# copy and sets up logging for scripts/eprints_to_rdm.py.
 # If the working list exists it is used for the next stream.
 #
 # E.g.
@@ -48,5 +48,5 @@ cat <<EOT
 
 EOT
 touch "${WORKING_LOG}"
-./eprints_to_rdm.py "${WORKING_LIST}" >>"${WORKING_LOG}"
+./scripts/eprints_to_rdm.py "${WORKING_LIST}" >>"${WORKING_LOG}"
 

@@ -4,7 +4,7 @@
 Institutional Repository Data Management Tools
 ==============================================
 
-irdmtools is a set of tools for working with Invenio RDM and migrating content from EPrints to RDM. It consists of a small set of Go based command line programs along with Python scripts and a wrapping irdm Python module. The Go based tooling is designed to work directory with a copy of you repositories' database (e.g. Postgres for RDM or MySQL for EPrints). 
+irdmtools is a set of tools for working with Invenio RDM and migrating content from EPrints to RDM. It consists of a small set of Go based command line programs along with Python scripts and a wrapping irdm Python module (both in the `scripts` directory). The Go based tooling is designed to work directory with a copy of you repositories' database (e.g. Postgres for RDM or MySQL for EPrints). 
 
 irdmtools is developed around RDM's web services (e.g. REST API and OAI-PMH), PostgreSQL database and external metadata services (e.g. CrossRef, DataCite). 
 
@@ -58,7 +58,7 @@ For examples of using irdmtools from Python see the
 - For harvesting content
     - [dataset](https://github.com/caltechlibrary/dataset/) >= 2
 - To migrate content from EPrints 3.3 to RDM
-    - Python 3 and packages listed in [requirements.txt]
+    - Python 3 and the packages listed in `scripts/requirements.txt`
 
 ## Quick install
 
@@ -79,7 +79,7 @@ cd irdmtools
 make
 make test
 make install
-python -m pip install -r requirements.txt
+python -m pip install -r scripts/requirements.txt
 ~~~
 
 ## Configuration

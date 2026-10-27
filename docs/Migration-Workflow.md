@@ -8,15 +8,15 @@ This workflow supports EPrints 3.3 and Invenio RDM v13. Support for RDM v14 is b
 ## Requirements
 
 1. A POSIX compatible shell (e.g. Bash)
-2. Python 3 and packages in requirements.txt
+2. Python 3 and packages in scripts/requirements.txt
 3. The latest irdmtools
 4. Latest jq for working with JSON and extracting interesting bits
 
-To install the dependent packages found in the requirements.txt
-file you can use the following command.
+To install the dependent packages found in the scripts/requirements.txt
+file you can use the following command, run from the repository root.
 
 ~~~
-python3 -m pip install -r requirements.txt
+python3 -m pip install -r scripts/requirements.txt
 ~~~
 
 ## Setup
@@ -94,13 +94,13 @@ mysql --batch --skip-column-names \
 We have over 100,000 records so migration is going to take a couple days. We're migrating the metadata and any publicly visible files. I've found working by year to be helpful way of batching up record loads.
 
 For a given set of eprintid in a file called "migrate-ids.txt" you can use
-the `eprints_to_rdm.py` script along with an environment setup to
+the `scripts/eprints_to_rdm.py` script along with an environment setup to
 automatically migrate both metadata and files from CaltechAUTHORS to the
 new RDM deployment.
 
 ~~~
 . caltechauthors.env
-./eprints_to_rdm.py migrate-ids.txt
+./scripts/eprints_to_rdm.py migrate-ids.txt
 ~~~
 
 The migration tool with stop on error. This is deliberate. When it stops you need to investigate the error and either manually migrate the record or take other mediation actions.
