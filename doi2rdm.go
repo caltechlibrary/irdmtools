@@ -70,6 +70,10 @@ type Doi2Rdm struct {
 	// queryCrossRef fetches a CrossRef work. It is nil outside tests, which
 	// leaves QueryCrossRefWork, the live query, in place.
 	queryCrossRef func(cfg *Config, doi string, options *Doi2RdmOptions) (*crossrefapi.Works, error)
+
+	// queryDataCite fetches a DataCite object. It is nil outside tests, which
+	// leaves QueryDataCiteObject, the live query, in place.
+	queryDataCite func(cfg *Config, doi string, options *Doi2RdmOptions) (map[string]interface{}, error)
 }
 
 type Doi2RdmOptions struct {
@@ -428,7 +432,11 @@ func (app *Doi2Rdm) RunDataCiteToRdm(in io.Reader, out io.Writer, eout io.Writer
 			return ENOEXEC, err
 		}
 	}
-	nWork, err := QueryDataCiteObject(app.Cfg, doi, options)
+	query := QueryDataCiteObject
+	if app.queryDataCite != nil {
+		query = app.queryDataCite
+	}
+	nWork, err := query(app.Cfg, doi, options)
 	if err != nil {
 		return ENOENT, err
 	}
@@ -477,7 +485,13 @@ func (app *Doi2Rdm) RunDoiToRdmCombined(in io.Reader, out io.Writer, eout io.Wri
 	if strings.HasPrefix(strings.ToLower(doi), "arxiv:") {
 		return app.RunDataCiteToRdm(in, out, eout, optionFName, doi, diffFName)
 	}
-	if _, crErr := app.RunCrossRefToRdm(in, out, eout, optionFName, doi, diffFName); crErr != nil  {
+	if crCode, crErr := app.RunCrossRefToRdm(in, out, eout, optionFName, doi, diffFName); crErr != nil  {
+		// A symbols file that is missing or invalid is a problem with the
+		// configuration, not with the DOI. Report it now: DataCite does not
+		// read that file and would answer "not found", hiding it.
+		if crCode == EX_NOINPUT || crCode == EX_CONFIG {
+			return crCode, crErr
+		}
 		// Then try DataCiteToRdm
 		if exitCode, dcErr := app.RunDataCiteToRdm(in, out, eout, optionFName, doi, diffFName); dcErr != nil {
 			return exitCode, fmt.Errorf("crossref: %s, datacite: %s", crErr, dcErr)
