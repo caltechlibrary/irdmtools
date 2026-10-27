@@ -141,9 +141,9 @@ func TestLoadOptionsSymbolsErrors(t *testing.T) {
 		symbols string
 		code    int
 	}{
-		{"missing", "absent.json", EX_NOINPUT},
-		{"unknown section", "invalid.json", EX_CONFIG},
-		{"not JSON", "notjson.json", EX_CONFIG},
+		{"missing", "absent.json", int(ExitNoInput)},
+		{"unknown section", "invalid.json", int(ExitConfig)},
+		{"not JSON", "notjson.json", int(ExitConfig)},
 	}
 	for _, tt := range tests {
 		app := &Doi2Rdm{Cfg: new(Config)}
@@ -201,12 +201,12 @@ func TestLoadCrossRefOptionsDefaults(t *testing.T) {
 	if !options.DotInitials {
 		t.Error("expected dot_initials from the options file")
 	}
-	if _, code, err := (&Doi2Rdm{Cfg: new(Config)}).loadCrossRefOptions(filepath.Join(dir, "absent.yaml")); err == nil || code != ENOENT {
-		t.Errorf("expected ENOENT for a missing options file, got %d, %v", code, err)
+	if _, code, err := (&Doi2Rdm{Cfg: new(Config)}).loadCrossRefOptions(filepath.Join(dir, "absent.yaml")); err == nil || code != int(ExitNoInput) {
+		t.Errorf("expected 66 for a missing options file, got %d, %v", code, err)
 	}
 	bad := writeSymbolsFile(t, dir, "bad.yaml", "mailto: [unclosed\n")
-	if _, code, err := (&Doi2Rdm{Cfg: new(Config)}).loadCrossRefOptions(bad); err == nil || code != ENOEXEC {
-		t.Errorf("expected ENOEXEC for an invalid options file, got %d, %v", code, err)
+	if _, code, err := (&Doi2Rdm{Cfg: new(Config)}).loadCrossRefOptions(bad); err == nil || code != int(ExitConfig) {
+		t.Errorf("expected 78 for an invalid options file, got %d, %v", code, err)
 	}
 }
 
@@ -219,8 +219,8 @@ func TestRunCrossRefToRdmBadSymbols(t *testing.T) {
 		symbols string
 		code    int
 	}{
-		{"absent.json", EX_NOINPUT},
-		{writeSymbolsFile(t, dir, "invalid.json", `{"superscript": {}}`), EX_CONFIG},
+		{"absent.json", int(ExitNoInput)},
+		{writeSymbolsFile(t, dir, "invalid.json", `{"superscript": {}}`), int(ExitConfig)},
 	}
 	for _, tt := range tests {
 		app := &Doi2Rdm{Cfg: new(Config)}
@@ -231,21 +231,6 @@ func TestRunCrossRefToRdmBadSymbols(t *testing.T) {
 	}
 	if out.Len() != 0 {
 		t.Errorf("expected nothing on stdout, got %q", out.String())
-	}
-}
-
-// TestWorkspaceExitCodes pins the numbers of the workspace exit codes
-// (DR-0014) the symbols option uses: scripts, such as the irdm_harvester,
-// read the numbers, not the constants.
-func TestWorkspaceExitCodes(t *testing.T) {
-	if EX_NOINPUT != 66 {
-		t.Errorf("expected EX_NOINPUT to be 66, got %d", EX_NOINPUT)
-	}
-	if EX_CONFIG != 78 {
-		t.Errorf("expected EX_CONFIG to be 78, got %d", EX_CONFIG)
-	}
-	if ENOENT != 2 {
-		t.Errorf("expected ENOENT, the harvester's \"DOI not found\", to stay 2, got %d", ENOENT)
 	}
 }
 

@@ -266,13 +266,13 @@ func TestRenderCrossRefWorkDiff(t *testing.T) {
 }
 
 // TestRenderCrossRefWorkErrors checks a work that cannot be crosswalked writes
-// nothing and returns ENOEXEC, and that the crosswalk functions refuse a nil work.
+// nothing and returns 65, and that the crosswalk functions refuse a nil work.
 func TestRenderCrossRefWorkErrors(t *testing.T) {
 	app := &Doi2Rdm{Cfg: new(Config)}
 	var out, eout bytes.Buffer
 	code, err := app.renderCrossRefWork(&out, &eout, "10.1/x", nil, warningOptions(t), nil, false)
-	if err == nil || code != ENOEXEC {
-		t.Errorf("expected ENOEXEC and an error, got %d, %v", code, err)
+	if err == nil || code != int(ExitData) {
+		t.Errorf("expected exit code 65 and an error, got %d, %v", code, err)
 	}
 	if out.Len() != 0 || eout.Len() != 0 {
 		t.Errorf("expected nothing written, got %q and %q", out.String(), eout.String())
@@ -348,14 +348,14 @@ func TestRunCrossRefToRdmWritesWarnings(t *testing.T) {
 	if eout.Len() != 0 {
 		t.Errorf("expected no warnings from the new work, got %q", eout.String())
 	}
-	// a failed query is ENOENT, "not found", and writes nothing
+	// a failed query has the exit class of its error ("not found" is 1), and writes nothing
 	failing := &Doi2Rdm{Cfg: new(Config), queryCrossRef: func(*Config, string, *Doi2RdmOptions) (*crossrefapi.Works, error) {
-		return nil, fmt.Errorf("no such work")
+		return nil, NegativeError(fmt.Errorf("no such work"))
 	}}
 	out.Reset()
 	eout.Reset()
-	if code, err := failing.RunCrossRefToRdm(strings.NewReader(""), &out, &eout, "", "10.1/none", ""); err == nil || code != ENOENT {
-		t.Errorf("expected ENOENT and an error, got %d, %v", code, err)
+	if code, err := failing.RunCrossRefToRdm(strings.NewReader(""), &out, &eout, "", "10.1/none", ""); err == nil || code != int(ExitNegative) {
+		t.Errorf("expected exit code 1 and an error, got %d, %v", code, err)
 	}
 	if out.Len() != 0 || eout.Len() != 0 {
 		t.Errorf("expected nothing written, got %q and %q", out.String(), eout.String())

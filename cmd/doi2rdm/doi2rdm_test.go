@@ -83,6 +83,7 @@ func TestExitStatus(t *testing.T) {
 		return write(name, "mailto: helpdesk@library.caltech.edu\nsymbols: "+symbols+"\n")
 	}
 	write("invalid.json", `{"superscript": {}}`)
+	ok := write("ok.yaml", "mailto: helpdesk@library.caltech.edu\n")
 	tests := []struct {
 		name string
 		args []string
@@ -92,19 +93,26 @@ func TestExitStatus(t *testing.T) {
 		{"version", []string{"-version"}, 0},
 		{"show-yaml", []string{"-show-yaml"}, 0},
 		{"unknown flag", []string{"-no-such-flag"}, 2},
-		{"no DOI", nil, 1},
-		{"missing options file", []string{filepath.Join(dir, "absent.yaml"), "10.1/none"}, 2},
+		{"no DOI", nil, 2},
+		{"missing options file", []string{filepath.Join(dir, "absent.yaml"), "10.1/none"}, 66},
+		{"missing options file, crossref", []string{filepath.Join(dir, "absent.yaml"), "crossref", "10.1/none"}, 66},
+		{"missing options file, datacite", []string{filepath.Join(dir, "absent.yaml"), "datacite", "10.1/none"}, 66},
+		{"invalid options YAML", []string{write("bad.yaml", "mailto: [unclosed\n"), "10.1/none"}, 78},
 		{"missing symbols file", []string{options("missing.yaml", "absent.json"), "10.1/none"}, 66},
 		{"invalid symbols file", []string{options("invalid.yaml", "invalid.json"), "10.1/none"}, 78},
 		{"missing symbols file, crossref", []string{options("missing2.yaml", "absent.json"), "crossref", "10.1/none"}, 66},
-		{"invalid options YAML", []string{write("bad.yaml", "mailto: [unclosed\n"), "10.1/none"}, 8},
+		{"missing -diff file", []string{"-diff", filepath.Join(dir, "absent-diff.json"), "10.1/none"}, 66},
+		{"missing -diff file, datacite", []string{"-diff", filepath.Join(dir, "absent-diff.json"), ok, "datacite", "10.1/none"}, 66},
+		{"invalid -diff file", []string{"-diff", write("bad-diff.json", "not json"), "10.1/none"}, 65},
+		{"invalid -diff file, crossref", []string{"-diff", write("bad-diff2.json", "not json"), ok, "crossref", "10.1/none"}, 65},
+		{"invalid -diff file, datacite", []string{"-diff", write("bad-diff3.json", "not json"), ok, "datacite", "10.1/none"}, 65},
 	}
 	for _, tt := range tests {
 		code, out, eout := run(t, bin, tt.args...)
 		if code != tt.code {
 			t.Errorf("%s: expected exit code %d, got %d (stderr %q)", tt.name, tt.code, code, eout)
 		}
-		if tt.code != 0 && tt.code != 2 && strings.TrimSpace(out) != "" {
+		if tt.code != 0 && strings.TrimSpace(out) != "" {
 			t.Errorf("%s: expected nothing on stdout, got %q", tt.name, out)
 		}
 	}
@@ -123,7 +131,7 @@ func TestHelpTextListsEveryExitCode(t *testing.T) {
 		return helpText[i:j]
 	}
 	status := section("# EXIT STATUS", "\n# OPTIONS\n")
-	for _, code := range []string{"0", "1", "2", "8", "66", "78"} {
+	for _, code := range []string{"0", "1", "2", "65", "66", "69", "70", "74", "75", "78"} {
 		if !strings.Contains(status, "\n"+code+"\n: ") {
 			t.Errorf("expected EXIT STATUS to list exit code %s as an entry", code)
 		}

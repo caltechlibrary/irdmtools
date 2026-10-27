@@ -64,7 +64,7 @@ in table is used.
 A missing symbols file stops the run with exit code 66 and an invalid one with
 78, before any record is fetched. The default invocation, `doi2rdm options.yaml
 DOI`, reports them the same way, so a script can tell a configuration problem
-from a DOI that was not found (exit code 2).
+from a DOI that was not found (exit code 1). The manual lists every exit code.
 
 ## Warnings
 

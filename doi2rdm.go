@@ -52,15 +52,8 @@ import (
 )
 
 const (
+	// EXIT_OK is the exit code for success, 0.
 	EXIT_OK = 0
-	ENOENT = 2
-	ENOEXEC = 8
-	EAGAIN = 11
-	// The workspace exit codes (DR-0014), used by the failures added with the
-	// symbols option so that a script can tell them from "DOI not found" (2).
-	// The codes above are the older ones and are not changed here.
-	EX_NOINPUT = 66 // a named input, such as the symbols file, is missing
-	EX_CONFIG = 78 // a configuration file is present but wrong
 )
 
 // Doi2Rdm holds the configuration for doi2rdm cli.
@@ -238,20 +231,47 @@ func (app *Doi2Rdm) Configure(configFName string, envPrefix string, debug bool) 
 //
 //	options, exitCode, err := app.loadCrossRefOptions("options.yaml")
 func (app *Doi2Rdm) loadCrossRefOptions(optionFName string) (*Doi2RdmOptions, int, error) {
-	var (
-		err error
-		src []byte
-	)
-	src = DefaultDoi2RdmOptionsYAML
+	options, err := app.loadOptions(optionFName)
+	if err != nil {
+		return nil, ExitCode(err), err
+	}
+	if options.Symbols != "" && optionFName != "" && !filepath.IsAbs(options.Symbols) {
+		options.Symbols = filepath.Join(filepath.Dir(optionFName), options.Symbols)
+	}
+	if _, err := options.crossRefNormalizer(); err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			err = NoInputError(err)
+		} else {
+			err = ConfigError(err)
+		}
+		return nil, ExitCode(err), err
+	}
+	return options, EXIT_OK, nil
+}
+
+// loadOptions reads the options YAML (the built in default when optionFName is
+// empty) and applies the defaults every run uses. A missing or unreadable file
+// is classified by what the operating system says (66 for a missing one); a
+// file that is not valid YAML is a configuration error (78).
+//
+// @param optionFName {string} the options YAML file name, or "" for the default
+// @returns {*Doi2RdmOptions} the options, nil on error
+// @returns {error} an error naming the file that could not be read or parsed
+// @example
+//
+//	options, err := app.loadOptions("options.yaml")
+func (app *Doi2Rdm) loadOptions(optionFName string) (*Doi2RdmOptions, error) {
+	src := DefaultDoi2RdmOptionsYAML
 	if optionFName != "" {
+		var err error
 		src, err = os.ReadFile(optionFName)
 		if err != nil {
-			return nil, ENOENT, err
+			return nil, err
 		}
 	}
 	options := new(Doi2RdmOptions)
 	if err := yaml.Unmarshal(src, &options); err != nil {
-		return nil, ENOEXEC, err
+		return nil, ConfigError(fmt.Errorf("%s: %w", optionFName, err))
 	}
 	if app.Cfg.Debug {
 		options.Debug = app.Cfg.Debug
@@ -260,16 +280,13 @@ func (app *Doi2Rdm) loadCrossRefOptions(optionFName string) (*Doi2RdmOptions, in
 		//mailTo = fmt.Sprintf("%s@%s", os.Getenv("USER"), os.Getenv("HOSTNAME"))
 		options.MailTo = "helpdesk@library.caltech.edu"
 	}
-	if options.Symbols != "" && optionFName != "" && !filepath.IsAbs(options.Symbols) {
-		options.Symbols = filepath.Join(filepath.Dir(optionFName), options.Symbols)
-	}
-	if _, err := options.crossRefNormalizer(); err != nil {
-		if errors.Is(err, fs.ErrNotExist) {
-			return nil, EX_NOINPUT, err
-		}
-		return nil, EX_CONFIG, err
-	}
-	return options, EXIT_OK, nil
+	return options, nil
+}
+
+// failure returns the exit code of an error with the error, the way a Run
+// method reports a failure.
+func failure(err error) (int, error) {
+	return ExitCode(err), err
 }
 
 // RunCrossRefToRdm implements the doi2rdm cli behaviors using the CrossRef service.
@@ -304,14 +321,14 @@ func (app *Doi2Rdm) RunCrossRefToRdm(in io.Reader, out io.Writer, eout io.Writer
 		oWork := new(crossrefapi.Works)
 		src, err := os.ReadFile(diffFName)
 		if err != nil {
-			return ENOENT, err
+			return failure(err)
 		}
 		if err := JSONUnmarshal(src, &oWork); err != nil {
-			return ENOEXEC, err
+			return failure(DataError(fmt.Errorf("%s: %w", diffFName, err)))
 		}
 		oRecord, err = CrosswalkCrossRefWork(app.Cfg, oWork, options)
 		if err != nil {
-			return ENOEXEC, err
+			return failure(DataError(fmt.Errorf("%s: %w", diffFName, err)))
 		}
 	}
 	query := QueryCrossRefWork
@@ -320,7 +337,7 @@ func (app *Doi2Rdm) RunCrossRefToRdm(in io.Reader, out io.Writer, eout io.Writer
 	}
 	nWork, err := query(app.Cfg, doi, options)
 	if err != nil {
-		return ENOENT, err
+		return failure(err)
 	}
 	return app.renderCrossRefWork(out, eout, doi, nWork, options, oRecord, diffFName != "")
 }
@@ -339,7 +356,7 @@ func (app *Doi2Rdm) RunCrossRefToRdm(in io.Reader, out io.Writer, eout io.Writer
 // @param options {*Doi2RdmOptions} the crosswalk options
 // @param oRecord {*simplified.Record} the old record to diff against, used when diff is true
 // @param diff {bool} true to write the diff of oRecord and the new record
-// @returns {int} EXIT_OK, or ENOEXEC if the work cannot be crosswalked or the JSON made
+// @returns {int} EXIT_OK, 65 if the work cannot be converted, 70 if the JSON cannot be made, 74 if it cannot be written
 // @returns {error} an error describing the failure
 // @example
 //
@@ -351,7 +368,7 @@ func (app *Doi2Rdm) renderCrossRefWork(out io.Writer, eout io.Writer, doi string
 	)
 	nRecord, warnings, err := CrosswalkCrossRefWorkWarnings(app.Cfg, nWork, options)
 	if err != nil {
-		return ENOEXEC, err
+		return failure(DataError(err))
 	}
 	if diff {
 		src, err = oRecord.DiffAsJSON(nRecord)
@@ -359,14 +376,16 @@ func (app *Doi2Rdm) renderCrossRefWork(out io.Writer, eout io.Writer, doi string
 		src, err = JSONMarshalIndent(nRecord, "", "    ")
 	}
 	if err != nil {
-		return ENOEXEC, err
+		return failure(InternalError(err))
 	}
 	if eout != nil {
 		for _, w := range warnings {
 			fmt.Fprintln(eout, w.Line(doi))
 		}
 	}
-	fmt.Fprintf(out, "%s\n", src)
+	if _, err := fmt.Fprintf(out, "%s\n", src); err != nil {
+		return failure(IOError(err))
+	}
 	return EXIT_OK, nil
 }
 
@@ -392,44 +411,27 @@ func (app *Doi2Rdm) renderCrossRefWork(out io.Writer, eout io.Writer, doi string
 //
 // ```
 func (app *Doi2Rdm) RunDataCiteToRdm(in io.Reader, out io.Writer, eout io.Writer, optionFName, doi string, diffFName string) (int, error) {
-	var (
-		err error
-		src []byte
-	)
-	src = DefaultDoi2RdmOptionsYAML
-	if optionFName != "" {
-		src, err = os.ReadFile(optionFName)
-		if err != nil {
-			return ENOENT, err
-		}
-	}
-	options := new(Doi2RdmOptions)
-	if err := yaml.Unmarshal(src, &options); err != nil {
-		return ENOEXEC, err
-	}
-	if app.Cfg.Debug {
-		options.Debug = app.Cfg.Debug
-	}
-	if options.MailTo == "" {
-		//mailTo = fmt.Sprintf("%s@%s", os.Getenv("USER"), os.Getenv("HOSTNAME"))
-		options.MailTo = "helpdesk@library.caltech.edu"
+	options, err := app.loadOptions(optionFName)
+	if err != nil {
+		return failure(err)
 	}
 	var (
 		oRecord *simplified.Record
 		nRecord *simplified.Record
+		src     []byte
 	)
 	if diffFName != "" {
 		object := map[string]interface{}{}
 		src, err := os.ReadFile(diffFName)
 		if err != nil {
-			return ENOENT, err
+			return failure(err)
 		}
 		if err := JSONUnmarshal(src, &object); err != nil {
-			return ENOEXEC, err
+			return failure(DataError(fmt.Errorf("%s: %w", diffFName, err)))
 		}
 		oRecord, err = CrosswalkDataCiteObject(app.Cfg, object, options)
 		if err != nil {
-			return ENOEXEC, err
+			return failure(DataError(fmt.Errorf("%s: %w", diffFName, err)))
 		}
 	}
 	query := QueryDataCiteObject
@@ -438,14 +440,14 @@ func (app *Doi2Rdm) RunDataCiteToRdm(in io.Reader, out io.Writer, eout io.Writer
 	}
 	nWork, err := query(app.Cfg, doi, options)
 	if err != nil {
-		return ENOENT, err
+		return failure(err)
 	}
 	if len(nWork) == 0 {
-		return ENOENT, fmt.Errorf("not data received for %q", doi)
+		return failure(DataError(fmt.Errorf("DataCite answered %q with no data", doi)))
 	}
 	nRecord, err = CrosswalkDataCiteObject(app.Cfg, nWork, options)
 	if err != nil {
-		return ENOEXEC, err
+		return failure(DataError(err))
 	}
 	if diffFName != "" {
 		src, err = oRecord.DiffAsJSON(nRecord)
@@ -453,9 +455,11 @@ func (app *Doi2Rdm) RunDataCiteToRdm(in io.Reader, out io.Writer, eout io.Writer
 		src, err = JSONMarshalIndent(nRecord, "", "    ")
 	}
 	if err != nil {
-		return ENOEXEC, err
+		return failure(InternalError(err))
 	}
-	fmt.Fprintf(out, "%s\n", src)
+	if _, err := fmt.Fprintf(out, "%s\n", src); err != nil {
+		return failure(IOError(err))
+	}
 	return EXIT_OK, nil
 }
 
@@ -485,17 +489,30 @@ func (app *Doi2Rdm) RunDoiToRdmCombined(in io.Reader, out io.Writer, eout io.Wri
 	if strings.HasPrefix(strings.ToLower(doi), "arxiv:") {
 		return app.RunDataCiteToRdm(in, out, eout, optionFName, doi, diffFName)
 	}
-	if crCode, crErr := app.RunCrossRefToRdm(in, out, eout, optionFName, doi, diffFName); crErr != nil  {
-		// A symbols file that is missing or invalid is a problem with the
-		// configuration, not with the DOI. Report it now: DataCite does not
-		// read that file and would answer "not found", hiding it.
-		if crCode == EX_NOINPUT || crCode == EX_CONFIG {
-			return crCode, crErr
-		}
-		// Then try DataCiteToRdm
-		if exitCode, dcErr := app.RunDataCiteToRdm(in, out, eout, optionFName, doi, diffFName); dcErr != nil {
-			return exitCode, fmt.Errorf("crossref: %s, datacite: %s", crErr, dcErr)
-		}
+	crCode, crErr := app.RunCrossRefToRdm(in, out, eout, optionFName, doi, diffFName)
+	if crErr == nil {
+		return EXIT_OK, nil
 	}
-	return EXIT_OK, nil
+	// CrossRef gave no answer for the DOI when it has no record (1), could not
+	// be reached or failed (69) or asked to be tried later (75). Any other
+	// failure is about the options, a file or the record itself, and DataCite
+	// would not help: a symbols file that is missing or invalid, for one,
+	// would be hidden by DataCite's "not found".
+	crClass := ExitClassOf(crErr)
+	if crClass != ExitNegative && crClass != ExitUnavailable && crClass != ExitTempFail {
+		return crCode, crErr
+	}
+	_, dcErr := app.RunDataCiteToRdm(in, out, eout, optionFName, doi, diffFName)
+	if dcErr == nil {
+		return EXIT_OK, nil
+	}
+	// "Not found" needs both services to say so. Otherwise the class of the
+	// first failure that was not "not found", CrossRef's before DataCite's:
+	// neither answered, so the DOI's absence cannot be concluded.
+	class := crClass
+	if class == ExitNegative {
+		class = ExitClassOf(dcErr)
+	}
+	err := &ExitError{Class: class, Err: fmt.Errorf("crossref: %s, datacite: %s", crErr, dcErr)}
+	return int(class), err
 }

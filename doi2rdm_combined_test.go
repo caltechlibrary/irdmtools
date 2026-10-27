@@ -18,7 +18,7 @@ func combinedApp(t *testing.T, dataCiteCalls *int) *Doi2Rdm {
 		queryCrossRef: fixtureQuery(t),
 		queryDataCite: func(*Config, string, *Doi2RdmOptions) (map[string]interface{}, error) {
 			*dataCiteCalls++
-			return nil, fmt.Errorf("datacite: no such DOI")
+			return nil, NegativeError(fmt.Errorf("datacite: no such DOI"))
 		},
 	}
 }
@@ -34,8 +34,8 @@ func TestCombinedBadSymbolsStopsBeforeDataCite(t *testing.T) {
 		symbols string
 		code    int
 	}{
-		{"missing", "absent.json", EX_NOINPUT},
-		{"invalid", "invalid.json", EX_CONFIG},
+		{"missing", "absent.json", int(ExitNoInput)},
+		{"invalid", "invalid.json", int(ExitConfig)},
 	}
 	for _, tt := range tests {
 		calls := 0
@@ -85,12 +85,12 @@ func TestCombinedFallsBackToDataCite(t *testing.T) {
 	calls := 0
 	app := combinedApp(t, &calls)
 	app.queryCrossRef = func(*Config, string, *Doi2RdmOptions) (*crossrefapi.Works, error) {
-		return nil, fmt.Errorf("crossref: no such DOI")
+		return nil, NegativeError(fmt.Errorf("crossref: no such DOI"))
 	}
 	var out, eout bytes.Buffer
 	code, err := app.RunDoiToRdmCombined(strings.NewReader(""), &out, &eout, "", "10.1/none", "")
-	if err == nil || code != ENOENT {
-		t.Errorf("expected ENOENT and an error, got %d, %v", code, err)
+	if err == nil || code != int(ExitNegative) {
+		t.Errorf("expected exit code 1 and an error, got %d, %v", code, err)
 	}
 	if calls != 1 {
 		t.Errorf("expected DataCite to be tried once, got %d", calls)

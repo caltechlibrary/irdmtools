@@ -19,8 +19,9 @@ in either their canonical form or URL form (e.g. "10.1021/acsami.7b15651" or
 "https://doi.org/10.1021/acsami.7b15651").
 
 If a DOI is retrieved the exit code is zero and the JSON document is
-the only thing written to standard output. If a DOI is not found the exit
-code is 2. Other problems have their own exit codes, see EXIT STATUS.
+the only thing written to standard output. If neither CrossRef nor DataCite
+has the DOI the exit code is 1. Other problems have their own exit codes, see
+EXIT STATUS.
 
 # OPTIONS_YAML
 
@@ -93,31 +94,56 @@ status. With -diff only the warnings for the current record are written.
 
 # EXIT STATUS
 
-Standard output is the JSON document and nothing else. These are the exit
-codes doi2rdm returns. The numbers 66 and 78 are the workspace's standard
-exit codes (sysexits); 1, 2 and 8 are older and are kept because programs
-that run doi2rdm read them.
+Standard output is the JSON document and nothing else. The exit codes are the
+Caltech Library workspace's standard ones (sysexits), so a script can tell what
+went wrong from the number alone.
 
 0
-: the record was written (and any warnings went to standard error)
+: the record was written (any warnings went to standard error)
 
 1
-: no DOI was given on the command line
+: the DOI was not found: CrossRef and DataCite both answered that they have no
+  record for it
 
 2
-: the DOI was not found at CrossRef or DataCite; also a missing options file
-  or -diff file, and a command line that could not be parsed (an unknown
-  option)
+: the command line is wrong: no DOI was given, or an option is not known
 
-8
-: the options file or the -diff file is not valid, or a record could not be
-  converted
+65
+: something doi2rdm read is wrong: the -diff file is not valid JSON, or the
+  record CrossRef or DataCite returned could not be converted (for example it
+  has a resource type the options do not map; the message names it)
 
 66
-: the symbols file named in the options is missing
+: a file named on the command line or in the options is missing: the options
+  file, the -diff file or the symbols file
+
+69
+: CrossRef or DataCite could not be reached or failed (a network error, a
+  timeout or an HTTP error such as 500 or 503). The DOI may exist; try again
+  later
+
+70
+: an error nothing classified, which is a bug in doi2rdm
+
+74
+: writing the JSON failed
+
+75
+: CrossRef or DataCite asked doi2rdm to try again later (HTTP 429, rate
+  limited)
 
 78
-: the symbols file named in the options is present but invalid
+: a configuration file is present but wrong: the options file is not valid
+  YAML, or the symbols file named in the options is not valid
+
+If neither service has the DOI the exit code is 1, but only when both answered
+that they have no record. If either was unavailable and neither returned a
+record, the exit code is that service's (CrossRef's first), because the DOI may
+still exist. A problem with a file or with the record itself stops the run
+at once and is not hidden by trying the other service.
+
+Earlier versions used 2 for "not found" and 8 for an invalid file. A script that
+read those must be updated: "not found" is now 1 and 2 is a command line error.
 
 # OPTIONS
 
