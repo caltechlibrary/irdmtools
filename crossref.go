@@ -5,7 +5,6 @@ import (
 	"os"
 	"path"
 	"strings"
-	"sync"
 	"time"
 
 
@@ -40,29 +39,24 @@ func getWorksResourceType(work *crossrefapi.Works) string {
 	return ""
 }
 
-// crossRefNormalizer is the normalizer that turns CrossRef titles into plain
-// text, built once per run from the default symbol table.
-var crossRefNormalizer = sync.OnceValues(func() (*crossrefapi.Normalizer, error) {
-	return crossrefapi.NewNormalizer("")
-})
-
 // getWorksTitles returns the title of a CrossRef Works object as plain text
 // with its subtitle appended, and the other titles that add something to it.
 // The conversion warnings are not reported here yet. With no title the
 // title is "" and there are no other titles.
 //
 // @param work {*crossrefapi.Works} a CrossRef work, which may have no message
+// @param options {*Doi2RdmOptions} the options, which name the symbol table to convert with
 // @returns {string} the full title as plain text
 // @returns {[]string} the alternate titles as plain text
 // @returns {error} an error if the normalizer cannot be built
 // @example
 //
-//	title, others, err := getWorksTitles(work)
-func getWorksTitles(work *crossrefapi.Works) (string, []string, error) {
+//	title, others, err := getWorksTitles(work, options)
+func getWorksTitles(work *crossrefapi.Works, options *Doi2RdmOptions) (string, []string, error) {
 	if work == nil || work.Message == nil {
 		return "", nil, nil
 	}
-	n, err := crossRefNormalizer()
+	n, err := options.crossRefNormalizer()
 	if err != nil {
 		return "", nil, err
 	}
@@ -557,7 +551,7 @@ func CrosswalkCrossRefWork(cfg *Config, work *crossrefapi.Works, options *Doi2Rd
 			return nil, err
 		}
 	}
-	title, otherTitles, err := getWorksTitles(work)
+	title, otherTitles, err := getWorksTitles(work, options)
 	if err != nil {
 		return nil, err
 	}

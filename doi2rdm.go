@@ -35,9 +35,12 @@
 package irdmtools
 
 import (
+	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
+	"path/filepath"
 	"strings"
 
 	// 3rd Party packages
@@ -70,6 +73,34 @@ type Doi2RdmOptions struct {
 	ISSNJournals        map[string]string `json:"issn_journals,omitempty" yaml:"issn_journals,omitempty"`
 	ISSNPublishers      map[string]string `json:"issn_publishers,omitempty" yaml:"issn_publishers,omitempty"`
 	Debug               bool              `json:"debug,omitempty" yaml:"debug,omitempty"`
+	// Symbols is the path of a crossrefapi override file for the table that
+	// turns CrossRef markup, entities and MathML into plain text. A relative
+	// path is read relative to the options file. Empty means the built in table.
+	Symbols string `json:"symbols,omitempty" yaml:"symbols,omitempty"`
+
+	// normalizer is built from Symbols the first time it is needed.
+	normalizer *crossrefapi.Normalizer
+}
+
+// crossRefNormalizer returns the normalizer for these options, building it
+// from the Symbols file on first use (the built in table when Symbols is
+// empty). A built normalizer never changes, but this method is not safe to
+// call from several goroutines before the first call has returned.
+//
+// @returns {*crossrefapi.Normalizer} the normalizer to convert CrossRef text with
+// @returns {error} an error naming the Symbols file if it is missing or invalid
+// @example
+//
+//	n, err := options.crossRefNormalizer()
+func (options *Doi2RdmOptions) crossRefNormalizer() (*crossrefapi.Normalizer, error) {
+	if options.normalizer == nil {
+		n, err := crossrefapi.NewNormalizer(options.Symbols)
+		if err != nil {
+			return nil, err
+		}
+		options.normalizer = n
+	}
+	return options.normalizer, nil
 }
 
 var (
@@ -132,6 +163,11 @@ doi_prefix_publishers:
 issn_journals:
 # Mapping ISSN prefixes to Publishers (used to normalize publisher names)
 issn_publishers:
+# CrossRef titles and abstracts hold markup, character entities and MathML.
+# They are converted to plain text with a built in table of symbols. To change
+# the table, name a crossrefapi override file here. A relative path is read
+# relative to this options file. Leave it out to use the built in table.
+#symbols: symbols.json
 `)
 )
 
@@ -176,6 +212,53 @@ func (app *Doi2Rdm) Configure(configFName string, envPrefix string, debug bool) 
 	return nil
 }
 
+// loadCrossRefOptions reads the options YAML (the built in default when
+// optionFName is empty) for a CrossRef run and builds the normalizer it names,
+// so a bad options or symbols file stops the run before any record is fetched.
+// A relative Symbols path is read relative to the options file.
+//
+// @param optionFName {string} the options YAML file name, or "" for the default
+// @returns {*Doi2RdmOptions} the options, nil on error
+// @returns {int} the exit code, ENOENT for a missing file, ENOEXEC for an invalid one
+// @returns {error} an error naming the file that could not be read or parsed
+// @example
+//
+//	options, exitCode, err := app.loadCrossRefOptions("options.yaml")
+func (app *Doi2Rdm) loadCrossRefOptions(optionFName string) (*Doi2RdmOptions, int, error) {
+	var (
+		err error
+		src []byte
+	)
+	src = DefaultDoi2RdmOptionsYAML
+	if optionFName != "" {
+		src, err = os.ReadFile(optionFName)
+		if err != nil {
+			return nil, ENOENT, err
+		}
+	}
+	options := new(Doi2RdmOptions)
+	if err := yaml.Unmarshal(src, &options); err != nil {
+		return nil, ENOEXEC, err
+	}
+	if app.Cfg.Debug {
+		options.Debug = app.Cfg.Debug
+	}
+	if options.MailTo == "" {
+		//mailTo = fmt.Sprintf("%s@%s", os.Getenv("USER"), os.Getenv("HOSTNAME"))
+		options.MailTo = "helpdesk@library.caltech.edu"
+	}
+	if options.Symbols != "" && optionFName != "" && !filepath.IsAbs(options.Symbols) {
+		options.Symbols = filepath.Join(filepath.Dir(optionFName), options.Symbols)
+	}
+	if _, err := options.crossRefNormalizer(); err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			return nil, ENOENT, err
+		}
+		return nil, ENOEXEC, err
+	}
+	return options, EXIT_OK, nil
+}
+
 // RunCrossRefToRdm implements the doi2rdm cli behaviors using the CrossRef service.
 // With the exception of the "setup" action you should call `app.LoadConfig()` before execute
 // Run.
@@ -199,28 +282,11 @@ func (app *Doi2Rdm) Configure(configFName string, envPrefix string, debug bool) 
 //
 // ```
 func (app *Doi2Rdm) RunCrossRefToRdm(in io.Reader, out io.Writer, eout io.Writer, optionFName, doi string, diffFName string) (int, error) {
-	var (
-		err error
-		src []byte
-	)
-	src = DefaultDoi2RdmOptionsYAML
-	if optionFName != "" {
-		src, err = os.ReadFile(optionFName)
-		if err != nil {
-			return ENOENT, err
-		}
+	options, exitCode, err := app.loadCrossRefOptions(optionFName)
+	if err != nil {
+		return exitCode, err
 	}
-	options := new(Doi2RdmOptions)
-	if err := yaml.Unmarshal(src, &options); err != nil {
-		return ENOEXEC, err
-	}
-	if app.Cfg.Debug {
-		options.Debug = app.Cfg.Debug
-	}
-	if options.MailTo == "" {
-		//mailTo = fmt.Sprintf("%s@%s", os.Getenv("USER"), os.Getenv("HOSTNAME"))
-		options.MailTo = "helpdesk@library.caltech.edu"
-	}
+	var src []byte
 	var (
 		oRecord *simplified.Record
 		nRecord *simplified.Record
