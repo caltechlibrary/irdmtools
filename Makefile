@@ -1,36 +1,34 @@
-
-# generated with CMTools 0.0.98 0e1e09ba
-
 #
-# Simple Makefile for Golang based Projects built under POSIX.
+# Makefile for irdmtools, a Go package and command line tools.
+#
+# Everyday targets:   build, test, test-live, test-release, install, uninstall, clean
+# Release targets:    generate, release, dist (see "Releasing" below)
+#
+# A plain `make`, `make build`, `make test` and `make install` need only git,
+# make, go and pandoc. `cmt` is run only by `make generate` and by
+# `make release`, never by the everyday targets, so a fresh clone builds with
+# the committed version.go, CITATION.cff and installers.
 #
 PROJECT = irdmtools
 
 GIT_GROUP = caltechlibrary
 
-PROGRAMS = rdmutil ep3util eprint2rdm rdm2eprint eprintrest doi2rdm people2vocabulary ep3ds2citations rdmds2citations # $(shell ls -1 cmd)
+PROGRAMS = $(shell ls -1 cmd)
 
-RELEASE_DATE = $(shell date +%Y-%m-%d)
+# version.go is left out: it has a rule (cmt, under generate), and listing it
+# here would make every build run cmt through that rule.
+PACKAGE = $(shell ls -1 *.go | grep -v 'version.go')
 
-RELEASE_HASH=$(shell git log --pretty=format:'%h' -n 1)
-
-MAN_PAGES_1 = $(shell ls -1 *.1.md | sed -E 's/.1.md/.1/g')
-
-MAN_PAGES_3 = $(shell ls -1 *.3.md | sed -E 's/.3.md/.3/g')
-
-MAN_PAGES_7 = $(shell ls -1 *.7.md | sed -E 's/.7.md/.7/g')
-
-DOCS = $(shell ls -1 *.?.md)
-
-PACKAGE = $(shell ls -1 *.go)
+MAN_PAGES = $(shell ls -1 docs/*.1.md 2>/dev/null | sed -E 's|^docs/||; s/\.1.md/.1/g')
 
 VERSION = $(shell grep '"version":' codemeta.json | cut -d\"  -f 4)
 
-BRANCH = $(shell git branch | grep '* ' | cut -d  -f 2)
+RELEASE_HASH = $(shell git log --pretty=format:'%h' -n 1)
+
+BRANCH = $(shell git branch | grep '* ' | cut -d\  -f 2)
 
 OS = $(shell uname)
 
-#PREFIX = /usr/local/bin
 PREFIX = $(HOME)
 
 ifneq ($(prefix),)
@@ -42,38 +40,123 @@ ifeq ($(OS), Windows)
 	EXT = .exe
 endif
 
-build: version.go $(PROGRAMS) man CITATION.cff installer.sh installer.ps1
+# One entry per release platform: name:GOOS:GOARCH
+PLATFORMS = Linux-x86_64:linux:amd64 Linux-aarch64:linux:arm64 \
+	macOS-x86_64:darwin:amd64 macOS-arm64:darwin:arm64 \
+	Windows-x86_64:windows:amd64 Windows-arm64:windows:arm64
+
+build: $(PROGRAMS) man
+
+# Building a program also writes its manual page (the program's own -help
+# output) into docs/, which is where the documentation site is built from.
+$(PROGRAMS): $(PACKAGE)
+	@mkdir -p bin
+	go build -o "bin/$@$(EXT)" ./cmd/$@
+	@mkdir -p docs
+	@./bin/$@$(EXT) -help >docs/$@.1.md
+
+# man renders each docs/NAME.1.md into man/man1/NAME.1.
+man: $(MAN_PAGES)
+
+$(MAN_PAGES): .FORCE
+	@mkdir -p man/man1
+	pandoc docs/$@.md --from markdown --to man -s >man/man1/$@
+
+# test runs offline: vet, then the Go tests. The ones that need an RDM or
+# Postgres configuration skip themselves, and the ones that call public APIs
+# (DataCite, CrossRef, ROR) skip unless -live is given.
+test: .FORCE
+	go vet ./...
+	go test ./...
+
+# test-live also calls the public APIs. CrossRef asks callers to identify
+# themselves, and these tests send a fixed Library address.
+test-live: .FORCE
+	go test . -live
+
+# test-release runs the tests of release.bash, and of release.ps1 when pwsh is
+# installed. They use throwaway repositories and a stub gh, so nothing reaches
+# GitHub.
+test-release: .FORCE
+	./release_test.bash
+	@if command -v pwsh >/dev/null 2>&1; then RELEASE_IMPL=ps1 ./release_test.bash; else echo "pwsh not found: release.ps1 not tested"; fi
+
+# check vets the code and lists, without changing them, files gofmt would
+# reformat. Existing files are not reformatted as a side effect of other work.
+check: .FORCE
+	go vet ./...
+	@UNFORMATTED="$$(gofmt -l . )"; if [ -n "$$UNFORMATTED" ]; then echo "not gofmt-formatted (left as is):"; echo "$$UNFORMATTED"; fi
+
+# NOTE: on macOS you must use "mv" instead of "cp" to avoid problems
+install: build .FORCE
+	@if [ ! -d $(PREFIX)/bin ]; then mkdir -p $(PREFIX)/bin; fi
+	@echo "Installing programs in $(PREFIX)/bin"
+	@for FNAME in $(PROGRAMS); do if [ -f ./bin/$$FNAME$(EXT) ]; then mv -v ./bin/$$FNAME$(EXT) $(PREFIX)/bin/$$FNAME$(EXT); fi; done
+	@echo ""
+	@echo "Make sure $(PREFIX)/bin is in your PATH"
+	@echo ""
+	@if [ ! -d $(PREFIX)/man/man1 ]; then mkdir -p $(PREFIX)/man/man1; fi
+	@for MAN_PAGE in $(MAN_PAGES); do cp -v man/man1/$$MAN_PAGE $(PREFIX)/man/man1/;done
+	@echo ""
+	@echo "Make sure $(PREFIX)/man is in your MANPATH"
+	@echo ""
+
+uninstall: .FORCE
+	@echo "Removing programs in $(PREFIX)/bin"
+	-for FNAME in $(PROGRAMS); do if [ -f $(PREFIX)/bin/$$FNAME$(EXT) ]; then rm -v $(PREFIX)/bin/$$FNAME$(EXT); fi; done
+	-for MAN_PAGE in $(MAN_PAGES); do if [ -f "$(PREFIX)/man/man1/$$MAN_PAGE" ]; then rm "$(PREFIX)/man/man1/$$MAN_PAGE"; fi; done
+
+hash: .FORCE
+	@git log --pretty=format:'%h' -n 1
+
+# clean never removes version.go: it is committed, so that a fresh clone builds.
+clean: .FORCE
+	-if [ -d bin ]; then rm -fR bin; fi
+	-if [ -d dist ]; then rm -fR dist; fi
+	-if [ -d man ]; then rm -fR man; fi
+	-if [ -d testout ]; then rm -fR testout; fi
+
+status:
+	git status
+
+save:
+	@git commit -am "$${msg:-Quick Save}"
+	git push origin $(BRANCH)
+
+refresh:
+	git fetch origin
+	git pull origin $(BRANCH)
+
+#
+# Releasing
+#
+# 1. Edit codemeta.json by hand: version, dateModified, releaseNotes.
+# 2. make release      regenerates version.go, CITATION.cff and both installers
+#                      from codemeta.json with cmt (the only place cmt runs
+#                      besides an explicit `make generate`), rebuilds the
+#                      programs and their manual pages from that version.go,
+#                      runs the tests, builds one zip per platform in dist/ and
+#                      runs release-check, which stops here if anything does
+#                      not carry the version and the hash of the commit, or a
+#                      zip lacks one of the programs.
+# 3. ./release.bash    refuses if anything beyond those files is uncommitted,
+#                      asks for confirmation, commits and pushes the regenerated
+#                      files ("prep for vX.Y.Z"), and creates the DRAFT GitHub
+#                      release from dist/*.zip. Publish the draft from the
+#                      repository's releases page (or with gh release edit).
+#
+# Run `make test-release` after changing release.bash, release.ps1 or
+# release_test.bash.
+#
+
+# generate runs cmt over codemeta.json. Run it when the version or the
+# metadata change; a plain `make` leaves the committed copies alone.
+generate: version.go CITATION.cff installer.sh installer.ps1
 
 version.go: .FORCE
 	cmt codemeta.json version.go
 
-hash: .FORCE
-	git log --pretty=format:'%h' -n 1
-
-man: $(MAN_PAGES_1) # $(MAN_PAGES_3) $(MAN_PAGES_7)
-
-$(MAN_PAGES_1): .FORCE
-	mkdir -p man/man1
-	pandoc $@.md --from markdown --to man -s >man/man1/$@
-
-$(MAN_PAGES_3): .FORCE
-	mkdir -p man/man3
-	pandoc $@.md --from markdown --to man -s >man/man3/$@
-
-$(MAN_PAGES_7): .FORCE
-	mkdir -p man/man7
-	pandoc $@.md --from markdown --to man -s >man/man7/$@
-
-$(PROGRAMS): $(PACKAGE)
-	@mkdir -p bin
-	go build -o "bin/$@$(EXT)" cmd/$@/*.go
-	@./bin/$@ -help >$@.1.md
-
-$(MAN_PAGES): .FORCE
-	mkdir -p man/man1
-	pandoc $@.md --from markdown --to man -s >man/man1/$@
-
-CITATION.cff: codemeta.json
+CITATION.cff: .FORCE
 	cmt codemeta.json CITATION.cff
 
 installer.sh: .FORCE
@@ -82,112 +165,66 @@ installer.sh: .FORCE
 installer.ps1: .FORCE
 	cmt codemeta.json installer.ps1
 
-
-test: $(PACKAGE)
-	go test
-
-status:
-	git status
-
-save:
-	@if [ "$(msg)" != "" ]; then git commit -am "$(msg)"; else git commit -am "Quick Save"; fi
-	git push origin $(BRANCH)
-
-refresh:
-	git fetch origin
-	git pull origin $(BRANCH)
-
-clean:
-	@if [ -f version.go ]; then rm version.go; fi
-	@if [ -d bin ]; then rm -fR bin; fi
-	@if [ -d dist ]; then rm -fR dist; fi
-	@if [ -d man ]; then rm -fR man; fi
-	@if [ -d testout ]; then rm -fR testout; fi
-
-install: build
-	@echo "Installing programs in $(PREFIX)/bin"
-	@for FNAME in $(PROGRAMS); do if [ -f "./bin/$${FNAME}$(EXT)" ]; then mv -v "./bin/$${FNAME}$(EXT)" "$(PREFIX)/bin/$${FNAME}$(EXT)"; fi; done
-	@echo ""
-	@echo "Make sure $(PREFIX)/bin is in your PATH"
-	@echo "Installing man page in $(PREFIX)/man"
-	@mkdir -p $(PREFIX)/man/man1
-	@for FNAME in $(MAN_PAGES_1); do if [ -f "./man/man1/$${FNAME}" ]; then cp -v "./man/man1/$${FNAME}" "$(PREFIX)/man/man1/$${FNAME}"; fi; done
-	@mkdir -p $(PREFIX)/man/man3
-	@for FNAME in $(MAN_PAGES_3); do if [ -f "./man/man3/$${FNAME}" ]; then cp -v "./man/man3/$${FNAME}" "$(PREFIX)/man/man3/$${FNAME}"; fi; done
-	@mkdir -p $(PREFIX)/man/man7
-	@for FNAME in $(MAN_PAGES_7); do if [ -f "./man/man7/$${FNAME}" ]; then cp -v "./man/man7/$${FNAME}" "$(PREFIX)/man/man7/$${FNAME}"; fi; done
-	@echo ""
-	@echo "Make sure $(PREFIX)/man is in your MANPATH"
-
-uninstall: .FORCE
-	@echo "Removing programs in $(PREFIX)/bin"
-	@for FNAME in $(PROGRAMS); do if [ -f "$(PREFIX)/bin/$${FNAME}$(EXT)" ]; then rm -v "$(PREFIX)/bin/$${FNAME}$(EXT)"; fi; done
-	@echo "Removing man pages in $(PREFIX)/man"
-	@for FNAME in $(MAN_PAGES_1); do if [ -f "$(PREFIX)/man/man1/$${FNAME}" ]; then rm -v "$(PREFIX)/man/man1/$${FNAME}"; fi; done
-	@for FNAME in $(MAN_PAGES_3); do if [ -f "$(PREFIX)/man/man3/$${FNAME}" ]; then rm -v "$(PREFIX)/man/man3/$${FNAME}"; fi; done
-	@for FNAME in $(MAN_PAGES_7); do if [ -f "$(PREFIX)/man/man7/$${FNAME}" ]; then rm -v "$(PREFIX)/man/man7/$${FNAME}"; fi; done
-
-setup_dist: .FORCE
+# dist builds one zip per platform in PLATFORMS, starting from an empty dist/.
+dist: build .FORCE
+	@rm -fR dist
 	@mkdir -p dist
-	@rm -fR dist/
+	@for ENTRY in $(PLATFORMS); do \
+		NAME=$$(echo $$ENTRY | cut -d: -f1); GOOS=$$(echo $$ENTRY | cut -d: -f2); GOARCH=$$(echo $$ENTRY | cut -d: -f3); \
+		SUFFIX=""; if [ "$$GOOS" = "windows" ]; then SUFFIX=".exe"; fi; \
+		rm -fR dist/stage; mkdir -p dist/stage/bin; \
+		for FNAME in $(PROGRAMS); do \
+			env GOOS=$$GOOS GOARCH=$$GOARCH go build -o "dist/stage/bin/$${FNAME}$$SUFFIX" ./cmd/$$FNAME || exit 1; \
+		done; \
+		cp LICENSE codemeta.json CITATION.cff README.md INSTALL.md dist/stage/; \
+		cp -R docs man dist/stage/; \
+		(cd dist/stage && zip -qr ../$(PROJECT)-v$(VERSION)-$$NAME.zip .) || exit 1; \
+		echo "dist/$(PROJECT)-v$(VERSION)-$$NAME.zip"; \
+	done
+	@rm -fR dist/stage
 
-dist/Linux-x86_64: $(PROGRAMS)
-	@mkdir -p dist/bin
-	@for FNAME in $(PROGRAMS); do env  GOOS=linux GOARCH=amd64 go build -o "dist/bin/$${FNAME}" cmd/$${FNAME}/*.go; done
-	@cd dist && zip -r $(PROJECT)-v$(VERSION)-Linux-x86_64.zip LICENSE codemeta.json CITATION.cff *.md bin/* man/* $(DOCS)
-	@rm -fR dist/bin
+release-version: .FORCE
+	@$(MAKE) -B generate
 
-dist/Linux-aarch64: $(PROGRAMS)
-	@mkdir -p dist/bin
-	@for FNAME in $(PROGRAMS); do env  GOOS=linux GOARCH=arm64 go build -o "dist/bin/$${FNAME}" cmd/$${FNAME}/*.go; done
-	@cd dist && zip -r $(PROJECT)-v$(VERSION)-Linux-aarch64.zip LICENSE codemeta.json CITATION.cff *.md bin/* man/* $(DOCS)
-	@rm -fR dist/bin
+# release-check stops the release unless version.go, the installers,
+# CITATION.cff, the manual pages in docs/ and the zip files all carry the
+# version in codemeta.json and the hash of the commit being released, and
+# every zip carries every program.
+release-check: .FORCE
+	@HASH=$$(git log --pretty=format:%h -n 1); \
+	if ! grep -q 'Version = "$(VERSION)"' version.go; then \
+		echo "error: version.go does not carry version $(VERSION)" >&2; exit 1; fi; \
+	if ! grep -q "ReleaseHash = \"$$HASH\"" version.go; then \
+		echo "error: version.go does not carry hash $$HASH" >&2; exit 1; fi; \
+	if ! grep -q '^version: $(VERSION)' CITATION.cff; then \
+		echo "error: CITATION.cff does not carry version $(VERSION)" >&2; exit 1; fi; \
+	for FNAME in installer.sh installer.ps1; do \
+		if ! grep -q 'VERSION.*"$(VERSION)"' $$FNAME; then \
+			echo "error: $$FNAME does not carry version $(VERSION)" >&2; exit 1; fi; \
+	done; \
+	for FNAME in docs/*.?.md; do \
+		if ! head -4 $$FNAME | grep -q "version $(VERSION) $$HASH"; then \
+			echo "error: $$FNAME does not carry version $(VERSION) $$HASH" >&2; exit 1; fi; \
+	done; \
+	COUNT=0; \
+	for ENTRY in $(PLATFORMS); do \
+		NAME=$$(echo $$ENTRY | cut -d: -f1); GOOS=$$(echo $$ENTRY | cut -d: -f2); ZIP=dist/$(PROJECT)-v$(VERSION)-$$NAME.zip; \
+		SUFFIX=""; if [ "$$GOOS" = "windows" ]; then SUFFIX=".exe"; fi; \
+		if [ ! -f $$ZIP ]; then echo "error: missing $$ZIP" >&2; exit 1; fi; \
+		for FNAME in $(PROGRAMS); do \
+			if ! unzip -Z1 $$ZIP | grep -qx "bin/$$FNAME$$SUFFIX"; then \
+				echo "error: $$ZIP does not carry bin/$$FNAME$$SUFFIX" >&2; exit 1; fi; \
+		done; \
+		for PAGE in $$(unzip -Z1 $$ZIP 'docs/*.?.md'); do \
+			if ! unzip -p $$ZIP $$PAGE | head -4 | grep -q "version $(VERSION) $$HASH"; then \
+				echo "error: $$ZIP $$PAGE does not carry version $(VERSION) $$HASH" >&2; exit 1; fi; \
+		done; \
+		COUNT=$$((COUNT + 1)); \
+	done; \
+	echo "release-check: version.go, CITATION.cff, installers, docs/ and $$COUNT zip files carry $(VERSION) $$HASH"
 
-dist/macOS-x86_64: $(PROGRAMS)
-	@mkdir -p dist/bin
-	@for FNAME in $(PROGRAMS); do env GOOS=darwin GOARCH=amd64 go build -o "dist/bin/$${FNAME}" cmd/$${FNAME}/*.go; done
-	@cd dist && zip -r $(PROJECT)-v$(VERSION)-macOS-x86_64.zip LICENSE codemeta.json CITATION.cff *.md bin/* man/* $(DOCS)
-	@rm -fR dist/bin
-
-
-dist/macOS-arm64: $(PROGRAMS)
-	@mkdir -p dist/bin
-	@for FNAME in $(PROGRAMS); do env GOOS=darwin GOARCH=arm64 go build -o "dist/bin/$${FNAME}" cmd/$${FNAME}/*.go; done
-	@cd dist && zip -r $(PROJECT)-v$(VERSION)-macOS-arm64.zip LICENSE codemeta.json CITATION.cff *.md bin/* man/* $(DOCS)
-	@rm -fR dist/bin
-
-
-dist/Windows-x86_64: $(PROGRAMS)
-	@mkdir -p dist/bin
-	@for FNAME in $(PROGRAMS); do env GOOS=windows GOARCH=amd64 go build -o "dist/bin/$${FNAME}.exe" cmd/$${FNAME}/*.go; done
-	@cd dist && zip -r $(PROJECT)-v$(VERSION)-Windows-x86_64.zip LICENSE codemeta.json CITATION.cff *.md bin/* man/* $(DOCS)
-	@rm -fR dist/bin
-
-dist/Windows-arm64: $(PROGRAMS)
-	@mkdir -p dist/bin
-	@for FNAME in $(PROGRAMS); do env GOOS=windows GOARCH=arm64 go build -o "dist/bin/$${FNAME}.exe" cmd/$${FNAME}/*.go; done
-	@cd dist && zip -r $(PROJECT)-v$(VERSION)-Windows-arm64.zip LICENSE codemeta.json CITATION.cff *.md bin/* man/* $(DOCS)
-	@rm -fR dist/bin
-
-# Raspberry Pi OS (32 bit) based on report from Raspberry Pi Model 3B+
-dist/Linux-armv7l: $(PROGRAMS)
-	@mkdir -p dist/bin
-	@for FNAME in $(PROGRAMS); do env GOOS=linux GOARCH=arm GOARM=7 go build -o "dist/bin/$${FNAME}" cmd/$${FNAME}/*.go; done
-	@cd dist && zip -r $(PROJECT)-v$(VERSION)-Linux-armv7l.zip LICENSE codemeta.json CITATION.cff *.md bin/* man/* $(DOCS)
-	@rm -fR dist/bin
-
-distribute_docs:
-	@mkdir -p dist/
-	@cp -v codemeta.json dist/
-	@cp -v CITATION.cff dist/
-	@cp -v README.md dist/
-	@cp -v LICENSE dist/
-	@cp -v INSTALL.md dist/
-	@cp -vR man dist/
-	@for DNAME in $(DOCS); do cp -vR $$DNAME dist/; done
-
-release: build installer.sh installer.ps1 save setup_dist distribute_docs dist/Linux-x86_64 dist/Linux-aarch64 dist/macOS-x86_64 dist/macOS-arm64 dist/Windows-x86_64 dist/Windows-arm64 dist/Linux-armv7l
-	@printf "\nready to run\n\n\trelease.bash\n\n"
-
+# release: see "Releasing" above. It commits nothing; release.bash does that.
+release: clean release-version test dist release-check
+	@printf "\nrelease-check passed. Now run: ./release.bash   (or ./release.bash --dry-run first)\n\n"
 
 .FORCE:
