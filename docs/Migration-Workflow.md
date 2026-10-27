@@ -3,7 +3,7 @@
 
 This is a working document for how Caltech Library is migrating from EPrints to Invenio RDM using irdmtools for our CaltechAUTHORS repository.
 
-EPrints is running version 3.3. RDM is running version 11.
+This workflow supports EPrints 3.3 and Invenio RDM v13. Support for RDM v14 is being prepared.
 
 ## Requirements
 

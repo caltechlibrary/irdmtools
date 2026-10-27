@@ -4,9 +4,9 @@
 Institutional Repository Data Management Tools
 ==============================================
 
-This is a proof of concept set tools for working with Invenio RDM and migrating content from EPrints to RDM. It consists of a small set of Go based command line programs along with Python scripts and a wrapping irdm Python module. The Go based tooling is designed to work directory with a copy of you repositories' database (e.g. Postgres for RDM or MySQL for EPrints). 
+irdmtools is a set of tools for working with Invenio RDM and migrating content from EPrints to RDM. It consists of a small set of Go based command line programs along with Python scripts and a wrapping irdm Python module. The Go based tooling is designed to work directory with a copy of you repositories' database (e.g. Postgres for RDM or MySQL for EPrints). 
 
-The proof of concept is being developed around RDM's web services (e.g. REST API and OAI-PMH), PostgreSQL database and external metadata services (e.g. CrossRef, DataCite). 
+irdmtools is developed around RDM's web services (e.g. REST API and OAI-PMH), PostgreSQL database and external metadata services (e.g. CrossRef, DataCite). 
 
 Caltech Library is using irdmtools to migrate content from our legacy EPrints 3.3 repositories (heavily customized) to RDM. Post migration the core Go tools will remain useful for curation at the collection level (e.g. [rdmutil](rdmutil.1.md))
 
@@ -38,6 +38,15 @@ This tools take an EPrint record in a dataset collection and returns an abbrevia
 
 This tools take an RDM record in a dataset collection and returns an abbreviated record inspired by [citeproc](https://en.wikipedia.org/wiki/CiteProc). It also supports harvesting selected RDM records into a dataset collection using the `-harvest` and `-ids` options. We use this feature to facilate creating <https://feeds.library.caltech.edu>. See the [man page](rdmds2citations.1.md) for details.
 
+## Documentation
+
+- [Installation](INSTALL.md)
+- [User manual](user_manual.md), with the man page of each program
+- [Migration workflow](Migration-Workflow.md), moving a repository from EPrints to Invenio RDM
+
+For examples of using irdmtools from Python see the
+[irdm_harvester](https://github.com/caltechlibrary/irdm_harvester) repository.
+
 ## Requirements
 
 - An Invenio RDM deployment
@@ -61,10 +70,8 @@ curl https://software.library.caltech.edu/irdmtools/installer.sh | sh
 
 ## Installation from source
 
-This codebase is speculative. It is likely to change and 
-as issues are identified. To install you need to download
-the source code and compile it.  Here's the steps I take to
-install irdmtools.
+To install from source you need to download the source code
+and compile it. Here are the steps to install irdmtools.
 
 ~~~
 git clone git@github.com:caltechlibrary/irdmtools
