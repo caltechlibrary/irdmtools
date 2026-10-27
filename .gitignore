@@ -29,9 +29,12 @@ __pycache__/
 
 # Secrets and per-machine configuration: never committed.
 # .env and irdmtools.json hold the RDM token and database passwords
-# (config.go reads both).
+# (config.go reads both). The scripts/test_*.bash smoke tests source
+# test_*.env and test_rdmutil.rc from the working directory, the same kind of
+# file.
 .env
 *.env
+*.rc
 *.keys
 /irdmtools.json
 
