@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/fs"
 	"net"
+	"net/http"
 	"net/url"
 )
 
@@ -228,4 +229,41 @@ func ExitClassOf(err error) ExitClass {
 //	}
 func ExitCode(err error) int {
 	return int(ExitClassOf(err))
+}
+
+// classifyHTTPStatus turns the HTTP status a service answered with into an
+// error of the exit class a caller can act on: nil for 200, a negative answer
+// for 404 (no such DOI), a retry-later failure for 429 (rate limited), and
+// unavailable for every other status. The API clients record the status but
+// return no error for a failure status, so the caller reads it and asks here.
+//
+// @param service {string} the service's name, such as "CrossRef", for the message
+// @param doi {string} the DOI that was asked for, for the message
+// @param status {int} the HTTP status code the service answered with
+// @returns {error} nil for 200, else an *ExitError whose message names the service and the DOI
+// @example
+//
+//	if err := classifyHTTPStatus("CrossRef", doi, client.StatusCode); err != nil {
+//		return nil, err
+//	}
+func classifyHTTPStatus(service, doi string, status int) error {
+	switch status {
+	case http.StatusOK:
+		return nil
+	case http.StatusNotFound:
+		return NegativeError(fmt.Errorf("%s has no record for %q (HTTP %d)", service, doi, status))
+	case http.StatusTooManyRequests:
+		return TempFailError(fmt.Errorf("%s is rate limiting requests for %q, try again later (HTTP %d)", service, doi, status))
+	}
+	return UnavailableError(fmt.Errorf("%s answered %q with HTTP %d %s", service, doi, status, http.StatusText(status)))
+}
+
+// queryError classifies an error from an API client's request: a network error
+// stays one (it is the unavailable class), anything else is a response that
+// could not be read.
+func queryError(service, doi string, err error) error {
+	if ExitClassOf(err) == ExitUnavailable {
+		return fmt.Errorf("%s could not be reached for %q: %w", service, doi, err)
+	}
+	return DataError(fmt.Errorf("%s answered %q with a response that cannot be read: %w", service, doi, err))
 }

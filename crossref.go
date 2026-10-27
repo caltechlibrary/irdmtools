@@ -13,15 +13,29 @@ import (
 	"github.com/caltechlibrary/simplified"
 )
 
+// crossRefAPIURL is the base URL of the CrossRef API. It is empty outside
+// tests, which leaves the client's own address, https://api.crossref.org.
+var crossRefAPIURL string
+
 func QueryCrossRefWork(cfg *Config, doi string, options *Doi2RdmOptions) (*crossrefapi.Works, error) {
 	appName := path.Base(os.Args[0])
 	client, err := crossrefapi.NewCrossRefClient(appName, options.MailTo)
 	if err != nil {
-		return nil, err
+		return nil, ConfigError(err)
+	}
+	if crossRefAPIURL != "" {
+		client.API = crossRefAPIURL
 	}
 	works, err := client.Works(doi)
 	if err != nil {
+		return nil, queryError("CrossRef", doi, err)
+	}
+	// The client returns no error and no record for a failure status.
+	if err := classifyHTTPStatus("CrossRef", doi, client.StatusCode); err != nil {
 		return nil, err
+	}
+	if works == nil {
+		return nil, DataError(fmt.Errorf("CrossRef answered %q with an empty response", doi))
 	}
 	if cfg.Debug {
 		src, _ := JSONMarshalIndent(works, "", "    ")

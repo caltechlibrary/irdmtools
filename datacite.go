@@ -12,18 +12,29 @@ import (
 	"github.com/caltechlibrary/simplified"
 )
 
+// dataCiteAPIURL is the base URL of the DataCite API. It is empty outside
+// tests, which leaves the client's own address, https://api.datacite.org.
+var dataCiteAPIURL string
+
 func QueryDataCiteObject(cfg *Config, doi string, options *Doi2RdmOptions) (map[string]interface{}, error) {
 	appName := path.Base(os.Args[0])
 	client, err := dataciteapi.NewDataCiteClient(appName, options.MailTo)
 	if err != nil {
-		return nil, err
+		return nil, ConfigError(err)
+	}
+	if dataCiteAPIURL != "" {
+		client.API = dataCiteAPIURL
 	}
 	objects, err := client.Dois(doi)
 	if err != nil {
+		return nil, queryError("DataCite", doi, err)
+	}
+	// The client returns no error and no object for a failure status.
+	if err := classifyHTTPStatus("DataCite", doi, client.StatusCode); err != nil {
 		return nil, err
 	}
 	if len(objects) == 0 {
-		return nil, fmt.Errorf("no data returned for %q", doi)
+		return nil, DataError(fmt.Errorf("DataCite answered %q with an empty response", doi))
 	}
 	src, _ := JSONMarshalIndent(objects, "", "    ")
 	if cfg.Debug {
@@ -31,7 +42,7 @@ func QueryDataCiteObject(cfg *Config, doi string, options *Doi2RdmOptions) (map[
 	}
 	m := map[string]interface{}{}
 	if err := JSONUnmarshal(src, &m); err != nil {
-		return nil, fmt.Errorf("problem encoding/decoding DataCite object, %s", err)
+		return nil, DataError(fmt.Errorf("problem encoding/decoding DataCite object, %s", err))
 	}
 	return m, nil
 }
