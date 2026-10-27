@@ -53,9 +53,9 @@ type EPrintRest struct {
 	RepoID             string `json:"repo_id,required"`
 	EPrintArchivesPath string `json:"eprint_archives_path,required"`
 	Port               string `json:"rest_port,omitempty"`
-	DbHost             string `json:"db_host,omitempty`
-	DbUser             string `json:"db_user,omitempty`
-	DbPassword         string `json:"db_password,omitempty`
+	DbHost             string `json:"db_host,omitempty"`
+	DbUser             string `json:"db_user,omitempty"`
+	DbPassword         string `json:"db_password,omitempty"`
 	in                 io.Reader
 	out                io.Writer
 	eout               io.Writer

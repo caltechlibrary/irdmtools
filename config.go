@@ -53,7 +53,7 @@ import (
 type Config struct {
 	// Debug is set true then methods with access to the Config obect
 	// can use this flag to implement addition logging to standard err
-	Debug bool `json:"-", yaml:"-"`
+	Debug bool `json:"-" yaml:"-"`
 	// Repository Name, e.g. CaltechAUTHORS, CaltechTHESIS, CaltechDATA
 	RepoName string `json:"repo_name,omitempty" yaml:"repo_name,omitempty"`
 	// Repository ID, e.g. caltechauthors, caltechthesis, caltechdata (usually the db name for repository)
