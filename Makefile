@@ -45,15 +45,26 @@ PLATFORMS = Linux-x86_64:linux:amd64 Linux-aarch64:linux:arm64 \
 	macOS-x86_64:darwin:amd64 macOS-arm64:darwin:arm64 \
 	Windows-x86_64:windows:amd64 Windows-arm64:windows:arm64
 
-build: $(PROGRAMS) man
+build: $(PROGRAMS)
+	@$(MAKE) man
 
 # Building a program also writes its manual page (the program's own -help
-# output) into docs/, which is where the documentation site is built from.
+# output) into docs/, which is where the documentation site is built from, and
+# one page per help topic, docs/NAME-TOPIC.1.md, from "NAME -help topics" and
+# "NAME -help TOPIC". The old topic pages are removed first, so a renamed or
+# removed action does not leave a page behind; a program that cannot list its
+# topics stops the build. man is a sub-make so that it sees the pages written
+# here: MAN_PAGES is read when the Makefile is read.
 $(PROGRAMS): $(PACKAGE)
 	@mkdir -p bin
 	go build -o "bin/$@$(EXT)" ./cmd/$@
 	@mkdir -p docs
 	@./bin/$@$(EXT) -help >docs/$@.1.md
+	@TOPICS=$$(./bin/$@$(EXT) -help topics) || exit 1; \
+	rm -f docs/$@-*.1.md; \
+	for TOPIC in $$(echo "$$TOPICS" | grep -v '^#' | awk '{print $$1}'); do \
+		./bin/$@$(EXT) -help $$TOPIC >docs/$@-$$TOPIC.1.md || exit 1; \
+	done
 
 # man renders each docs/NAME.1.md into man/man1/NAME.1.
 man: $(MAN_PAGES)

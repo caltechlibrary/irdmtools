@@ -42,6 +42,7 @@ This tools take an RDM record in a dataset collection and returns an abbreviated
 
 - [Installation](INSTALL.md)
 - [User manual](user_manual.md), with the man page of each program
+- Help topics: `rdmutil` (one topic per action), `ep3util` (one per action) and `doi2rdm` have more than one page of help. `NAME -help topics` lists the topics and `NAME -help TOPIC` prints one, for example `rdmutil -help get_record` or `doi2rdm -help exit_status`. Each topic also has a page in this documentation, named `NAME-TOPIC` (for example `rdmutil-get_record.1.md`).
 - [Migration workflow](Migration-Workflow.md), moving a repository from EPrints to Invenio RDM
 
 For examples of using irdmtools from Python see the

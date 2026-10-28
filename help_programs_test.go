@@ -206,3 +206,64 @@ func TestManualsNameHelpTopics(t *testing.T) {
 		}
 	}
 }
+
+// pageBody returns a manual page from its "# NAME" heading on, leaving out the
+// three header lines, whose version and hash change with every release.
+func pageBody(page string) string {
+	if i := strings.Index(page, "\n# NAME\n"); i >= 0 {
+		return page[i:]
+	}
+	return page
+}
+
+// TestEveryTopicHasACurrentDocsPage checks that each topic of each program has
+// its page in docs/, named NAME-TOPIC.1.md, with the first line of a manual page
+// for that topic and the text the program prints today: a topic added, or a
+// manual edited, without regenerating the docs (make build) fails here.
+func TestEveryTopicHasACurrentDocsPage(t *testing.T) {
+	total := 0
+	for name, topics := range helpPrograms {
+		for _, topic := range topics {
+			total++
+			fName := filepath.Join("docs", name+"-"+topic+".1.md")
+			src, err := os.ReadFile(fName)
+			if err != nil {
+				t.Errorf("%s: expected a docs page for the topic, run make build: %v", fName, err)
+				continue
+			}
+			page := string(src)
+			if !strings.HasPrefix(page, "%"+name+"-"+topic+"(1) irdmtools user manual | version ") {
+				t.Errorf("%s: unexpected first line %q", fName, strings.SplitN(page, "\n", 2)[0])
+			}
+			_, want, _ := runProgram(t, name, "-help", topic)
+			if pageBody(page) != pageBody(want) {
+				t.Errorf("%s is not what \"%s -help %s\" prints now; run make build", fName, name, topic)
+			}
+		}
+	}
+	if total != 49 {
+		t.Errorf("expected 49 topics across the programs, counted %d", total)
+	}
+}
+
+// TestNoStaleTopicPages checks docs/ has no topic page whose topic is gone, or
+// for a program that has no topics: a renamed or removed action leaves its old
+// page behind unless the Makefile clears them.
+func TestNoStaleTopicPages(t *testing.T) {
+	for name, topics := range helpPrograms {
+		want := map[string]bool{}
+		for _, topic := range topics {
+			want[topic] = true
+		}
+		pages, err := filepath.Glob(filepath.Join("docs", name+"-*.1.md"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		for _, page := range pages {
+			topic := strings.TrimSuffix(strings.TrimPrefix(filepath.Base(page), name+"-"), ".1.md")
+			if !want[topic] {
+				t.Errorf("%s is a page for a topic %s no longer has", page, name)
+			}
+		}
+	}
+}
