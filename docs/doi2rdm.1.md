@@ -1,4 +1,4 @@
-%doi2rdm(1) irdmtools user manual | version 0.0.99 a66c9ddf
+%doi2rdm(1) irdmtools user manual | version 0.1.0 6ccc3239
 % R. S. Doiel and Tom Morrell
 % 2026-10-27
 
@@ -150,7 +150,7 @@ read those must be updated: "not found" is now 1 and 2 is a command line error.
 # OPTIONS
 
 -help
-: display help
+: display help. Use -help topics to list the help topics and -help TOPIC to show the page for one.
 
 -license
 : display license

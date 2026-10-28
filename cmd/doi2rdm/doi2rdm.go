@@ -196,7 +196,7 @@ read those must be updated: "not found" is now 1 and 2 is a command line error.
 # OPTIONS
 
 -help
-: display help
+: display help. Use -help topics to list the help topics and -help TOPIC to show the page for one.
 
 -license
 : display license
@@ -286,7 +286,13 @@ func main() {
 	eout := os.Stderr
 
 	if showHelp {
-		fmt.Fprintf(out, "%s\n", fmtHelp(helpText, appName, version, releaseDate, releaseHash))
+		manual := fmtHelp(helpText, appName, version, releaseDate, releaseHash)
+		// -help alone prints the manual; -help topics lists the help topics and
+		// -help TOPIC prints one (see irdmtools.RunHelp).
+		if words := flag.Args(); len(words) > 0 {
+			os.Exit(irdmtools.RunHelp(appName, manual, []string{"OPTIONS", "OPTIONS_YAML", "TEXT NORMALIZATION", "WARNINGS", "EXIT STATUS", "EXAMPLES"}, words, out, os.Stderr))
+		}
+		fmt.Fprintf(out, "%s\n", manual)
 		os.Exit(0)
 	}
 	if showVersion {

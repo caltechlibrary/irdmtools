@@ -133,5 +133,10 @@ func TestMain(m *testing.M) {
 		l.Printf("skipping testing Test03Harvest, no ids file")
 
 	}
-	os.Exit(m.Run())
+	code := m.Run()
+	// the directory the help tests build the programs into
+	if helpBinDir != "" {
+		os.RemoveAll(helpBinDir)
+	}
+	os.Exit(code)
 }

@@ -102,7 +102,7 @@ reflect direct access to the database instead of the EPrint REST API.
 # OPTIONS
 
 help
-: display help
+: display help. Use -help topics to list the help topics and -help TOPIC to show the page for one.
 
 license
 : display license
@@ -210,7 +210,13 @@ func main() {
 	args := flag.Args()
 
 	if showHelp {
-		fmt.Fprintf(os.Stdout, "%s\n", fmtHelp(helpText, appName, version, releaseDate, releaseHash))
+		manual := fmtHelp(helpText, appName, version, releaseDate, releaseHash)
+		// -help alone prints the manual; -help topics lists the help topics and
+		// -help TOPIC prints one (see irdmtools.RunHelp).
+		if words := flag.Args(); len(words) > 0 {
+			os.Exit(irdmtools.RunHelp(appName, manual, nil, words, os.Stdout, os.Stderr))
+		}
+		fmt.Fprintf(os.Stdout, "%s\n", manual)
 		os.Exit(0)
 	}
 	if showVersion {

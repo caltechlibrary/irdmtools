@@ -49,7 +49,7 @@ by default it assumes localhost running on port 5432.
 # OPTIONS
 
 help
-: display help
+: display help. Use -help topics to list the help topics and -help TOPIC to show the page for one.
 
 license
 : display license

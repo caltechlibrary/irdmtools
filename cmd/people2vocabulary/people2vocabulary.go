@@ -185,7 +185,13 @@ func main() {
 	flag.Parse()
 	args := flag.Args()
 	if showHelp {
-		fmt.Fprintf(out, "%s\n", fmtHelp(helpText, appName, version, releaseDate, releaseHash))
+		manual := fmtHelp(helpText, appName, version, releaseDate, releaseHash)
+		// -help alone prints the manual; -help topics lists the help topics and
+		// -help TOPIC prints one (see irdmtools.RunHelp).
+		if words := flag.Args(); len(words) > 0 {
+			os.Exit(irdmtools.RunHelp(appName, manual, nil, words, out, os.Stderr))
+		}
+		fmt.Fprintf(out, "%s\n", manual)
 		os.Exit(0)
 	}
 	if showLicense {

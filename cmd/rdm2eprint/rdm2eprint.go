@@ -184,7 +184,13 @@ func main() {
 
 
 	if showHelp {
-		fmt.Fprintf(os.Stdout, "%s\n", fmtHelp(helpText, appName, version, releaseDate, releaseHash))
+		manual := fmtHelp(helpText, appName, version, releaseDate, releaseHash)
+		// -help alone prints the manual; -help topics lists the help topics and
+		// -help TOPIC prints one (see irdmtools.RunHelp).
+		if words := flag.Args(); len(words) > 0 {
+			os.Exit(irdmtools.RunHelp(appName, manual, nil, words, os.Stdout, os.Stderr))
+		}
+		fmt.Fprintf(os.Stdout, "%s\n", manual)
 		os.Exit(0)
 	}
 	if showVersion {
