@@ -355,8 +355,16 @@ def build_plan(people, entries, caltech_ror=CALTECH_ROR):
             if theirs and theirs not in mine and not holders[scheme].get(theirs):
                 wanted.setdefault((scheme, theirs, raw), []).append(e)
     for (scheme, _normal, raw), candidates in sorted(wanted.items()):
-        target = min(candidates, key=lambda c: (c.clpid != c.person, str(c.rdm_id)))
-        target.adds.append((scheme, raw))
+        if len(candidates) > 1:
+            # Several entries of one person lack it. Which entry should hold it is a
+            # judgement for a person, so nothing is chosen (RSDOIEL, 2026-11-10).
+            ids = ", ".join(sorted(str(c.rdm_id) for c in candidates))
+            items.append(_item(candidates[0].person, None, "ambiguous_target", "needs_human",
+                               f"{scheme} {raw} is missing from {len(candidates)} RDM entries "
+                               f"of this person ({ids}); not added",
+                               scheme, raw))
+            continue
+        candidates[0].adds.append((scheme, raw))
 
     for e in parsed:
         if e.status != "resolved":

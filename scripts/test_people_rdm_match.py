@@ -186,17 +186,58 @@ class TestAddIdentifier(unittest.TestCase):
         self.assertEqual(outcomes(plan, "needs_human"), [])
 
 
-    def test_identifier_goes_to_the_entry_that_holds_the_clpid(self):
-        # r1 sorts first but only matches through its ORCID; r2 carries the clpid.
+    def test_identifier_missing_from_several_entries_of_one_person_needs_a_human(self):
+        # r1 matches through its ORCID, r2 carries the clpid; the ISNI is missing from both.
+        # Which entry should hold it is a judgement, so nothing is chosen (RSDOIEL, 2026-11-10).
         entries = [entry("r1", orcid=ORCID_A), entry("r2", clpid="Alpha-A", orcid=ORCID_A)]
         plan = m.build_plan([person("Alpha-A", orcid=ORCID_A, isni=ISNI_A)], entries)
-        self.assertEqual([(i["rdm_id"], i["scheme"]) for i in actions(plan, "add_identifier")
-                          if i["scheme"] == "isni"], [("r2", "isni")])
+        self.assertEqual([i for i in applied(plan) if i["scheme"] == "isni"], [])
+        hits = actions(plan, "ambiguous_target")
+        self.assertEqual(len(hits), 1)
+        self.assertEqual(hits[0]["outcome"], "needs_human")
+        self.assertEqual((hits[0]["clpid"], hits[0]["scheme"], hits[0]["value"]),
+                         ("Alpha-A", "isni", ISNI_A))
+        self.assertIsNone(hits[0]["rdm_id"])
+        self.assertIn("r1", hits[0]["message"])
+        self.assertIn("r2", hits[0]["message"])
 
-    def test_one_missing_identifier_is_added_to_one_entry_only(self):
+    def test_missing_identifier_on_two_entries_is_added_to_neither(self):
         entries = [entry("r1", clpid="Alpha-A"), entry("r2", clpid="Alpha-A")]
         plan = m.build_plan([person("Alpha-A", orcid=ORCID_A)], entries)
-        self.assertEqual(len(applied(plan)), 1)
+        self.assertEqual(applied(plan), [])
+        self.assertEqual(len(actions(plan, "ambiguous_target")), 1)
+
+    def test_one_item_per_identifier_not_per_entry(self):
+        entries = [entry("r1", clpid="Alpha-A"), entry("r2", clpid="Alpha-A"),
+                   entry("r3", clpid="Alpha-A")]
+        plan = m.build_plan([person("Alpha-A", orcid=ORCID_A, isni=ISNI_A)], entries)
+        self.assertEqual(sorted(i["scheme"] for i in actions(plan, "ambiguous_target")),
+                         ["isni", "orcid"])
+
+    def test_a_single_candidate_is_still_applied(self):
+        # One entry of the person, so there is nothing to choose between.
+        entries = [entry("r1", clpid="Alpha-A"), entry("r2", clpid="Alpha-B", orcid=ORCID_B)]
+        plan = m.build_plan([person("Alpha-A", orcid=ORCID_A), person("Alpha-B", orcid=ORCID_B)],
+                            entries)
+        self.assertEqual([(i["rdm_id"], i["scheme"]) for i in applied(plan)], [("r1", "orcid")])
+        self.assertEqual(actions(plan, "ambiguous_target"), [])
+
+    def test_ambiguous_target_on_stale_entries_is_still_needs_human_not_repair(self):
+        stale = {"id": "x", "pid": "y"}
+        entries = [entry("r1", clpid="Alpha-A", extra=stale),
+                   entry("r2", clpid="Alpha-A", extra=stale)]
+        plan = m.build_plan([person("Alpha-A", orcid=ORCID_A)], entries)
+        self.assertEqual(len(actions(plan, "ambiguous_target")), 1)
+        self.assertEqual(actions(plan, "needs_repair"), [])
+
+    def test_the_clpid_is_still_added_to_each_entry_while_the_isni_is_ambiguous(self):
+        # Both entries match through the ORCID; each lacks the clpid (added to each, nothing to
+        # choose) and the ISNI (which entry holds it is a judgement).
+        entries = [entry("r1", orcid=ORCID_A), entry("r2", orcid=ORCID_A)]
+        plan = m.build_plan([person("Alpha-A", orcid=ORCID_A, isni=ISNI_A)], entries)
+        self.assertEqual(sorted((i["rdm_id"], i["scheme"]) for i in applied(plan)),
+                         [("r1", "clpid"), ("r2", "clpid")])
+        self.assertEqual([i["scheme"] for i in actions(plan, "ambiguous_target")], ["isni"])
 
 
 class TestConflicts(unittest.TestCase):
