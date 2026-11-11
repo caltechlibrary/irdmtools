@@ -194,6 +194,43 @@ def _write_private(path, report):
         os.umask(old)
 
 
+def _about(item, scope):
+    """Whether an item concerns one COLD person.
+
+    An item's own `clpid` is not enough: on a conflict it can be the RDM entry's clpid, which COLD
+    does not hold, while the COLD person it concerns is named in `detail.cold`. Leaving those out of
+    a one-person run would make an unresolved problem look resolved.
+
+    @param item {dict} a plan item
+    @param scope {str} a COLD clpid
+    @returns {bool} True when the item carries that clpid or names that person in its detail
+    @example
+        _about({"clpid": "Old-Id", "detail": {"cold": {"Alpha-A": {}}}}, "Alpha-A")   # True
+    """
+    return item["clpid"] == scope or scope in ((item.get("detail") or {}).get("cold") or {})
+
+
+def compact_plan(plan, scope=None):
+    """Shrink a plan for a report that has to travel a size-limited channel.
+
+    The matcher reports every person with no ORCID as an `info` item, thousands of them, and the
+    COLD side only counts them. The result drops them and counts every outcome instead. With a
+    scope the plan is first limited to that clpid, so the counts are that person's.
+
+    @param plan {list} items from people_rdm_match.build_plan
+    @param scope {str} one clpid, or None for everyone
+    @returns {dict} `plan` (no `info` items), `plan_counts` (outcome -> count) and `compact` (True)
+    @example
+        compact_plan(plan, "Doe-Jane")   # {"plan": [...], "plan_counts": {"info": 1}, "compact": True}
+    """
+    kept = [i for i in plan if scope is None or _about(i, scope)]
+    counts = {}
+    for i in kept:
+        counts[i["outcome"]] = counts.get(i["outcome"], 0) + 1
+    return {"plan": [i for i in kept if i["outcome"] != "info"], "plan_counts": counts,
+            "compact": True}
+
+
 def main(argv=None, load_entries=None, make_service=None):
     """Run the sync on the instance: read people, build the plan, apply, write a report.
 
@@ -210,6 +247,9 @@ def main(argv=None, load_entries=None, make_service=None):
     ap.add_argument("--out", required=True, help="report file to create (mode 0600; never replaced)")
     ap.add_argument("--apply", action="store_true", help="write; the default is a dry run")
     ap.add_argument("--scope", default=None, help="limit the run to one clpid")
+    ap.add_argument("--compact", action="store_true",
+                    help="leave `info` items out of the report and count them (with --scope, "
+                         "report only that clpid); applies exactly what a full run would")
     ap.add_argument("--env", default="/Sites/caltechauthors/.env", help="the instance's .env")
     args = ap.parse_args(argv)
 
@@ -249,6 +289,8 @@ def main(argv=None, load_entries=None, make_service=None):
         summary[r["status"]] += 1
     report = {"mode": "apply" if args.apply else "dry-run", "scope": args.scope, "plan": plan,
               "results": results, "summary": summary, "aborted": aborted}
+    if args.compact:
+        report.update(compact_plan(plan, args.scope))
     _write_private(args.out, report)
     print(f"{report['mode']}: " + ", ".join(f"{k}={v}" for k, v in summary.items() if v)
           + (f"; ABORTED: {aborted}" if aborted else ""), file=sys.stderr)

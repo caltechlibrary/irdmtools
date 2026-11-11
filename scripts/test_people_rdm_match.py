@@ -811,3 +811,136 @@ class TestWholeSetProperties(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestItemDetail(unittest.TestCase):
+    """Each item that needs a person carries structured detail (cold Phase 5).
+
+    The message is prose. The page that lists these items must show both sides, link to the COLD
+    people involved and say where a fix can be made, so the facts travel as data:
+    detail = {"fix": "cold" | "rdm",
+              "cold": {clpid: {"orcid": ..., "isni": ...}},   # the COLD people to open
+              "rdm": {"ids": [...], "clpids": [...], "orcids": [...], "isnis": [...]}}
+    `fix` is "rdm" when nothing in COLD is wrong or involved, so the fix is outside COLD (RDM v13's
+    names routes are GET only).
+    """
+
+    def one(self, people, entries, action):
+        found = actions(m.build_plan(people, entries), action)
+        self.assertEqual(len(found), 1, found)
+        return found[0]["detail"]
+
+    def rdm(self, ids, clpids=(), orcids=(), isnis=()):
+        return {"ids": list(ids), "clpids": list(clpids), "orcids": list(orcids),
+                "isnis": list(isnis)}
+
+    def test_applied_and_info_items_have_an_empty_detail(self):
+        plan = m.build_plan([person("Alpha-A", orcid=ORCID_A), person("Beta-B")], [])
+        self.assertTrue(plan)
+        for item in plan:
+            if item["outcome"] in ("applied", "info"):
+                self.assertEqual(item["detail"], {}, item)
+
+    def test_every_actionable_item_has_a_fix_and_both_sides(self):
+        people = [person("Alpha-A", orcid=ORCID_A, isni="3626 6637"),
+                  person("Beta-B", orcid=ORCID_B), person("Gamma-C", orcid=ORCID_B)]
+        entries = [entry("r1", clpid="Nobody-Z"), entry("r2", ror=CALTECH),
+                   entry("r3", clpid="Alpha-A", orcid="not-an-orcid"),
+                   entry("r4", clpid="Beta-B", extra={"id": "stale"})]
+        plan = m.build_plan(people, entries)
+        seen = {i["action"] for i in plan if i["outcome"] in ("needs_human", "needs_repair", "warning")}
+        self.assertGreaterEqual(len(seen), 4, seen)
+        for item in plan:
+            if item["outcome"] in ("needs_human", "needs_repair", "warning"):
+                self.assertIn(item["detail"]["fix"], ("cold", "rdm"), item)
+                self.assertEqual(set(item["detail"]), {"fix", "cold", "rdm"}, item)
+
+    def test_a_malformed_cold_identifier_is_fixed_in_cold(self):
+        d = self.one([person("Alpha-A", isni="3626 6637")], [], "malformed_identifier")
+        self.assertEqual(d, {"fix": "cold", "cold": {"Alpha-A": {"orcid": "", "isni": "3626 6637"}},
+                             "rdm": {}})
+
+    def test_a_malformed_rdm_identifier_is_fixed_outside_cold_and_names_the_cold_person(self):
+        d = self.one([person("Alpha-A", orcid=ORCID_A)],
+                     [entry("r1", clpid="Alpha-A", orcid="not-an-orcid")], "malformed_identifier")
+        self.assertEqual(d["fix"], "rdm")
+        self.assertEqual(d["cold"], {"Alpha-A": {"orcid": ORCID_A, "isni": ""}})
+        self.assertEqual(d["rdm"], self.rdm(["r1"], ["Alpha-A"]))
+
+    def test_an_entry_with_several_clpids_is_fixed_outside_cold(self):
+        e = entry("r1", clpid="Alpha-A")
+        e["metadata"]["identifiers"].append({"scheme": "clpid", "identifier": "Beta-B"})
+        d = self.one([person("Alpha-A"), person("Beta-B")], [e], "conflict")
+        self.assertEqual(d["fix"], "rdm")
+        self.assertEqual(sorted(d["cold"]), ["Alpha-A", "Beta-B"])
+        self.assertEqual(d["rdm"], self.rdm(["r1"], ["Alpha-A", "Beta-B"]))
+
+    def test_an_orphan_clpid_has_no_cold_person_and_is_fixed_outside_cold(self):
+        d = self.one([person("Alpha-A")], [entry("r1", clpid="Nobody-Z")], "orphan_clpid")
+        self.assertEqual(d, {"fix": "rdm", "cold": {}, "rdm": self.rdm(["r1"], ["Nobody-Z"])})
+
+    def test_an_old_id_alias_names_the_person_it_belongs_to(self):
+        d = self.one([person("Alpha-A", thesis_id="Old-Id")], [entry("r1", clpid="Old-Id")],
+                     "orphan_clpid")
+        self.assertEqual(d["fix"], "rdm")
+        self.assertEqual(sorted(d["cold"]), ["Alpha-A"])
+        self.assertEqual(d["rdm"], self.rdm(["r1"], ["Old-Id"]))
+
+    def test_a_caltech_entry_missing_from_cold_is_fixed_in_cold(self):
+        d = self.one([person("Alpha-A")], [entry("r1", ror=CALTECH, orcid=ORCID_C)],
+                     "caltech_affiliate_not_in_cold")
+        self.assertEqual(d["fix"], "cold")
+        self.assertEqual(d["cold"], {})
+        self.assertEqual(d["rdm"], self.rdm(["r1"], [], [ORCID_C]))
+
+    def test_identifiers_that_belong_to_several_people_show_every_person(self):
+        people = [person("Alpha-A", orcid=ORCID_A), person("Beta-B", isni=ISNI_B)]
+        d = self.one(people, [entry("r1", orcid=ORCID_A, isni=ISNI_B)], "conflict")
+        self.assertEqual(d["fix"], "cold")
+        self.assertEqual(d["cold"], {"Alpha-A": {"orcid": ORCID_A, "isni": ""},
+                                     "Beta-B": {"orcid": "", "isni": ISNI_B}})
+        self.assertEqual(d["rdm"], self.rdm(["r1"], [], [ORCID_A], [m.normalize_isni(ISNI_B)]))
+
+    def test_an_unknown_clpid_whose_identifiers_belong_to_a_person_names_that_person(self):
+        d = self.one([person("Alpha-A", orcid=ORCID_A)],
+                     [entry("r1", clpid="Old-Id", orcid=ORCID_A)], "conflict")
+        self.assertEqual(d["fix"], "cold")
+        self.assertEqual(d["cold"], {"Alpha-A": {"orcid": ORCID_A, "isni": ""}})
+        self.assertEqual(d["rdm"], self.rdm(["r1"], ["Old-Id"], [ORCID_A]))
+
+    def test_a_clpid_and_an_identifier_that_disagree_show_both_people(self):
+        people = [person("Alpha-A", orcid=ORCID_A), person("Beta-B", orcid=ORCID_B)]
+        d = self.one(people, [entry("r1", clpid="Alpha-A", orcid=ORCID_B)], "conflict")
+        self.assertEqual(sorted(d["cold"]), ["Alpha-A", "Beta-B"])
+        self.assertEqual(d["rdm"], self.rdm(["r1"], ["Alpha-A"], [ORCID_B]))
+
+    def test_a_scheme_that_differs_shows_the_cold_value_and_the_rdm_value(self):
+        d = self.one([person("Alpha-A", orcid=ORCID_A)],
+                     [entry("r1", clpid="Alpha-A", orcid=ORCID_B)], "conflict")
+        self.assertEqual(d["fix"], "cold")
+        self.assertEqual(d["cold"], {"Alpha-A": {"orcid": ORCID_A, "isni": ""}})
+        self.assertEqual(d["rdm"], self.rdm(["r1"], ["Alpha-A"], [ORCID_B]))
+
+    def test_an_ambiguous_target_lists_every_candidate_entry(self):
+        d = self.one([person("Alpha-A", orcid=ORCID_A)],
+                     [entry("r1", clpid="Alpha-A"), entry("r2", clpid="Alpha-A")],
+                     "ambiguous_target")
+        self.assertEqual(d["fix"], "rdm")
+        self.assertEqual(d["cold"], {"Alpha-A": {"orcid": ORCID_A, "isni": ""}})
+        self.assertEqual(d["rdm"], self.rdm(["r1", "r2"], ["Alpha-A"]))
+
+    def test_a_repair_is_fixed_outside_cold(self):
+        d = self.one([person("Alpha-A", orcid=ORCID_A)],
+                     [entry("r1", clpid="Alpha-A", extra={"id": "stale"})], "needs_repair")
+        self.assertEqual(d["fix"], "rdm")
+        self.assertEqual(d["cold"], {"Alpha-A": {"orcid": ORCID_A, "isni": ""}})
+        self.assertEqual(d["rdm"], self.rdm(["r1"], ["Alpha-A"]))
+
+    def test_an_orcid_shared_by_two_people_is_fixed_in_cold(self):
+        people = [person("Alpha-A", orcid=ORCID_A), person("Beta-B", orcid=ORCID_A)]
+        items = actions(m.build_plan(people, []), "ambiguous_orcid")
+        self.assertEqual(len(items), 2)   # one per person, each showing both
+        for item in items:
+            self.assertEqual(item["detail"]["fix"], "cold")
+            self.assertEqual(sorted(item["detail"]["cold"]), ["Alpha-A", "Beta-B"])
+            self.assertEqual(item["detail"]["rdm"], {})

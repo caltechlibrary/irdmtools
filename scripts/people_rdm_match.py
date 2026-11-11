@@ -53,7 +53,7 @@ ALLOWED_KEYS = frozenset({
 CALTECH_ROR = "05dxps055"
 
 _ITEM_KEYS = ("clpid", "rdm_id", "action", "outcome", "message", "scheme",
-              "value", "before", "after")
+              "value", "before", "after", "detail")
 
 
 def normalize_orcid(value):
@@ -200,10 +200,35 @@ def _p_isni(person):
 
 
 def _item(clpid, rdm_id, action, outcome, message, scheme="", value="",
-          before=None, after=None):
+          before=None, after=None, detail=None):
     return {"clpid": clpid, "rdm_id": rdm_id, "action": action, "outcome": outcome,
             "message": message, "scheme": scheme, "value": value,
-            "before": before, "after": after}
+            "before": before, "after": after, "detail": detail or {}}
+
+
+def _detail(fix, by_clpid, people, entries=()):
+    """The structured facts behind an item that needs a person.
+
+    @param fix {str} "cold" when a correction can be made in COLD, "rdm" when the fix is
+      outside COLD (RDM v13's names routes are GET only)
+    @param by_clpid {dict} clpid -> COLD person
+    @param people {iterable} the COLD clpids involved; ones COLD does not hold are left out
+    @param entries {iterable} the RDM entries involved
+    @returns {dict} fix, cold ({clpid: {orcid, isni}} as COLD holds them) and rdm
+      ({ids, clpids, orcids, isnis}, or {} when no entry is involved)
+    @example
+        _detail("cold", {"A-B": {"clpid": "A-B", "orcid": "0000-0002-0000-0001"}}, ["A-B"])
+    """
+    cold = {c: {"orcid": _clean(by_clpid[c].get("orcid")), "isni": _clean(by_clpid[c].get("isni"))}
+            for c in sorted(set(people)) if c in by_clpid}
+    entries = list(entries)
+    rdm = {}
+    if entries:
+        rdm = {"ids": sorted(str(e.rdm_id) for e in entries),
+               "clpids": sorted(set().union(*(e.clpids for e in entries))),
+               "orcids": sorted(set().union(*(e.orcids for e in entries))),
+               "isnis": sorted(set().union(*(e.isnis for e in entries)))}
+    return {"fix": fix, "cold": cold, "rdm": rdm}
 
 
 def _sort_key(item):
@@ -239,7 +264,7 @@ def build_plan(people, entries, caltech_ror=CALTECH_ROR):
             if raw and not valid(normalize(raw)):
                 items.append(_item(clpid, None, "malformed_identifier", "warning",
                                    f"COLD {scheme} {raw!r} is not well formed; not used",
-                                   scheme, raw))
+                                   scheme, raw, detail=_detail("cold", by_clpid, [clpid])))
     owners = {"orcid": {}, "isni": {}}
     for clpid, p in by_clpid.items():
         orcid = _p_orcid(p)
@@ -266,12 +291,14 @@ def build_plan(people, entries, caltech_ror=CALTECH_ROR):
             for scheme, raw in e.malformed:
                 items.append(_item(e.clpid, e.rdm_id, "malformed_identifier", "warning",
                                    f"RDM {scheme} {raw!r} is not well formed; entry not changed",
-                                   scheme, raw))
+                                   scheme, raw,
+                                   detail=_detail("rdm", by_clpid, e.clpids, [e])))
             continue
         if len(e.clpids) > 1:
             e.status = "conflict"
             items.append(_item(e.clpid, e.rdm_id, "conflict", "needs_human",
-                               f"entry carries several clpids ({', '.join(sorted(e.clpids))})"))
+                               f"entry carries several clpids ({', '.join(sorted(e.clpids))})",
+                               detail=_detail("rdm", by_clpid, e.clpids, [e])))
             continue
         ident_owners = set()
         for v in e.orcids:
@@ -294,17 +321,20 @@ def build_plan(people, entries, caltech_ror=CALTECH_ROR):
             e.status = "orphan"
             items.append(_item(e.clpid, e.rdm_id, "orphan_clpid", "warning",
                                f"RDM clpid {e.clpid} is not a COLD clpid and no identifier "
-                               "matches a COLD person; not changed"))
+                               "matches a COLD person; not changed",
+                               detail=_detail("rdm", by_clpid, [], [e])))
             continue
         if not e.clpid and not ident_owners:
             e.status = "free"
             if e.caltech:
                 items.append(_item("", e.rdm_id, "caltech_affiliate_not_in_cold", "warning",
                                    "Caltech-affiliated RDM entry with no clpid and no "
-                                   "identifier match in COLD"))
+                                   "identifier match in COLD",
+                                   detail=_detail("cold", by_clpid, [], [e])))
             continue
 
         reason = None
+        involved = {person} if person else set()
         if len(ident_owners) > 1:
             reason = f"identifiers belong to several COLD people ({', '.join(sorted(ident_owners))})"
         elif e.clpid and e.clpid not in by_clpid and not alias:
@@ -324,14 +354,16 @@ def build_plan(people, entries, caltech_ror=CALTECH_ROR):
         if reason:
             e.status = "conflict"
             items.append(_item(e.clpid or (person or ""), e.rdm_id, "conflict", "needs_human",
-                               reason))
+                               reason,
+                               detail=_detail("cold", by_clpid, involved | ident_owners, [e])))
             continue
         e.person = person
         if alias:
             e.status = "orphan"
             items.append(_item(e.clpid, e.rdm_id, "orphan_clpid", "warning",
                                f"RDM clpid {e.clpid} is the {alias[1]} of COLD person "
-                               f"{alias[0]}; not changed"))
+                               f"{alias[0]}; not changed",
+                               detail=_detail("rdm", by_clpid, [alias[0]], [e])))
         else:
             e.status = "resolved"
 
@@ -362,7 +394,8 @@ def build_plan(people, entries, caltech_ror=CALTECH_ROR):
             items.append(_item(candidates[0].person, None, "ambiguous_target", "needs_human",
                                f"{scheme} {raw} is missing from {len(candidates)} RDM entries "
                                f"of this person ({ids}); not added",
-                               scheme, raw))
+                               scheme, raw,
+                               detail=_detail("rdm", by_clpid, [candidates[0].person], candidates)))
             continue
         candidates[0].adds.append((scheme, raw))
 
@@ -373,7 +406,8 @@ def build_plan(people, entries, caltech_ror=CALTECH_ROR):
             what = ", ".join(f"{s}={v}" for s, v in sorted(e.adds))
             items.append(_item(e.person, e.rdm_id, "needs_repair", "needs_repair",
                                f"entry has stale top-level keys ({', '.join(e.stale)}) that "
-                               f"block an update; would apply: {what}"))
+                               f"block an update; would apply: {what}",
+                               detail=_detail("rdm", by_clpid, [e.person], [e])))
             continue
         if e.adds:
             before = e.identifiers
@@ -412,7 +446,8 @@ def build_plan(people, entries, caltech_ror=CALTECH_ROR):
         if len(owners["orcid"].get(orcid, ())) > 1:
             items.append(_item(clpid, None, "ambiguous_orcid", "needs_human",
                                f"ORCID {orcid} is held by several COLD people; not created",
-                               "orcid", orcid))
+                               "orcid", orcid,
+                               detail=_detail("cold", by_clpid, owners["orcid"][orcid])))
             continue
         if clpid in claimed or holders["orcid"].get(orcid) or (isni and holders["isni"].get(isni)):
             continue

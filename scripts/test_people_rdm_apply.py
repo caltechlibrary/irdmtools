@@ -355,6 +355,72 @@ class TestMain(unittest.TestCase):
         self.assertEqual((self.report()["summary"]["created"], self.report()["summary"]["updated"]),
                          (1, 1))
 
+    def with_info_people(self):
+        """Add two people with no ORCID: the matcher reports each as `info`."""
+        with open(self.people, "w") as fp:
+            json.dump([person("Alpha-A", orcid=ORCID_A), person("Alpha-B", orcid=ORCID_B),
+                       person("Gamma-C"), person("Gamma-D")], fp)
+
+    def test_a_full_report_keeps_the_info_items_and_has_no_counts_block(self):
+        self.with_info_people()
+        self.assertEqual(self.go(), 0)
+        rep = self.report()
+        self.assertEqual(sum(1 for i in rep["plan"] if i["outcome"] == "info"), 2)
+        self.assertNotIn("compact", rep)
+        self.assertNotIn("plan_counts", rep)
+
+    def test_compact_drops_info_items_and_counts_them(self):
+        self.with_info_people()
+        self.assertEqual(self.go("--compact"), 0)
+        rep = self.report()
+        self.assertTrue(rep["compact"])
+        self.assertEqual([i for i in rep["plan"] if i["outcome"] == "info"], [])
+        self.assertEqual(rep["plan_counts"]["info"], 2)
+
+    def test_compact_keeps_every_other_item_exactly_as_the_full_report_has_it(self):
+        self.with_info_people()
+        self.go()
+        full = self.report()
+        import os
+        os.remove(self.out)
+        self.go("--compact")
+        compact = self.report()
+        self.assertEqual(compact["plan"], [i for i in full["plan"] if i["outcome"] != "info"])
+        self.assertEqual(compact["results"], full["results"])
+        self.assertEqual(compact["summary"], full["summary"])
+        counts = {}
+        for i in full["plan"]:
+            counts[i["outcome"]] = counts.get(i["outcome"], 0) + 1
+        self.assertEqual(compact["plan_counts"], counts)
+
+    def test_compact_with_a_scope_reports_only_that_person_and_counts_only_theirs(self):
+        self.with_info_people()
+        self.assertEqual(self.go("--compact", "--scope", "Gamma-C"), 0)
+        rep = self.report()
+        self.assertEqual(rep["scope"], "Gamma-C")
+        self.assertEqual(rep["plan"], [])
+        self.assertEqual(rep["plan_counts"], {"info": 1})
+
+    def test_a_scope_finds_items_about_the_person_even_when_the_item_names_an_rdm_clpid(self):
+        """A conflict's own clpid can be the RDM entry's, unknown to COLD. A rerun for the COLD
+        person must still see it: dropping it would make an unresolved problem look resolved."""
+        plan = m.build_plan([person("Alpha-A", orcid=ORCID_A)],
+                            [entry("r1", clpid="Old-Id", orcid=ORCID_A)])
+        item = [i for i in plan if i["action"] == "conflict"][0]
+        self.assertEqual(item["clpid"], "Old-Id")
+        scoped = a.compact_plan(plan, "Alpha-A")
+        self.assertEqual([i["action"] for i in scoped["plan"]], ["conflict"])
+        self.assertEqual(scoped["plan_counts"], {"needs_human": 1})
+        # and it is still found by the clpid the item itself carries
+        self.assertEqual([i["action"] for i in a.compact_plan(plan, "Old-Id")["plan"]], ["conflict"])
+        # but not for an unrelated person
+        self.assertEqual(a.compact_plan(plan, "Zed-Z")["plan"], [])
+
+    def test_compact_never_changes_what_is_applied(self):
+        self.with_info_people()
+        self.assertEqual(self.go("--apply", "--compact"), 0)
+        self.assertEqual(self.svc.writes(), [("create", "Alpha-A"), ("update", "r1")])
+
     def test_scope_limits_the_run(self):
         self.assertEqual(self.go("--apply", "--scope", "Nobody-Z"), 0)
         self.assertEqual(self.svc.writes(), [])
