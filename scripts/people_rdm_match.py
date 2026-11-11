@@ -430,7 +430,8 @@ def build_plan(people, entries, caltech_ror=CALTECH_ROR):
             seen.add(key)
             items.append(_item(e.person, e.rdm_id, "alt_name_candidate", "info",
                                f"RDM name form {e.form!r} could be an alt_name of {e.person}",
-                               "alt_name", e.form))
+                               "alt_name", e.form,
+                               detail=_detail("cold", by_clpid, [e.person], [e])))
 
     # People: create, or nothing to create.
     # An entry in conflict still exists: its clpid claims the person, so no duplicate is created.

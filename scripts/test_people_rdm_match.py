@@ -452,6 +452,19 @@ class TestAltNameCandidates(unittest.TestCase):
         self.assertEqual([(h["outcome"], h["value"], h["clpid"]) for h in hits],
                          [("info", "Alpha, A. M.", "Alpha-A")])
 
+    def test_candidate_carries_both_sides_so_a_person_can_fix_it_in_cold(self):
+        """cold plan decision 1 (2026-11-11): the page shows a candidate with the COLD person and
+        the RDM entry, like any item a person acts on. The fix is in COLD (add the alt_name)."""
+        plan = m.build_plan([person("Alpha-A", family="Alpha", given="Ann Marie", orcid=ORCID_A)],
+                            [entry("r1", clpid="Alpha-A", orcid=ORCID_A, family="Alpha", given="A. M.")])
+        (hit,) = actions(plan, "alt_name_candidate")
+        d = hit["detail"]
+        self.assertEqual(d["fix"], "cold")
+        self.assertEqual(list(d["cold"]), ["Alpha-A"])
+        self.assertEqual(d["cold"]["Alpha-A"]["orcid"], ORCID_A)
+        self.assertEqual(d["rdm"]["ids"], ["r1"])
+        self.assertEqual(d["rdm"]["clpids"], ["Alpha-A"])
+
     def test_candidate_never_changes_the_entry(self):
         entries = [entry("r1", clpid="Alpha-A", orcid=ORCID_A, family="Alpha", given="A. M.")]
         plan = m.build_plan([person("Alpha-A", family="Alpha", given="Ann Marie", orcid=ORCID_A)],

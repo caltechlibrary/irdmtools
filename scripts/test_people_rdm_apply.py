@@ -385,13 +385,42 @@ class TestMain(unittest.TestCase):
         os.remove(self.out)
         self.go("--compact")
         compact = self.report()
-        self.assertEqual(compact["plan"], [i for i in full["plan"] if i["outcome"] != "info"])
+        self.assertEqual(compact["plan"], [i for i in full["plan"]
+                                           if i["outcome"] != "info"
+                                           or i["action"] == "alt_name_candidate"])
         self.assertEqual(compact["results"], full["results"])
         self.assertEqual(compact["summary"], full["summary"])
         counts = {}
         for i in full["plan"]:
             counts[i["outcome"]] = counts.get(i["outcome"], 0) + 1
         self.assertEqual(compact["plan_counts"], counts)
+
+    def alt_name_plan(self):
+        """A plan with one alt_name_candidate (info) and one no_orcid (info), both about people."""
+        return m.build_plan(
+            [person("Alpha-A", family="Alpha", given="Ann Marie", orcid=ORCID_A), person("Gamma-C")],
+            [entry("r1", clpid="Alpha-A", orcid=ORCID_A, family="Alpha", given="A. M.")])
+
+    def test_compact_keeps_alt_name_candidates_but_still_drops_other_info_items(self):
+        """cold plan decision 1 (2026-11-11): candidates are stored, so they travel; the
+        thousands of no_orcid items still do not."""
+        plan = self.alt_name_plan()
+        self.assertEqual(sorted(i["action"] for i in plan if i["outcome"] == "info"),
+                         ["alt_name_candidate", "no_orcid"])
+        out = a.compact_plan(plan)
+        self.assertEqual([i["action"] for i in out["plan"] if i["outcome"] == "info"],
+                         ["alt_name_candidate"])
+        # every item is still counted, kept or not
+        self.assertEqual(out["plan_counts"]["info"], 2)
+
+    def test_compact_with_a_scope_keeps_that_persons_alt_name_candidate(self):
+        out = a.compact_plan(self.alt_name_plan(), "Alpha-A")
+        self.assertEqual([i["action"] for i in out["plan"]], ["alt_name_candidate"])
+        self.assertEqual(out["plan_counts"], {"info": 1})
+        # a person with only a no_orcid item still gets nothing back, just the count
+        other = a.compact_plan(self.alt_name_plan(), "Gamma-C")
+        self.assertEqual(other["plan"], [])
+        self.assertEqual(other["plan_counts"], {"info": 1})
 
     def test_compact_with_a_scope_reports_only_that_person_and_counts_only_theirs(self):
         self.with_info_people()
