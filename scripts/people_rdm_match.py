@@ -9,8 +9,9 @@ items whose outcome is ``applied``.
 Inputs (plain dicts, so the module runs under any Python without RDM installed):
 
 * a COLD person: ``clpid``, ``family_name``, ``given_name``, ``orcid``, ``isni``,
-  ``thesis_id``, ``authors_id``, ``advisors_id`` (the last three are old clpids),
-  ``alt_name`` (a list of name forms, or one string).
+  ``thesis_id``, ``authors_id``, ``advisors_id`` (the last three are old clpids).
+  Other keys, such as COLD's ``alt_name``, are ignored (cold DR-0036: alternate names are out
+  of scope).
 * an RDM entry: ``{"rdm_id": ..., "metadata": {...}}`` where ``metadata`` is the
   stored names JSON (``name``, ``family_name``, ``given_name``, ``identifiers``,
   ``affiliations`` and, on legacy records, stray top-level keys).
@@ -135,11 +136,6 @@ def _name_key(text):
 
 def _form(family, given):
     return f"{_clean(family)}, {_clean(given)}"
-
-
-def _alt_names(person):
-    value = person.get("alt_name") or []
-    return [value] if isinstance(value, str) else list(value)
 
 
 class _Entry:
@@ -416,22 +412,6 @@ def build_plan(people, entries, caltech_ror=CALTECH_ROR):
                 items.append(_item(e.person, e.rdm_id, "add_identifier", "applied",
                                    f"add {scheme} {value}", scheme, value,
                                    copy.deepcopy(before), copy.deepcopy(after)))
-
-    # Alt-name candidates: RDM name forms COLD does not know yet.
-    seen = set()
-    for e in parsed:
-        if e.person is None:
-            continue
-        p = by_clpid[e.person]
-        known = {_name_key(_form(p.get("family_name"), p.get("given_name")))}
-        known |= {_name_key(n) for n in _alt_names(p)}
-        key = (e.person, _name_key(e.form))
-        if e.form != ", " and _name_key(e.form) not in known and key not in seen:
-            seen.add(key)
-            items.append(_item(e.person, e.rdm_id, "alt_name_candidate", "info",
-                               f"RDM name form {e.form!r} could be an alt_name of {e.person}",
-                               "alt_name", e.form,
-                               detail=_detail("cold", by_clpid, [e.person], [e])))
 
     # People: create, or nothing to create.
     # An entry in conflict still exists: its clpid claims the person, so no duplicate is created.

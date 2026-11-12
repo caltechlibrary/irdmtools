@@ -47,9 +47,6 @@ class ApplyAborted(Exception):
 
 STATUSES = ("created", "updated", "would_create", "would_update", "skipped", "error")
 
-# `info` items a compact report still carries: the COLD side stores them (cold plan, 2026-11-11).
-STORED_INFO_ACTIONS = ("alt_name_candidate",)
-
 
 def _clean(data):
     """Keep only what the names schema allows; drops id, links, timestamps and stale keys."""
@@ -217,13 +214,12 @@ def compact_plan(plan, scope=None):
     """Shrink a plan for a report that has to travel a size-limited channel.
 
     The matcher reports every person with no ORCID as an `info` item, thousands of them, and the
-    COLD side only counts them. The result drops them and counts every outcome instead. The one
-    kind of `info` item the COLD side stores, an `alt_name_candidate` (cold plan, 2026-11-11), is
-    kept. With a scope the plan is first limited to that clpid, so the counts are that person's.
+    COLD side only counts them. The result drops them and counts every outcome instead. With a
+    scope the plan is first limited to that clpid, so the counts are that person's.
 
     @param plan {list} items from people_rdm_match.build_plan
     @param scope {str} one clpid, or None for everyone
-    @returns {dict} `plan` (no `info` items except alt_name_candidate), `plan_counts`
+    @returns {dict} `plan` (no `info` items), `plan_counts`
       (outcome -> count, every item counted) and `compact` (True)
     @example
         compact_plan(plan, "Doe-Jane")   # {"plan": [...], "plan_counts": {"info": 1}, "compact": True}
@@ -232,8 +228,7 @@ def compact_plan(plan, scope=None):
     counts = {}
     for i in kept:
         counts[i["outcome"]] = counts.get(i["outcome"], 0) + 1
-    return {"plan": [i for i in kept
-                     if i["outcome"] != "info" or i["action"] in STORED_INFO_ACTIONS],
+    return {"plan": [i for i in kept if i["outcome"] != "info"],
             "plan_counts": counts, "compact": True}
 
 

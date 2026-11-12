@@ -24,13 +24,12 @@ CALTECH = "05dxps055"
 
 
 def person(clpid, family="Surname", given="Given", orcid="", isni="", thesis_id="",
-           authors_id="", advisors_id="", alt_name=None):
+           authors_id="", advisors_id=""):
     """A COLD person as the sync's JSON export carries it."""
     return {
         "clpid": clpid, "family_name": family, "given_name": given,
         "orcid": orcid, "isni": isni, "thesis_id": thesis_id,
         "authors_id": authors_id, "advisors_id": advisors_id,
-        "alt_name": alt_name if alt_name is not None else [],
     }
 
 
@@ -442,68 +441,27 @@ def plan_items_for_entry(plan, rdm_id):
     return [i for i in plan if i["rdm_id"] == rdm_id]
 
 
-class TestAltNameCandidates(unittest.TestCase):
-    """cold DR-0029: a differing RDM name form is a candidate, never a change."""
+class TestAlternateNamesAreOutOfScope(unittest.TestCase):
+    """cold DR-0036 decision 7: alternate names are out of scope in both directions. The matcher
+    neither reads COLD's alt_name nor proposes an RDM name form as one."""
 
-    def test_differing_name_form_is_a_candidate(self):
-        plan = m.build_plan([person("Alpha-A", family="Alpha", given="Ann Marie", orcid=ORCID_A)],
-                            [entry("r1", clpid="Alpha-A", orcid=ORCID_A, family="Alpha", given="A. M.")])
-        hits = actions(plan, "alt_name_candidate")
-        self.assertEqual([(h["outcome"], h["value"], h["clpid"]) for h in hits],
-                         [("info", "Alpha, A. M.", "Alpha-A")])
+    def differing_plan(self, **extra):
+        p = person("Alpha-A", family="Alpha", given="Ann Marie", orcid=ORCID_A)
+        p.update(extra)
+        return m.build_plan([p], [entry("r1", clpid="Alpha-A", orcid=ORCID_A,
+                                        family="Alpha", given="A. M.")])
 
-    def test_candidate_carries_both_sides_so_a_person_can_fix_it_in_cold(self):
-        """cold plan decision 1 (2026-11-11): the page shows a candidate with the COLD person and
-        the RDM entry, like any item a person acts on. The fix is in COLD (add the alt_name)."""
-        plan = m.build_plan([person("Alpha-A", family="Alpha", given="Ann Marie", orcid=ORCID_A)],
-                            [entry("r1", clpid="Alpha-A", orcid=ORCID_A, family="Alpha", given="A. M.")])
-        (hit,) = actions(plan, "alt_name_candidate")
-        d = hit["detail"]
-        self.assertEqual(d["fix"], "cold")
-        self.assertEqual(list(d["cold"]), ["Alpha-A"])
-        self.assertEqual(d["cold"]["Alpha-A"]["orcid"], ORCID_A)
-        self.assertEqual(d["rdm"]["ids"], ["r1"])
-        self.assertEqual(d["rdm"]["clpids"], ["Alpha-A"])
-
-    def test_candidate_never_changes_the_entry(self):
-        entries = [entry("r1", clpid="Alpha-A", orcid=ORCID_A, family="Alpha", given="A. M.")]
-        plan = m.build_plan([person("Alpha-A", family="Alpha", given="Ann Marie", orcid=ORCID_A)],
-                            entries)
-        self.assertEqual(applied(plan), [])
-        self.assertEqual(m.apply_to_entries(entries, plan), entries)
-
-    def test_same_name_form_is_not_a_candidate(self):
-        plan = m.build_plan([person("Alpha-A", family="Alpha", given="Ann", orcid=ORCID_A)],
-                            [entry("r1", clpid="Alpha-A", orcid=ORCID_A, family="Alpha", given="Ann")])
+    def test_a_differing_name_form_gives_no_alternate_name_item(self):
+        plan = self.differing_plan()
         self.assertEqual(actions(plan, "alt_name_candidate"), [])
+        self.assertEqual([i for i in plan if i.get("scheme") == "alt_name"], [])
 
-    def test_form_already_in_alt_name_list_is_not_a_candidate(self):
-        plan = m.build_plan([person("Alpha-A", family="Alpha", given="Ann", orcid=ORCID_A,
-                                    alt_name=["Alpha, A."])],
-                            [entry("r1", clpid="Alpha-A", orcid=ORCID_A, family="Alpha", given="A.")])
-        self.assertEqual(actions(plan, "alt_name_candidate"), [])
+    def test_the_alt_name_field_of_a_person_is_ignored(self):
+        self.assertEqual(self.differing_plan(alt_name=["Alpha, A. M."]), self.differing_plan())
+        self.assertEqual(self.differing_plan(alt_name="Alpha, A. M."), self.differing_plan())
 
-    def test_alt_name_may_be_a_single_string(self):
-        plan = m.build_plan([person("Alpha-A", family="Alpha", given="Ann", orcid=ORCID_A,
-                                    alt_name="Alpha, A.")],
-                            [entry("r1", clpid="Alpha-A", orcid=ORCID_A, family="Alpha", given="A.")])
-        self.assertEqual(actions(plan, "alt_name_candidate"), [])
-
-    def test_name_comparison_ignores_case_and_surrounding_space(self):
-        plan = m.build_plan([person("Alpha-A", family="Alpha", given="Ann", orcid=ORCID_A)],
-                            [entry("r1", clpid="Alpha-A", orcid=ORCID_A, family=" ALPHA ", given="ann")])
-        self.assertEqual(actions(plan, "alt_name_candidate"), [])
-
-    def test_two_entries_with_the_same_form_give_one_candidate(self):
-        entries = [entry("r1", clpid="Alpha-A", family="Alpha", given="A."),
-                   entry("r2", clpid="Alpha-A", family="Alpha", given="A.")]
-        plan = m.build_plan([person("Alpha-A", family="Alpha", given="Ann")], entries)
-        self.assertEqual(len(actions(plan, "alt_name_candidate")), 1)
-
-    def test_conflicted_entry_gives_no_candidate(self):
-        plan = m.build_plan([person("Alpha-A"), person("Alpha-B", orcid=ORCID_B)],
-                            [entry("r1", clpid="Alpha-A", orcid=ORCID_B, given="Other")])
-        self.assertEqual(actions(plan, "alt_name_candidate"), [])
+    def test_the_matcher_has_no_alternate_name_code(self):
+        self.assertFalse(hasattr(m, "_alt_names"))
 
 
 class TestOrphanClpids(unittest.TestCase):
@@ -703,12 +661,6 @@ class TestSeveralClpidsOnOneEntry(unittest.TestCase):
     def test_clpids_with_stray_white_space_are_the_same_clpid(self):
         plan = m.build_plan([person("Alpha-A")], [self.two_clpid_entry("Alpha-A", " Alpha-A ")])
         self.assertEqual(actions(plan, "conflict"), [])
-
-    def test_no_alt_name_candidate_from_such_an_entry(self):
-        e = self.two_clpid_entry()
-        e["metadata"]["given_name"] = "Other"
-        plan = m.build_plan([person("Alpha-A"), person("Alpha-B")], [e])
-        self.assertEqual(actions(plan, "alt_name_candidate"), [])
 
 
 class TestWholeSetProperties(unittest.TestCase):

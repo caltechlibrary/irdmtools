@@ -10,7 +10,7 @@ import json
 import sys
 
 FIELDS = ("clpid", "family_name", "given_name", "orcid", "isni",
-          "thesis_id", "authors_id", "advisors_id", "alt_name")
+          "thesis_id", "authors_id", "advisors_id")
 
 people = []
 with open(sys.argv[1]) as fp:
@@ -18,8 +18,8 @@ with open(sys.argv[1]) as fp:
         if not line.strip():
             continue
         obj = json.loads(line)["object"]
-        person = {k: obj.get(k, "" if k != "alt_name" else []) for k in FIELDS}
-        for k in FIELDS[:-1]:
+        person = {k: obj.get(k, "") for k in FIELDS}
+        for k in FIELDS:
             if person[k] is None:
                 person[k] = ""
         people.append(person)
