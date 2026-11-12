@@ -11,6 +11,7 @@ import sys
 
 FIELDS = ("clpid", "family_name", "given_name", "orcid", "isni",
           "thesis_id", "authors_id", "advisors_id")
+FLAGS = ("caltech", "jpl")      # affiliation flags (cold DR-0037); absent means false
 
 people = []
 with open(sys.argv[1]) as fp:
@@ -22,6 +23,8 @@ with open(sys.argv[1]) as fp:
         for k in FIELDS:
             if person[k] is None:
                 person[k] = ""
+        for k in FLAGS:
+            person[k] = bool(obj.get(k))
         people.append(person)
 with open(sys.argv[2], "w") as out:
     json.dump(people, out)

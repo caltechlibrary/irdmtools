@@ -1,49 +1,49 @@
 #!/usr/bin/env python3
-"""people_rdm_match matches COLD people to RDM names entries and builds a plan.
+"""people_rdm_match plans a push of COLD's people to the RDM names pick list.
 
-This is the matching core of the COLD people sync (cold#122; cold DR-0029 and
-DR-0030). It is pure: it reads two lists, returns a list of plan items, and never
-touches a database, a file or the network. The applier (a later phase) acts on the
-items whose outcome is ``applied``.
+This is the matching core of the COLD people push (cold#122; cold DR-0037). It is pure: it
+reads two lists, returns a list of plan items, and never touches a database, a file or the
+network. The applier (people_rdm_apply) acts on the items whose outcome is ``applied``.
+
+COLD is the source (DR-0036, DR-0037), so the plan makes the pick list match COLD rather than
+diffing two equals. An entry belongs to a person by its clpid alone.
 
 Inputs (plain dicts, so the module runs under any Python without RDM installed):
 
-* a COLD person: ``clpid``, ``family_name``, ``given_name``, ``orcid``, ``isni``,
-  ``thesis_id``, ``authors_id``, ``advisors_id`` (the last three are old clpids).
-  Other keys, such as COLD's ``alt_name``, are ignored (cold DR-0036: alternate names are out
-  of scope).
-* an RDM entry: ``{"rdm_id": ..., "metadata": {...}}`` where ``metadata`` is the
-  stored names JSON (``name``, ``family_name``, ``given_name``, ``identifiers``,
-  ``affiliations`` and, on legacy records, stray top-level keys).
+* a COLD person: ``clpid``, ``family_name``, ``given_name``, ``orcid``, ``isni``, the flags
+  ``caltech`` and ``jpl`` (booleans), and ``thesis_id``, ``authors_id``, ``advisors_id``.
+  Other keys are ignored.
+* an RDM entry: ``{"rdm_id": ..., "metadata": {...}}``. ``metadata`` is the stored names JSON
+  (stray top-level keys on legacy entries included). An empty ``metadata`` is a soft-deleted
+  row.
 
-Rules, in the order they are applied to each RDM entry:
+What the plan holds, in write order:
 
-1. The entry's person is found by identifier only (DR-0029): its clpid, else the
-   one COLD person its ORCID or ISNI belongs to.
-2. A disagreement is a ``conflict`` (needs_human) and nothing is applied to that
-   entry: the clpid and an ORCID/ISNI point at different people, an identifier
-   belongs to several people, or both sides hold different values for a scheme.
-3. A clpid RDM holds that COLD does not is ``orphan_clpid`` (warning), with a hint
-   when it is one of the person's old ids; such an entry is never changed.
-4. Otherwise a missing clpid, ORCID or ISNI is added (applied). An identifier is
-   never added if another RDM entry already holds it, and when several entries of
-   one person lack it exactly one, chosen deterministically, receives it.
-5. An identifier that is not well formed (on either side) is reported as a
-   ``malformed_identifier`` warning, is never matched on or written, and leaves an
-   RDM entry that carries one unchanged. An entry carrying several different clpids
-   is a ``conflict``: a person must resolve it.
-6. An entry with stale top-level keys is not updated: its would-be changes become
-   one ``needs_repair`` item (cold DR-0031).
-7. A COLD person with a clpid and an ORCID, and no RDM entry, is created with
-   ``id`` equal to the clpid. An ISNI-only person is never created.
+1. ``create``, ``update`` or ``revive`` for each COLD person (a ``revive`` when the person's id is a
+   soft-deleted row, which the service can neither update nor create over: COLD is authoritative, so
+   the applier restores it, cold DR-0039): the entry whose id is the clpid is written
+   with name, given, family, ORCID, ISNI and the clpid identifier from COLD; identifier schemes
+   COLD does not own are kept; affiliations are added, never removed (Caltech and JPL from COLD's
+   flags). An entry that already matches produces nothing.
+2. ``replace`` for each legacy entry (an id that is not a clpid) that carries a COLD person's
+   clpid: the person's entry is written first, carrying the legacy entry's affiliations, and
+   the legacy entry is then removed.
+3. ``remove`` for each live entry no COLD person owns.
+4. Reports that change nothing: ``malformed_identifier`` (a COLD value that is not well
+   formed; the stored value of that scheme is kept), ``stale_entry`` (the
+   person's own entry still carries the legacy stray keys, which the service rejects) and
+   ``not_in_cold`` (a one-person plan for a clpid COLD does not hold). While a person is blocked
+   by ``stale_entry`` their legacy entries are kept.
 
-The result never depends on the order of the inputs.
+``scope`` limits a plan to one person: their write and their legacy entries' replacement, and
+nothing is removed. The result never depends on the order of the inputs, and planning again
+after applying a plan produces nothing to apply.
 """
 
 import copy
 import re
 
-OUTCOMES = ("applied", "needs_human", "needs_repair", "warning", "info")
+OUTCOMES = ("applied", "needs_human", "warning")
 
 # The keys the RDM names schema allows at the top level of a stored record.
 ALLOWED_KEYS = frozenset({
@@ -51,10 +51,18 @@ ALLOWED_KEYS = frozenset({
     "identifiers", "props", "affiliations",
 })
 
+# What the names service accepts on a write: it stores `$schema` itself and rejects it as an
+# unknown field (found on the rehearsal VM, 2026-11-12, updating an entry a push had created).
+WRITABLE_KEYS = ALLOWED_KEYS - {"$schema"}
+
 CALTECH_ROR = "05dxps055"
+JPL_ROR = "027k65916"
 
 _ITEM_KEYS = ("clpid", "rdm_id", "action", "outcome", "message", "scheme",
               "value", "before", "after", "detail")
+
+_OWNED_SCHEMES = ("clpid", "orcid", "isni")
+_RANK = {"create": 0, "update": 0, "revive": 0, "replace": 1, "remove": 2}
 
 
 def normalize_orcid(value):
@@ -129,70 +137,46 @@ def _clean(value):
     return (value or "").strip()
 
 
-def _name_key(text):
-    text = re.sub(r"\s+", " ", _clean(text)).casefold()
-    return re.sub(r"\s*,\s*", ", ", text)
-
-
 def _form(family, given):
-    return f"{_clean(family)}, {_clean(given)}"
+    return ", ".join(part for part in (_clean(family), _clean(given)) if part)
+
+
+def _norm(scheme, value):
+    if scheme == "orcid":
+        return normalize_orcid(value)
+    if scheme == "isni":
+        return normalize_isni(value)
+    return _clean(value)
+
+
+def _ror(value):
+    return _clean(value).rsplit("/", 1)[-1]
+
+
+def _aff_key(aff):
+    return _ror(aff.get("id")) or ("name:" + _clean(aff.get("name")).casefold())
 
 
 class _Entry:
     """One RDM entry, parsed once."""
 
-    def __init__(self, raw, caltech_ror):
+    def __init__(self, raw):
         self.rdm_id = raw["rdm_id"]
-        self.metadata = raw["metadata"]
-        self.identifiers = self.metadata.get("identifiers") or []
-        by_scheme = {"clpid": set(), "orcid": set(), "isni": set()}
-        self.malformed = []     # [(scheme, raw)]: present but not well formed
-        for ident in self.identifiers:
-            scheme = _clean(ident.get("scheme")).lower()
-            raw_value = ident.get("identifier")
-            if scheme == "clpid":
-                value = _clean(raw_value)
-            elif scheme == "orcid":
-                value = normalize_orcid(raw_value)
-                if value and not is_valid_orcid(value):
-                    self.malformed.append((scheme, _clean(raw_value)))
-                    continue
-            elif scheme == "isni":
-                value = normalize_isni(raw_value)
-                if value and not is_valid_isni(value):
-                    self.malformed.append((scheme, _clean(raw_value)))
-                    continue
-            else:
-                continue
-            if value:
-                by_scheme[scheme].add(value)
-        self.clpids = by_scheme["clpid"]
-        self.orcids = by_scheme["orcid"]
-        self.isnis = by_scheme["isni"]
-        self.clpid = min(self.clpids) if self.clpids else ""
+        self.metadata = raw["metadata"] or {}
+        self.deleted = not self.metadata
+        self.clpids = {_clean(i.get("identifier")) for i in self.metadata.get("identifiers") or []
+                       if _clean(i.get("scheme")).lower() == "clpid" and _clean(i.get("identifier"))}
         self.stale = stale_keys(self.metadata)
-        family = self.metadata.get("family_name")
-        given = self.metadata.get("given_name")
-        if family is None and given is None:
-            family, _, given = (self.metadata.get("name") or "").partition(",")
-        self.form = _form(family, given)
-        self.caltech = any(
-            _clean(a.get("id")).rsplit("/", 1)[-1] == caltech_ror
-            for a in (self.metadata.get("affiliations") or []))
-        # Filled in by the resolution pass.
-        self.person = None      # the COLD clpid this entry belongs to, if any
-        self.status = "free"    # free | conflict | orphan | resolved
-        self.adds = []          # [(scheme, value)] wanted for this entry
 
 
-def _p_orcid(person):
-    value = normalize_orcid(person.get("orcid"))
-    return value if is_valid_orcid(value) else ""
-
-
-def _p_isni(person):
-    value = normalize_isni(person.get("isni"))
-    return value if is_valid_isni(value) else ""
+def _p_value(person, scheme):
+    """The person's COLD ORCID or ISNI: (usable value, raw text). The value is "" if not well formed."""
+    raw = _clean(person.get(scheme))
+    if scheme == "orcid":
+        value = normalize_orcid(raw)
+        return (value if is_valid_orcid(value) else ""), raw
+    value = normalize_isni(raw)
+    return (value if is_valid_isni(value) else ""), raw
 
 
 def _item(clpid, rdm_id, action, outcome, message, scheme="", value="",
@@ -202,264 +186,193 @@ def _item(clpid, rdm_id, action, outcome, message, scheme="", value="",
             "before": before, "after": after, "detail": detail or {}}
 
 
-def _detail(fix, by_clpid, people, entries=()):
-    """The structured facts behind an item that needs a person.
-
-    @param fix {str} "cold" when a correction can be made in COLD, "rdm" when the fix is
-      outside COLD (RDM v13's names routes are GET only)
-    @param by_clpid {dict} clpid -> COLD person
-    @param people {iterable} the COLD clpids involved; ones COLD does not hold are left out
-    @param entries {iterable} the RDM entries involved
-    @returns {dict} fix, cold ({clpid: {orcid, isni}} as COLD holds them) and rdm
-      ({ids, clpids, orcids, isnis}, or {} when no entry is involved)
-    @example
-        _detail("cold", {"A-B": {"clpid": "A-B", "orcid": "0000-0002-0000-0001"}}, ["A-B"])
-    """
-    cold = {c: {"orcid": _clean(by_clpid[c].get("orcid")), "isni": _clean(by_clpid[c].get("isni"))}
-            for c in sorted(set(people)) if c in by_clpid}
-    entries = list(entries)
-    rdm = {}
-    if entries:
-        rdm = {"ids": sorted(str(e.rdm_id) for e in entries),
-               "clpids": sorted(set().union(*(e.clpids for e in entries))),
-               "orcids": sorted(set().union(*(e.orcids for e in entries))),
-               "isnis": sorted(set().union(*(e.isnis for e in entries)))}
-    return {"fix": fix, "cold": cold, "rdm": rdm}
-
-
 def _sort_key(item):
-    return tuple("" if item[k] is None else str(item[k])
-                 for k in ("clpid", "rdm_id", "action", "scheme", "value"))
+    return (_RANK.get(item["action"], 3),) + tuple(
+        "" if item[k] is None else str(item[k])
+        for k in ("clpid", "rdm_id", "action", "scheme", "value"))
 
 
-def build_plan(people, entries, caltech_ror=CALTECH_ROR):
-    """build_plan matches every COLD person and RDM entry and returns the plan.
+def _desired(person, base, carried, caltech_ror, jpl_ror):
+    """The data COLD says a person's entry holds.
 
-    The whole set is examined before anything is decided, so the plan does not
-    depend on input order and a rerun after applying it applies nothing. Inputs
-    are not modified.
+    @param person {dict} the COLD person
+    @param base {dict} the person's current entry, cleaned to the schema ({} when there is none)
+    @param carried {list} affiliations carried over from legacy entries being replaced
+    @param caltech_ror {str} the Caltech ROR id
+    @param jpl_ror {str} the JPL ROR id
+    @returns {tuple} the new data and the list of what changed against ``base``
+    @example
+        data, changes = _desired(person, {}, [], CALTECH_ROR, JPL_ROR)
+    """
+    clpid = _clean(person["clpid"])
+    old = base.get("identifiers") or []
+    new_ids = [{"scheme": "clpid", "identifier": clpid}]
+    for scheme in ("orcid", "isni"):
+        value, raw = _p_value(person, scheme)
+        if value:
+            new_ids.append({"scheme": scheme, "identifier": value if scheme == "orcid" else raw})
+        elif raw:   # not well formed: leave what is stored for this scheme
+            new_ids += [i for i in old if _clean(i.get("scheme")).lower() == scheme]
+    new_ids += [i for i in old if _clean(i.get("scheme")).lower() not in _OWNED_SCHEMES]
+
+    affs = list(base.get("affiliations") or [])
+    seen = {_aff_key(a) for a in affs}
+    flagged = ([{"id": caltech_ror, "name": "Caltech"}] if person.get("caltech") else []) + \
+              ([{"id": jpl_ror, "name": "JPL"}] if person.get("jpl") else [])
+    for aff in list(carried) + flagged:
+        if _aff_key(aff) not in seen:
+            seen.add(_aff_key(aff))
+            affs.append(copy.deepcopy(aff))
+
+    data = {k: copy.deepcopy(v) for k, v in base.items() if k in WRITABLE_KEYS}
+    data.update({"name": _form(person.get("family_name"), person.get("given_name")),
+                 "family_name": _clean(person.get("family_name")),
+                 "given_name": _clean(person.get("given_name")),
+                 "identifiers": new_ids})
+    if affs:
+        data["affiliations"] = affs
+
+    changes = []
+    if ((data["name"], data["family_name"], data["given_name"]) !=
+            (_clean(base.get("name")), _clean(base.get("family_name")), _clean(base.get("given_name")))):
+        changes.append("name")
+    for scheme in _OWNED_SCHEMES:
+        a = {_norm(scheme, i.get("identifier")) for i in new_ids
+             if _clean(i.get("scheme")).lower() == scheme}
+        b = {_norm(scheme, i.get("identifier")) for i in old
+             if _clean(i.get("scheme")).lower() == scheme}
+        if a != b:
+            changes.append(scheme)
+    if {_aff_key(a) for a in affs} != {_aff_key(a) for a in base.get("affiliations") or []}:
+        changes.append("affiliations")
+    return data, changes
+
+
+def summarize(plan):
+    """summarize counts the applied create, update, revive, replace and remove items.
+
+    @param plan {list} the result of build_plan
+    @returns {dict} action -> count, with every action present
+    @example
+        summarize(build_plan(people, entries))  # {"create": 1, "update": 0, "revive": 0, "replace": 0, "remove": 0}
+    """
+    counts = {a: 0 for a in ("create", "update", "revive", "replace", "remove")}
+    for i in plan:
+        if i["outcome"] == "applied" and i["action"] in counts:
+            counts[i["action"]] += 1
+    return counts
+
+
+def build_plan(people, entries, caltech_ror=CALTECH_ROR, jpl_ror=JPL_ROR, scope=None):
+    """build_plan plans a push of COLD's people onto the RDM names entries.
+
+    The whole set is examined before anything is decided, so the plan does not depend on
+    input order. Inputs are not modified.
 
     @param people {list} COLD people (see the module description)
     @param entries {list} RDM entries, ``{"rdm_id", "metadata"}``
-    @param caltech_ror {str} the ROR id that marks a Caltech affiliation
-    @returns {list} plan items, each with the keys clpid, rdm_id, action,
-        outcome, message, scheme, value, before, after; sorted deterministically
+    @param caltech_ror {str} the ROR id given to a person flagged ``caltech``
+    @param jpl_ror {str} the ROR id given to a person flagged ``jpl``
+    @param scope {str} limit the plan to one clpid, or None for a full push
+    @returns {list} plan items (clpid, rdm_id, action, outcome, message, scheme, value,
+        before, after, detail) in write order
     @example
-        plan = build_plan([{"clpid": "A-B", "orcid": "0000-0002-0000-0001"}], [])
-        # one item: action "create", outcome "applied", after["id"] == "A-B"
+        plan = build_plan([{"clpid": "A-B", "family_name": "A", "given_name": "B"}], [])
+        # one item: action "create", rdm_id "A-B"
     """
-    items = []
     by_clpid = {}
     for p in people:
         if _clean(p.get("clpid")):
             by_clpid[_clean(p["clpid"])] = p
+    if scope is not None and scope not in by_clpid:
+        return [_item(scope, None, "not_in_cold", "needs_human",
+                      f"COLD does not hold {scope}; nothing pushed and nothing removed")]
+
+    items = []
+    parsed = sorted((_Entry(e) for e in entries), key=lambda e: str(e.rdm_id))
+    live = [e for e in parsed if not e.deleted]
+    deleted_ids = {e.rdm_id for e in parsed if e.deleted}
+    own = {e.rdm_id: e for e in live if e.rdm_id in by_clpid}
+    foreign = [e for e in live if e.rdm_id not in by_clpid]
+    legacy_of = {c: [e for e in foreign if c in e.clpids] for c in by_clpid}
+
+    blocked = set()
     for clpid, p in sorted(by_clpid.items()):
-        for scheme, normalize, valid in (("orcid", normalize_orcid, is_valid_orcid),
-                                         ("isni", normalize_isni, is_valid_isni)):
-            raw = _clean(p.get(scheme))
-            if raw and not valid(normalize(raw)):
+        for scheme in ("orcid", "isni"):
+            value, raw = _p_value(p, scheme)
+            if raw and not value:
                 items.append(_item(clpid, None, "malformed_identifier", "warning",
-                                   f"COLD {scheme} {raw!r} is not well formed; not used",
-                                   scheme, raw, detail=_detail("cold", by_clpid, [clpid])))
-    owners = {"orcid": {}, "isni": {}}
-    for clpid, p in by_clpid.items():
-        orcid = _p_orcid(p)
-        isni = _p_isni(p)
-        if orcid:
-            owners["orcid"].setdefault(orcid, set()).add(clpid)
-        if isni:
-            owners["isni"].setdefault(isni, set()).add(clpid)
-    claims = {}   # an old id -> every (clpid, field) that claims it
-    for clpid, p in by_clpid.items():
-        for field in ("thesis_id", "authors_id", "advisors_id"):
-            alias = _clean(p.get(field))
-            if alias and alias not in by_clpid:
-                claims.setdefault(alias, set()).add((clpid, field))
-    # An old id two people claim says nothing about either, so it is not an alias.
-    aliases = {a: next(iter(c)) for a, c in claims.items() if len({x[0] for x in c}) == 1}
-
-    parsed = sorted((_Entry(e, caltech_ror) for e in entries), key=lambda e: str(e.rdm_id))
-
-    # Pass 1: who does each entry belong to, and is anything in conflict?
-    for e in parsed:
-        if e.malformed:
-            e.status = "malformed"
-            for scheme, raw in e.malformed:
-                items.append(_item(e.clpid, e.rdm_id, "malformed_identifier", "warning",
-                                   f"RDM {scheme} {raw!r} is not well formed; entry not changed",
-                                   scheme, raw,
-                                   detail=_detail("rdm", by_clpid, e.clpids, [e])))
+                                   f"COLD {scheme} {raw!r} is not well formed; not written",
+                                   scheme, raw))
+        e = own.get(clpid)
+        if e is not None and e.stale:
+            blocked.add(clpid)
+            items.append(_item(clpid, clpid, "stale_entry", "needs_human",
+                               f"entry {clpid} carries stale top-level keys ({', '.join(e.stale)}) "
+                               "that the service rejects; nothing written for this person",
+                               before=copy.deepcopy(e.metadata)))
             continue
-        if len(e.clpids) > 1:
-            e.status = "conflict"
-            items.append(_item(e.clpid, e.rdm_id, "conflict", "needs_human",
-                               f"entry carries several clpids ({', '.join(sorted(e.clpids))})",
-                               detail=_detail("rdm", by_clpid, e.clpids, [e])))
-            continue
-        ident_owners = set()
-        for v in e.orcids:
-            ident_owners |= owners["orcid"].get(v, set())
-        for v in e.isnis:
-            ident_owners |= owners["isni"].get(v, set())
-        alias = aliases.get(e.clpid) if e.clpid else None
-        if e.clpid in by_clpid:
-            person = e.clpid
-        elif alias:
-            person = alias[0]
-        elif not e.clpid and len(ident_owners) == 1:
-            person = next(iter(ident_owners))
-        elif e.clpid and len(ident_owners) == 1:
-            person = next(iter(ident_owners))   # an unknown clpid, a known identifier
+        base = {k: v for k, v in (e.metadata if e else {}).items() if k in ALLOWED_KEYS}
+        carried = [a for l in legacy_of[clpid] for a in l.metadata.get("affiliations") or []]
+        data, changes = _desired(p, base, carried, caltech_ror, jpl_ror)
+        if e is None and clpid in deleted_ids:
+            # COLD holds the person, so the pick list has them (cold DR-0039). The service can neither
+            # update nor create over a soft-deleted row, so the applier revives it.
+            data["id"] = clpid
+            items.append(_item(clpid, clpid, "revive", "applied",
+                               f"restore entry {clpid}, which was removed and is needed again",
+                               "clpid", clpid, None, data, {"changes": ["restored"]}))
+        elif e is None:
+            data["id"] = clpid
+            items.append(_item(clpid, clpid, "create", "applied",
+                               f"create entry {clpid}", "clpid", clpid, None, data,
+                               {"changes": ["new"]}))
+        elif changes:
+            items.append(_item(clpid, clpid, "update", "applied",
+                               f"update entry {clpid}: {', '.join(changes)}", "clpid", clpid,
+                               copy.deepcopy(base), data, {"changes": changes}))
+
+    for e in foreign:
+        persons = sorted(c for c in e.clpids if c in by_clpid)
+        if persons:
+            if any(c in blocked for c in persons):
+                continue
+            old = {k: v for k, v in e.metadata.items() if k in ALLOWED_KEYS}
+            changes = []
+            for c in persons:
+                _, diff = _desired(by_clpid[c], old, [], caltech_ror, jpl_ror)
+                # The clpid identifier is always among the differences of a legacy entry.
+                changes += [(f"{c}: {d}" if len(persons) > 1 else d) for d in diff if d != "clpid"]
+            items.append(_item(persons[0], e.rdm_id, "replace", "applied",
+                               f"remove legacy entry {e.rdm_id}, replaced by {', '.join(persons)}",
+                               before=copy.deepcopy(e.metadata),
+                               detail={"replaced_by": persons[0], "persons": persons,
+                                       "changes": changes,
+                                       "names": {c: _form(by_clpid[c].get("family_name"),
+                                                          by_clpid[c].get("given_name"))
+                                                 for c in persons}}))
         else:
-            person = None
+            items.append(_item(min(e.clpids) if e.clpids else "", e.rdm_id, "remove", "applied",
+                               f"remove entry {e.rdm_id}: it is not a COLD person's entry",
+                               before=copy.deepcopy(e.metadata)))
 
-        if e.clpid and e.clpid not in by_clpid and not alias and not ident_owners:
-            e.status = "orphan"
-            items.append(_item(e.clpid, e.rdm_id, "orphan_clpid", "warning",
-                               f"RDM clpid {e.clpid} is not a COLD clpid and no identifier "
-                               "matches a COLD person; not changed",
-                               detail=_detail("rdm", by_clpid, [], [e])))
-            continue
-        if not e.clpid and not ident_owners:
-            e.status = "free"
-            if e.caltech:
-                items.append(_item("", e.rdm_id, "caltech_affiliate_not_in_cold", "warning",
-                                   "Caltech-affiliated RDM entry with no clpid and no "
-                                   "identifier match in COLD",
-                                   detail=_detail("cold", by_clpid, [], [e])))
-            continue
-
-        reason = None
-        involved = {person} if person else set()
-        if len(ident_owners) > 1:
-            reason = f"identifiers belong to several COLD people ({', '.join(sorted(ident_owners))})"
-        elif e.clpid and e.clpid not in by_clpid and not alias:
-            reason = (f"RDM clpid {e.clpid} is not a COLD clpid but its identifiers belong to "
-                      f"{person}")
-        elif ident_owners - {person}:
-            reason = (f"clpid {e.clpid or '(none)'} resolves to {person} but an identifier "
-                      f"belongs to {', '.join(sorted(ident_owners - {person}))}")
-        elif person is not None:
-            p = by_clpid[person]
-            for scheme, mine, theirs in (
-                    ("orcid", e.orcids, _p_orcid(p)),
-                    ("isni", e.isnis, _p_isni(p))):
-                if mine and theirs and theirs not in mine:
-                    reason = (f"{scheme} differs: RDM has {', '.join(sorted(mine))}, "
-                              f"COLD ({person}) has {theirs}")
-        if reason:
-            e.status = "conflict"
-            items.append(_item(e.clpid or (person or ""), e.rdm_id, "conflict", "needs_human",
-                               reason,
-                               detail=_detail("cold", by_clpid, involved | ident_owners, [e])))
-            continue
-        e.person = person
-        if alias:
-            e.status = "orphan"
-            items.append(_item(e.clpid, e.rdm_id, "orphan_clpid", "warning",
-                               f"RDM clpid {e.clpid} is the {alias[1]} of COLD person "
-                               f"{alias[0]}; not changed",
-                               detail=_detail("rdm", by_clpid, [alias[0]], [e])))
-        else:
-            e.status = "resolved"
-
-    # Pass 2: what is missing from each resolved entry?
-    holders = {"orcid": {}, "isni": {}}
-    for e in parsed:
-        for v in e.orcids:
-            holders["orcid"].setdefault(v, set()).add(e.rdm_id)
-        for v in e.isnis:
-            holders["isni"].setdefault(v, set()).add(e.rdm_id)
-    wanted = {}   # (scheme, value) -> [entry]
-    for e in parsed:
-        if e.status != "resolved":
-            continue
-        p = by_clpid[e.person]
-        if e.person not in e.clpids:
-            e.adds.append(("clpid", e.person))
-        for scheme, mine, theirs, raw in (
-                ("orcid", e.orcids, _p_orcid(p), _p_orcid(p)),
-                ("isni", e.isnis, _p_isni(p), _clean(p.get("isni")))):
-            if theirs and theirs not in mine and not holders[scheme].get(theirs):
-                wanted.setdefault((scheme, theirs, raw), []).append(e)
-    for (scheme, _normal, raw), candidates in sorted(wanted.items()):
-        if len(candidates) > 1:
-            # Several entries of one person lack it. Which entry should hold it is a
-            # judgement for a person, so nothing is chosen (RSDOIEL, 2026-11-10).
-            ids = ", ".join(sorted(str(c.rdm_id) for c in candidates))
-            items.append(_item(candidates[0].person, None, "ambiguous_target", "needs_human",
-                               f"{scheme} {raw} is missing from {len(candidates)} RDM entries "
-                               f"of this person ({ids}); not added",
-                               scheme, raw,
-                               detail=_detail("rdm", by_clpid, [candidates[0].person], candidates)))
-            continue
-        candidates[0].adds.append((scheme, raw))
-
-    for e in parsed:
-        if e.status != "resolved":
-            continue
-        if e.adds and e.stale:
-            what = ", ".join(f"{s}={v}" for s, v in sorted(e.adds))
-            items.append(_item(e.person, e.rdm_id, "needs_repair", "needs_repair",
-                               f"entry has stale top-level keys ({', '.join(e.stale)}) that "
-                               f"block an update; would apply: {what}",
-                               detail=_detail("rdm", by_clpid, [e.person], [e])))
-            continue
-        if e.adds:
-            before = e.identifiers
-            after = before + [{"scheme": s, "identifier": v} for s, v in sorted(e.adds)]
-            for scheme, value in sorted(e.adds):
-                items.append(_item(e.person, e.rdm_id, "add_identifier", "applied",
-                                   f"add {scheme} {value}", scheme, value,
-                                   copy.deepcopy(before), copy.deepcopy(after)))
-
-    # People: create, or nothing to create.
-    # An entry in conflict still exists: its clpid claims the person, so no duplicate is created.
-    claimed = {e.person for e in parsed if e.person} | {c for e in parsed for c in e.clpids if c in by_clpid}
-    for clpid, p in sorted(by_clpid.items()):
-        orcid = _p_orcid(p)
-        isni = _p_isni(p)
-        if not orcid:
-            if not _clean(p.get("orcid")):
-                items.append(_item(clpid, None, "no_orcid", "info",
-                                   "no ORCID in COLD; nothing to create", "orcid"))
-            continue
-        if len(owners["orcid"].get(orcid, ())) > 1:
-            items.append(_item(clpid, None, "ambiguous_orcid", "needs_human",
-                               f"ORCID {orcid} is held by several COLD people; not created",
-                               "orcid", orcid,
-                               detail=_detail("cold", by_clpid, owners["orcid"][orcid])))
-            continue
-        if clpid in claimed or holders["orcid"].get(orcid) or (isni and holders["isni"].get(isni)):
-            continue
-        identifiers = [{"scheme": "clpid", "identifier": clpid},
-                       {"scheme": "orcid", "identifier": orcid}]
-        if isni:
-            identifiers.append({"scheme": "isni", "identifier": _clean(p.get("isni"))})
-        after = {
-            "id": clpid,
-            "name": _form(p.get("family_name"), p.get("given_name")),
-            "family_name": _clean(p.get("family_name")),
-            "given_name": _clean(p.get("given_name")),
-            "identifiers": identifiers,
-            "affiliations": [{"id": caltech_ror, "name": "Caltech"}],
-        }
-        items.append(_item(clpid, None, "create", "applied",
-                           f"create RDM entry {clpid} with ORCID {orcid}", "clpid", clpid,
-                           None, after))
-
+    if scope is not None:
+        # A removal's clpid is never a COLD person's, so none of them is kept.
+        items = [i for i in items
+                 if i["clpid"] == scope or scope in (i["detail"].get("persons") or [])]
     return sorted(items, key=_sort_key)
 
 
 def apply_to_entries(entries, plan):
     """apply_to_entries returns the entries as they would be after the plan's applied items.
 
-    This is the model of the applier that the tests, and a dry run's preview, use.
-    It changes a copy only.
+    This is the model of the applier that the tests, and a dry run's preview, use. A removed
+    entry becomes a soft-deleted row (empty metadata), as the service leaves it. It changes a
+    copy only.
 
     @param entries {list} RDM entries, ``{"rdm_id", "metadata"}``
     @param plan {list} the result of build_plan
-    @returns {list} new entries with identifiers added and created entries appended
+    @returns {list} new entries
     @example
         after = apply_to_entries(entries, build_plan(people, entries))
     """
@@ -468,10 +381,14 @@ def apply_to_entries(entries, plan):
     for item in plan:
         if item["outcome"] != "applied":
             continue
-        if item["action"] == "add_identifier":
-            idents = by_id[item["rdm_id"]]["metadata"].setdefault("identifiers", [])
-            idents.append({"scheme": item["scheme"], "identifier": item["value"]})
-        elif item["action"] == "create":
+        if item["action"] == "create":
             metadata = {k: v for k, v in item["after"].items() if k != "id"}
             result.append({"rdm_id": item["after"]["id"], "metadata": copy.deepcopy(metadata)})
+        elif item["action"] == "revive":
+            metadata = {k: v for k, v in item["after"].items() if k != "id"}
+            by_id[item["rdm_id"]]["metadata"] = copy.deepcopy(metadata)
+        elif item["action"] == "update":
+            by_id[item["rdm_id"]]["metadata"] = copy.deepcopy(item["after"])
+        elif item["action"] in ("replace", "remove"):
+            by_id[item["rdm_id"]]["metadata"] = {}
     return result

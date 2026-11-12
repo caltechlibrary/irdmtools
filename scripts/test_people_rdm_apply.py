@@ -1,68 +1,134 @@
 #!/usr/bin/env python3
-"""Tests for people_rdm_apply (cold#122, Phase 2; cold DR-0031).
+"""Tests for people_rdm_apply (cold#122; cold DR-0037, the people push).
 
-A fake names service stands in for RDM: the same three calls the real one gives
-(read, create, update), recording every call so a test can say what was *not* touched.
-All names and identifiers are synthetic.
+A fake names service stands in for RDM. It has the five calls the real adapter gives (read,
+create, update, delete, rebuild_index) and fails the way the service did on the rehearsal VM:
+a deleted entry cannot be updated (MissingModelError) or created again (PIDAlreadyExists), and
+a legacy entry (a stray `pid` key) refuses an update (ValidationError, caltechauthors#192).
+Every call is recorded, so a test can say what was *not* touched. All names and identifiers
+are synthetic.
 
 Run from the scripts directory:  python3 -m unittest test_people_rdm_apply -v
 """
 
 import copy
 import json
+import os
+import shutil
+import stat
+import tempfile
 import unittest
 
 import people_rdm_apply as a
 import people_rdm_match as m
-from test_people_rdm_match import (ISNI_A, ORCID_A, ORCID_B, entry, person)
+from test_people_rdm_match import (CALTECH, ISNI_A, ORCID_A, ORCID_B, deleted, entry, legacy,
+                                   person)
+
+
+class PIDAlreadyExists(Exception):
+    pass
+
+
+class MissingModelError(Exception):
+    pass
+
+
+class ValidationError(Exception):
+    pass
 
 
 class FakeService:
-    """A names service in memory. `records` maps id -> the data the service would return."""
+    """A names service in memory. `records` maps id -> what the service returns for that id."""
 
-    def __init__(self, records=None, read_error=None, write_error=None):
+    def __init__(self, records=None, gone=(), read_error=None, write_error=None, log=None):
         self.records = copy.deepcopy(records or {})
-        self.calls = []
-        self.read_error = read_error      # id -> exception to raise from read
-        self.write_error = write_error    # id -> exception to raise from create/update
+        self.gone = set(gone)             # soft-deleted ids
+        self.calls = [] if log is None else log
+        self.read_error = read_error or {}    # id -> exception raised by read
+        self.write_error = write_error or {}  # id -> exception raised by create/update/delete
+        self.index_error = None
 
     def read(self, id_):
         self.calls.append(("read", id_))
-        if self.read_error and id_ in self.read_error:
+        if id_ in self.read_error:
             raise self.read_error[id_]
+        if id_ in self.gone:
+            # the service answers a soft-deleted entry with a stub: no name, no identifiers
+            return {"id": id_, "links": {"self": "x"}, "revision_id": 2, "created": "2026-01-01"}
         if id_ not in self.records:
             raise a.NotFound(id_)
         return copy.deepcopy(self.records[id_])
 
     def create(self, data):
         self.calls.append(("create", data["id"]))
-        if self.write_error and data["id"] in self.write_error:
+        if data["id"] in self.write_error:
             raise self.write_error[data["id"]]
+        if data["id"] in self.records or data["id"] in self.gone:
+            raise PIDAlreadyExists(data["id"])
         self.records[data["id"]] = copy.deepcopy(data)
         return copy.deepcopy(data)
 
     def update(self, id_, data):
         self.calls.append(("update", id_))
-        if self.write_error and id_ in self.write_error:
+        if id_ in self.write_error:
             raise self.write_error[id_]
+        if id_ in self.gone:
+            raise MissingModelError(id_)
+        if "pid" in self.records.get(id_, {}):
+            raise ValidationError("Additional properties are not allowed ('pid' was unexpected)")
         self.records[id_] = copy.deepcopy(data)
         return copy.deepcopy(data)
 
+    def revive(self, data):
+        self.calls.append(("revive", data["id"]))
+        if data["id"] in self.write_error:
+            raise self.write_error[data["id"]]
+        if data["id"] not in self.gone:
+            raise RuntimeError(f"{data['id']} is not a soft-deleted entry")
+        self.gone.discard(data["id"])
+        self.records[data["id"]] = copy.deepcopy(data)
+        return copy.deepcopy(data)
+
+    def delete(self, id_):
+        self.calls.append(("delete", id_))
+        if id_ in self.write_error:
+            raise self.write_error[id_]
+        del self.records[id_]
+        self.gone.add(id_)
+
+    def rebuild_index(self):
+        self.calls.append(("rebuild_index",))
+        if self.index_error:
+            raise self.index_error
+
     def writes(self):
-        return [c for c in self.calls if c[0] in ("create", "update")]
+        return [c for c in self.calls if c[0] in ("create", "update", "revive", "delete")]
+
+    def entries(self):
+        """The matcher's view of the service: live records, deleted ones as empty rows."""
+        # Only a legacy entry (one with a `pid`) has the stray `id` and `pid` in its stored JSON;
+        # `id`, links and the rest are what the service adds when it reads.
+        rows = [{"rdm_id": k, "metadata": {f: v for f, v in rec.items() if f in m.ALLOWED_KEYS
+                                          or ("pid" in rec and f in ("id", "pid"))}}
+                for k, rec in sorted(self.records.items())]
+        return rows + [{"rdm_id": k, "metadata": {}} for k in sorted(self.gone)]
 
 
-def stored(rdm_id, clpid=None, orcid=None, isni=None, family="Surname", given="Given", extra=None):
+def stored(rdm_id, **kw):
     """What the service returns for an existing entry: clean data plus service decoration."""
-    data = entry(rdm_id, clpid=clpid, orcid=orcid, isni=isni, family=family, given=given)["metadata"]
-    data.update({"id": rdm_id, "links": {"self": "x"}, "created": "2026-01-01", "revision_id": 3})
-    if extra:
-        data.update(extra)
-    return data
+    e = entry(rdm_id, **kw)["metadata"]
+    e.update({"id": rdm_id, "links": {"self": "x"}, "created": "2026-01-01", "revision_id": 3})
+    return e
 
 
-def plan_for(people, entries):
-    return m.build_plan(people, entries)
+def stored_legacy(rdm_id, **kw):
+    e = stored(rdm_id, **kw)
+    e["pid"] = {"pk": 1, "status": "R", "pid_type": "names", "obj_type": "rec"}
+    return e
+
+
+def plan_for(people, entries, **kw):
+    return m.build_plan(people, entries, **kw)
 
 
 def statuses(results):
@@ -71,128 +137,416 @@ def statuses(results):
 
 class TestDryRun(unittest.TestCase):
     def test_dry_run_is_the_default_and_writes_nothing(self):
-        svc = FakeService()
-        plan = plan_for([person("Alpha-A", orcid=ORCID_A)], [])
+        svc = FakeService({"id-1": stored_legacy("id-1", clpid="Alpha-A"),
+                           "Gone-G": stored("Gone-G", clpid="Gone-G")})
+        people = [person("Alpha-A"), person("Beta-B")]
+        plan = plan_for(people, svc.entries())
         results = a.apply_plan(plan, svc)
         self.assertEqual(svc.writes(), [])
-        self.assertEqual(statuses(results), [("create", "would_create")])
+        self.assertEqual(sorted(s for _, s in statuses(results)),
+                         ["would_create", "would_create", "would_remove", "would_replace"])
 
-    def test_dry_run_of_an_update_shows_before_and_after_and_writes_nothing(self):
-        svc = FakeService({"r1": stored("r1", clpid="Alpha-A")})
-        plan = plan_for([person("Alpha-A", orcid=ORCID_A)], [entry("r1", clpid="Alpha-A")])
+    def test_a_dry_run_update_shows_before_and_after(self):
+        svc = FakeService({"Alpha-A": stored("Alpha-A", clpid="Alpha-A", given="A.")})
+        plan = plan_for([person("Alpha-A", given="Ann")], svc.entries())
         results = a.apply_plan(plan, svc)
-        self.assertEqual(svc.writes(), [])
-        self.assertEqual(statuses(results), [("add_identifier", "would_update")])
-        self.assertIn({"scheme": "orcid", "identifier": ORCID_A}, results[0]["after"]["identifiers"])
-        self.assertNotIn({"scheme": "orcid", "identifier": ORCID_A}, results[0]["before"]["identifiers"])
+        self.assertEqual(statuses(results), [("update", "would_update")])
+        self.assertEqual((results[0]["before"]["given_name"], results[0]["after"]["given_name"]),
+                         ("A.", "Ann"))
 
 
-class TestCreate(unittest.TestCase):
-    def test_create_uses_the_clpid_as_the_id(self):
+class TestCreateAndUpdate(unittest.TestCase):
+    def test_create_writes_the_entry_with_the_clpid_as_id(self):
         svc = FakeService()
-        plan = plan_for([person("Alpha-A", orcid=ORCID_A)], [])
-        results = a.apply_plan(plan, svc, apply=True)
+        results = a.apply_plan(plan_for([person("Alpha-A", orcid=ORCID_A)], []), svc, apply=True)
         self.assertEqual(svc.writes(), [("create", "Alpha-A")])
         self.assertEqual(svc.records["Alpha-A"]["id"], "Alpha-A")
         self.assertEqual(statuses(results), [("create", "created")])
 
-    def test_create_sends_only_what_the_names_schema_allows_plus_the_id(self):
-        svc = FakeService()
-        a.apply_plan(plan_for([person("Alpha-A", orcid=ORCID_A)], []), svc, apply=True)
-        self.assertLessEqual(set(svc.records["Alpha-A"]), set(m.ALLOWED_KEYS) | {"id"})
-
-    def test_an_entry_that_already_exists_is_never_overwritten(self):
+    def test_an_entry_that_appeared_since_the_plan_is_not_overwritten(self):
         svc = FakeService({"Alpha-A": stored("Alpha-A", clpid="Alpha-A")})
-        plan = plan_for([person("Alpha-A", orcid=ORCID_A)], [])
+        plan = plan_for([person("Alpha-A")], [])
         results = a.apply_plan(plan, svc, apply=True)
         self.assertEqual(svc.writes(), [])
         self.assertEqual(statuses(results), [("create", "skipped")])
         self.assertIn("exists", results[0]["message"])
 
+    def test_update_writes_cold_s_names_and_keeps_other_identifier_schemes(self):
+        e = stored("Alpha-A", clpid="Alpha-A", given="A.")
+        e["identifiers"].append({"scheme": "wikidata", "identifier": "Q1"})
+        svc = FakeService({"Alpha-A": e})
+        results = a.apply_plan(plan_for([person("Alpha-A", given="Ann", orcid=ORCID_A)],
+                                        svc.entries()), svc, apply=True)
+        got = svc.records["Alpha-A"]
+        self.assertEqual((got["given_name"], got["name"]), ("Ann", "Surname, Ann"))
+        self.assertIn({"scheme": "wikidata", "identifier": "Q1"}, got["identifiers"])
+        self.assertIn({"scheme": "orcid", "identifier": ORCID_A}, got["identifiers"])
+        self.assertEqual(statuses(results), [("update", "updated")])
 
-class TestUpdate(unittest.TestCase):
-    def setUp(self):
-        self.people = [person("Alpha-A", orcid=ORCID_A, isni=ISNI_A)]
+    def test_the_update_payload_has_only_schema_keys(self):
+        svc = FakeService({"Alpha-A": stored("Alpha-A", clpid="Alpha-A", given="A.")})
+        a.apply_plan(plan_for([person("Alpha-A")], svc.entries()), svc, apply=True)
+        self.assertLessEqual(set(svc.records["Alpha-A"]), set(m.ALLOWED_KEYS))
 
-    def test_update_adds_the_identifier_and_keeps_the_stored_names(self):
-        # The stored name differs from COLD's: DR-0029 says RDM's names stay.
-        rec = stored("r1", clpid="Alpha-A", family="Surname", given="G. Q.")
-        svc = FakeService({"r1": rec})
-        ent = [entry("r1", clpid="Alpha-A", family="Surname", given="G. Q.")]
-        a.apply_plan(plan_for(self.people, ent), svc, apply=True)
-        got = svc.records["r1"]
-        self.assertEqual((got["family_name"], got["given_name"], got["name"]),
-                         ("Surname", "G. Q.", "Surname, G. Q."))
-        schemes = {(i["scheme"], i["identifier"]) for i in got["identifiers"]}
-        self.assertIn(("orcid", ORCID_A), schemes)
-
-    def test_update_keeps_identifier_schemes_cold_does_not_own(self):
-        rec = stored("r1", clpid="Alpha-A", isni=ISNI_A)
-        rec["identifiers"].append({"scheme": "wikidata", "identifier": "Q1"})
-        svc = FakeService({"r1": rec})
-        ent = [{"rdm_id": "r1", "metadata": {k: v for k, v in rec.items() if k in m.ALLOWED_KEYS}}]
-        a.apply_plan(plan_for([person("Alpha-A", orcid=ORCID_A, isni=ISNI_A)], ent), svc, apply=True)
-        schemes = {(i["scheme"], i["identifier"]) for i in svc.records["r1"]["identifiers"]}
-        self.assertEqual(schemes, {("clpid", "Alpha-A"), ("isni", ISNI_A), ("wikidata", "Q1"),
-                                   ("orcid", ORCID_A)})
-
-    def test_update_payload_is_clean_no_id_no_links_no_service_decoration(self):
-        svc = FakeService({"r1": stored("r1", clpid="Alpha-A")})
-        a.apply_plan(plan_for(self.people, [entry("r1", clpid="Alpha-A")]), svc, apply=True)
-        self.assertLessEqual(set(svc.records["r1"]), set(m.ALLOWED_KEYS))
-
-    def test_one_update_per_entry_even_when_two_identifiers_are_added(self):
-        svc = FakeService({"r1": stored("r1", clpid="Alpha-A")})
-        results = a.apply_plan(plan_for(self.people, [entry("r1", clpid="Alpha-A")]), svc, apply=True)
-        self.assertEqual(svc.writes(), [("update", "r1")])
-        got = {(i["scheme"], i["identifier"]) for i in svc.records["r1"]["identifiers"]}
-        self.assertEqual(got, {("clpid", "Alpha-A"), ("orcid", ORCID_A), ("isni", ISNI_A)})
-        self.assertEqual(statuses(results), [("add_identifier", "updated")])
-
-    def test_an_entry_changed_since_the_plan_is_skipped_not_overwritten(self):
-        plan = plan_for(self.people, [entry("r1", clpid="Alpha-A")])
-        changed = stored("r1", clpid="Alpha-A", orcid=ORCID_B)   # someone added an ORCID meanwhile
-        svc = FakeService({"r1": changed})
+    def test_an_entry_changed_since_the_plan_is_not_updated(self):
+        svc = FakeService({"Alpha-A": stored("Alpha-A", clpid="Alpha-A", given="A.")})
+        plan = plan_for([person("Alpha-A", given="Ann")], svc.entries())
+        svc.records["Alpha-A"]["given_name"] = "Someone else"
         results = a.apply_plan(plan, svc, apply=True)
         self.assertEqual(svc.writes(), [])
-        self.assertEqual(statuses(results), [("add_identifier", "skipped")])
-        self.assertIn("changed", results[0]["message"])
+        self.assertEqual(statuses(results), [("update", "skipped")])
 
-    def test_an_entry_that_vanished_since_the_plan_is_skipped(self):
-        plan = plan_for(self.people, [entry("r1", clpid="Alpha-A")])
+    def test_decoration_the_service_adds_does_not_count_as_a_change(self):
+        # links, created, revision_id and id come back from read(); the plan never saw them.
+        svc = FakeService({"Alpha-A": stored("Alpha-A", clpid="Alpha-A", given="A.")})
+        plan = plan_for([person("Alpha-A", given="Ann")], svc.entries())
+        self.assertEqual(statuses(a.apply_plan(plan, svc, apply=True)), [("update", "updated")])
+
+
+class TestStalePlan(unittest.TestCase):
+    """An entry changed under the plan is left alone, whichever part of it changed."""
+
+    def planned(self):
+        e = stored("Alpha-A", clpid="Alpha-A", given="A.", ror="00abcde12")
+        svc = FakeService({"Alpha-A": e})
+        return svc, plan_for([person("Alpha-A", given="Ann")], svc.entries())
+
+    def skipped(self, svc, plan):
+        self.assertEqual(statuses(a.apply_plan(plan, svc, apply=True)), [("update", "skipped")])
+        self.assertEqual(svc.writes(), [])
+
+    def test_the_entry_is_gone(self):
+        svc, plan = self.planned()
+        del svc.records["Alpha-A"]
+        self.skipped(svc, plan)
+
+    def test_the_entry_was_removed_since_the_plan_and_reads_as_a_stub(self):
+        svc, plan = self.planned()
+        del svc.records["Alpha-A"]
+        svc.gone.add("Alpha-A")
+        self.skipped(svc, plan)
+
+    def test_the_name_changed(self):
+        svc, plan = self.planned()
+        svc.records["Alpha-A"]["name"] = "Other, Name"
+        self.skipped(svc, plan)
+
+    def test_the_family_name_changed(self):
+        svc, plan = self.planned()
+        svc.records["Alpha-A"]["family_name"] = "Other"
+        self.skipped(svc, plan)
+
+    def test_an_identifier_changed(self):
+        svc, plan = self.planned()
+        svc.records["Alpha-A"]["identifiers"].append({"scheme": "orcid", "identifier": ORCID_B})
+        self.skipped(svc, plan)
+
+    def test_an_affiliation_changed(self):
+        svc, plan = self.planned()
+        svc.records["Alpha-A"]["affiliations"] = []
+        self.skipped(svc, plan)
+
+
+class TestWhatTheServiceDoesWithTheData(unittest.TestCase):
+    def test_a_service_that_scribbles_on_its_input_does_not_change_what_the_result_reports(self):
+        class Scribbling(FakeService):
+            def create(self, data):
+                data["name"] = "scribbled"
+                return super().create(data)
+
+            def update(self, id_, data):
+                data["name"] = "scribbled"
+                return super().update(id_, data)
+
+        svc = Scribbling({"Beta-B": stored("Beta-B", clpid="Beta-B", given="B.")})
+        plan = plan_for([person("Alpha-A"), person("Beta-B")], svc.entries())
+        results = a.apply_plan(plan, svc, apply=True)
+        self.assertEqual([r["after"]["name"] for r in results], ["Surname, Given", "Surname, Given"])
+
+    def test_an_applied_item_with_an_action_the_applier_does_not_know_is_ignored(self):
+        plan = plan_for([person("Alpha-A")], [])
+        plan[0]["action"] = "add_identifier"
         svc = FakeService()
-        results = a.apply_plan(plan, svc, apply=True)
-        self.assertEqual(svc.writes(), [])
-        self.assertEqual(statuses(results), [("add_identifier", "skipped")])
+        self.assertEqual(a.apply_plan(plan, svc, apply=True), [])
+        self.assertEqual(svc.calls, [])
 
-    def test_result_carries_the_whole_before_record_as_a_pre_image(self):
-        rec = stored("r1", clpid="Alpha-A")
-        svc = FakeService({"r1": rec})
-        results = a.apply_plan(plan_for(self.people, [entry("r1", clpid="Alpha-A")]), svc, apply=True)
-        self.assertEqual(results[0]["before"]["name"], "Surname, Given")
-        self.assertEqual(results[0]["before"]["identifiers"],
-                         [{"scheme": "clpid", "identifier": "Alpha-A"}])
+
+class TestReplace(unittest.TestCase):
+    def setUp(self):
+        self.people = [person("Alpha-A", orcid=ORCID_A, caltech=True)]
+        self.svc = FakeService({"id-1": stored_legacy("id-1", clpid="Alpha-A", orcid=ORCID_A,
+                                                      ror="00abcde12")})
+
+    def test_the_person_is_written_before_the_legacy_entry_is_removed(self):
+        a.apply_plan(plan_for(self.people, self.svc.entries()), self.svc, apply=True)
+        self.assertEqual(self.svc.writes(), [("create", "Alpha-A"), ("delete", "id-1")])
+
+    def test_the_replacement_carries_the_legacy_affiliations_and_the_flag(self):
+        a.apply_plan(plan_for(self.people, self.svc.entries()), self.svc, apply=True)
+        ids = sorted(x["id"] for x in self.svc.records["Alpha-A"]["affiliations"])
+        self.assertEqual(ids, sorted(["00abcde12", CALTECH]))
+
+    def test_a_failed_write_keeps_the_legacy_entry(self):
+        self.svc.write_error = {"Alpha-A": ValueError("schema says no")}
+        results = a.apply_plan(plan_for(self.people, self.svc.entries()), self.svc, apply=True)
+        self.assertEqual(statuses(results), [("create", "error"), ("replace", "skipped")])
+        self.assertIn("id-1", self.svc.records)
+        self.assertNotIn(("delete", "id-1"), self.svc.calls)
+
+    def test_a_skipped_write_keeps_the_legacy_entry_too(self):
+        plan = plan_for(self.people, self.svc.entries())
+        self.svc.records["Alpha-A"] = stored("Alpha-A", clpid="Alpha-A")   # appeared since
+        results = a.apply_plan(plan, self.svc, apply=True)
+        self.assertEqual(statuses(results), [("create", "skipped"), ("replace", "skipped")])
+        self.assertIn("id-1", self.svc.records)
+
+    def test_a_legacy_entry_whose_clpid_changed_since_the_plan_is_kept(self):
+        plan = plan_for(self.people, self.svc.entries())
+        self.svc.records["id-1"]["identifiers"] = [{"scheme": "clpid", "identifier": "Else-E"}]
+        results = a.apply_plan(plan, self.svc, apply=True)
+        self.assertEqual(statuses(results), [("create", "created"), ("replace", "skipped")])
+        self.assertIn("id-1", self.svc.records)
+
+    def test_a_legacy_entry_already_gone_is_skipped_not_an_error(self):
+        plan = plan_for(self.people, self.svc.entries())
+        del self.svc.records["id-1"]
+        results = a.apply_plan(plan, self.svc, apply=True)
+        self.assertEqual(statuses(results), [("create", "created"), ("replace", "skipped")])
+
+    def test_the_replaced_entrys_stored_record_is_kept_in_the_result_as_a_pre_image(self):
+        results = a.apply_plan(plan_for(self.people, self.svc.entries()), self.svc, apply=True)
+        replace = [r for r in results if r["action"] == "replace"][0]
+        self.assertEqual(replace["status"], "replaced")
+        self.assertEqual(replace["before"]["name"], "Surname, Given")
+
+    def test_two_legacy_entries_are_both_removed_after_one_write(self):
+        svc = FakeService({"id-1": stored_legacy("id-1", clpid="Alpha-A"),
+                           "id-2": stored_legacy("id-2", clpid="Alpha-A")})
+        a.apply_plan(plan_for([person("Alpha-A")], svc.entries()), svc, apply=True)
+        self.assertEqual(svc.writes(), [("create", "Alpha-A"), ("delete", "id-1"),
+                                        ("delete", "id-2")])
+
+
+class TestRevive(unittest.TestCase):
+    """cold DR-0039: a clpid COLD holds is written even when its entry was soft-deleted."""
+
+    def setUp(self):
+        self.svc = FakeService(gone={"Alpha-A"})
+        self.people = [person("Alpha-A", family="Alpha", given="Ann", orcid=ORCID_A)]
+
+    def plan(self):
+        return plan_for(self.people, self.svc.entries())
+
+    def test_a_dry_run_says_it_would_revive_and_writes_nothing(self):
+        results = a.apply_plan(self.plan(), self.svc)
+        self.assertEqual(statuses(results), [("revive", "would_revive")])
+        self.assertEqual(self.svc.writes(), [])
+
+    def test_an_apply_revives_the_entry_through_the_service(self):
+        results = a.apply_plan(self.plan(), self.svc, apply=True)
+        self.assertEqual(statuses(results), [("revive", "revived")])
+        self.assertEqual(self.svc.writes(), [("revive", "Alpha-A")])
+        self.assertEqual(self.svc.records["Alpha-A"]["name"], "Alpha, Ann")
+        self.assertNotIn("Alpha-A", self.svc.gone)
+
+    def test_the_revived_entry_matches_cold_and_a_second_push_changes_nothing(self):
+        a.apply_plan(self.plan(), self.svc, apply=True)
+        self.svc.calls.clear()
+        self.assertEqual(a.apply_plan(self.plan(), self.svc, apply=True), [])
+        self.assertEqual(self.svc.writes(), [])
+
+    def test_an_entry_that_came_back_to_life_since_the_plan_is_not_overwritten(self):
+        plan = self.plan()
+        self.svc.gone.discard("Alpha-A")
+        self.svc.records["Alpha-A"] = stored("Alpha-A", clpid="Alpha-A")
+        results = a.apply_plan(plan, self.svc, apply=True)
+        self.assertEqual(statuses(results), [("revive", "skipped")])
+        self.assertIn("exists", results[0]["message"])
+        self.assertEqual(self.svc.writes(), [])
+
+    def test_a_row_that_has_vanished_altogether_is_skipped(self):
+        plan = self.plan()
+        self.svc.gone.discard("Alpha-A")
+        results = a.apply_plan(plan, self.svc, apply=True)
+        self.assertEqual(statuses(results), [("revive", "skipped")])
+        self.assertEqual(self.svc.writes(), [])
+
+    def test_a_failed_revive_is_an_error_and_keeps_the_legacy_entry(self):
+        svc = FakeService({"id-1": stored_legacy("id-1", clpid="Alpha-A")}, gone={"Alpha-A"},
+                          write_error={"Alpha-A": ValueError("schema says no")})
+        results = a.apply_plan(plan_for(self.people, svc.entries()), svc, apply=True)
+        self.assertEqual(statuses(results), [("revive", "error"), ("replace", "skipped")])
+        self.assertIn("id-1", svc.records)
+        self.assertIn("Alpha-A", svc.gone)
+
+    def test_a_revive_is_followed_by_the_replace_of_the_persons_legacy_entries(self):
+        svc = FakeService({"id-1": stored_legacy("id-1", clpid="Alpha-A")}, gone={"Alpha-A"})
+        a.apply_plan(plan_for(self.people, svc.entries()), svc, apply=True)
+        self.assertEqual(svc.writes(), [("revive", "Alpha-A"), ("delete", "id-1")])
+
+    def test_the_planned_data_reaches_the_service_without_being_aliased(self):
+        class Scribbling(FakeService):
+            def revive(self, data):
+                data["name"] = "scribbled"
+                return super().revive(data)
+
+        svc = Scribbling(gone={"Alpha-A"})
+        results = a.apply_plan(plan_for(self.people, svc.entries()), svc, apply=True)
+        self.assertEqual(results[0]["after"]["name"], "Alpha, Ann")
+
+    def test_a_full_push_that_revived_rebuilds_the_names_index(self):
+        report = a.run(self.people, self.svc.entries(), self.svc, apply=True)
+        self.assertEqual(report["summary"]["revived"], 1)
+        self.assertEqual(report["index"], {"status": "rebuilt", "message": ""})
+
+    def test_a_one_person_revive_does_not_rebuild_the_index(self):
+        report = a.run(self.people, self.svc.entries(), self.svc, apply=True, scope="Alpha-A")
+        self.assertEqual(report["summary"]["revived"], 1)
+        self.assertIsNone(report["index"])
+
+    def test_a_revive_is_always_listed_in_a_compact_report(self):
+        out = a.compact_plan(self.plan())
+        self.assertEqual([(i["action"], i["rdm_id"]) for i in out["plan"]], [("revive", "Alpha-A")])
+        self.assertEqual(out["action_counts"], {"revive": 1})
+
+
+class TestRemove(unittest.TestCase):
+    def test_an_entry_no_cold_person_owns_is_deleted_after_the_writes(self):
+        svc = FakeService({"Gone-G": stored("Gone-G", clpid="Gone-G")})
+        plan = plan_for([person("Alpha-A")], svc.entries())
+        results = a.apply_plan(plan, svc, apply=True)
+        self.assertEqual(svc.writes(), [("create", "Alpha-A"), ("delete", "Gone-G")])
+        self.assertEqual(statuses(results), [("create", "created"), ("remove", "removed")])
+
+    def test_a_removal_the_entry_changed_under_is_skipped(self):
+        svc = FakeService({"Gone-G": stored("Gone-G", clpid="Gone-G")})
+        plan = plan_for([], svc.entries())
+        svc.records["Gone-G"]["identifiers"] = [{"scheme": "clpid", "identifier": "Alpha-A"}]
+        self.assertEqual(statuses(a.apply_plan(plan, svc, apply=True)), [("remove", "skipped")])
+        self.assertIn("Gone-G", svc.records)
+
+    def test_a_removal_of_an_entry_already_soft_deleted_is_skipped(self):
+        svc = FakeService({"Gone-G": stored("Gone-G", clpid="Gone-G")})
+        plan = plan_for([], svc.entries())
+        del svc.records["Gone-G"]
+        svc.gone.add("Gone-G")
+        results = a.apply_plan(plan, svc, apply=True)
+        self.assertEqual(statuses(results), [("remove", "skipped")])
+        self.assertIn("no longer exists", results[0]["message"])
+        self.assertEqual(svc.writes(), [])
+
+    def test_a_removal_of_an_entry_already_gone_is_skipped(self):
+        svc = FakeService({"Gone-G": stored("Gone-G", clpid="Gone-G")})
+        plan = plan_for([], svc.entries())
+        del svc.records["Gone-G"]
+        self.assertEqual(statuses(a.apply_plan(plan, svc, apply=True)), [("remove", "skipped")])
+
+    def test_a_delete_that_raises_after_the_entry_is_gone_is_reported_as_removed_with_the_error(self):
+        # The service commits the soft delete, then the index step can fail (a legacy row that was
+        # never indexed: OpenSearch 404). The entry is gone; calling that a plain error misleads.
+        class Failing(FakeService):
+            def delete(self, id_):
+                super().delete(id_)
+                raise RuntimeError("index said 404")
+
+        svc = Failing({"Gone-G": stored("Gone-G", clpid="Gone-G")})
+        results = a.apply_plan(plan_for([], svc.entries()), svc, apply=True)
+        self.assertEqual(statuses(results), [("remove", "removed")])
+        self.assertIn("index said 404", results[0]["message"])
+        self.assertIn("gone", results[0]["message"])
+
+    def test_a_delete_that_raises_and_leaves_the_entry_is_an_error(self):
+        svc = FakeService({"Gone-G": stored("Gone-G", clpid="Gone-G")},
+                          write_error={"Gone-G": RuntimeError("locked")})
+        results = a.apply_plan(plan_for([], svc.entries()), svc, apply=True)
+        self.assertEqual(statuses(results), [("remove", "error")])
+
+    def test_a_removal_that_fails_is_an_error_and_the_run_continues(self):
+        svc = FakeService({"G-1": stored("G-1", clpid="G-1"), "G-2": stored("G-2", clpid="G-2")},
+                          write_error={"G-1": RuntimeError("locked")})
+        results = a.apply_plan(plan_for([], svc.entries()), svc, apply=True)
+        self.assertEqual(statuses(results), [("remove", "error"), ("remove", "removed")])
+        self.assertIn("locked", results[0]["message"])
+
+
+class TestNoRemovalCap(unittest.TestCase):
+    """COLD is authoritative (cold DR-0038): a push removes whatever COLD does not hold."""
+
+    def svc(self, n):
+        return FakeService({f"G-{i}": stored(f"G-{i}", clpid=f"G-{i}") for i in range(n)})
+
+    def test_any_number_of_removals_goes_ahead(self):
+        svc = self.svc(200)
+        results = a.apply_plan(plan_for([person("Alpha-A")], svc.entries()), svc, apply=True)
+        self.assertEqual(sum(1 for r in results if r["status"] == "removed"), 200)
+
+    def test_replaced_and_removed_entries_are_both_done_whatever_the_count(self):
+        svc = FakeService({f"id-{i}": stored_legacy(f"id-{i}", clpid=f"P-{i}") for i in range(5)})
+        results = a.apply_plan(plan_for([person(f"P-{i}") for i in range(5)], svc.entries()),
+                               svc, apply=True)
+        self.assertEqual(sum(1 for r in results if r["status"] == "replaced"), 5)
+
+    def test_apply_plan_has_no_cap_parameters(self):
+        with self.assertRaises(TypeError):
+            a.apply_plan([], FakeService(), apply=True, max_removals=1)
+        self.assertFalse(hasattr(a, "RemovalCapExceeded"))
+
+
+class TestFailures(unittest.TestCase):
+    def test_a_read_failure_other_than_not_found_aborts_with_the_earlier_results(self):
+        svc = FakeService(read_error={"Beta-B": RuntimeError("database is down")})
+        plan = plan_for([person("Alpha-A"), person("Beta-B")], [])
+        with self.assertRaises(a.ApplyAborted) as ctx:
+            a.apply_plan(plan, svc, apply=True)
+        self.assertIn("database is down", str(ctx.exception))
+        self.assertEqual(statuses(ctx.exception.results), [("create", "created")])
+        self.assertEqual(svc.writes(), [("create", "Alpha-A")])
+
+    def test_a_write_failure_is_recorded_and_the_run_continues(self):
+        svc = FakeService(write_error={"Alpha-A": ValueError("schema says no")})
+        results = a.apply_plan(plan_for([person("Alpha-A"), person("Beta-B")], []), svc, apply=True)
+        self.assertEqual(statuses(results), [("create", "error"), ("create", "created")])
+        self.assertIn("schema says no", results[0]["message"])
+
+    def test_a_create_for_an_id_that_was_removed_since_the_plan_is_skipped_and_says_so(self):
+        # The planner revives a removed id it can see; one removed after the plan is only noticed here.
+        svc = FakeService(gone={"Alpha-A"})
+        results = a.apply_plan(plan_for([person("Alpha-A")], []), svc, apply=True)
+        self.assertEqual(statuses(results), [("create", "skipped")])
+        self.assertIn("removed", results[0]["message"])
+        self.assertEqual(svc.writes(), [])
+
+    def test_a_create_that_meets_pid_already_exists_is_reported_and_not_retried(self):
+        class Racing(FakeService):
+            def read(self, id_):          # the entry appears between the read and the create
+                self.calls.append(("read", id_))
+                raise a.NotFound(id_)
+
+        svc = Racing(gone={"Alpha-A"})
+        results = a.apply_plan(plan_for([person("Alpha-A")], []), svc, apply=True)
+        self.assertEqual(statuses(results), [("create", "error")])
+        self.assertIn("PIDAlreadyExists", results[0]["message"])
+        self.assertEqual(svc.calls.count(("create", "Alpha-A")), 1)
+
+    def test_an_update_failure_leaves_the_stored_record_alone(self):
+        rec = stored("Alpha-A", clpid="Alpha-A", given="A.")
+        svc = FakeService({"Alpha-A": rec}, write_error={"Alpha-A": ValueError("nope")})
+        results = a.apply_plan(plan_for([person("Alpha-A")], svc.entries()), svc, apply=True)
+        self.assertEqual(statuses(results), [("update", "error")])
+        self.assertEqual(svc.records["Alpha-A"], rec)
 
 
 class TestOnlyAppliedItemsTouchTheService(unittest.TestCase):
-    def test_conflicts_warnings_repairs_and_info_never_reach_the_service(self):
-        people = [person("Alpha-A"), person("Alpha-B", orcid=ORCID_B),
-                  person("Alpha-C", orcid=ORCID_A)]
-        ents = [entry("r1", clpid="Alpha-A", orcid=ORCID_B),                # conflict
-                entry("r2", clpid="Alpha-C", extra={"id": "x", "pid": "y"}),  # needs_repair
-                entry("r3", clpid="Orphan-Z")]                             # orphan warning
-        plan = plan_for(people, ents)
-        self.assertTrue(any(i["outcome"] != "applied" for i in plan))
-        svc = FakeService({"Alpha-B": stored("Alpha-B", clpid="Alpha-B")})
-        results = a.apply_plan(plan, svc, apply=True)
+    def test_warnings_and_reports_never_reach_the_service(self):
+        svc = FakeService({"Alpha-A": stored_legacy("Alpha-A", clpid="Alpha-A")})
+        plan = plan_for([person("Alpha-A", orcid="bad")], svc.entries())
+        self.assertEqual({i["outcome"] for i in plan}, {"warning", "needs_human"})
+        self.assertEqual(a.apply_plan(plan, svc, apply=True), [])
         self.assertEqual(svc.writes(), [])
-        self.assertEqual(results, [])
 
     def test_an_item_that_is_not_applied_is_ignored_whatever_its_action(self):
-        # The contract is the outcome, not the action name: a hand-built or future plan item.
-        plan = plan_for([person("Alpha-A", orcid=ORCID_A)], [])
-        self.assertEqual(plan[0]["action"], "create")
-        for outcome in ("needs_human", "needs_repair", "warning", "info"):
+        plan = plan_for([person("Alpha-A")], [])
+        for outcome in ("needs_human", "warning"):
             held = copy.deepcopy(plan)
             held[0]["outcome"] = outcome
             svc = FakeService()
@@ -209,257 +563,291 @@ class TestOnlyAppliedItemsTouchTheService(unittest.TestCase):
                 data["name"] = "scribbled"
                 return super().update(id_, data)
 
-        plan = plan_for([person("Alpha-A", orcid=ORCID_A), person("Alpha-B", orcid=ORCID_B)],
-                        [entry("r1", clpid="Alpha-B")])
+        svc = Mutating({"Beta-B": stored("Beta-B", clpid="Beta-B", given="B.")})
+        plan = plan_for([person("Alpha-A"), person("Beta-B")], svc.entries())
         before = copy.deepcopy(plan)
-        a.apply_plan(plan, Mutating({"r1": stored("r1", clpid="Alpha-B")}), apply=True)
+        a.apply_plan(plan, svc, apply=True)
         self.assertEqual(plan, before)
-
-    def test_the_plan_is_not_modified(self):
-        plan = plan_for([person("Alpha-A", orcid=ORCID_A)], [])
-        before = copy.deepcopy(plan)
-        a.apply_plan(plan, FakeService(), apply=True)
-        self.assertEqual(plan, before)
-
-
-class TestFailures(unittest.TestCase):
-    def test_a_read_failure_other_than_not_found_aborts_loudly(self):
-        # The earlier test swallowed a database error here and went on to write.
-        svc = FakeService(read_error={"Alpha-A": RuntimeError("database is down")})
-        plan = plan_for([person("Alpha-A", orcid=ORCID_A)], [])
-        with self.assertRaises(a.ApplyAborted) as ctx:
-            a.apply_plan(plan, svc, apply=True)
-        self.assertIn("database is down", str(ctx.exception))
-        self.assertEqual(svc.writes(), [])
-
-    def test_abort_stops_before_later_items_and_keeps_the_earlier_results(self):
-        people = [person("Alpha-A", orcid=ORCID_A), person("Alpha-B", orcid=ORCID_B)]
-        svc = FakeService(read_error={"Alpha-B": RuntimeError("boom")})
-        with self.assertRaises(a.ApplyAborted) as ctx:
-            a.apply_plan(plan_for(people, []), svc, apply=True)
-        self.assertEqual(statuses(ctx.exception.results), [("create", "created")])
-        self.assertEqual(svc.writes(), [("create", "Alpha-A")])
-
-    def test_a_write_failure_is_recorded_and_the_run_continues(self):
-        people = [person("Alpha-A", orcid=ORCID_A), person("Alpha-B", orcid=ORCID_B)]
-        svc = FakeService(write_error={"Alpha-A": ValueError("schema says no")})
-        results = a.apply_plan(plan_for(people, []), svc, apply=True)
-        self.assertEqual(statuses(results), [("create", "error"), ("create", "created")])
-        self.assertIn("schema says no", results[0]["message"])
-        self.assertIn("Alpha-B", svc.records)
-
-    def test_an_update_failure_leaves_the_stored_record_alone(self):
-        rec = stored("r1", clpid="Alpha-A")
-        svc = FakeService({"r1": rec}, write_error={"r1": ValueError("nope")})
-        results = a.apply_plan(plan_for([person("Alpha-A", orcid=ORCID_A)],
-                                        [entry("r1", clpid="Alpha-A")]), svc, apply=True)
-        self.assertEqual(statuses(results), [("add_identifier", "error")])
-        self.assertEqual(svc.records["r1"], rec)
-
-
-class TestScope(unittest.TestCase):
-    def test_a_scope_limits_the_run_to_one_clpid(self):
-        people = [person("Alpha-A", orcid=ORCID_A), person("Alpha-B", orcid=ORCID_B)]
-        svc = FakeService()
-        results = a.apply_plan(plan_for(people, []), svc, apply=True, scope="Alpha-B")
-        self.assertEqual(svc.writes(), [("create", "Alpha-B")])
-        self.assertEqual([r["clpid"] for r in results], ["Alpha-B"])
-
-    def test_a_scope_that_matches_nothing_does_nothing(self):
-        svc = FakeService()
-        results = a.apply_plan(plan_for([person("Alpha-A", orcid=ORCID_A)], []), svc,
-                               apply=True, scope="Nobody-Z")
-        self.assertEqual((results, svc.writes()), ([], []))
 
 
 class TestRun(unittest.TestCase):
-    """Matcher and applier together, on the fake: what the instance-side program does."""
+    """Matcher and applier together on the fake: what the instance-side program does."""
 
-    def entries_of(self, svc):
-        return [{"rdm_id": k, "metadata": {f: v for f, v in rec.items() if f in m.ALLOWED_KEYS}}
-                for k, rec in sorted(svc.records.items())]
+    def setUp(self):
+        self.people = [person("Alpha-A", orcid=ORCID_A, caltech=True), person("Beta-B"),
+                       person("Gamma-C", given="Cy")]
+        self.svc = FakeService({"id-1": stored_legacy("id-1", clpid="Alpha-A", orcid=ORCID_A),
+                                "Beta-B": stored("Beta-B", clpid="Beta-B", given="Bee"),
+                                "Gone-G": stored("Gone-G", clpid="Gone-G")})
 
-    def test_report_has_plan_results_and_counts_and_is_json(self):
-        svc = FakeService({"r1": stored("r1", clpid="Alpha-A")})
-        people = [person("Alpha-A", orcid=ORCID_A), person("Alpha-B", orcid=ORCID_B)]
-        report = a.run(people, self.entries_of(svc), svc, apply=True)
+    def run_it(self, **kw):
+        return a.run(self.people, self.svc.entries(), self.svc, **kw)
+
+    def test_the_report_is_json_with_plan_results_counts_and_index(self):
+        report = self.run_it(apply=True)
         json.dumps(report)
         self.assertEqual(report["mode"], "apply")
-        self.assertEqual(report["summary"]["created"], 1)
-        self.assertEqual(report["summary"]["updated"], 1)
-        self.assertEqual(report["summary"]["error"], 0)
+        self.assertEqual({k: report["summary"][k] for k in ("created", "updated", "replaced",
+                                                              "removed", "error")},
+                         {"created": 2, "updated": 1, "replaced": 1, "removed": 1, "error": 0})
         self.assertTrue(report["plan"])
 
-    def test_dry_run_report_says_so(self):
-        svc = FakeService()
-        report = a.run([person("Alpha-A", orcid=ORCID_A)], [], svc)
+    def test_dry_run_says_so_and_has_no_index_step(self):
+        report = self.run_it()
         self.assertEqual(report["mode"], "dry-run")
-        self.assertEqual(report["summary"]["would_create"], 1)
+        self.assertEqual(report["summary"]["would_create"], 2)
+        self.assertEqual(report["index"], None)
+        self.assertNotIn(("rebuild_index",), self.svc.calls)
 
-    def test_a_rerun_after_apply_changes_nothing(self):
-        svc = FakeService({"r1": stored("r1", clpid="Alpha-A")})
-        people = [person("Alpha-A", orcid=ORCID_A, isni=ISNI_A), person("Alpha-B", orcid=ORCID_B)]
-        a.run(people, self.entries_of(svc), svc, apply=True)
-        writes_after_first = len(svc.writes())
-        again = a.run(people, self.entries_of(svc), svc, apply=True)
-        self.assertEqual(len(svc.writes()), writes_after_first)
+    def test_a_full_apply_rebuilds_the_names_index_once_after_the_writes(self):
+        report = self.run_it(apply=True)
+        self.assertEqual(self.svc.calls.count(("rebuild_index",)), 1)
+        self.assertEqual(self.svc.calls[-1], ("rebuild_index",))
+        self.assertEqual(report["index"], {"status": "rebuilt", "message": ""})
+
+    def test_a_one_person_apply_does_not_rebuild_the_index(self):
+        report = self.run_it(apply=True, scope="Alpha-A")
+        self.assertNotIn(("rebuild_index",), self.svc.calls)
+        self.assertEqual(report["index"], None)
+        self.assertEqual(self.svc.writes(), [("create", "Alpha-A"), ("delete", "id-1")])
+
+    def test_nothing_written_means_no_index_rebuild(self):
+        self.run_it(apply=True)
+        self.svc.calls.clear()
+        again = self.run_it(apply=True)
+        self.assertEqual(self.svc.calls.count(("rebuild_index",)), 0)
+        self.assertEqual(again["index"], None)
+
+    def test_an_index_failure_is_reported_in_the_report(self):
+        self.svc.index_error = RuntimeError("queue is down")
+        report = self.run_it(apply=True)
+        self.assertEqual(report["index"]["status"], "error")
+        self.assertIn("queue is down", report["index"]["message"])
+
+    def test_a_second_full_push_changes_nothing_and_removes_nothing(self):
+        self.run_it(apply=True)
+        self.svc.calls.clear()
+        again = self.run_it(apply=True)
+        self.assertEqual(self.svc.writes(), [])
         self.assertEqual(again["results"], [])
+        self.assertEqual(sorted(k for k, v in self.svc.records.items() if "pid" not in v),
+                         ["Alpha-A", "Beta-B", "Gamma-C"])
 
-    def test_a_second_apply_of_the_same_plan_skips_everything(self):
-        svc = FakeService({"r1": stored("r1", clpid="Alpha-A")})
-        people = [person("Alpha-A", orcid=ORCID_A), person("Alpha-B", orcid=ORCID_B)]
-        plan = plan_for(people, self.entries_of(svc))
-        a.apply_plan(plan, svc, apply=True)
-        n = len(svc.writes())
-        second = a.apply_plan(plan, svc, apply=True)
-        self.assertEqual(len(svc.writes()), n)
-        self.assertEqual({r["status"] for r in second}, {"skipped"})
+    def test_the_report_has_no_cap_and_never_refuses(self):
+        report = self.run_it(apply=True)
+        self.assertNotIn("cap", report)
+        self.assertNotIn("refused", report)
+        self.assertEqual(report["summary"]["removed"], 1)
+
+    def test_an_abort_is_in_the_report_with_the_partial_results(self):
+        self.svc.read_error = {"Gamma-C": RuntimeError("database is down")}
+        report = self.run_it(apply=True)
+        self.assertIn("database is down", report["aborted"])
+        self.assertEqual(self.svc.calls.count(("rebuild_index",)), 1)   # what was written is indexed
+
+
+class TestVersionCheck(unittest.TestCase):
+    def test_only_the_tested_major_versions_pass(self):
+        self.assertEqual(a.TESTED_RDM_MAJORS, ("13",))
+        for ok in ("13.0.0", "13.1.2", "13.99.1", "13.0.0rc1", "13"):
+            self.assertTrue(a.rdm_version_tested(ok), ok)
+        for bad in ("14.0.0", "12.0.4", "130.0.0", "1.13.0", "", "abc", None, "v13.0.0", "13abc", "13rc1"):
+            self.assertFalse(a.rdm_version_tested(bad), bad)
+
+
+class TestFiles(unittest.TestCase):
+    def test_the_report_writer_never_replaces_a_file(self):
+        d = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, d, ignore_errors=True)
+        path = os.path.join(d, "r.json")
+        a._write_private(path, {"a": 1})
+        with self.assertRaises(FileExistsError):
+            a._write_private(path, {"a": 2})
+        with open(path) as fp:
+            self.assertEqual(json.load(fp), {"a": 1})
+
+
+class TestCompact(unittest.TestCase):
+    """The report travels a size-limited channel: creates and unremarkable replaces are counted."""
+
+    def plan(self):
+        return plan_for(
+            [person("Alpha-A", family="Alpha", given="Ann"), person("Beta-B"), person("Gamma-C")],
+            [legacy("id-a", clpid="Alpha-A", family="Alpha", given="A."),
+             legacy("id-b", clpid="Beta-B"), entry("Gone-G", clpid="Gone-G"),
+             entry("Gamma-C", clpid="Gamma-C", given="G.")])
+
+    def test_creates_and_replaces_that_change_nothing_reviewable_are_counted_not_listed(self):
+        out = a.compact_plan(self.plan())
+        listed = sorted((i["action"], i["rdm_id"]) for i in out["plan"])
+        self.assertEqual(listed, [("remove", "Gone-G"), ("replace", "id-a"), ("update", "Gamma-C")])
+        self.assertTrue(out["compact"])
+
+    def test_every_item_is_counted(self):
+        plan = self.plan()
+        out = a.compact_plan(plan)
+        self.assertEqual(out["action_counts"], {"create": 2, "update": 1, "replace": 2, "remove": 1})
+        self.assertEqual(out["plan_counts"], {"applied": len(plan)})
+
+    def test_a_scope_limits_the_counts_to_that_person(self):
+        out = a.compact_plan(self.plan(), "Alpha-A")
+        self.assertEqual(out["action_counts"], {"create": 1, "replace": 1})
+        self.assertEqual([i["action"] for i in out["plan"]], ["replace"])
+
+    def test_a_scope_finds_the_replace_of_a_legacy_entry_shared_by_two_people(self):
+        e = legacy("id-one", clpid="Alpha-A")
+        e["metadata"]["identifiers"].append({"scheme": "clpid", "identifier": "Alpha-B"})
+        plan = plan_for([person("Alpha-A"), person("Alpha-B", given="Other")], [e])
+        out = a.compact_plan(plan, "Alpha-B")
+        self.assertEqual(sorted((i["action"], i["rdm_id"]) for i in out["plan"]),
+                         [("replace", "id-one")])
+        self.assertEqual(out["action_counts"], {"create": 1, "replace": 1})
+
+    def test_warnings_and_reports_are_always_listed(self):
+        plan = plan_for([person("Alpha-A", orcid="bad")], [legacy("Alpha-A", clpid="Alpha-A")])
+        out = a.compact_plan(plan)
+        self.assertEqual(len(out["plan"]), len(plan))
+        self.assertEqual(out["action_counts"], {})
 
 
 class TestMain(unittest.TestCase):
-    """The instance-side entry point, with the database and the service injected."""
+    """The instance-side entry point, with the database, the service and the dump injected."""
 
     def setUp(self):
-        import os
-        import tempfile
         self.dir = tempfile.mkdtemp()
         self.people = os.path.join(self.dir, "people.json")
         self.out = os.path.join(self.dir, "report.json")
+        self.dump_path = self.out + ".dump.jsonl"
         with open(self.people, "w") as fp:
-            json.dump([person("Alpha-A", orcid=ORCID_A), person("Alpha-B", orcid=ORCID_B)], fp)
-        self.svc = FakeService({"r1": stored("r1", clpid="Alpha-B")})
-        self.entries = [entry("r1", clpid="Alpha-B")]
+            json.dump([person("Alpha-A", orcid=ORCID_A), person("Beta-B", given="Bee")], fp)
+        self.log = []
+        self.svc = FakeService({"id-1": stored_legacy("id-1", clpid="Alpha-A"),
+                                "Beta-B": stored("Beta-B", clpid="Beta-B", given="B."),
+                                "Gone-G": stored("Gone-G", clpid="Gone-G")}, log=self.log)
+        self.dump_error = None
 
     def tearDown(self):
-        import shutil
         shutil.rmtree(self.dir, ignore_errors=True)
 
-    def go(self, *args, svc=None, entries=None):
+    def dump(self, env, path):
+        self.log.append(("dump", path))
+        if self.dump_error:
+            raise self.dump_error
+        with open(path, "x") as fp:
+            fp.write("{}\n")
+        return 1
+
+    def go(self, *args, svc=None, version="13.1.2"):
         svc = svc or self.svc
+
+        def read_version(env):
+            if isinstance(version, Exception):
+                raise version
+            return version
         return a.main(["--people", self.people, "--out", self.out, *args],
-                      load_entries=lambda env: self.entries if entries is None else entries,
-                      make_service=lambda env: svc)
+                      load_entries=lambda env: svc.entries(), make_service=lambda env: svc,
+                      dump=self.dump, read_version=read_version)
 
     def report(self):
         with open(self.out) as fp:
             return json.load(fp)
 
-    def test_default_is_a_dry_run_that_writes_nothing_and_exits_0(self):
+    def test_default_is_a_dry_run_that_writes_nothing_and_dumps_nothing(self):
         self.assertEqual(self.go(), 0)
         self.assertEqual(self.svc.writes(), [])
+        self.assertNotIn("dump", [c[0] for c in self.log])
         self.assertEqual(self.report()["mode"], "dry-run")
+        self.assertIsNone(self.report()["dump"])
 
-    def test_apply_writes_and_exits_0(self):
+    def test_apply_dumps_first_then_writes_and_names_the_dump_in_the_report(self):
         self.assertEqual(self.go("--apply"), 0)
-        self.assertEqual(self.svc.writes(), [("create", "Alpha-A"), ("update", "r1")])
-        self.assertEqual((self.report()["summary"]["created"], self.report()["summary"]["updated"]),
-                         (1, 1))
+        kinds = [c[0] for c in self.log if c[0] in ("dump", "create", "update", "delete")]
+        self.assertEqual(kinds[0], "dump")
+        self.assertEqual(self.report()["dump"], self.dump_path)
+        self.assertEqual(self.svc.writes(), [("create", "Alpha-A"), ("update", "Beta-B"),
+                                             ("delete", "id-1"), ("delete", "Gone-G")])
 
-    def with_info_people(self):
-        """Add two people with no ORCID: the matcher reports each as `info`."""
-        with open(self.people, "w") as fp:
-            json.dump([person("Alpha-A", orcid=ORCID_A), person("Alpha-B", orcid=ORCID_B),
-                       person("Gamma-C"), person("Gamma-D")], fp)
-
-    def test_a_full_report_keeps_the_info_items_and_has_no_counts_block(self):
-        self.with_info_people()
+    def test_a_dry_run_does_not_mind_an_existing_dump_file(self):
+        with open(self.dump_path, "w") as fp:
+            fp.write("keep me")
         self.assertEqual(self.go(), 0)
-        rep = self.report()
-        self.assertEqual(sum(1 for i in rep["plan"] if i["outcome"] == "info"), 2)
-        self.assertNotIn("compact", rep)
-        self.assertNotIn("plan_counts", rep)
 
-    def test_compact_drops_info_items_and_counts_them(self):
-        self.with_info_people()
+    def test_a_dump_path_can_be_chosen(self):
+        other = os.path.join(self.dir, "pre.jsonl")
+        self.assertEqual(self.go("--apply", "--dump", other), 0)
+        self.assertEqual(self.report()["dump"], other)
+        self.assertTrue(os.path.exists(other))
+
+    def test_a_failed_dump_stops_before_any_write_exit_74(self):
+        self.dump_error = OSError("disk full")
+        self.assertEqual(self.go("--apply"), 74)
+        self.assertEqual(self.svc.writes(), [])
+
+    def test_an_existing_dump_file_is_never_overwritten_exit_73(self):
+        with open(self.dump_path, "w") as fp:
+            fp.write("keep me")
+        self.assertEqual(self.go("--apply"), 73)
+        with open(self.dump_path) as fp:
+            self.assertEqual(fp.read(), "keep me")
+        self.assertEqual(self.svc.calls, [])
+
+    def test_many_removals_go_ahead_with_exit_0(self):
+        many = FakeService({f"G-{i}": stored(f"G-{i}", clpid=f"G-{i}") for i in range(120)})
+        self.assertEqual(self.go("--apply", svc=many), 0)
+        self.assertEqual(sum(1 for c in many.calls if c[0] == "delete"), 120)
+
+    def test_the_old_cap_flags_are_gone_usage_2(self):
+        for flag in (["--max-removals", "5"], ["--allow-many-removals"]):
+            with self.assertRaises(SystemExit) as ctx:
+                self.go(*flag)
+            self.assertEqual(ctx.exception.code, 2)
+            self.assertEqual(self.svc.calls, [])
+
+    def test_scope_pushes_one_person_and_removes_nothing_else(self):
+        self.assertEqual(self.go("--apply", "--scope", "Alpha-A"), 0)
+        self.assertEqual(self.svc.writes(), [("create", "Alpha-A"), ("delete", "id-1")])
+        self.assertEqual(self.report()["scope"], "Alpha-A")
+
+    def test_a_scope_cold_does_not_hold_writes_nothing_and_says_so(self):
+        self.assertEqual(self.go("--apply", "--scope", "Nobody-Z"), 0)
+        self.assertEqual(self.svc.writes(), [])
+        self.assertEqual([i["action"] for i in self.report()["plan"]], ["not_in_cold"])
+
+    def test_compact_keeps_what_is_reviewable_and_counts_the_rest(self):
         self.assertEqual(self.go("--compact"), 0)
         rep = self.report()
         self.assertTrue(rep["compact"])
-        self.assertEqual([i for i in rep["plan"] if i["outcome"] == "info"], [])
-        self.assertEqual(rep["plan_counts"]["info"], 2)
-
-    def test_compact_keeps_every_other_item_exactly_as_the_full_report_has_it(self):
-        self.with_info_people()
-        self.go()
-        full = self.report()
-        import os
-        os.remove(self.out)
-        self.go("--compact")
-        compact = self.report()
-        self.assertEqual(compact["plan"], [i for i in full["plan"] if i["outcome"] != "info"])
-        self.assertEqual(compact["results"], full["results"])
-        self.assertEqual(compact["summary"], full["summary"])
-        counts = {}
-        for i in full["plan"]:
-            counts[i["outcome"]] = counts.get(i["outcome"], 0) + 1
-        self.assertEqual(compact["plan_counts"], counts)
-
-    def info_plan(self):
-        """A plan whose only items are `info` ones, each about a person."""
-        return m.build_plan([person("Alpha-A"), person("Gamma-C")], [])
-
-    def test_compact_drops_every_info_item_but_counts_it(self):
-        """cold DR-0036 decision 7: no `info` item is stored any more."""
-        plan = self.info_plan()
-        self.assertTrue(plan and all(i["outcome"] == "info" for i in plan))
-        out = a.compact_plan(plan)
-        self.assertEqual(out["plan"], [])
-        self.assertEqual(out["plan_counts"], {"info": len(plan)})
-
-    def test_compact_with_a_scope_counts_only_that_person(self):
-        out = a.compact_plan(self.info_plan(), "Alpha-A")
-        self.assertEqual(out["plan"], [])
-        self.assertEqual(out["plan_counts"], {"info": 1})
-
-    def test_there_is_no_list_of_stored_info_actions(self):
-        self.assertFalse(hasattr(a, "STORED_INFO_ACTIONS"))
-
-    def test_compact_with_a_scope_reports_only_that_person_and_counts_only_theirs(self):
-        self.with_info_people()
-        self.assertEqual(self.go("--compact", "--scope", "Gamma-C"), 0)
-        rep = self.report()
-        self.assertEqual(rep["scope"], "Gamma-C")
-        self.assertEqual(rep["plan"], [])
-        self.assertEqual(rep["plan_counts"], {"info": 1})
-
-    def test_a_scope_finds_items_about_the_person_even_when_the_item_names_an_rdm_clpid(self):
-        """A conflict's own clpid can be the RDM entry's, unknown to COLD. A rerun for the COLD
-        person must still see it: dropping it would make an unresolved problem look resolved."""
-        plan = m.build_plan([person("Alpha-A", orcid=ORCID_A)],
-                            [entry("r1", clpid="Old-Id", orcid=ORCID_A)])
-        item = [i for i in plan if i["action"] == "conflict"][0]
-        self.assertEqual(item["clpid"], "Old-Id")
-        scoped = a.compact_plan(plan, "Alpha-A")
-        self.assertEqual([i["action"] for i in scoped["plan"]], ["conflict"])
-        self.assertEqual(scoped["plan_counts"], {"needs_human": 1})
-        # and it is still found by the clpid the item itself carries
-        self.assertEqual([i["action"] for i in a.compact_plan(plan, "Old-Id")["plan"]], ["conflict"])
-        # but not for an unrelated person
-        self.assertEqual(a.compact_plan(plan, "Zed-Z")["plan"], [])
+        self.assertNotIn("create", [i["action"] for i in rep["plan"]])
+        self.assertEqual(rep["action_counts"]["create"], 1)
 
     def test_compact_never_changes_what_is_applied(self):
-        self.with_info_people()
         self.assertEqual(self.go("--apply", "--compact"), 0)
-        self.assertEqual(self.svc.writes(), [("create", "Alpha-A"), ("update", "r1")])
-
-    def test_scope_limits_the_run(self):
-        self.assertEqual(self.go("--apply", "--scope", "Nobody-Z"), 0)
-        self.assertEqual(self.svc.writes(), [])
+        self.assertEqual(self.svc.writes(), [("create", "Alpha-A"), ("update", "Beta-B"),
+                                             ("delete", "id-1"), ("delete", "Gone-G")])
 
     def test_the_report_file_is_private(self):
-        import os
-        import stat
         self.go()
         self.assertEqual(stat.S_IMODE(os.stat(self.out).st_mode), 0o600)
+
+    def test_the_dump_file_is_private_by_the_real_dumper(self):
+        path = os.path.join(self.dir, "real.jsonl")
+        rows = [{"table": "name_metadata", "row": {"id": "u1"}}]
+        a.write_dump(path, rows)
+        self.assertEqual(stat.S_IMODE(os.stat(path).st_mode), 0o600)
+        with open(path) as fp:
+            self.assertEqual([json.loads(l) for l in fp], rows)
+        with self.assertRaises(FileExistsError):
+            a.write_dump(path, rows)
 
     def test_an_existing_output_file_is_never_overwritten_exit_73(self):
         with open(self.out, "w") as fp:
             fp.write("keep me")
         self.assertEqual(self.go("--apply"), 73)
-        self.assertEqual(open(self.out).read(), "keep me")
+        with open(self.out) as fp:
+            self.assertEqual(fp.read(), "keep me")
         self.assertEqual(self.svc.calls, [])
 
     def test_a_missing_people_file_is_66(self):
-        import os
         os.remove(self.people)
         self.assertEqual(self.go(), 66)
         self.assertEqual(self.svc.calls, [])
@@ -474,23 +862,124 @@ class TestMain(unittest.TestCase):
             json.dump({"clpid": "x"}, fp)
         self.assertEqual(self.go(), 65)
 
+    def bad_people(self, people):
+        with open(self.people, "w") as fp:
+            json.dump(people, fp)
+        code = self.go("--apply")
+        self.assertEqual(self.svc.calls, [])        # RDM was not touched at all
+        self.assertFalse(os.path.exists(self.out))
+        return code
+
+    def test_an_empty_people_list_is_65_and_removes_nothing(self):
+        # Not "COLD holds nobody": an export that read nothing would otherwise remove every name.
+        self.assertEqual(self.bad_people([]), 65)
+
+    def test_a_row_that_is_not_an_object_is_65(self):
+        self.assertEqual(self.bad_people([person("Alpha-A"), "Beta-B"]), 65)
+
+    def test_a_row_without_a_clpid_is_65(self):
+        row = person("Alpha-A")
+        del row["clpid"]
+        self.assertEqual(self.bad_people([row, person("Beta-B")]), 65)
+
+    def test_a_row_with_a_blank_clpid_is_65(self):
+        self.assertEqual(self.bad_people([person("Alpha-A"), person("  ")]), 65)
+
+    def test_a_clpid_that_is_not_text_is_65(self):
+        row = person("Alpha-A")
+        row["clpid"] = 17
+        self.assertEqual(self.bad_people([row]), 65)
+
+    def test_a_clpid_listed_twice_is_65(self):
+        self.assertEqual(self.bad_people([person("Alpha-A"), person("Beta-B"), person("Alpha-A")]), 65)
+
+    def test_the_check_also_guards_a_one_person_push_and_a_dry_run(self):
+        with open(self.people, "w") as fp:
+            json.dump([], fp)
+        self.assertEqual(self.go("--scope", "Alpha-A"), 65)
+        self.assertEqual(self.go(), 65)
+
+    def test_a_clean_people_file_still_runs(self):
+        self.assertEqual(self.go(), 0)
+
+    def test_the_message_names_the_problem_not_the_people(self):
+        problems = a.check_people([person("Alpha-A", given="Secret"), person("Alpha-A")])
+        self.assertEqual(len(problems), 1)
+        self.assertIn("Alpha-A", problems[0])
+        self.assertNotIn("Secret", problems[0])
+
+    def test_check_people_reports_each_kind_once_per_row(self):
+        row = person("x")
+        del row["clpid"]
+        problems = a.check_people([row, "text", person("B-B"), person("B-B")])
+        self.assertEqual(len(problems), 3)
+        self.assertEqual(a.check_people([person("Alpha-A")]), [])
+        self.assertEqual(len(a.check_people([person("C-C")] * 3)), 1)
+
+    # ---- the write path is only verified for some RDM versions (cold DR-0031) ----
+
+    def test_an_apply_on_an_untested_rdm_version_is_refused_with_exit_1_and_writes_nothing(self):
+        self.assertEqual(self.go("--apply", version="14.0.0"), 1)
+        self.assertEqual(self.svc.calls, [])
+        self.assertNotIn("dump", [c[0] for c in self.log])
+        rep = self.report()
+        self.assertIn("14.0.0", rep["aborted"])
+        self.assertIn("unchecked", rep["aborted"])
+        self.assertEqual(rep["rdm_version"], {"name": "invenio-app-rdm", "version": "14.0.0",
+                                              "tested": False})
+        self.assertEqual(rep["results"], [])
+
+    def test_an_apply_that_cannot_read_the_version_is_refused_too(self):
+        self.assertEqual(self.go("--apply", version=RuntimeError("no such package")), 1)
+        self.assertEqual(self.svc.calls, [])
+        self.assertIn("no such package", self.report()["aborted"])
+        self.assertIsNone(self.report()["rdm_version"]["version"])
+
+    def test_a_one_person_apply_is_refused_on_an_untested_version_too(self):
+        self.assertEqual(self.go("--apply", "--scope", "Alpha-A", version="12.0.1"), 1)
+        self.assertEqual(self.svc.writes(), [])
+
+    def test_a_dry_run_on_an_untested_version_still_runs_and_says_the_version(self):
+        self.assertEqual(self.go(version="14.0.0"), 0)
+        rep = self.report()
+        self.assertEqual(rep["rdm_version"]["tested"], False)
+        self.assertIsNone(rep["aborted"])
+        self.assertTrue(rep["plan"])
+
+    def test_a_tested_version_is_recorded_and_runs(self):
+        self.assertEqual(self.go("--apply", version="13.1.2"), 0)
+        self.assertEqual(self.report()["rdm_version"],
+                         {"name": "invenio-app-rdm", "version": "13.1.2", "tested": True})
+
+    def test_the_check_reads_the_version_before_it_touches_rdm(self):
+        loaded = []
+        a.main(["--people", self.people, "--out", self.out, "--apply"],
+               load_entries=lambda env: loaded.append("entries") or self.svc.entries(),
+               make_service=lambda env: self.svc, dump=self.dump,
+               read_version=lambda env: "14.0.0")
+        self.assertEqual(loaded, [])
+
     def test_a_bad_flag_is_usage_2(self):
         with self.assertRaises(SystemExit) as ctx:
             a.main(["--bogus"], load_entries=lambda e: [], make_service=lambda e: self.svc)
         self.assertEqual(ctx.exception.code, 2)
 
     def test_a_read_abort_exits_70_and_still_writes_the_partial_report(self):
-        svc = FakeService(read_error={"Alpha-A": RuntimeError("database is down")})
+        svc = FakeService(read_error={"Alpha-A": RuntimeError("database is down")}, log=self.log)
         self.assertEqual(self.go("--apply", svc=svc), 70)
-        rep = self.report()
-        self.assertIn("database is down", rep["aborted"])
+        self.assertIn("database is down", self.report()["aborted"])
         self.assertEqual(svc.writes(), [])
 
     def test_an_item_error_exits_70_after_the_rest_was_done(self):
-        svc = FakeService({"r1": stored("r1", clpid="Alpha-B")},
-                          write_error={"Alpha-A": ValueError("schema says no")})
+        svc = FakeService({"Gone-G": stored("Gone-G", clpid="Gone-G")},
+                          write_error={"Alpha-A": ValueError("schema says no")}, log=self.log)
         self.assertEqual(self.go("--apply", svc=svc), 70)
         self.assertEqual(self.report()["summary"]["error"], 1)
+
+    def test_an_index_failure_exits_70(self):
+        self.svc.index_error = RuntimeError("queue is down")
+        self.assertEqual(self.go("--apply"), 70)
+        self.assertEqual(self.report()["index"]["status"], "error")
 
     def test_the_database_cannot_be_reached_exits_69_and_touches_nothing(self):
         def broken(env):
@@ -557,6 +1046,19 @@ class TestNamesServiceAdapter(unittest.TestCase):
             self.calls.append(("update", identity, id_, data))
             return TestNamesServiceAdapter.Item(data)
 
+        def delete(self, identity, id_):
+            self.calls.append(("delete", identity, id_))
+
+        def rebuild_index(self, identity):
+            self.calls.append(("rebuild_index", identity))
+
+        class indexer:
+            drained = []
+
+            @classmethod
+            def process_bulk_queue(cls):
+                cls.drained.append(1)
+
     def adapter(self, stub):
         return a.NamesService(stub, "SYSTEM", (self.PIDDoesNotExist, self.NoResultFound))
 
@@ -584,6 +1086,104 @@ class TestNamesServiceAdapter(unittest.TestCase):
         ad.update("x", {"name": "N"})
         self.assertEqual(stub.calls, [("create", "SYSTEM", {"id": "x"}),
                                       ("update", "SYSTEM", "x", {"name": "N"})])
+
+    def test_delete_passes_the_identity_and_the_id(self):
+        stub = self.Stub()
+        self.adapter(stub).delete("x")
+        self.assertEqual(stub.calls, [("delete", "SYSTEM", "x")])
+
+    def test_rebuild_index_queues_and_then_drains_in_the_same_call(self):
+        stub = self.Stub()
+        self.Stub.indexer.drained.clear()
+        self.adapter(stub).rebuild_index()
+        self.assertEqual(stub.calls, [("rebuild_index", "SYSTEM")])
+        self.assertEqual(self.Stub.indexer.drained, [1])
+
+    # ---- reviving a soft-deleted entry (cold DR-0039) ----
+
+    class Model:
+        def __init__(self, json_=None):
+            self.json = json_
+
+    class Query:
+        def __init__(self, model):
+            self.model = model
+            self.asked = []
+
+        def filter_by(self, **kw):
+            self.asked.append(kw)
+            return self
+
+        def one_or_none(self):
+            return self.model
+
+    def reviving(self, model, update=None):
+        """An adapter over a stub service whose record class holds one row."""
+        outer = self
+        query = self.Query(model)
+
+        class Schema:
+            value = "local://names/name-v1.0.0.json"
+
+        class RecordCls:
+            class model_cls:
+                pass
+            schema = Schema
+        RecordCls.model_cls.query = query
+
+        class Svc(self.Stub):
+            record_cls = RecordCls
+
+            def update(self_, identity, id_, data):
+                self_.calls.append(("update", identity, id_, copy.deepcopy(data),
+                                    copy.deepcopy(model.json) if model else None))
+                if update:
+                    raise update
+                return outer.Item(data)
+
+        class Session:
+            rolled_back = 0
+
+            @classmethod
+            def rollback(cls):
+                cls.rolled_back += 1
+
+        stub = Svc()
+        return a.NamesService(stub, "SYSTEM", (self.PIDDoesNotExist,), session=Session), stub, Session, query
+
+    def test_revive_gives_the_deleted_row_valid_json_and_then_lets_the_service_update_it(self):
+        model = self.Model(None)
+        ad, stub, session, query = self.reviving(model)
+        ad.revive({"id": "Alpha-A", "name": "Alpha, Ann", "identifiers": []})
+        self.assertEqual(query.asked, [{"pid": "Alpha-A"}])
+        update = stub.calls[0]
+        self.assertEqual(update[:3], ("update", "SYSTEM", "Alpha-A"))
+        # at the moment of the update the row already holds the schema key and nothing stale
+        self.assertEqual(update[4], {"$schema": "local://names/name-v1.0.0.json"})
+        # the data handed to the service carries no id (the id is the first argument)
+        self.assertNotIn("id", update[3])
+        self.assertEqual(update[3]["name"], "Alpha, Ann")
+
+    def test_a_failed_revive_rolls_the_transaction_back_and_raises(self):
+        model = self.Model(None)
+        ad, stub, session, _ = self.reviving(model, update=RuntimeError("validation said no"))
+        with self.assertRaises(RuntimeError):
+            ad.revive({"id": "Alpha-A", "name": "Alpha, Ann"})
+        self.assertEqual(session.rolled_back, 1)
+
+    def test_revive_refuses_a_row_that_is_not_soft_deleted(self):
+        model = self.Model({"name": "Alpha, Ann"})
+        ad, stub, session, _ = self.reviving(model)
+        with self.assertRaises(a.NotSoftDeleted):
+            ad.revive({"id": "Alpha-A", "name": "x"})
+        self.assertEqual(stub.calls, [])
+        self.assertEqual(model.json, {"name": "Alpha, Ann"})
+
+    def test_revive_refuses_an_id_that_has_no_row(self):
+        ad, stub, _, _ = self.reviving(None)
+        with self.assertRaises(a.NotSoftDeleted):
+            ad.revive({"id": "Alpha-A", "name": "x"})
+        self.assertEqual(stub.calls, [])
 
     def test_an_adapter_error_through_apply_plan_aborts_only_when_it_is_not_not_found(self):
         plan = plan_for([person("Alpha-A", orcid=ORCID_A)], [])
@@ -633,14 +1233,26 @@ class TestEntryFromRow(unittest.TestCase):
         doc = {"name": "Probe, Cold", "given_name": "Cold", "family_name": "Probe",
                "identifiers": [{"scheme": "clpid", "identifier": "Alpha-A"}]}
         ent = [self.x.entry_from_row("uuid-1", None, doc)]
-        plan = m.build_plan([person("Alpha-A", orcid=ORCID_A)], ent)
-        self.assertEqual([i["action"] for i in plan if i["outcome"] == "applied"], ["add_identifier"])
+        plan = m.build_plan([person("Alpha-A", family="Probe", given="Cold", orcid=ORCID_A)], ent)
+        self.assertEqual([i["action"] for i in plan if i["outcome"] == "applied"], ["update"])
         self.assertEqual([i["rdm_id"] for i in plan if i["outcome"] == "applied"], ["Alpha-A"])
 
-    def test_the_query_keeps_rows_without_a_pid(self):
+    def test_the_query_keeps_soft_deleted_rows_and_takes_the_id_from_the_row(self):
+        # A soft-deleted row has NULL json, and a service-created entry has no pidstore_pid row; the
+        # `pid` column of name_metadata is set on every row (checked on the rehearsal VM, 2026-11-12).
         sql = " ".join(self.x.ENTRIES_SQL.split()).upper()
-        self.assertIn("LEFT JOIN PIDSTORE_PID", sql)
+        self.assertNotIn("JSON IS NOT NULL", sql)
+        self.assertIn("M.PID", sql)
         self.assertNotIn(" INNER JOIN", sql)
+
+    def test_a_soft_deleted_row_is_an_entry_with_empty_metadata(self):
+        self.assertEqual(self.x.entry_from_row("uuid-1", "Alpha-A", None),
+                         {"rdm_id": "Alpha-A", "metadata": {}})
+
+    def test_a_soft_deleted_service_created_id_is_seen_by_the_matcher_and_revived(self):
+        ent = [self.x.entry_from_row("uuid-1", "Alpha-A", None)]
+        plan = m.build_plan([person("Alpha-A")], ent)
+        self.assertEqual([(i["action"], i["outcome"]) for i in plan], [("revive", "applied")])
 
     def test_importing_the_module_needs_no_arguments_and_no_invenio(self):
         import importlib

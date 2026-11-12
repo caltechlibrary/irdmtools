@@ -8,11 +8,13 @@ Runs on the RDM instance as the instance's own user, under its own `uv run`:
 Each line is {"rdm_id": <the entry's id>, "metadata": <the stored JSON, untouched>}, so stray
 top-level keys (the legacy `id` and `pid`) are preserved for the matcher to see.
 
-Every row of `name_metadata` is exported. The names service creates entries with NO
-pidstore_pid row and no `id` in the stored JSON (found on the test instance, 2026-11-10), so a
-join through pidstore_pid silently drops everything the sync itself created. An entry without a
-pid row takes its one clpid as its id (the sync creates entries with id equal to the clpid,
-cold DR-0031), and falls back to the row's uuid when it has none or several.
+Every row of `name_metadata` is exported, soft-deleted ones included (their `json` is NULL and they
+come out with empty metadata, so the planner knows an id is taken). The entry's id is the row's own
+`pid` column, set on every row and equal to the pidstore_pid value where there is one (checked on the
+rehearsal VM, 2026-11-12). The names service creates entries with NO pidstore_pid row and no `id` in
+the stored JSON (found on the test instance, 2026-11-10), so a join through pidstore_pid would drop
+everything a push created. A row with no `pid` takes its one clpid as its id and falls back to its
+uuid when it has none or several.
 
 Safe by construction: a READ ONLY transaction and a single SELECT. The output file is mode 0600.
 Also imported by people_rdm_apply.py, which is why nothing here runs at import time.
@@ -22,11 +24,9 @@ import os
 import sys
 
 ENTRIES_SQL = """
-SELECT m.id, p.pid_value, m.json
+SELECT m.id, m.pid, m.json
 FROM name_metadata m
-LEFT JOIN pidstore_pid p ON p.object_uuid = m.id AND p.pid_type = 'names'
-WHERE m.json IS NOT NULL
-ORDER BY p.pid_value NULLS LAST, m.id
+ORDER BY m.pid NULLS LAST, m.id
 """
 
 
@@ -34,7 +34,7 @@ def entry_from_row(uuid, pid_value, doc):
     """Turn one database row into a matcher entry {"rdm_id", "metadata"}.
 
     @param uuid {str} the row's primary key
-    @param pid_value {str} the pidstore_pid value, or None when no pid row points at the row
+    @param pid_value {str} the row's `pid` column (the entry's id), or None
     @param doc {dict|str} the stored JSON, or its text
     @returns {dict} the entry; the stored document is returned untouched
     @example
@@ -42,6 +42,7 @@ def entry_from_row(uuid, pid_value, doc):
     """
     if isinstance(doc, str):
         doc = json.loads(doc)
+    doc = doc or {}     # a soft-deleted row has NULL json: an entry with empty metadata
     if pid_value is not None:
         return {"rdm_id": pid_value, "metadata": doc}
     clpids = [i.get("identifier") for i in doc.get("identifiers") or []
