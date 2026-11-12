@@ -1,0 +1,103 @@
+version = 1
+revision = 3
+requires-python = ">=3.8"
+resolution-markers = [
+    "python_full_version >= '3.10'",
+    "python_full_version == '3.9.*'",
+    "python_full_version > '3.8' and python_full_version < '3.9'",
+    "python_full_version <= '3.8'",
+]
+
+[[package]]
+name = "idutils"
+version = "1.6.0"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version <= '3.8'",
+]
+dependencies = [
+    { name = "isbnlib", marker = "python_full_version <= '3.8'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/06/ea/97f631ea64e756bbbd4b17c3e8173033321fb39527da8bfd5b5b8332fdd4/idutils-1.6.0.tar.gz", hash = "sha256:dfffe30a6abdba85b1710ef3bb469ae586f72a3db3f36217b82213ed8de32f85", size = 35905, upload-time = "2026-03-19T07:49:10.553Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/5f/25/eb953116f129414fb21f563c0253efda09fbc482507cede686005a5026a4/idutils-1.6.0-py2.py3-none-any.whl", hash = "sha256:fe84d9d837c16f1ec9062687fa8bdc133fcbdab6365f894511e67b2aaa1849d7", size = 24654, upload-time = "2026-03-19T07:49:09.07Z" },
+]
+
+[[package]]
+name = "idutils"
+version = "1.6.1"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version > '3.8' and python_full_version < '3.9'",
+]
+dependencies = [
+    { name = "isbnlib2", version = "3.11.7", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version > '3.8' and python_full_version < '3.9'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/23/1b/8d35c02739e1bcf53c23107324f56565e42ab87e53d3cb82322368a024ec/idutils-1.6.1.tar.gz", hash = "sha256:4604827ed52aa272843f1c53b25ed3be864868a9abcdf0ee7932df56f94458b8", size = 35853, upload-time = "2026-05-28T08:54:17.464Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/7b/9c/aa092c1daaac95ba6b19d9d2f0542a27692c11ec4e3175f6f98e08d49681/idutils-1.6.1-py2.py3-none-any.whl", hash = "sha256:de24b0f5d9317052223819a99893f913d752820c3d7046d3a4e970b1221e0723", size = 23814, upload-time = "2026-05-28T08:54:16.43Z" },
+]
+
+[[package]]
+name = "idutils"
+version = "1.7.1"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.10'",
+    "python_full_version == '3.9.*'",
+]
+dependencies = [
+    { name = "isbnlib2", version = "3.11.7", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.9.*'" },
+    { name = "isbnlib2", version = "3.11.24", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/d2/33/12b04eb3082a10328bb6e7770b9e89b336b4a2c5dbed0e52750f4d6e222c/idutils-1.7.1.tar.gz", hash = "sha256:f2e1b860d117e5389adaddb3b67a17b90a17fb428b59351bab6ecf74e64608a3", size = 17926, upload-time = "2026-10-20T15:44:25.819Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/07/ee/efa1d86e216fcd44747a0696624d13e3131438ed5f24108762d3ed9d5f79/idutils-1.7.1-py3-none-any.whl", hash = "sha256:2e6b5f8bf4fcc495e6186b2b0d59d38477641546506a363e13f42589f2bfa362", size = 21862, upload-time = "2026-10-20T15:44:24.647Z" },
+]
+
+[[package]]
+name = "irdmtools-people-push"
+version = "0.0.0"
+source = { virtual = "." }
+dependencies = [
+    { name = "idutils", version = "1.6.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version <= '3.8'" },
+    { name = "idutils", version = "1.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version > '3.8' and python_full_version < '3.9'" },
+    { name = "idutils", version = "1.7.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.9'" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "idutils", specifier = ">=1.5.1" }]
+
+[[package]]
+name = "isbnlib"
+version = "3.10.14"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/9e/6d/55b9ee89fdfb3aacb92b975a60357c7aa547db358817e16be3b6f8f5d781/isbnlib-3.10.14.tar.gz", hash = "sha256:96f90864c77b01f55fa11e5bfca9fd909501d9842f3bc710d4eab85195d90539", size = 48046, upload-time = "2023-04-26T08:53:05.486Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/dd/ce/1eb1e2afaca49add3185e202ce9c2c6d5779b7eecb20973e43ad804eb2a4/isbnlib-3.10.14-py2.py3-none-any.whl", hash = "sha256:f885b350fc8e600a919ed46e3b07253062cd604af69885455a25a299217b3fe2", size = 52535, upload-time = "2023-04-26T08:53:03.024Z" },
+]
+
+[[package]]
+name = "isbnlib2"
+version = "3.11.7"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version == '3.9.*'",
+    "python_full_version > '3.8' and python_full_version < '3.9'",
+]
+sdist = { url = "https://files.pythonhosted.org/packages/54/a9/4c1d1a13cc307bab80f78c02ff113533dca2ef3ef226b8bf3e237ab02cb6/isbnlib2-3.11.7.tar.gz", hash = "sha256:7aa9da05eb477f16e147ba56f56fb4610d644d08b11377b2644d874b17e8e838", size = 55939, upload-time = "2026-02-06T13:36:55.812Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/d4/0f/5fd8349c7543e0892fee011b57e8b40af4e2ab469e1f2490a04bf26010d0/isbnlib2-3.11.7-py3-none-any.whl", hash = "sha256:86bbdce570afbce03fd5a2a2f1f22274d9de7014e181fc07fd46a0f4a514e8cf", size = 66744, upload-time = "2026-02-06T13:36:54.312Z" },
+]
+
+[[package]]
+name = "isbnlib2"
+version = "3.11.24"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.10'",
+]
+sdist = { url = "https://files.pythonhosted.org/packages/b3/63/3d3394634d9e14b1dfbc4d5c1ba9733c1018083cabad65f51636063f85d5/isbnlib2-3.11.24.tar.gz", hash = "sha256:d13dbb147779c975f42bd69c10715111a353d66cb720a858009101b8638f6ee7", size = 57312, upload-time = "2026-09-19T13:55:29.751Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/0a/3b/69dfdc1990f6c154b101b656aa662b1f2890511e849fd060976d7e02b6f2/isbnlib2-3.11.24-py3-none-any.whl", hash = "sha256:bb49dffb55b112de3800cbbdf9a484592e2a1033c0d126a73f52db98ecbd69c9", size = 68239, upload-time = "2026-09-19T13:55:28.201Z" },
+]

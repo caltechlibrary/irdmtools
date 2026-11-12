@@ -3,14 +3,14 @@
 
 Usage: people_rdm_export_cold.py people.jsonl OUT.json
 
-Deliberately drops everything else (email, bio, internal_notes, ...): the sync needs
+Carries ``ror`` (cold DR-0040: it drives the person's affiliations). Deliberately drops everything else (email, bio, internal_notes, ...): the sync needs
 identity only, and nothing else should leave the COLD collection.
 """
 import json
 import sys
 
 FIELDS = ("clpid", "family_name", "given_name", "orcid", "isni",
-          "thesis_id", "authors_id", "advisors_id")
+          "thesis_id", "authors_id", "advisors_id", "ror")
 FLAGS = ("caltech", "jpl")      # affiliation flags (cold DR-0037); absent means false
 
 people = []

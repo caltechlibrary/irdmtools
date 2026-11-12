@@ -18,12 +18,16 @@ import unittest
 
 import people_rdm_match as m
 
-ORCID_A = "0000-0002-0000-0001"
-ORCID_B = "0000-0002-0000-0002"
-ORCID_C = "0000-0002-0000-0003"
-ORCID_X = "0000-0002-0000-000X"
+# Synthetic identifiers with valid check digits: the push validates with idutils (cold DR-0041),
+# which verifies them. The *_BAD ones have a well formed shape and a wrong check digit.
+ORCID_A = "0000-0002-0000-0014"
+ORCID_B = "0000-0002-0000-0022"
+ORCID_C = "0000-0002-0000-0030"
+ORCID_X = "0000-0002-0000-009X"
+ORCID_BAD = "0000-0002-0000-0015"
 ISNI_A = "0000 0001 2345 6789"
-ISNI_B = "0000 0001 2345 6790"
+ISNI_B = "0000 0001 2281 955X"
+ISNI_BAD = "0000 0001 2345 6790"
 CALTECH = "05dxps055"
 JPL = "027k65916"
 OTHER_ROR = "00abcde12"
@@ -108,19 +112,28 @@ class TestNormalization(unittest.TestCase):
         self.assertEqual(m.normalize_orcid(ORCID_X.lower()), m.normalize_orcid(ORCID_X))
 
 
-class TestIdentifierShape(unittest.TestCase):
-    def test_orcid_shape(self):
-        for ok in (ORCID_A, ORCID_X):
-            self.assertTrue(m.is_valid_orcid(ok), ok)
-        for bad in ("", "0000-0002-0000-00012", "0000-0002-0000-001", "0000-0002-0000-000Y",
-                    "0000-0002-00000-0001", "000000020000-0001"):
-            self.assertFalse(m.is_valid_orcid(bad), bad)
+class TestIdentifierValidity(unittest.TestCase):
+    """The program asks idutils (cold DR-0041); these pin what it accepts for the synthetic fixtures."""
 
-    def test_isni_shape(self):
-        self.assertTrue(m.is_valid_isni(m.normalize_isni(ISNI_A)))
-        self.assertTrue(m.is_valid_isni("000000012345678X"))
-        for bad in ("", "00000001234567", "00000001234567X", "00000001234567890", "000000012345678Y"):
-            self.assertFalse(m.is_valid_isni(bad), bad)
+    def test_orcid(self):
+        for ok in (ORCID_A, ORCID_X):
+            self.assertTrue(m._valid("orcid", m.normalize_orcid(ok)), ok)
+        for bad in ("", ORCID_BAD, "0000-0002-0000-00012", "0000-0002-0000-001", "0000-0002-0000-000Y",
+                    "0000-0002-00000-0001", "000000020000-0001"):
+            self.assertFalse(m._valid("orcid", bad), bad)
+
+    def test_isni(self):
+        for ok in (ISNI_A, ISNI_B):
+            self.assertTrue(m._valid("isni", m.normalize_isni(ok)), ok)
+        for bad in ("", m.normalize_isni(ISNI_BAD), "00000001234567", "00000001234567X",
+                    "00000001234567890", "000000012345678Y"):
+            self.assertFalse(m._valid("isni", bad), bad)
+
+    def test_ror(self):
+        for ok in (CALTECH, "https://ror.org/" + CALTECH, JPL, OTHER_ROR):
+            self.assertTrue(m._valid("ror", ok), ok)
+        for bad in ("", "not-a-ror", "05dxps05", "https://ror.org/zzzz", "0abcdefgh"):
+            self.assertFalse(m._valid("ror", bad), bad)
 
 
 class TestCreate(unittest.TestCase):
@@ -167,12 +180,12 @@ class TestCreate(unittest.TestCase):
                              caltech_ror="c-ror", jpl_ror="j-ror")[0]["after"]
         self.assertEqual(sorted(a["id"] for a in after["affiliations"]), ["c-ror", "j-ror"])
 
-    def test_cold_ror_does_not_drive_an_affiliation(self):
-        # Open in DR-0037 (item 4); the build keeps ROR out until it is decided.
+    def test_cold_ror_drives_an_affiliation(self):
+        # Decided in cold DR-0040 (was open in DR-0037, item 4); see TestAffiliationsFromColdAlone.
         p = person("Alpha-A")
         p["ror"] = OTHER_ROR
         after = m.build_plan([p], [])[0]["after"]
-        self.assertEqual(after.get("affiliations", []), [])
+        self.assertEqual([a["id"] for a in after["affiliations"]], [OTHER_ROR])
 
     def test_a_person_with_no_given_name_is_named_by_the_family_name_alone(self):
         # "Family, " would never compare equal to what is stored, so every push would update it.
@@ -264,18 +277,20 @@ class TestUpdateInPlace(unittest.TestCase):
         self.assertNotIn("$schema", after)
         self.assertEqual(after["tags"], ["x"])
 
-    def test_an_affiliation_is_added_from_a_flag_and_existing_ones_stay(self):
+    def test_an_affiliation_is_added_from_a_flag(self):
         plan = m.build_plan([person("Alpha-A", caltech=True)],
-                            [entry("Alpha-A", clpid="Alpha-A", ror=OTHER_ROR)])
+                            [entry("Alpha-A", clpid="Alpha-A")])
         item = actions(plan, "update")[0]
         self.assertEqual(item["detail"]["changes"], ["affiliations"])
-        self.assertEqual(sorted(a["id"] for a in item["after"]["affiliations"]),
-                         sorted([OTHER_ROR, CALTECH]))
+        self.assertEqual([a["id"] for a in item["after"]["affiliations"]], [CALTECH])
 
-    def test_a_flag_never_removes_an_affiliation(self):
+    def test_an_entry_affiliation_cold_does_not_hold_is_removed(self):
+        # cold DR-0040: was "a flag never removes an affiliation" (DR-0036's additive rule).
         plan = m.build_plan([person("Alpha-A")],
                             [entry("Alpha-A", clpid="Alpha-A", ror=CALTECH)])
-        self.assertEqual(plan, [])
+        item = actions(plan, "update")[0]
+        self.assertEqual(item["detail"]["changes"], ["affiliations"])
+        self.assertNotIn("affiliations", item["after"])
 
     def test_a_ror_url_form_counts_as_the_same_affiliation(self):
         plan = m.build_plan([person("Alpha-A", caltech=True)],
@@ -297,14 +312,13 @@ class TestReplaceLegacy(unittest.TestCase):
         self.assertEqual(plan[1]["detail"]["replaced_by"], "Alpha-A")
         self.assertEqual(plan[1]["clpid"], "Alpha-A")
 
-    def test_the_new_entry_carries_the_legacy_affiliations_plus_the_flags(self):
+    def test_the_new_entry_takes_its_affiliations_from_the_flags_not_the_legacy_entry(self):
         plan = m.build_plan([person("Alpha-A", caltech=True)],
                             [legacy("fnvmz-3ak39", clpid="Alpha-A", ror=OTHER_ROR)])
         after = actions(plan, "create")[0]["after"]
-        self.assertEqual(sorted(a["id"] for a in after["affiliations"]),
-                         sorted([OTHER_ROR, CALTECH]))
+        self.assertEqual([a["id"] for a in after["affiliations"]], [CALTECH])
 
-    def test_a_carried_affiliation_the_flag_also_gives_appears_once(self):
+    def test_an_affiliation_the_legacy_entry_and_the_flag_share_appears_once(self):
         plan = m.build_plan([person("Alpha-A", caltech=True)],
                             [legacy("id-one", clpid="Alpha-A", ror=CALTECH)])
         after = actions(plan, "create")[0]["after"]
@@ -329,7 +343,7 @@ class TestReplaceLegacy(unittest.TestCase):
         self.assertEqual(sorted(i["rdm_id"] for i in actions(plan, "replace")),
                          ["id-one", "id-two"])
         ids = [a["id"] for a in actions(plan, "create")[0]["after"]["affiliations"]]
-        self.assertEqual(sorted(ids), sorted([OTHER_ROR, CALTECH]))
+        self.assertEqual(ids, [CALTECH])
 
     def test_a_legacy_entry_beside_a_current_entry_is_replaced_by_updating_it(self):
         plan = m.build_plan([person("Alpha-A", caltech=True)],
@@ -338,7 +352,7 @@ class TestReplaceLegacy(unittest.TestCase):
         self.assertEqual([(i["action"], i["rdm_id"]) for i in plan],
                          [("update", "Alpha-A"), ("replace", "id-one")])
         ids = [a["id"] for a in actions(plan, "update")[0]["after"]["affiliations"]]
-        self.assertEqual(sorted(ids), sorted([OTHER_ROR, CALTECH]))
+        self.assertEqual(ids, [CALTECH])
 
     def test_a_replace_lists_what_differs_between_the_legacy_entry_and_cold(self):
         plan = m.build_plan([person("Alpha-A", family="Alpha", given="Ann", orcid=ORCID_B,
@@ -435,13 +449,13 @@ class TestDeletedRows(unittest.TestCase):
             self.assertEqual(actions(plan, "id_deleted"), [])
             self.assertEqual(outcomes(plan, "needs_human"), [])
 
-    def test_the_legacy_entries_of_a_revived_person_are_replaced_and_their_affiliations_carried(self):
+    def test_the_legacy_entries_of_a_revived_person_are_replaced_and_nothing_is_carried(self):
         plan = m.build_plan([person("Alpha-A", caltech=True)],
                             [deleted("Alpha-A"), legacy("id-1", clpid="Alpha-A", ror=OTHER_ROR)])
         self.assertEqual([(i["action"], i["rdm_id"]) for i in plan],
                          [("revive", "Alpha-A"), ("replace", "id-1")])
         ids = [a["id"] for a in actions(plan, "revive")[0]["after"]["affiliations"]]
-        self.assertEqual(sorted(ids), sorted([OTHER_ROR, CALTECH]))
+        self.assertEqual(ids, [CALTECH])
 
     def test_a_revive_is_part_of_a_scoped_plan_for_that_person_only(self):
         plan = m.build_plan([person("Alpha-A"), person("Beta-B")],
@@ -554,7 +568,7 @@ class TestWholeSetProperties(unittest.TestCase):
         m.build_plan(people, entries)
         self.assertEqual((people, entries), (self.PEOPLE, self.ENTRIES))
 
-    def test_carried_affiliations_do_not_depend_on_the_order_of_legacy_entries(self):
+    def test_the_plan_does_not_depend_on_the_order_of_legacy_entries(self):
         people = [person("Alpha-A")]
         entries = [legacy("id-1", clpid="Alpha-A", ror=OTHER_ROR),
                    legacy("id-2", clpid="Alpha-A", ror=CALTECH)]
@@ -626,6 +640,239 @@ class TestSummary(unittest.TestCase):
     def test_summary_counts_a_revive(self):
         plan = m.build_plan([person("Alpha-A")], [deleted("Alpha-A")])
         self.assertEqual(m.summarize(plan)["revive"], 1)
+
+
+CALTECH_URL = "https://ror.org/" + CALTECH
+
+
+def with_ror(p, ror):
+    """The person with COLD's ``ror`` field set, as COLD stores it (a ror.org URL)."""
+    p = dict(p)
+    p["ror"] = ror
+    return p
+
+
+def aff_ids(item):
+    return sorted(a["id"] for a in item["after"].get("affiliations") or [])
+
+
+class TestAffiliationsFromColdAlone(unittest.TestCase):
+    """cold DR-0040: a person's affiliations are COLD's ``ror`` field plus the Caltech and JPL
+    boxes, and nothing else. A ROR COLD no longer holds, or a box now unchecked, leaves the entry;
+    nothing is carried over from a legacy entry."""
+
+    # What COLD holds drives what is written.
+
+    def test_a_ror_in_cold_gives_an_affiliation_with_no_box_checked(self):
+        after = m.build_plan([with_ror(person("Alpha-A"), CALTECH_URL)], [])[0]
+        self.assertEqual(aff_ids(after), [CALTECH])
+
+    def test_a_bare_ror_id_in_cold_is_the_same_as_the_url_form(self):
+        after = m.build_plan([with_ror(person("Alpha-A"), CALTECH)], [])[0]
+        self.assertEqual(aff_ids(after), [CALTECH])
+
+    def test_a_ror_that_is_not_caltech_or_jpl_is_written_too(self):
+        after = m.build_plan([with_ror(person("Alpha-A"), "https://ror.org/" + OTHER_ROR)], [])[0]
+        self.assertEqual(aff_ids(after), [OTHER_ROR])
+
+    def test_a_box_adds_to_the_ror_it_does_not_replace_it(self):
+        after = m.build_plan([with_ror(person("Alpha-A", caltech=True), "https://ror.org/" + OTHER_ROR)],
+                             [])[0]
+        self.assertEqual(aff_ids(after), sorted([OTHER_ROR, CALTECH]))
+
+    def test_ror_and_both_boxes_give_each_affiliation_once(self):
+        after = m.build_plan([with_ror(person("Alpha-A", caltech=True, jpl=True), CALTECH_URL)], [])[0]
+        self.assertEqual(aff_ids(after), sorted([CALTECH, JPL]))
+
+    def test_the_jpl_box_adds_jpl_to_a_caltech_ror(self):
+        after = m.build_plan([with_ror(person("Alpha-A", jpl=True), CALTECH_URL)], [])[0]
+        self.assertEqual(aff_ids(after), sorted([CALTECH, JPL]))
+
+    def test_an_empty_ror_and_no_box_gives_no_affiliation(self):
+        for p in (person("Alpha-A"), with_ror(person("Alpha-A"), ""), with_ror(person("Alpha-A"), None)):
+            after = m.build_plan([p], [])[0]["after"]
+            self.assertEqual(after.get("affiliations") or [], [])
+
+    def test_the_ror_ids_of_the_boxes_are_still_parameters(self):
+        after = m.build_plan([with_ror(person("Alpha-A", jpl=True), "https://ror.org/" + OTHER_ROR)], [],
+                             jpl_ror="j-ror")[0]
+        self.assertEqual(aff_ids(after), sorted([OTHER_ROR, "j-ror"]))
+
+    # What COLD stopped holding leaves the entry.
+
+    def test_a_cleared_ror_removes_the_affiliation_from_the_entry(self):
+        plan = m.build_plan([with_ror(person("Alpha-A"), "")],
+                            [entry("Alpha-A", clpid="Alpha-A", ror=CALTECH)])
+        item = actions(plan, "update")[0]
+        self.assertEqual(item["detail"]["changes"], ["affiliations"])
+        self.assertEqual(aff_ids(item), [])
+
+    def test_an_unchecked_box_removes_its_affiliation(self):
+        e = entry("Alpha-A", clpid="Alpha-A", ror=CALTECH)
+        e["metadata"]["affiliations"].append({"id": JPL, "name": "JPL"})
+        plan = m.build_plan([person("Alpha-A", caltech=True)], [e])
+        item = actions(plan, "update")[0]
+        self.assertEqual(item["detail"]["changes"], ["affiliations"])
+        self.assertEqual(aff_ids(item), [CALTECH])
+
+    def test_an_affiliation_the_entry_has_and_cold_does_not_hold_is_replaced_by_cold_s(self):
+        plan = m.build_plan([person("Alpha-A", jpl=True)],
+                            [entry("Alpha-A", clpid="Alpha-A", ror=OTHER_ROR)])
+        self.assertEqual(aff_ids(actions(plan, "update")[0]), [JPL])
+
+    def test_an_entry_that_already_matches_cold_is_not_updated(self):
+        for p, ror in ((with_ror(person("Alpha-A"), CALTECH_URL), CALTECH),
+                       (person("Alpha-A", caltech=True), "https://ror.org/" + CALTECH),
+                       (person("Alpha-A"), None)):
+            self.assertEqual(m.build_plan([p], [entry("Alpha-A", clpid="Alpha-A", ror=ror)]), [])
+
+    # Nothing is carried over from a legacy entry.
+
+    def test_a_replacement_entry_carries_nothing_from_the_legacy_entry(self):
+        plan = m.build_plan([person("Alpha-A")],
+                            [legacy("fnvmz-3ak39", clpid="Alpha-A", ror=OTHER_ROR)])
+        self.assertEqual(aff_ids(actions(plan, "create")[0]), [])
+
+    def test_a_replacement_entry_has_only_what_cold_holds_even_when_the_legacy_entry_has_more(self):
+        plan = m.build_plan([person("Alpha-A", caltech=True)],
+                            [legacy("fnvmz-3ak39", clpid="Alpha-A", ror=OTHER_ROR)])
+        self.assertEqual(aff_ids(actions(plan, "create")[0]), [CALTECH])
+
+    def test_a_revived_person_carries_nothing_from_the_legacy_entry_either(self):
+        plan = m.build_plan([with_ror(person("Alpha-A"), CALTECH_URL)],
+                            [deleted("Alpha-A"), legacy("id-1", clpid="Alpha-A", ror=OTHER_ROR)])
+        self.assertEqual(aff_ids(actions(plan, "revive")[0]), [CALTECH])
+
+    def test_the_order_of_a_persons_legacy_entries_does_not_matter(self):
+        people = [with_ror(person("Alpha-A"), CALTECH_URL)]
+        entries = [legacy("id-1", clpid="Alpha-A", ror=OTHER_ROR),
+                   legacy("id-2", clpid="Alpha-A", ror=CALTECH)]
+        self.assertEqual(m.build_plan(people, entries), m.build_plan(people, entries[::-1]))
+        self.assertEqual(aff_ids(actions(m.build_plan(people, entries), "create")[0]), [CALTECH])
+
+
+def warnings_of(plan):
+    """The malformed_identifier warnings of a plan as (clpid, scheme, value), sorted."""
+    return sorted((i["clpid"], i["scheme"], i["value"]) for i in plan
+                  if i["action"] == "malformed_identifier")
+
+
+def identifiers_of(item):
+    return {(i["scheme"], i["identifier"]) for i in item["after"]["identifiers"]}
+
+
+class TestIdentifiersAreValidatedWithIdutils(unittest.TestCase):
+    """cold DR-0041: ORCID, ISNI and ROR are validated with idutils, the library RDM validates
+    with. A value that does not validate is not pushed, the person's other data is, and the value
+    is reported as a malformed_identifier warning (clpid, scheme, value)."""
+
+    # A value with the right shape and the wrong check digit is caught here, not by RDM.
+
+    def test_an_orcid_with_a_bad_check_digit_is_not_pushed_and_is_reported(self):
+        plan = m.build_plan([person("Alpha-A", orcid=ORCID_BAD)], [])
+        self.assertEqual(warnings_of(plan), [("Alpha-A", "orcid", ORCID_BAD)])
+        self.assertEqual({s for s, _ in identifiers_of(actions(plan, "create")[0])}, {"clpid"})
+
+    def test_an_isni_with_a_bad_check_digit_is_not_pushed_and_is_reported(self):
+        plan = m.build_plan([person("Alpha-A", isni=ISNI_BAD)], [])
+        self.assertEqual(warnings_of(plan), [("Alpha-A", "isni", ISNI_BAD)])
+        self.assertEqual({s for s, _ in identifiers_of(actions(plan, "create")[0])}, {"clpid"})
+
+    def test_a_bad_orcid_keeps_the_stored_orcid(self):
+        e = entry("Alpha-A", clpid="Alpha-A", orcid=ORCID_A)
+        plan = m.build_plan([person("Alpha-A", orcid=ORCID_BAD)], [e])
+        self.assertEqual(applied(plan), [])
+        self.assertEqual(warnings_of(plan), [("Alpha-A", "orcid", ORCID_BAD)])
+
+    def test_a_bad_isni_keeps_the_stored_isni(self):
+        e = entry("Alpha-A", clpid="Alpha-A", isni=ISNI_A)
+        plan = m.build_plan([person("Alpha-A", isni=ISNI_BAD)], [e])
+        self.assertEqual(applied(plan), [])
+        self.assertEqual(warnings_of(plan), [("Alpha-A", "isni", ISNI_BAD)])
+
+    def test_the_valid_forms_are_pushed_without_a_warning(self):
+        for orcid in (ORCID_A, "https://orcid.org/" + ORCID_A, ORCID_A.replace("-", "")):
+            plan = m.build_plan([person("Alpha-A", orcid=orcid)], [])
+            self.assertEqual(warnings_of(plan), [], orcid)
+            self.assertIn(("orcid", ORCID_A), identifiers_of(actions(plan, "create")[0]))
+        for isni in (ISNI_A, ISNI_A.replace(" ", ""), ISNI_B):
+            self.assertEqual(warnings_of(m.build_plan([person("Alpha-A", isni=isni)], [])), [], isni)
+
+    # A ROR that does not validate gives no affiliation; the boxes still add theirs (DR-0040).
+
+    def test_a_malformed_ror_gives_no_affiliation_and_is_reported(self):
+        for bad in ("not-a-ror", "https://ror.org/zzzz", "0abcdefgh", "05dxps05"):
+            plan = m.build_plan([with_ror(person("Alpha-A"), bad)], [])
+            self.assertEqual(warnings_of(plan), [("Alpha-A", "ror", bad)], bad)
+            self.assertEqual(actions(plan, "create")[0]["after"].get("affiliations") or [], [], bad)
+
+    def test_a_malformed_ror_does_not_stop_the_boxes_adding_their_affiliations(self):
+        plan = m.build_plan([with_ror(person("Alpha-A", caltech=True, jpl=True), "not-a-ror")], [])
+        self.assertEqual(warnings_of(plan), [("Alpha-A", "ror", "not-a-ror")])
+        self.assertEqual(aff_ids(actions(plan, "create")[0]), sorted([CALTECH, JPL]))
+
+    def test_a_malformed_ror_removes_the_stored_affiliation_cold_no_longer_holds(self):
+        # Not pushed means COLD holds no ROR for the person (DR-0040): the stored one is not COLD's.
+        plan = m.build_plan([with_ror(person("Alpha-A"), "not-a-ror")],
+                            [entry("Alpha-A", clpid="Alpha-A", ror=CALTECH)])
+        self.assertEqual(aff_ids(actions(plan, "update")[0]), [])
+        self.assertEqual(warnings_of(plan), [("Alpha-A", "ror", "not-a-ror")])
+
+    def test_a_valid_ror_has_no_warning_in_either_form(self):
+        for ror in (CALTECH_URL, CALTECH, "https://ror.org/" + OTHER_ROR):
+            self.assertEqual(warnings_of(m.build_plan([with_ror(person("Alpha-A"), ror)], [])), [], ror)
+
+    # One bad value does not hold back the rest of the person.
+
+    def test_a_bad_orcid_does_not_hold_back_the_rest_of_the_person(self):
+        plan = m.build_plan([person("Alpha-A", family="Alpha", given="Ann", orcid=ORCID_BAD,
+                                    isni=ISNI_A, caltech=True)], [])
+        created = actions(plan, "create")[0]
+        self.assertEqual(created["after"]["name"], "Alpha, Ann")
+        self.assertEqual(identifiers_of(created), {("clpid", "Alpha-A"), ("isni", ISNI_A)})
+        self.assertEqual(aff_ids(created), [CALTECH])
+
+    def test_every_bad_value_of_a_person_is_reported(self):
+        p = with_ror(person("Alpha-A", orcid=ORCID_BAD, isni=ISNI_BAD), "not-a-ror")
+        self.assertEqual(warnings_of(m.build_plan([p], [])),
+                         [("Alpha-A", "isni", ISNI_BAD), ("Alpha-A", "orcid", ORCID_BAD),
+                          ("Alpha-A", "ror", "not-a-ror")])
+
+    def test_an_empty_value_is_not_a_malformed_one(self):
+        p = with_ror(person("Alpha-A", orcid="", isni="  "), "")
+        self.assertEqual(warnings_of(m.build_plan([p], [])), [])
+
+    # The whole list and one person both report.
+
+    def test_a_full_push_reports_every_person_with_a_bad_value(self):
+        people = [person("Alpha-A", orcid=ORCID_BAD), person("Beta-B", isni=ISNI_BAD),
+                  with_ror(person("Gamma-C"), "not-a-ror"), person("Delta-D", orcid=ORCID_A)]
+        self.assertEqual(warnings_of(m.build_plan(people, [])),
+                         [("Alpha-A", "orcid", ORCID_BAD), ("Beta-B", "isni", ISNI_BAD),
+                          ("Gamma-C", "ror", "not-a-ror")])
+
+    def test_a_push_of_one_person_reports_that_person_only(self):
+        people = [person("Alpha-A", orcid=ORCID_BAD), person("Beta-B", isni=ISNI_BAD)]
+        self.assertEqual(warnings_of(m.build_plan(people, [], scope="Beta-B")),
+                         [("Beta-B", "isni", ISNI_BAD)])
+
+    # The push and RDM agree because both ask idutils.
+
+    def test_the_push_agrees_with_idutils_on_orcid_and_isni(self):
+        from idutils import is_isni, is_orcid
+        rng = random.Random(41)
+        values = []
+        for _ in range(150):
+            base = "".join(rng.choice("0123456789") for _ in range(15))
+            for check in "0123456789X":
+                values.append(base + check)
+        for v in values:
+            orcid = "-".join(v[i:i + 4] for i in range(0, 16, 4))
+            isni = " ".join(v[i:i + 4] for i in range(0, 16, 4))
+            for scheme, text, ok in (("orcid", orcid, bool(is_orcid(orcid))),
+                                     ("isni", isni, bool(is_isni(isni)))):
+                plan = m.build_plan([person("Alpha-A", **{scheme: text})], [])
+                self.assertEqual(not warnings_of(plan), ok, (scheme, text))
 
 
 if __name__ == "__main__":

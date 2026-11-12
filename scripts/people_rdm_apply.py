@@ -265,7 +265,8 @@ def run(people, entries, service, apply=False, scope=None):
     @param service {object} read, create, update, delete and rebuild_index
     @param apply {bool} False is a dry run
     @param scope {str} one clpid (a one-person push, which removes nothing else), or None
-    @returns {dict} mode, scope, plan, results, summary, aborted and index (all JSON
+    @returns {dict} mode, scope, plan, results, summary (the write statuses and `warnings`, the count of
+      values that did not validate), warnings (clpid, scheme, value, message for each), aborted and index (all JSON
       serializable); `index` is None unless a full push wrote something
     @example
         report = run(people, entries, service)   # dry run
@@ -279,6 +280,12 @@ def run(people, entries, service, apply=False, scope=None):
         results, report["aborted"] = exc.results, str(exc)
     report["results"] = results
     report["summary"] = _summary(results)
+    # Values that did not validate (cold DR-0041): not pushed, and said so, so a run that skipped
+    # values never reads as a clean one. The plan is already limited to the scope.
+    report["warnings"] = [{"clpid": i["clpid"], "scheme": i["scheme"], "value": i["value"],
+                           "message": i["message"]}
+                          for i in plan if i["action"] == "malformed_identifier"]
+    report["summary"]["warnings"] = len(report["warnings"])
     if scope is None and any(r["status"] in WRITTEN for r in results):   # a dry run writes nothing
         try:
             service.rebuild_index()
@@ -483,7 +490,8 @@ def main(argv=None, load_entries=None, make_service=None, dump=None, read_versio
                   else f"RDM {version} is not a tested version ({tested})")
         message = f"{reason}: the write path is unchecked, so nothing was written"
         _write_private(args.out, {"mode": "apply", "scope": args.scope, "plan": [], "results": [],
-                                  "summary": _summary([]), "aborted": message, "index": None,
+                                  "summary": {**_summary([]), "warnings": 0}, "warnings": [], "aborted": message,
+                                  "index": None,
                                   "dump": None, "rdm_version": rdm})
         print(f"REFUSED: {message}", file=sys.stderr)
         return EXIT_NEGATIVE

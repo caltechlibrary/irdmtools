@@ -1,0 +1,20 @@
+# The people push programs (people_rdm_*.py): COLD's people pick list pushed to RDM (cold DR-0031,
+# DR-0037, DR-0040, DR-0041). Run and tested through uv, from this directory:
+#
+#     uv run python -m unittest test_people_rdm_match test_people_rdm_apply test_people_rdm_export_cold
+#
+# On an RDM instance the programs run in the instance's own uv project, which already provides idutils
+# (through Invenio); the minimum below is the version the program is checked against.
+[project]
+name = "irdmtools-people-push"
+version = "0.0.0"
+description = "Push COLD's people to the RDM names pick list."
+requires-python = ">=3.8"
+dependencies = [
+    # The validators for ORCID, ISNI and ROR (cold DR-0041): the library RDM validates with.
+    "idutils>=1.5.1",
+]
+
+[tool.uv]
+# Scripts, not a package: nothing is built or installed, only the dependencies.
+package = false

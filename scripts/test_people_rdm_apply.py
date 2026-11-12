@@ -21,8 +21,8 @@ import unittest
 
 import people_rdm_apply as a
 import people_rdm_match as m
-from test_people_rdm_match import (CALTECH, ISNI_A, ORCID_A, ORCID_B, deleted, entry, legacy,
-                                   person)
+from test_people_rdm_match import (CALTECH, ISNI_A, ISNI_BAD, ORCID_A, ORCID_B, ORCID_BAD, deleted,
+                                   entry, legacy, person, with_ror)
 
 
 class PIDAlreadyExists(Exception):
@@ -281,10 +281,10 @@ class TestReplace(unittest.TestCase):
         a.apply_plan(plan_for(self.people, self.svc.entries()), self.svc, apply=True)
         self.assertEqual(self.svc.writes(), [("create", "Alpha-A"), ("delete", "id-1")])
 
-    def test_the_replacement_carries_the_legacy_affiliations_and_the_flag(self):
+    def test_the_replacement_has_the_flags_affiliation_and_nothing_from_the_legacy_entry(self):
         a.apply_plan(plan_for(self.people, self.svc.entries()), self.svc, apply=True)
         ids = sorted(x["id"] for x in self.svc.records["Alpha-A"]["affiliations"])
-        self.assertEqual(ids, sorted(["00abcde12", CALTECH]))
+        self.assertEqual(ids, [CALTECH])
 
     def test_a_failed_write_keeps_the_legacy_entry(self):
         self.svc.write_error = {"Alpha-A": ValueError("schema says no")}
@@ -929,6 +929,11 @@ class TestMain(unittest.TestCase):
                                               "tested": False})
         self.assertEqual(rep["results"], [])
 
+    def test_a_refused_report_has_the_same_warnings_keys_as_any_other(self):
+        self.go("--apply", version="14.0.0")
+        rep = self.report()
+        self.assertEqual((rep["warnings"], rep["summary"]["warnings"]), ([], 0))
+
     def test_an_apply_that_cannot_read_the_version_is_refused_too(self):
         self.assertEqual(self.go("--apply", version=RuntimeError("no such package")), 1)
         self.assertEqual(self.svc.calls, [])
@@ -1257,6 +1262,64 @@ class TestEntryFromRow(unittest.TestCase):
     def test_importing_the_module_needs_no_arguments_and_no_invenio(self):
         import importlib
         importlib.reload(self.x)
+
+
+class TestMalformedValuesAreInTheReport(unittest.TestCase):
+    """cold DR-0041: a value that did not validate is not pushed, and the report of the push, whole
+    list or one person, says so: `warnings` lists clpid, scheme and value, and `summary.warnings`
+    counts them, so a run that skipped values does not read as a clean run."""
+
+    def setUp(self):
+        self.people = [person("Alpha-A", orcid=ORCID_BAD, caltech=True),
+                       person("Beta-B", isni=ISNI_BAD),
+                       with_ror(person("Gamma-C"), "not-a-ror"),
+                       person("Delta-D", orcid=ORCID_A)]
+        self.svc = FakeService()
+
+    def run_it(self, **kw):
+        return a.run(self.people, self.svc.entries(), self.svc, **kw)
+
+    def listed(self, report):
+        return sorted((w["clpid"], w["scheme"], w["value"]) for w in report["warnings"])
+
+    def test_a_full_push_lists_every_value_that_did_not_validate(self):
+        report = self.run_it(apply=True)
+        self.assertEqual(self.listed(report), [("Alpha-A", "orcid", ORCID_BAD),
+                                               ("Beta-B", "isni", ISNI_BAD),
+                                               ("Gamma-C", "ror", "not-a-ror")])
+        json.dumps(report)
+
+    def test_the_summary_counts_them(self):
+        self.assertEqual(self.run_it(apply=True)["summary"]["warnings"], 3)
+
+    def test_a_dry_run_reports_them_too(self):
+        report = self.run_it()
+        self.assertEqual(report["mode"], "dry-run")
+        self.assertEqual(len(report["warnings"]), 3)
+        self.assertEqual(report["summary"]["warnings"], 3)
+
+    def test_a_push_of_one_person_lists_that_person_only(self):
+        report = self.run_it(apply=True, scope="Beta-B")
+        self.assertEqual(self.listed(report), [("Beta-B", "isni", ISNI_BAD)])
+        self.assertEqual(report["summary"]["warnings"], 1)
+
+    def test_a_run_with_nothing_to_report_has_an_empty_list_and_a_zero_count(self):
+        self.people = [person("Delta-D", orcid=ORCID_A, isni=ISNI_A)]
+        report = self.run_it(apply=True)
+        self.assertEqual((report["warnings"], report["summary"]["warnings"]), ([], 0))
+
+    def test_the_bad_value_never_reaches_the_service_and_the_rest_of_the_person_does(self):
+        self.run_it(apply=True)
+        alpha = self.svc.records["Alpha-A"]
+        self.assertNotIn(ORCID_BAD, json.dumps(alpha))
+        self.assertEqual([i["scheme"] for i in alpha["identifiers"]], ["clpid"])
+        self.assertEqual([x["id"] for x in alpha["affiliations"]], [CALTECH])
+
+    def test_the_compact_report_keeps_the_warnings_and_counts_them(self):
+        report = self.run_it()
+        compact = a.compact_plan(report["plan"])
+        self.assertEqual(compact["plan_counts"].get("warning"), 3)
+        self.assertEqual(sum(1 for i in compact["plan"] if i["action"] == "malformed_identifier"), 3)
 
 
 if __name__ == "__main__":
