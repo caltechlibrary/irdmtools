@@ -17,8 +17,8 @@ authors:
 
 
 repository-code: "https://github.com/caltechlibrary/irdmtools"
-version: 0.1.0
-date-released: 2026-10-27
+version: 0.2.0
+date-released: 2026-11-12
 
 license-url: "https://software.library.caltech.edu/irdmtools/LICENSE"
 keywords:

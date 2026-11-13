@@ -1,6 +1,6 @@
-%rdmutil-get_record(1) irdmtools user manual | version 0.1.0 38413f08
+%rdmutil-get_record(1) irdmtools user manual | version 0.2.0 c655545a
 % R. S. Doiel and Tom Morrell
-% 2026-10-27
+% 2026-11-12
 
 # NAME
 
