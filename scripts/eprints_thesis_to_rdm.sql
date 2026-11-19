@@ -1,7 +1,10 @@
 -- eprints_thesis_to_rdm.sql builds one RDM-shaped JSON object per CaltechTHESIS
 -- EPrints record (irdmtools DR-0010, caltechthesis plan Phase 1). Run it with
 -- the mysql client and --raw, or through eprint2rdm's SQL mode.
-WITH doc_class AS (
+WITH RECURSIVE nums AS (
+    SELECT 1 AS n UNION ALL SELECT n + 1 FROM nums WHERE n < 200
+),
+doc_class AS (
     -- One row per document with the ep3StaticSite file rule applied (brief ruling 17).
     -- class is: excluded (an EPrints thumbnail or index document, by the main file's name
     -- without its extension), non_public (the eprint is not in the archive, or the security
@@ -38,6 +41,53 @@ WITH doc_class AS (
 )
 SELECT JSON_MERGE_PATCH('{}', JSON_OBJECT(
     'metadata', JSON_OBJECT(
+        'resource_type', JSON_OBJECT('id', 'publication-thesis'),
+        'title', NULLIF(e.title_c, ''),
+        'description', NULLIF(e.abstract_c, ''),
+        'publisher', COALESCE(NULLIF(e.publisher, ''), 'Caltech Library'),
+        -- the author(s), with the clpid and ORCID when EPrints has them
+        'creators', (
+            SELECT JSON_ARRAYAGG(JSON_OBJECT(
+                'person_or_org', JSON_OBJECT(
+                    'type', 'personal',
+                    'family_name', n.creators_name_family,
+                    'given_name', n.creators_name_given,
+                    'name', CONCAT_WS(', ', n.creators_name_family, n.creators_name_given),
+                    'identifiers', CASE
+                        WHEN COALESCE(i.creators_id, '') <> '' AND COALESCE(o.creators_orcid, '') <> '' THEN
+                            JSON_ARRAY(JSON_OBJECT('scheme', 'clpid', 'identifier', i.creators_id),
+                                       JSON_OBJECT('scheme', 'orcid', 'identifier', o.creators_orcid))
+                        WHEN COALESCE(i.creators_id, '') <> '' THEN
+                            JSON_ARRAY(JSON_OBJECT('scheme', 'clpid', 'identifier', i.creators_id))
+                        WHEN COALESCE(o.creators_orcid, '') <> '' THEN
+                            JSON_ARRAY(JSON_OBJECT('scheme', 'orcid', 'identifier', o.creators_orcid))
+                        END)))
+            FROM eprint_creators_name n
+            LEFT JOIN eprint_creators_id i ON i.eprintid = n.eprintid AND i.pos = n.pos
+            LEFT JOIN eprint_creators_orcid o ON o.eprintid = n.eprintid AND o.pos = n.pos
+            WHERE n.eprintid = e.eprintid
+        ),
+        -- keywords split on semicolons, trimmed, deduplicated; blanks and the EPrints-only "cls" dropped
+        'subjects', (
+            SELECT JSON_ARRAYAGG(JSON_OBJECT('subject', k.kw))
+            FROM (
+                SELECT kw, MIN(n) AS first_n
+                FROM (
+                    SELECT nums.n, TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(e.keywords_c, ';', nums.n), ';', -1)) AS kw
+                    FROM nums
+                    WHERE nums.n <= 1 + LENGTH(e.keywords_c) - LENGTH(REPLACE(e.keywords_c, ';', ''))
+                ) parts
+                WHERE kw <> '' AND kw <> 'cls'
+                GROUP BY kw
+                ORDER BY first_n
+            ) k
+        ),
+        'rights', (
+            SELECT JSON_ARRAYAGG(JSON_OBJECT('title', JSON_OBJECT('en', 'Other'),
+                                             'description', JSON_OBJECT('en', r.txt)))
+            FROM (SELECT e.rights_c AS txt UNION ALL SELECT e.copyright_c) r
+            WHERE r.txt IS NOT NULL AND r.txt <> ''
+        ),
         -- the main date of a degree, published or untyped eprint; never the datestamp,
         -- which is when the metadata was last corrected (caltechthesis brief ruling 15)
         'publication_date', CASE WHEN e.date_type IS NULL OR e.date_type IN ('', 'degree', 'published')
@@ -134,8 +184,27 @@ FROM (
                     AND c.embargo_cmp IS NOT NULL AND NOT c.permanent
                 ORDER BY c.embargo_cmp DESC LIMIT 1
             ),
+            -- the degree options, what most universities call majors and minors (author's names);
+            -- each entry carries the code and, when EPrints has it, the display name, so either
+            -- can correct the other when one is missing (author's ruling, 2026-11-19)
+            'caltech:option_major', (
+                SELECT JSON_ARRAYAGG(JSON_MERGE_PATCH('{}', JSON_OBJECT('id', m.option_major,
+                    'title', (SELECT JSON_OBJECT('en', sn.name_name) FROM subject_name_name sn
+                              WHERE sn.subjectid = m.option_major AND sn.name_name <> '' ORDER BY sn.pos LIMIT 1))))
+                FROM eprint_option_major m
+                WHERE m.eprintid = x.eprintid AND m.option_major IS NOT NULL AND m.option_major <> ''
+            ),
+            'caltech:option_minor', (
+                SELECT JSON_ARRAYAGG(JSON_MERGE_PATCH('{}', JSON_OBJECT('id', m.option_minor,
+                    'title', (SELECT JSON_OBJECT('en', sn.name_name) FROM subject_name_name sn
+                              WHERE sn.subjectid = m.option_minor AND sn.name_name <> '' ORDER BY sn.pos LIMIT 1))))
+                FROM eprint_option_minor m
+                WHERE m.eprintid = x.eprintid AND m.option_minor IS NOT NULL AND m.option_minor <> ''
+            ),
             'caltech:division', (
-                SELECT JSON_ARRAYAGG(JSON_OBJECT('id', d.divisions))
+                SELECT JSON_ARRAYAGG(JSON_MERGE_PATCH('{}', JSON_OBJECT('id', d.divisions,
+                    'title', (SELECT JSON_OBJECT('en', sn.name_name) FROM subject_name_name sn
+                              WHERE sn.subjectid = d.divisions AND sn.name_name <> '' ORDER BY sn.pos LIMIT 1))))
                 FROM eprint_divisions d
                 WHERE d.eprintid = x.eprintid AND d.divisions IS NOT NULL AND d.divisions <> ''
             )
@@ -143,6 +212,12 @@ FROM (
     FROM (
         SELECT e0.*,
             -- a date keeps its precision: year, year-month or year-month-day, never padded
+            -- text with the PHP magic-quote escapes removed, as COLD's query does
+            REPLACE(REPLACE(e0.title, '\\"', '"'), "\\'", "'") AS title_c,
+            REPLACE(REPLACE(e0.abstract, '\\"', '"'), "\\'", "'") AS abstract_c,
+            REPLACE(REPLACE(e0.keywords, '\\"', '"'), "\\'", "'") AS keywords_c,
+            REPLACE(REPLACE(e0.rights, '\\"', '"'), "\\'", "'") AS rights_c,
+            REPLACE(REPLACE(e0.copyright_statement, '\\"', '"'), "\\'", "'") AS copyright_c,
             -- the main date of the eprint, for publication_date
             CASE WHEN e0.date_year IS NULL THEN NULL
                 WHEN e0.date_month IS NULL THEN CAST(e0.date_year AS CHAR)

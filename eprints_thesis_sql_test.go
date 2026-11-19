@@ -406,7 +406,11 @@ func TestThesisSQLDivision(t *testing.T) {
 		ids := []string{}
 		for _, item := range raw {
 			m, _ := item.(map[string]interface{})
-			ids = append(ids, fmt.Sprint(m["id"]))
+			entry := fmt.Sprint(m["id"])
+			if title, ok := m["title"].(map[string]interface{}); ok {
+				entry += "=" + fmt.Sprint(title["en"])
+			}
+			ids = append(ids, entry)
 		}
 		return ids
 	}
@@ -414,8 +418,8 @@ func TestThesisSQLDivision(t *testing.T) {
 		obj := thesisCustomField(t, lines[id])
 		return obj["department"]
 	}
-	if got := division("30"); fmt.Sprint(got) != "[div_test_one div_test_two]" {
-		t.Errorf("eprint 30 caltech:division = %v, want [div_test_one div_test_two]", got)
+	if got := division("30"); fmt.Sprint(got) != "[div_test_one=Division of Test One div_test_two=Division of Test Two]" {
+		t.Errorf("eprint 30 caltech:division = %v, want the ids with their names", got)
 	}
 	if got := department("30"); got != "Division of Test One" {
 		t.Errorf("eprint 30 department = %v, want the first division's name", got)
@@ -791,5 +795,218 @@ func TestThesisSQLStateAndTombstone(t *testing.T) {
 	}
 	if tomb := lines["84"].Record.Tombstone; tomb != nil && !tomb.Timestamp.IsZero() {
 		t.Errorf("eprint 84 has no status_changed time but the tombstone has %v", tomb.Timestamp)
+	}
+}
+
+// TestThesisSQLBaseRecord checks the base descriptive fields a thesis needs to
+// load into RDM: resource type, title (with the quote escapes PHP magic quotes
+// left in EPrints text removed, as COLD's query does), the author with their
+// clpid and ORCID, the abstract, rights, the publisher and keywords.
+func TestThesisSQLBaseRecord(t *testing.T) {
+	db := openScratchEPrints(t)
+	resetScratch(t, db)
+	fixture(t, db, `INSERT INTO eprint (eprintid, eprint_status, type, title, abstract, keywords, rights,
+		copyright_statement, publisher) VALUES (90, 'archive', 'thesis', ?, ?, ?, ?, ?, NULL)`,
+		`On the \"Quiet\" Theory of Bob\'s Method`, `It doesn\'t say \"much\".`,
+		`alpha; beta ;; cls; alpha; gamma\'s idea`, `Restricted for a time`, `Copyright 2020 Test`)
+	fixture(t, db, `INSERT INTO eprint_creators_name (eprintid, pos, creators_name_family, creators_name_given)
+		VALUES (90, 0, 'Authorone', 'Zed')`)
+	fixture(t, db, `INSERT INTO eprint_creators_id (eprintid, pos, creators_id) VALUES (90, 0, 'Authorone-Z')`)
+	fixture(t, db, `INSERT INTO eprint_creators_orcid (eprintid, pos, creators_orcid) VALUES (90, 0, '0000-0001-2345-6789')`)
+	// eprint 91: nothing but the type; the publisher falls back to Caltech Library
+	fixture(t, db, `INSERT INTO eprint (eprintid, eprint_status, type) VALUES (91, 'archive', 'thesis')`)
+	// eprint 92: a named publisher
+	fixture(t, db, `INSERT INTO eprint (eprintid, eprint_status, type, publisher) VALUES (92, 'archive', 'thesis', 'California Institute of Technology')`)
+
+	lines := runThesisSQL(t, db)
+	md := lines["90"].Record.Metadata
+	if got := md.ResourceType["id"]; got != "publication-thesis" {
+		t.Errorf("resource_type id = %v, want publication-thesis", got)
+	}
+	if want := `On the "Quiet" Theory of Bob's Method`; md.Title != want {
+		t.Errorf("title = %q, want %q", md.Title, want)
+	}
+	if want := `It doesn't say "much".`; md.Description != want {
+		t.Errorf("description = %q, want %q", md.Description, want)
+	}
+	if len(md.Creators) != 1 {
+		t.Fatalf("creators = %d, want 1", len(md.Creators))
+	}
+	p := md.Creators[0].PersonOrOrg
+	if p.Type != "personal" || p.FamilyName != "Authorone" || p.GivenName != "Zed" || p.Name != "Authorone, Zed" {
+		t.Errorf("creator = %+v", p)
+	}
+	ids := map[string]string{}
+	for _, id := range p.Identifiers {
+		ids[id.Scheme] = id.Identifier
+	}
+	if fmt.Sprint(ids) != "map[clpid:Authorone-Z orcid:0000-0001-2345-6789]" {
+		t.Errorf("creator identifiers = %v", ids)
+	}
+	subjects := []string{}
+	for _, s := range md.Subjects {
+		subjects = append(subjects, s.Subject)
+	}
+	if fmt.Sprint(subjects) != "[alpha beta gamma's idea]" {
+		t.Errorf("subjects = %v, want [alpha beta gamma's idea]", subjects)
+	}
+	rights := []string{}
+	for _, r := range md.Rights {
+		rights = append(rights, r.Description["en"])
+	}
+	if fmt.Sprint(rights) != "[Restricted for a time Copyright 2020 Test]" {
+		t.Errorf("rights = %v", rights)
+	}
+	if md.Publisher != "Caltech Library" {
+		t.Errorf("publisher = %q, want Caltech Library", md.Publisher)
+	}
+	if got := lines["92"].Record.Metadata.Publisher; got != "California Institute of Technology" {
+		t.Errorf("named publisher = %q", got)
+	}
+	// a thesis with nothing else still has the resource type and publisher, and no creators or title key
+	m91 := lines["91"].Raw["metadata"].(map[string]interface{})
+	for _, k := range []string{"title", "creators", "subjects", "rights", "description"} {
+		if _, present := m91[k]; present {
+			t.Errorf("eprint 91 has nothing for %s but carries it", k)
+		}
+	}
+}
+
+// TestThesisSQLCreatorsAndBlanks checks a creator list whose members carry
+// different identifiers (matched by position, not shared), and that blank
+// strings are treated as absent.
+func TestThesisSQLCreatorsAndBlanks(t *testing.T) {
+	db := openScratchEPrints(t)
+	resetScratch(t, db)
+	// eprint 93: blank title, abstract and publisher
+	fixture(t, db, `INSERT INTO eprint (eprintid, eprint_status, type, title, abstract, publisher, keywords, rights)
+		VALUES (93, 'archive', 'thesis', '', '', '', '', '')`)
+	// eprint 94: two creators; the first has only a clpid, the second only an ORCID, the third neither
+	fixture(t, db, `INSERT INTO eprint (eprintid, eprint_status, type) VALUES (94, 'archive', 'thesis')`)
+	fixture(t, db, `INSERT INTO eprint_creators_name (eprintid, pos, creators_name_family, creators_name_given)
+		VALUES (94, 0, 'First', 'Ann'), (94, 1, 'Second', 'Ben'), (94, 2, 'Third', 'Cat')`)
+	fixture(t, db, `INSERT INTO eprint_creators_id (eprintid, pos, creators_id) VALUES (94, 0, 'First-A'), (94, 2, '')`)
+	fixture(t, db, `INSERT INTO eprint_creators_orcid (eprintid, pos, creators_orcid) VALUES (94, 1, '0000-0002-0000-0001')`)
+
+	lines := runThesisSQL(t, db)
+	m93 := lines["93"].Raw["metadata"].(map[string]interface{})
+	for _, k := range []string{"title", "description", "subjects", "rights"} {
+		if _, present := m93[k]; present {
+			t.Errorf("eprint 93 has a blank %s but carries it", k)
+		}
+	}
+	if got := lines["93"].Record.Metadata.Publisher; got != "Caltech Library" {
+		t.Errorf("a blank publisher must fall back to Caltech Library, got %q", got)
+	}
+	got := map[string]string{}
+	for _, c := range lines["94"].Record.Metadata.Creators {
+		ids := []string{}
+		for _, id := range c.PersonOrOrg.Identifiers {
+			ids = append(ids, id.Scheme+"="+id.Identifier)
+		}
+		got[c.PersonOrOrg.Name] = fmt.Sprint(ids)
+	}
+	want := "map[First, Ann:[clpid=First-A] Second, Ben:[orcid=0000-0002-0000-0001] Third, Cat:[]]"
+	if fmt.Sprint(got) != want {
+		t.Errorf("creator identifiers\n got  %v\n want %s", got, want)
+	}
+}
+
+// TestThesisSQLTextCleaning checks that the backslash PHP magic quotes left
+// before a quote is removed from every text field the query carries, and that
+// a backslash that is not before a quote is kept.
+func TestThesisSQLTextCleaning(t *testing.T) {
+	db := openScratchEPrints(t)
+	resetScratch(t, db)
+	fixture(t, db, `INSERT INTO eprint (eprintid, eprint_status, type, title, abstract, keywords, rights, copyright_statement)
+		VALUES (95, 'archive', 'thesis', ?, ?, ?, ?, ?)`,
+		`T \"a\" \'b\' c\d`, `A \"a\" \'b\'`, `k\'1; k\"2`, `R \"r\" \'s\'`, `C \"c\" \'d\'`)
+	lines := runThesisSQL(t, db)
+	md := lines["95"].Record.Metadata
+	if want := `T "a" 'b' c\d`; md.Title != want {
+		t.Errorf("title = %q, want %q", md.Title, want)
+	}
+	if want := `A "a" 'b'`; md.Description != want {
+		t.Errorf("description = %q, want %q", md.Description, want)
+	}
+	subjects := []string{}
+	for _, s := range md.Subjects {
+		subjects = append(subjects, s.Subject)
+	}
+	if fmt.Sprint(subjects) != `[k'1 k"2]` {
+		t.Errorf("subjects = %v", subjects)
+	}
+	rights := []string{}
+	for _, r := range md.Rights {
+		rights = append(rights, r.Description["en"])
+	}
+	if fmt.Sprint(rights) != `[R "r" 's' C "c" 'd']` {
+		t.Errorf("rights = %v", rights)
+	}
+}
+
+// TestThesisSQLOptions checks caltech:option_major and caltech:option_minor
+// (the author's names, 2026-11-19): the EPrints option codes as lists of {id}
+// in list order, as caltech:division does. Blank rows count as none.
+func TestThesisSQLOptions(t *testing.T) {
+	db := openScratchEPrints(t)
+	resetScratch(t, db)
+	fixture(t, db, `INSERT INTO subject_name_name (subjectid, pos, name_name) VALUES
+		('chemistry', 0, 'Chemistry'), ('physics', 0, 'Physics'), ('art', 0, 'Art History')`)
+	// eprint 100: two majors (inserted out of order), one minor
+	fixture(t, db, `INSERT INTO eprint (eprintid, eprint_status, type) VALUES (100, 'archive', 'thesis')`)
+	fixture(t, db, `INSERT INTO eprint_option_major (eprintid, pos, option_major) VALUES (100, 1, 'physics'), (100, 0, 'chemistry')`)
+	fixture(t, db, `INSERT INTO eprint_option_minor (eprintid, pos, option_minor) VALUES (100, 0, 'history')`)
+	// eprint 101: only a minor, and a blank major row
+	fixture(t, db, `INSERT INTO eprint (eprintid, eprint_status, type) VALUES (101, 'archive', 'thesis')`)
+	fixture(t, db, `INSERT INTO eprint_option_major (eprintid, pos, option_major) VALUES (101, 0, ''), (101, 1, NULL)`)
+	fixture(t, db, `INSERT INTO eprint_option_minor (eprintid, pos, option_minor) VALUES (101, 0, 'art')`)
+	// eprint 102: neither
+	fixture(t, db, `INSERT INTO eprint (eprintid, eprint_status, type) VALUES (102, 'archive', 'thesis')`)
+	// eprint 104: the lowest-position name wins, and a code with only a later name still gets it
+	fixture(t, db, `INSERT INTO subject_name_name (subjectid, pos, name_name) VALUES
+		('multi', 1, 'Second'), ('multi', 0, 'First'), ('late', 1, 'Late')`)
+	fixture(t, db, `INSERT INTO eprint (eprintid, eprint_status, type) VALUES (104, 'archive', 'thesis')`)
+	fixture(t, db, `INSERT INTO eprint_option_major (eprintid, pos, option_major) VALUES (104, 0, 'multi')`)
+	fixture(t, db, `INSERT INTO eprint_option_minor (eprintid, pos, option_minor) VALUES (104, 0, 'late')`)
+	// eprint 103: blank minor rows
+	fixture(t, db, `INSERT INTO eprint (eprintid, eprint_status, type) VALUES (103, 'archive', 'thesis')`)
+	fixture(t, db, `INSERT INTO eprint_option_minor (eprintid, pos, option_minor) VALUES (103, 0, ''), (103, 1, NULL)`)
+
+	lines := runThesisSQL(t, db)
+	// each entry is "code" or "code=name"; a code with no name in EPrints has no title
+	ids := func(id, key string) interface{} {
+		raw, present := lines[id].Record.CustomFields[key]
+		if !present {
+			return nil
+		}
+		out := []string{}
+		for _, item := range raw.([]interface{}) {
+			m := item.(map[string]interface{})
+			entry := fmt.Sprint(m["id"])
+			if title, ok := m["title"].(map[string]interface{}); ok {
+				entry += "=" + fmt.Sprint(title["en"])
+			}
+			out = append(out, entry)
+		}
+		return fmt.Sprint(out)
+	}
+	for _, c := range []struct {
+		id, key string
+		want    interface{}
+	}{
+		{"100", "caltech:option_major", "[chemistry=Chemistry physics=Physics]"},
+		{"100", "caltech:option_minor", "[history]"},
+		{"101", "caltech:option_major", nil},
+		{"101", "caltech:option_minor", "[art=Art History]"},
+		{"102", "caltech:option_major", nil},
+		{"102", "caltech:option_minor", nil},
+		{"103", "caltech:option_minor", nil},
+		{"104", "caltech:option_major", "[multi=First]"},
+		{"104", "caltech:option_minor", "[late=Late]"},
+	} {
+		if got := ids(c.id, c.key); got != c.want {
+			t.Errorf("eprint %s %s = %v, want %v", c.id, c.key, got, c.want)
+		}
 	}
 }
