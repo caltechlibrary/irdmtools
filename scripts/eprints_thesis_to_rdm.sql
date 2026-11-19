@@ -19,6 +19,8 @@ WITH doc_class AS (
         SELECT d.docid, d.eprintid, d.pos, d.format, d.security, d.main, d.content, d.mime_type,
             e.eprint_status,
             d.date_embargo_year AS embargo_year,
+            -- the years 2200 and 9999 are the sentinels for a permanent embargo (author's ruling)
+            COALESCE(d.date_embargo_year >= 2200, 0) AS permanent,
             LOWER(REGEXP_REPLACE(COALESCE(d.main, ''), '\\.[^.]+$', ''))
                 IN ('lightbox', 'preview', 'medium', 'small', 'indexcodes') AS is_thumb,
             -- the embargo date as EPrints holds it: year, year-month or year-month-day
@@ -103,6 +105,14 @@ FROM (
         JSON_MERGE_PATCH('{}', JSON_OBJECT(
             'thesis:thesis', CASE WHEN JSON_LENGTH(x.thesis_cf) = 0 THEN NULL ELSE x.thesis_cf END,
             -- EPrints records divisions only; the ids go in as a list, as caltech:groups does
+            -- the latest end among the embargoed documents, at EPrints' precision; a permanent
+            -- or unreadable embargo date is never written here
+            'caltech:embargo_until', (
+                SELECT c.embargo_d FROM doc_class c
+                WHERE c.eprintid = x.eprintid AND c.class = 'embargoed'
+                    AND c.embargo_cmp IS NOT NULL AND NOT c.permanent
+                ORDER BY c.embargo_cmp DESC LIMIT 1
+            ),
             'caltech:division', (
                 SELECT JSON_ARRAYAGG(JSON_OBJECT('id', d.divisions))
                 FROM eprint_divisions d
@@ -141,6 +151,7 @@ FROM (
                     'docid', c.docid, 'pos', c.pos, 'class', c.class, 'format', c.format,
                     'security', c.security, 'main', c.main, 'content', c.content,
                     'embargo_until', c.embargo_d,
+                    'permanent_embargo', CASE WHEN c.permanent THEN CAST('true' AS JSON) ELSE CAST('false' AS JSON) END,
                     'files', (SELECT JSON_ARRAYAGG(JSON_OBJECT('fileid', f.fileid, 'name', f.filename,
                             'size', f.filesize, 'hash', f.hash, 'hash_type', f.hash_type, 'mimetype', f.mime_type))
                         FROM file f WHERE f.datasetid = 'document' AND f.objectid = c.docid)))

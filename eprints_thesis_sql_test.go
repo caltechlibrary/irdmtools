@@ -630,3 +630,69 @@ func TestThesisSQLEmbargoBoundaries(t *testing.T) {
 		t.Errorf("document classes\n got  %v\n want %v", got, want)
 	}
 }
+
+// TestThesisSQLEmbargoUntil checks caltech:embargo_until: the latest end date
+// among the embargoed (public, not yet released) documents, at the precision
+// EPrints holds. A permanent embargo (the sentinel years 2200 and 9999), an
+// unreadable date, an expired embargo and a non-public document never set it;
+// the sidecar marks a permanent embargo instead.
+func TestThesisSQLEmbargoUntil(t *testing.T) {
+	db := openScratchEPrints(t)
+	resetScratch(t, db)
+	none := [3]interface{}{nil, nil, nil}
+	for _, id := range []int{60, 61, 62, 63, 64, 65} {
+		fixture(t, db, `INSERT INTO eprint (eprintid, eprint_status, type) VALUES (?, 'archive', 'thesis')`, id)
+	}
+	docs := []docFixture{
+		// 60: the latest of two embargoes wins, and keeps its precision
+		{601, 60, 1, "public", "a.pdf", "final", [3]interface{}{2090, 6, nil}, []string{"a.pdf"}},
+		{602, 60, 2, "public", "b.pdf", "final", [3]interface{}{2095, 3, 2}, []string{"b.pdf"}},
+		{603, 60, 3, "public", "c.pdf", "final", none, []string{"c.pdf"}},
+		// 61: a year-only embargo stays a year
+		{611, 61, 1, "public", "a.pdf", "final", [3]interface{}{2100, nil, nil}, []string{"a.pdf"}},
+		// 62: permanent embargoes are marked, not dated
+		{621, 62, 1, "public", "a.pdf", "final", [3]interface{}{2200, 1, 1}, []string{"a.pdf"}},
+		{622, 62, 2, "public", "b.pdf", "final", [3]interface{}{9999, nil, nil}, []string{"b.pdf"}},
+		{623, 62, 3, "public", "c.pdf", "final", [3]interface{}{2100, 5, 5}, []string{"c.pdf"}},
+		// 63: an expired embargo on a released document
+		{631, 63, 1, "public", "a.pdf", "final", [3]interface{}{2000, 1, 1}, []string{"a.pdf"}},
+		// 64: an unreadable date
+		{641, 64, 1, "public", "a.pdf", "final", [3]interface{}{2000, 13, 1}, []string{"a.pdf"}},
+		// 65: a campus-login document with a future embargo is not embargoed
+		{651, 65, 1, "validuser", "a.pdf", "final", [3]interface{}{2100, 1, 1}, []string{"a.pdf"}},
+	}
+	for _, d := range docs {
+		insertDoc(t, db, d)
+	}
+	lines := runThesisSQL(t, db)
+	until := func(id string) interface{} {
+		return lines[id].Record.CustomFields["caltech:embargo_until"]
+	}
+	for id, want := range map[string]interface{}{"60": "2095-03-02", "61": "2100", "62": "2100-05-05"} {
+		if got := until(id); got != want {
+			t.Errorf("eprint %s caltech:embargo_until = %v, want %v", id, got, want)
+		}
+	}
+	for _, id := range []string{"63", "64", "65"} {
+		if got := until(id); got != nil {
+			t.Errorf("eprint %s must have no caltech:embargo_until, got %v", id, got)
+		}
+	}
+	// the marker is on 621 and 622, and not on 623 or on an ordinary embargo
+	side := sidecarDocs(t, lines["62"])
+	for docid, want := range map[string]bool{"621": true, "622": true, "623": false} {
+		if got := side[docid]["permanent_embargo"] == true; got != want {
+			t.Errorf("sidecar document %s permanent_embargo = %v, want %v", docid, got, want)
+		}
+	}
+	side60 := sidecarDocs(t, lines["60"])
+	if side60["601"]["permanent_embargo"] == true {
+		t.Errorf("an ordinary embargo must not be marked permanent")
+	}
+	// the sidecar keeps each document's own end date at its precision, and none where there is none
+	for docid, want := range map[string]interface{}{"601": "2090-06", "602": "2095-03-02", "603": nil} {
+		if got := side60[docid]["embargo_until"]; got != want {
+			t.Errorf("sidecar document %s embargo_until = %v, want %v", docid, got, want)
+		}
+	}
+}
