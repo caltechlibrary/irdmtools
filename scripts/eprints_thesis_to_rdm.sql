@@ -37,6 +37,8 @@ doc_class AS (
                 COALESCE(d.date_embargo_day, 1)), '%Y-%m-%d') AS embargo_cmp
         FROM document d
         JOIN eprint e ON e.eprintid = d.eprintid
+        -- @eprint_ids, a comma separated list set by eprint2rdm, limits the run; unset means every eprint
+        WHERE (@eprint_ids IS NULL OR FIND_IN_SET(d.eprintid, @eprint_ids))
     ) z
 )
 SELECT JSON_MERGE_PATCH('{}', JSON_OBJECT(
@@ -282,6 +284,7 @@ FROM (
             )) AS thesis_cf
         FROM eprint e0
         WHERE e0.type = 'thesis'
+            AND (@eprint_ids IS NULL OR FIND_IN_SET(e0.eprintid, @eprint_ids))
     ) x
 ) e
 ORDER BY e.eprintid;

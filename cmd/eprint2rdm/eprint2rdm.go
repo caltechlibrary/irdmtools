@@ -172,6 +172,26 @@ dataset init eprints.ds
 
 At this point you would be ready to improve the records in
 eprints.ds before migrating them into Invenio RDM.
+
+# SQL MODE
+
+With -sql the program runs a query file against the EPrints MySQL database
+(EPRINT_DB_HOST, EPRINT_DB_USER, EPRINT_DB_PASSWORD and REPO_ID in the
+environment; no REST settings are needed). Each row of the query is one
+RDM-shaped JSON object; the program writes one {key, object} line per row,
+the key being the row's eprintid. -id-list limits the run to the eprint ids
+in a file (one per line); the query reads them as @eprint_ids. With -harvest
+the objects are loaded into the dataset collection instead of printed, and
+the program checks that every one is in the collection afterwards.
+
+~~~
+{app_name} -sql eprints_thesis_to_rdm.sql -id-list ids.txt -harvest thesis.ds
+~~~
+
+Exit status: 0 success, 1 the query found no record, 2 usage, 65 a row that is
+not JSON or repeats an eprintid, 66 a missing query file, id list or collection,
+69 the database cannot be reached, 74 the load stopped part way, 78 a setting
+is missing or the query is rejected.
 `
 )
 
@@ -187,6 +207,7 @@ func main() {
 	allIds, debug := false, false
 	idList, cName, configFName := "", "", ""
 	resourceTypesFName, contributorTypesFName := "", ""
+	sqlFName := ""
 	flag.BoolVar(&showHelp, "help", false, "display help")
 	flag.BoolVar(&showVersion, "version", false, "display version")
 	flag.BoolVar(&showLicense, "license", false, "display license")
@@ -197,6 +218,7 @@ func main() {
 	flag.StringVar(&resourceTypesFName, "resource-map", resourceTypesFName, "use this file to map resource types from EPrints to Invenio RDM")
 	flag.StringVar(&contributorTypesFName, "contributor-map", contributorTypesFName, "use this file to map contributor types from EPrints to Invenio RDM")
 	flag.StringVar(&configFName, "config", configFName, "user config file")
+	flag.StringVar(&sqlFName, "sql", sqlFName, "run this SQL query file against the EPrints MySQL database, writing one {key, object} line per record")
 	flag.Parse()
 	args := flag.Args()
 
@@ -222,6 +244,32 @@ func main() {
 	if showLicense {
 		fmt.Fprintf(os.Stdout, "%s\n", irdmtools.LicenseText)
 		os.Exit(0)
+	}
+
+	// The SQL mode needs only the EPRINT_DB_* and REPO_ID settings, not the REST
+	// ones, so it runs before the configuration gate below.
+	if sqlFName != "" {
+		if len(args) != 0 || allIds {
+			fmt.Fprintf(os.Stderr, "-sql takes no arguments and cannot be combined with -all-ids\n")
+			os.Exit(irdmtools.ExitCode(irdmtools.UsageError(fmt.Errorf("bad -sql usage"))))
+		}
+		cfg := irdmtools.NewConfig()
+		if configFName != "" {
+			if err := cfg.LoadConfig(configFName); err != nil {
+				fmt.Fprintf(os.Stderr, "%s\n", err)
+				os.Exit(irdmtools.ExitCode(irdmtools.ConfigError(err)))
+			}
+		}
+		if err := cfg.LoadEnv(""); err != nil {
+			fmt.Fprintf(os.Stderr, "%s\n", err)
+			os.Exit(irdmtools.ExitCode(irdmtools.ConfigError(err)))
+		}
+		dsn, err := irdmtools.EPrintDSN(cfg)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "%s\n", err)
+			os.Exit(irdmtools.ExitCode(err))
+		}
+		os.Exit(irdmtools.RunEPrintSQLMode(dsn, sqlFName, idList, cName, os.Stdout, os.Stderr))
 	}
 
 	// Create a appity object
