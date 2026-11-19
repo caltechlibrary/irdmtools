@@ -38,6 +38,10 @@ WITH doc_class AS (
 )
 SELECT JSON_MERGE_PATCH('{}', JSON_OBJECT(
     'metadata', JSON_OBJECT(
+        -- the main date of a degree, published or untyped eprint; never the datestamp,
+        -- which is when the metadata was last corrected (caltechthesis brief ruling 15)
+        'publication_date', CASE WHEN e.date_type IS NULL OR e.date_type IN ('', 'degree', 'published')
+                                 THEN e.main_d END,
         'identifiers', JSON_ARRAY(JSON_OBJECT('scheme', 'eprintid', 'identifier', CAST(e.eprintid AS CHAR))),
         -- typed dates (the local date types, EPrints names minus thesis_); thesis
         -- submitted and defended dates live in thesis:thesis instead
@@ -122,6 +126,11 @@ FROM (
     FROM (
         SELECT e0.*,
             -- a date keeps its precision: year, year-month or year-month-day, never padded
+            -- the main date of the eprint, for publication_date
+            CASE WHEN e0.date_year IS NULL THEN NULL
+                WHEN e0.date_month IS NULL THEN CAST(e0.date_year AS CHAR)
+                WHEN e0.date_day IS NULL THEN CONCAT(e0.date_year, '-', LPAD(e0.date_month, 2, '0'))
+                ELSE CONCAT(e0.date_year, '-', LPAD(e0.date_month, 2, '0'), '-', LPAD(e0.date_day, 2, '0')) END AS main_d,
             CASE WHEN e0.thesis_submitted_date_year IS NULL THEN NULL
                 WHEN e0.thesis_submitted_date_month IS NULL THEN CAST(e0.thesis_submitted_date_year AS CHAR)
                 WHEN e0.thesis_submitted_date_day IS NULL THEN CONCAT(e0.thesis_submitted_date_year, '-', LPAD(e0.thesis_submitted_date_month, 2, '0'))

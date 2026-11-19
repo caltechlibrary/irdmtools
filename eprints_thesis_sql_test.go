@@ -696,3 +696,44 @@ func TestThesisSQLEmbargoUntil(t *testing.T) {
 		}
 	}
 }
+
+// TestThesisSQLPublicationDate checks metadata.publication_date (brief ruling
+// 15, accepted 2026-11-19): it is the main date of a degree-type eprint, at
+// the precision EPrints holds, and never the datestamp, which records when
+// the metadata was last corrected. A published or untyped date counts as
+// well, as the Go crosswalk treats it; a submitted date does not, and an
+// eprint with no usable date gets none, left for triage.
+func TestThesisSQLPublicationDate(t *testing.T) {
+	db := openScratchEPrints(t)
+	resetScratch(t, db)
+	rows := []struct {
+		id        int
+		dateType  interface{}
+		y, m, d   interface{}
+		stampYear int
+		want      interface{}
+	}{
+		{70, "degree", 2024, nil, nil, 2026, "2024"},
+		{71, "degree", 2019, 6, 5, 2026, "2019-06-05"},
+		{72, "published", 2010, 3, nil, 2026, "2010-03"},
+		{73, nil, 2005, nil, nil, 2026, "2005"},
+		{74, "submitted", 2003, nil, nil, 2026, nil},
+		{75, "degree", nil, nil, nil, 2026, nil},
+		{76, "", 1999, nil, nil, 2026, "1999"},
+	}
+	for _, r := range rows {
+		fixture(t, db, `INSERT INTO eprint (eprintid, eprint_status, type, date_type, date_year, date_month, date_day,
+			datestamp_year, datestamp_month, datestamp_day) VALUES (?, 'archive', 'thesis', ?, ?, ?, ?, ?, 11, 1)`,
+			r.id, r.dateType, r.y, r.m, r.d, r.stampYear)
+	}
+	lines := runThesisSQL(t, db)
+	for _, r := range rows {
+		var got interface{}
+		if md := lines[fmt.Sprint(r.id)].Record.Metadata; md != nil && md.PublicationDate != "" {
+			got = md.PublicationDate
+		}
+		if got != r.want {
+			t.Errorf("eprint %d (date_type %v) publication_date = %v, want %v", r.id, r.dateType, got, r.want)
+		}
+	}
+}
