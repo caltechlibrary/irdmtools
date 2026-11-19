@@ -15,10 +15,13 @@ Bugs
 - [ ] eprint2rdm missing metadata attributes
 	- [x] journal related fields (e.g. journal:journal) in custom fields
 	- [ ] thesis related fields
+		- [x] `thesis:thesis` wrote the institution under the misspelled key `unversity`, so it was never loaded; now `university` (fixed 2026-11-19 in `eprint2rdm.go`, test `eprint2rdm_thesis_test.go`)
+		- [ ] any collection `eprint2rdm` already produced holds the misspelled key `unversity` and lacks the university; re-run it, or rename the key, wherever such a collection is still used (not checked whether the COLD harvest does)
 	- [ ] meeting:meeting in custom fields
 	- [x] migrate resolver id (eprint.IDNumber) to metadata.identifiers
 	- [x] Map CaltechTHESIS custom fields, issue #44
 	- [x] Group transfer problem, see issue #42
+- [ ] eprint2rdm gets a thesis's degree date and publication date wrong (found 2026-11-19; caltechthesis design brief rulings 12 and 15). For a `date_type` of `degree` (13,248 of 13,250 CaltechTHESIS eprints) the main `date` is the degree date, mostly year-only. `eprint2rdm.go:933-953` defaults `publication_date` to the eprint `datestamp` (when the metadata was last corrected, not when it was first published), overrides it from `date` only when `date_type` is `published` or empty, and writes date type ids `pub_date` and the raw `date_type` (`degree`), which are not RDM stock date types and do not match the local `degree_date`. Fix the logic so a degree-type eprint's `publication_date` comes from `date`, never from `datestamp`, and the degree date is written as `degree_date` with its precision kept. The author's pointer is the Python code in `feeds_v1.6`. A read of it on 2026-11-19 found no degree-date derivation there, only truncation of `publication_date` (`make_people.py:567-569`) and degree-type display labels; `citation.go:544-547` is what sets a thesis's publication date from `date` for `degree`. Read the feeds code the author had in mind before changing anything, and write the test first. Related: irdmtools DR-0010 (a SQL mode that does this for CaltechTHESIS), caltechthesis DR-0002 and DR-0005.
 - [x] Local group items are including an empty "{}" as an entry when retrieved with ep3util (e.g. thesis repository, ep3util get_record 7320)
 - [x] progress.go is producing non-sensical estamates of the time remaining, need to review my math (this was a really bad SQL query on my part)
 - [x] rdmutil

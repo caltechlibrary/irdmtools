@@ -319,7 +319,7 @@ func customFieldsMetadataFromEPrint(eprint *eprinttools.EPrint, rec *simplified.
 	if eprint.Type == "thesis" {
 		val := map[string]interface{}{
 			"type":       normalizeThesisType(eprint.ThesisType),
-			"unversity":  eprint.Institution,
+			"university": eprint.Institution,
 			"department": eprint.Department,
 		}
 		SetCustomField(rec, "thesis:thesis", "", val)
