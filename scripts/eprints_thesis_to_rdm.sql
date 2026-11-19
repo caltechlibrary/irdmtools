@@ -100,7 +100,24 @@ SELECT JSON_MERGE_PATCH('{}', JSON_OBJECT(
         'entries', e.public_files),
     'custom_fields', CASE WHEN JSON_LENGTH(e.cf) = 0 THEN NULL ELSE e.cf END,
     -- not part of an RDM record: every document and its files, for the loader
-    'eprints_sidecar', JSON_OBJECT('documents', e.sidecar_docs)
+    -- A deleted eprint carries a tombstone; its time is the time the status changed, when
+    -- EPrints has one (a time needs every part, so a missing part counts as the first or zero).
+    'tombstone', CASE WHEN e.eprint_status = 'deletion' THEN JSON_OBJECT(
+        'reason', 'Deleted in EPrints',
+        'timestamp', CASE WHEN e.status_changed_year IS NULL THEN NULL
+            ELSE CONCAT(e.status_changed_year, '-', LPAD(COALESCE(e.status_changed_month, 1), 2, '0'), '-',
+                LPAD(COALESCE(e.status_changed_day, 1), 2, '0'), 'T',
+                LPAD(COALESCE(e.status_changed_hour, 0), 2, '0'), ':',
+                LPAD(COALESCE(e.status_changed_minute, 0), 2, '0'), ':',
+                LPAD(COALESCE(e.status_changed_second, 0), 2, '0'), 'Z') END) END,
+    'eprints_sidecar', JSON_OBJECT(
+        'eprint_status', e.eprint_status,
+        -- what the loader makes of the eprint: archive is published, inbox and buffer are
+        -- not yet accepted so stay unpublished drafts, deletion is a tombstone
+        'rdm_state', CASE e.eprint_status WHEN 'archive' THEN 'published'
+                                          WHEN 'deletion' THEN 'deleted'
+                                          ELSE 'draft' END,
+        'documents', e.sidecar_docs)
 ))
 FROM (
     SELECT x.*,

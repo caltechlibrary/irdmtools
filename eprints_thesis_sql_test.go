@@ -737,3 +737,59 @@ func TestThesisSQLPublicationDate(t *testing.T) {
 		}
 	}
 }
+
+// TestThesisSQLStateAndTombstone checks how an eprint's status reaches the
+// loader. The sidecar carries eprint_status and rdm_state: archive is
+// published, inbox and buffer (not yet accepted) are draft, deletion is
+// deleted. A deleted eprint also carries a tombstone in the record, with the
+// time its status changed when EPrints has it; COLD's query leaves deletions
+// out, this one must not.
+func TestThesisSQLStateAndTombstone(t *testing.T) {
+	db := openScratchEPrints(t)
+	resetScratch(t, db)
+	for _, st := range []struct {
+		id     int
+		status string
+	}{{80, "inbox"}, {81, "buffer"}, {82, "deletion"}, {83, "archive"}, {84, "deletion"}} {
+		fixture(t, db, `INSERT INTO eprint (eprintid, eprint_status, type) VALUES (?, ?, 'thesis')`, st.id, st.status)
+	}
+	fixture(t, db, `UPDATE eprint SET status_changed_year = 2015, status_changed_month = 3, status_changed_day = 4,
+		status_changed_hour = 5, status_changed_minute = 6, status_changed_second = 7 WHERE eprintid = 82`)
+	// a thesis of another type is not part of this crosswalk
+	fixture(t, db, `INSERT INTO eprint (eprintid, eprint_status, type) VALUES (85, 'archive', 'article')`)
+
+	lines := runThesisSQL(t, db)
+	if _, ok := lines["85"]; ok {
+		t.Errorf("an eprint that is not a thesis must not be emitted")
+	}
+	want := map[string]string{"80": "draft", "81": "draft", "82": "deleted", "83": "published", "84": "deleted"}
+	status := map[string]string{"80": "inbox", "81": "buffer", "82": "deletion", "83": "archive", "84": "deletion"}
+	for id, w := range want {
+		line, ok := lines[id]
+		if !ok {
+			t.Errorf("no output line for eprint %s", id)
+			continue
+		}
+		if got := line.Sidecar["rdm_state"]; got != w {
+			t.Errorf("eprint %s rdm_state = %v, want %s", id, got, w)
+		}
+		if got := line.Sidecar["eprint_status"]; got != status[id] {
+			t.Errorf("eprint %s eprint_status = %v, want %s", id, got, status[id])
+		}
+		hasTomb := line.Record.Tombstone != nil
+		if hasTomb != (w == "deleted") {
+			t.Errorf("eprint %s tombstone present = %v, want %v", id, hasTomb, w == "deleted")
+		}
+	}
+	if tomb := lines["82"].Record.Tombstone; tomb != nil {
+		if got := tomb.Timestamp.UTC().Format("2006-01-02T15:04:05Z"); got != "2015-03-04T05:06:07Z" {
+			t.Errorf("eprint 82 tombstone timestamp = %s, want 2015-03-04T05:06:07Z", got)
+		}
+		if tomb.Reason == "" {
+			t.Errorf("eprint 82 tombstone has no reason")
+		}
+	}
+	if tomb := lines["84"].Record.Tombstone; tomb != nil && !tomb.Timestamp.IsZero() {
+		t.Errorf("eprint 84 has no status_changed time but the tombstone has %v", tomb.Timestamp)
+	}
+}
