@@ -442,3 +442,191 @@ func TestThesisSQLDivision(t *testing.T) {
 		t.Errorf("eprint 34 has a blank division name but department = %v", got)
 	}
 }
+
+// docFixture is one hand-written EPrints document with its files.
+type docFixture struct {
+	docid    int
+	eprintid int
+	pos      int
+	security interface{} // string or nil
+	main     string
+	content  interface{}    // string or nil
+	embargo  [3]interface{} // year, month, day
+	files    []string       // file names; the first is the main file
+}
+
+// insertDoc writes a docFixture: the document row and one file row per name.
+// Every file is 1000 bytes with the md5 "h<fileid>".
+func insertDoc(t *testing.T, db *sql.DB, d docFixture) {
+	t.Helper()
+	fixture(t, db, `INSERT INTO document (docid, eprintid, pos, format, security, main, content,
+		date_embargo_year, date_embargo_month, date_embargo_day, mime_type)
+		VALUES (?, ?, ?, 'application/pdf', ?, ?, ?, ?, ?, ?, 'application/pdf')`,
+		d.docid, d.eprintid, d.pos, d.security, d.main, d.content, d.embargo[0], d.embargo[1], d.embargo[2])
+	for i, name := range d.files {
+		fileid := d.docid*10 + i
+		fixture(t, db, `INSERT INTO file (fileid, datasetid, objectid, filename, mime_type, hash, hash_type, filesize)
+			VALUES (?, 'document', ?, ?, 'application/pdf', ?, 'MD5', 1000)`,
+			fileid, d.docid, name, fmt.Sprintf("h%d", fileid))
+	}
+}
+
+// sidecarDocs returns the sidecar's documents keyed by docid, as objects.
+func sidecarDocs(t *testing.T, line *thesisLine) map[string]map[string]interface{} {
+	t.Helper()
+	out := map[string]map[string]interface{}{}
+	raw, _ := line.Sidecar["documents"].([]interface{})
+	for _, item := range raw {
+		m, _ := item.(map[string]interface{})
+		out[fmt.Sprint(m["docid"])] = m
+	}
+	return out
+}
+
+// publicFileKeys returns the sorted names of the files the record carries.
+func publicFileKeys(line *thesisLine) []string {
+	keys := []string{}
+	if line.Record.Files != nil {
+		for k := range line.Record.Files.Entries {
+			keys = append(keys, k)
+		}
+	}
+	sortStrings(keys)
+	return keys
+}
+
+// sortStrings sorts a slice of strings in place.
+func sortStrings(s []string) {
+	for i := 1; i < len(s); i++ {
+		for j := i; j > 0 && s[j] < s[j-1]; j-- {
+			s[j], s[j-1] = s[j-1], s[j]
+		}
+	}
+}
+
+// TestThesisSQLFileRule checks the file rule taken from ep3StaticSite's
+// visibility.ts (brief ruling 17), one clause per document. A document is
+// "public" when its eprint is in the archive, its security is public and it
+// has no active embargo; "embargoed" when only an active embargo keeps a
+// public document back (its files wait in an unpublished draft); "excluded"
+// when its main file is an EPrints thumbnail or index name; and "non_public"
+// otherwise. Only public documents' files appear in the record; the sidecar
+// lists every document with its class and facts.
+func TestThesisSQLFileRule(t *testing.T) {
+	db := openScratchEPrints(t)
+	resetScratch(t, db)
+	none := [3]interface{}{nil, nil, nil}
+	// eprint 40: one document per clause, in the archive
+	fixture(t, db, `INSERT INTO eprint (eprintid, eprint_status, type) VALUES (40, 'archive', 'thesis')`)
+	docs := []docFixture{
+		{401, 40, 1, "public", "thesis.pdf", "final", none, []string{"thesis.pdf"}},
+		{402, 40, 2, "public", "fig1.png", "supplemental", none, []string{"fig1.png", "data.csv"}},
+		{403, 40, 3, "public", "second.pdf", "final", none, []string{"second.pdf"}},
+		{404, 40, 4, "internal", "form.pdf", "approvalform", none, []string{"form.pdf"}},
+		{405, 40, 5, "validuser", "campus.pdf", "final", [3]interface{}{2000, 1, 1}, []string{"campus.pdf"}},
+		{406, 40, 6, nil, "nosec.pdf", "other", none, []string{"nosec.pdf"}},
+		{407, 40, 7, "public", "later.pdf", "final", [3]interface{}{2100, 1, 1}, []string{"later.pdf"}},
+		{408, 40, 8, "public", "Lightbox.JPG", nil, none, []string{"Lightbox.JPG"}},
+		{409, 40, 9, "public", "preview.png", nil, none, []string{"preview.png"}},
+		{410, 40, 10, "public", "MEDIUM.jpg", nil, none, []string{"MEDIUM.jpg"}},
+		{411, 40, 11, "public", "small.gif", nil, none, []string{"small.gif"}},
+		{412, 40, 12, "public", "indexcodes.txt", nil, none, []string{"indexcodes.txt"}},
+		{413, 40, 13, "public", "released.pdf", "final", [3]interface{}{2000, 6, nil}, []string{"released.pdf"}},
+		{414, 40, 14, "public", "lightbox_notes.pdf", "supplemental", none, []string{"lightbox_notes.pdf"}},
+	}
+	// eprint 41: not in the archive, so nothing is public
+	fixture(t, db, `INSERT INTO eprint (eprintid, eprint_status, type) VALUES (41, 'inbox', 'thesis')`)
+	docs = append(docs, docFixture{415, 41, 1, "public", "draft.pdf", "final", none, []string{"draft.pdf"}})
+	// eprint 42: only non-public documents
+	fixture(t, db, `INSERT INTO eprint (eprintid, eprint_status, type) VALUES (42, 'archive', 'thesis')`)
+	docs = append(docs, docFixture{416, 42, 1, "internal", "arch.pdf", "archival", none, []string{"arch.pdf"}})
+	// eprint 43: an embargo date that cannot be read counts as active
+	fixture(t, db, `INSERT INTO eprint (eprintid, eprint_status, type) VALUES (43, 'archive', 'thesis')`)
+	docs = append(docs, docFixture{417, 43, 1, "public", "odd.pdf", "final", [3]interface{}{2000, 13, 1}, []string{"odd.pdf"}})
+	for _, d := range docs {
+		insertDoc(t, db, d)
+	}
+
+	lines := runThesisSQL(t, db)
+	wantClass := map[string]map[string]string{
+		"40": {"401": "public", "402": "public", "403": "public", "404": "non_public",
+			"405": "non_public", "406": "non_public", "407": "embargoed",
+			"408": "excluded", "409": "excluded", "410": "excluded", "411": "excluded", "412": "excluded",
+			"413": "public", "414": "public"},
+		"41": {"415": "non_public"},
+		"42": {"416": "non_public"},
+		"43": {"417": "embargoed"},
+	}
+	for id, w := range wantClass {
+		got := map[string]string{}
+		for docid, d := range sidecarDocs(t, lines[id]) {
+			got[docid] = fmt.Sprint(d["class"])
+		}
+		if fmt.Sprint(got) != fmt.Sprint(w) {
+			t.Errorf("eprint %s document classes\n got  %v\n want %v", id, got, w)
+		}
+	}
+	// the record carries only the public documents' files, all of them
+	wantKeys := map[string]string{
+		"40": "[data.csv fig1.png lightbox_notes.pdf released.pdf second.pdf thesis.pdf]",
+		"41": "[]", "42": "[]", "43": "[]",
+	}
+	for id, w := range wantKeys {
+		if got := publicFileKeys(lines[id]); fmt.Sprint(got) != w {
+			t.Errorf("eprint %s public files = %v, want %s", id, got, w)
+		}
+	}
+	if f := lines["40"].Record.Files; f == nil || !f.Enabled {
+		t.Errorf("eprint 40 has public files, so files.enabled must be true: %+v", f)
+	}
+	for _, id := range []string{"41", "42", "43"} {
+		if f := lines[id].Record.Files; f != nil && f.Enabled {
+			t.Errorf("eprint %s has no public files, so files.enabled must be false", id)
+		}
+	}
+	// an entry carries the name, size and checksum
+	if e := lines["40"].Record.Files.Entries["thesis.pdf"]; e == nil || e.Key != "thesis.pdf" || e.Size != 1000 || e.CheckSum != "md5:h4010" {
+		t.Errorf("entry for thesis.pdf = %+v, want key thesis.pdf, size 1000, checksum md5:h4010", e)
+	}
+	// the sidecar keeps the facts for a document that is not public, files included
+	d := sidecarDocs(t, lines["40"])["404"]
+	if d["security"] != "internal" || d["main"] != "form.pdf" || d["content"] != "approvalform" {
+		t.Errorf("sidecar document 404 = %v", d)
+	}
+	if files, _ := d["files"].([]interface{}); len(files) != 1 {
+		t.Errorf("sidecar document 404 files = %v, want one", d["files"])
+	}
+}
+
+// TestThesisSQLEmbargoBoundaries checks how an embargo date is compared with
+// today, as ep3StaticSite does: an embargo that ends today is over, and a
+// date with no month or day is compared as the first of the month or year.
+// The dates come from the database server's own clock.
+func TestThesisSQLEmbargoBoundaries(t *testing.T) {
+	db := openScratchEPrints(t)
+	resetScratch(t, db)
+	var y, m, d int
+	if err := db.QueryRow(`SELECT YEAR(CURDATE()), MONTH(CURDATE()), DAY(CURDATE())`).Scan(&y, &m, &d); err != nil {
+		t.Fatal(err)
+	}
+	fixture(t, db, `INSERT INTO eprint (eprintid, eprint_status, type) VALUES (50, 'archive', 'thesis')`)
+	docs := []docFixture{
+		{501, 50, 1, "public", "today.pdf", "final", [3]interface{}{y, m, d}, []string{"today.pdf"}},
+		{502, 50, 2, "public", "thisyear.pdf", "final", [3]interface{}{y, nil, nil}, []string{"thisyear.pdf"}},
+		{503, 50, 3, "public", "thismonth.pdf", "final", [3]interface{}{y, m, nil}, []string{"thismonth.pdf"}},
+		{504, 50, 4, "public", "nextyear.pdf", "final", [3]interface{}{y + 1, nil, nil}, []string{"nextyear.pdf"}},
+		{505, 50, 5, "public", "tomorrow.pdf", "final", [3]interface{}{y + 1, 1, 1}, []string{"tomorrow.pdf"}},
+	}
+	for _, doc := range docs {
+		insertDoc(t, db, doc)
+	}
+	lines := runThesisSQL(t, db)
+	got := map[string]string{}
+	for docid, doc := range sidecarDocs(t, lines["50"]) {
+		got[docid] = fmt.Sprint(doc["class"])
+	}
+	want := map[string]string{"501": "public", "502": "public", "503": "public", "504": "embargoed", "505": "embargoed"}
+	if fmt.Sprint(got) != fmt.Sprint(want) {
+		t.Errorf("document classes\n got  %v\n want %v", got, want)
+	}
+}

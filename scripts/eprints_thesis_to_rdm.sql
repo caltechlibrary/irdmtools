@@ -1,6 +1,39 @@
 -- eprints_thesis_to_rdm.sql builds one RDM-shaped JSON object per CaltechTHESIS
 -- EPrints record (irdmtools DR-0010, caltechthesis plan Phase 1). Run it with
 -- the mysql client and --raw, or through eprint2rdm's SQL mode.
+WITH doc_class AS (
+    -- One row per document with the ep3StaticSite file rule applied (brief ruling 17).
+    -- class is: excluded (an EPrints thumbnail or index document, by the main file's name
+    -- without its extension), non_public (the eprint is not in the archive, or the security
+    -- is not public: internal, validuser, or none), embargoed (public, but an embargo date
+    -- lies in the future or cannot be read, so it is treated as active), or public.
+    SELECT z.*,
+        CASE
+            WHEN z.is_thumb THEN 'excluded'
+            WHEN z.eprint_status IS NULL OR z.eprint_status <> 'archive' THEN 'non_public'
+            WHEN z.security IS NULL OR z.security <> 'public' THEN 'non_public'
+            WHEN z.embargo_year IS NOT NULL AND (z.embargo_cmp IS NULL OR z.embargo_cmp > CURDATE()) THEN 'embargoed'
+            ELSE 'public'
+        END AS class
+    FROM (
+        SELECT d.docid, d.eprintid, d.pos, d.format, d.security, d.main, d.content, d.mime_type,
+            e.eprint_status,
+            d.date_embargo_year AS embargo_year,
+            LOWER(REGEXP_REPLACE(COALESCE(d.main, ''), '\\.[^.]+$', ''))
+                IN ('lightbox', 'preview', 'medium', 'small', 'indexcodes') AS is_thumb,
+            -- the embargo date as EPrints holds it: year, year-month or year-month-day
+            CASE WHEN d.date_embargo_year IS NULL THEN NULL
+                 WHEN d.date_embargo_month IS NULL THEN CAST(d.date_embargo_year AS CHAR)
+                 WHEN d.date_embargo_day IS NULL THEN CONCAT(d.date_embargo_year, '-', LPAD(d.date_embargo_month, 2, '0'))
+                 ELSE CONCAT(d.date_embargo_year, '-', LPAD(d.date_embargo_month, 2, '0'), '-', LPAD(d.date_embargo_day, 2, '0')) END AS embargo_d,
+            -- a day for comparing only: a missing month or day counts as the first; an
+            -- unreadable date is NULL
+            STR_TO_DATE(CONCAT(d.date_embargo_year, '-', COALESCE(d.date_embargo_month, 1), '-',
+                COALESCE(d.date_embargo_day, 1)), '%Y-%m-%d') AS embargo_cmp
+        FROM document d
+        JOIN eprint e ON e.eprintid = d.eprintid
+    ) z
+)
 SELECT JSON_MERGE_PATCH('{}', JSON_OBJECT(
     'metadata', JSON_OBJECT(
         'identifiers', JSON_ARRAY(JSON_OBJECT('scheme', 'eprintid', 'identifier', CAST(e.eprintid AS CHAR))),
@@ -55,7 +88,13 @@ SELECT JSON_MERGE_PATCH('{}', JSON_OBJECT(
             WHERE c.eprintid = e.eprintid
         ), JSON_ARRAY())
     ),
-    'custom_fields', CASE WHEN JSON_LENGTH(e.cf) = 0 THEN NULL ELSE e.cf END
+    'access', JSON_OBJECT('record', 'public', 'files', 'public'),
+    'files', JSON_OBJECT(
+        'enabled', CASE WHEN e.public_files IS NULL THEN CAST('false' AS JSON) ELSE CAST('true' AS JSON) END,
+        'entries', e.public_files),
+    'custom_fields', CASE WHEN JSON_LENGTH(e.cf) = 0 THEN NULL ELSE e.cf END,
+    -- not part of an RDM record: every document and its files, for the loader
+    'eprints_sidecar', JSON_OBJECT('documents', e.sidecar_docs)
 ))
 FROM (
     SELECT x.*,
@@ -93,6 +132,19 @@ FROM (
                 WHEN e0.thesis_degree_date_month IS NULL THEN CAST(e0.thesis_degree_date_year AS CHAR)
                 WHEN e0.thesis_degree_date_day IS NULL THEN CONCAT(e0.thesis_degree_date_year, '-', LPAD(e0.thesis_degree_date_month, 2, '0'))
                 ELSE CONCAT(e0.thesis_degree_date_year, '-', LPAD(e0.thesis_degree_date_month, 2, '0'), '-', LPAD(e0.thesis_degree_date_day, 2, '0')) END AS degree_d,
+            -- the public documents' files, keyed by file name, as RDM's files.entries
+            (SELECT JSON_OBJECTAGG(f.filename, JSON_OBJECT('key', f.filename, 'size', f.filesize,
+                    'checksum', CONCAT(LOWER(f.hash_type), ':', f.hash), 'mimetype', f.mime_type))
+                FROM doc_class c JOIN file f ON f.datasetid = 'document' AND f.objectid = c.docid
+                WHERE c.eprintid = e0.eprintid AND c.class = 'public' AND f.filename IS NOT NULL) AS public_files,
+            COALESCE((SELECT JSON_ARRAYAGG(JSON_OBJECT(
+                    'docid', c.docid, 'pos', c.pos, 'class', c.class, 'format', c.format,
+                    'security', c.security, 'main', c.main, 'content', c.content,
+                    'embargo_until', c.embargo_d,
+                    'files', (SELECT JSON_ARRAYAGG(JSON_OBJECT('fileid', f.fileid, 'name', f.filename,
+                            'size', f.filesize, 'hash', f.hash, 'hash_type', f.hash_type, 'mimetype', f.mime_type))
+                        FROM file f WHERE f.datasetid = 'document' AND f.objectid = c.docid)))
+                FROM doc_class c WHERE c.eprintid = e0.eprintid), JSON_ARRAY()) AS sidecar_docs,
             JSON_MERGE_PATCH('{}', JSON_OBJECT(
                 'university', NULLIF(e0.institution, ''),
                 -- for testing, the first division's display name stands in for the department
