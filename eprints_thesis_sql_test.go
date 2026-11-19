@@ -308,3 +308,137 @@ func TestThesisSQLThesisField(t *testing.T) {
 		}
 	}
 }
+
+// datesByType returns the date of each typed metadata.dates entry, keyed by
+// the type id.
+func datesByType(t *testing.T, rec *simplified.Record) map[string]string {
+	t.Helper()
+	got := map[string]string{}
+	if rec.Metadata == nil {
+		return got
+	}
+	for _, d := range rec.Metadata.Dates {
+		if d.Type == nil {
+			t.Errorf("date %q has no type", d.Date)
+			continue
+		}
+		if _, dup := got[d.Type.ID]; dup {
+			t.Errorf("date type %q appears twice", d.Type.ID)
+		}
+		got[d.Type.ID] = d.Date
+	}
+	return got
+}
+
+// TestThesisSQLTypedDates checks the thesis dates that are not part of
+// thesis:thesis: approved_date, gradofc_approval_date and degree_date, with
+// the ids the local date types use (the EPrints names minus "thesis_") and
+// the precision EPrints holds. The ids pub_date and degree, which the Go
+// crosswalk writes, are never used.
+func TestThesisSQLTypedDates(t *testing.T) {
+	db := openScratchEPrints(t)
+	resetScratch(t, db)
+	// eprint 20: all three, each at a different precision
+	fixture(t, db, `INSERT INTO eprint (eprintid, eprint_status, type,
+		thesis_approved_date_year, thesis_approved_date_month,
+		gradofc_approval_date_year, gradofc_approval_date_month, gradofc_approval_date_day,
+		thesis_degree_date_year)
+		VALUES (20, 'archive', 'thesis', 2023, 6, 2023, 6, 20, 2023)`)
+	// eprint 21: only a degree date
+	fixture(t, db, `INSERT INTO eprint (eprintid, eprint_status, type, thesis_degree_date_year, thesis_degree_date_month)
+		VALUES (21, 'archive', 'thesis', 1987, 6)`)
+	// eprint 22: none, and the main date alone must not create one
+	fixture(t, db, `INSERT INTO eprint (eprintid, eprint_status, type, date_year, date_type)
+		VALUES (22, 'archive', 'thesis', 2001, 'degree')`)
+
+	lines := runThesisSQL(t, db)
+	want := map[string]map[string]string{
+		"20": {"approved_date": "2023-06", "gradofc_approval_date": "2023-06-20", "degree_date": "2023"},
+		"21": {"degree_date": "1987-06"},
+		"22": {},
+	}
+	for id, w := range want {
+		line, ok := lines[id]
+		if !ok {
+			t.Errorf("no output line for eprint %s", id)
+			continue
+		}
+		got := datesByType(t, line.Record)
+		if fmt.Sprint(got) != fmt.Sprint(w) {
+			t.Errorf("eprint %s dates\n got  %v\n want %v", id, got, w)
+		}
+		if _, present := line.Raw["metadata"].(map[string]interface{})["dates"]; present && len(w) == 0 {
+			t.Errorf("eprint %s has no dates but carries a dates key", id)
+		}
+	}
+}
+
+// TestThesisSQLDivision checks the division handling (brief ruling 16): the
+// EPrints division ids go into caltech:division as a list of {id}, as
+// caltech:groups does, and the first division's display name is copied into
+// thesis:thesis.department for testing. A thesis with no division gets
+// neither, and a division with no display name gets the id but no department.
+func TestThesisSQLDivision(t *testing.T) {
+	db := openScratchEPrints(t)
+	resetScratch(t, db)
+	fixture(t, db, `INSERT INTO subject_name_name (subjectid, pos, name_name) VALUES
+		('div_test_one', 0, 'Division of Test One'), ('div_test_two', 0, 'Division of Test Two')`)
+	// eprint 30: two divisions; the department is the first, by list position
+	fixture(t, db, `INSERT INTO eprint (eprintid, eprint_status, type) VALUES (30, 'archive', 'thesis')`)
+	fixture(t, db, `INSERT INTO eprint_divisions (eprintid, pos, divisions) VALUES
+		(30, 1, 'div_test_two'), (30, 0, 'div_test_one')`)
+	// eprint 31: no division
+	fixture(t, db, `INSERT INTO eprint (eprintid, eprint_status, type) VALUES (31, 'archive', 'thesis')`)
+	// eprint 32: a division with no display name
+	fixture(t, db, `INSERT INTO eprint (eprintid, eprint_status, type) VALUES (32, 'archive', 'thesis')`)
+	fixture(t, db, `INSERT INTO eprint_divisions (eprintid, pos, divisions) VALUES (32, 0, 'div_unnamed')`)
+	// eprint 33: blank and NULL division rows count as no division
+	fixture(t, db, `INSERT INTO eprint (eprintid, eprint_status, type) VALUES (33, 'archive', 'thesis')`)
+	fixture(t, db, `INSERT INTO eprint_divisions (eprintid, pos, divisions) VALUES (33, 0, ''), (33, 1, NULL)`)
+	// eprint 34: a division whose display name is blank has no department
+	fixture(t, db, `INSERT INTO subject_name_name (subjectid, pos, name_name) VALUES ('div_blank', 0, '')`)
+	fixture(t, db, `INSERT INTO eprint (eprintid, eprint_status, type) VALUES (34, 'archive', 'thesis')`)
+	fixture(t, db, `INSERT INTO eprint_divisions (eprintid, pos, divisions) VALUES (34, 0, 'div_blank')`)
+
+	lines := runThesisSQL(t, db)
+	division := func(id string) []string {
+		raw, _ := lines[id].Record.CustomFields["caltech:division"].([]interface{})
+		ids := []string{}
+		for _, item := range raw {
+			m, _ := item.(map[string]interface{})
+			ids = append(ids, fmt.Sprint(m["id"]))
+		}
+		return ids
+	}
+	department := func(id string) interface{} {
+		obj := thesisCustomField(t, lines[id])
+		return obj["department"]
+	}
+	if got := division("30"); fmt.Sprint(got) != "[div_test_one div_test_two]" {
+		t.Errorf("eprint 30 caltech:division = %v, want [div_test_one div_test_two]", got)
+	}
+	if got := department("30"); got != "Division of Test One" {
+		t.Errorf("eprint 30 department = %v, want the first division's name", got)
+	}
+	if _, present := lines["31"].Record.CustomFields["caltech:division"]; present {
+		t.Errorf("eprint 31 has no division but carries caltech:division")
+	}
+	if got := department("31"); got != nil {
+		t.Errorf("eprint 31 has no division but department = %v", got)
+	}
+	if got := division("32"); fmt.Sprint(got) != "[div_unnamed]" {
+		t.Errorf("eprint 32 caltech:division = %v, want [div_unnamed]", got)
+	}
+	if got := department("32"); got != nil {
+		t.Errorf("eprint 32 has no division name but department = %v", got)
+	}
+	if _, present := lines["33"].Record.CustomFields["caltech:division"]; present {
+		t.Errorf("eprint 33 has only blank division rows but carries caltech:division")
+	}
+	if got := division("34"); fmt.Sprint(got) != "[div_blank]" {
+		t.Errorf("eprint 34 caltech:division = %v, want [div_blank]", got)
+	}
+	if got := department("34"); got != nil {
+		t.Errorf("eprint 34 has a blank division name but department = %v", got)
+	}
+}
